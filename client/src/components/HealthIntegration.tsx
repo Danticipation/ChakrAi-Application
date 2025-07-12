@@ -150,7 +150,7 @@ const HealthIntegration: React.FC = () => {
   const getDeviceIcon = (deviceType: string) => {
     switch (deviceType) {
       case 'apple_watch': return '⌚';
-      case 'Pixel_watch': return '⌚'; 
+      case 'pixel_watch': return '⌚'; 
       case 'fitbit': return '📱';
       case 'garmin': return '🏃';
       case 'samsung_health': return '📲';
@@ -331,9 +331,10 @@ const HealthIntegration: React.FC = () => {
             {/* Add New Device */}
             <div className="theme-surface rounded-xl p-6 border-2 border-theme-accent">
               <h3 className="text-lg font-semibold theme-text mb-4">Connect New Device</h3>
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
                 {[
                   { type: 'apple_watch', name: 'Apple Watch', icon: '⌚' },
+                  { type: 'pixel_watch', name: 'Pixel Watch', icon: '⌚' },
                   { type: 'fitbit', name: 'Fitbit', icon: '📱' },
                   { type: 'garmin', name: 'Garmin', icon: '🏃' },
                   { type: 'samsung_health', name: 'Samsung Health', icon: '📲' },

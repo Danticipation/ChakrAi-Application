@@ -1716,6 +1716,15 @@ app.get('/api/wearable-devices/:userId', async (req, res) => {
         lastSyncTime: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
         consentGranted: false,
         privacyLevel: 'low'
+      },
+      {
+        id: 4,
+        deviceType: 'pixel_watch',
+        deviceName: 'Google Pixel Watch 2',
+        syncStatus: 'connected',
+        lastSyncTime: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
+        consentGranted: true,
+        privacyLevel: 'high'
       }
     ];
     res.json(devices);
@@ -1754,6 +1763,24 @@ app.get('/api/health-metrics/:userId', async (req, res) => {
         recordedAt: new Date().toISOString(),
         dataQuality: 'medium',
         contextTags: ['daily_activity', 'walking']
+      },
+      {
+        id: 4,
+        metricType: 'stress_level',
+        metricValue: 3.2,
+        unit: 'score',
+        recordedAt: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
+        dataQuality: 'high',
+        contextTags: ['pixel_watch', 'stress_monitoring', 'morning']
+      },
+      {
+        id: 5,
+        metricType: 'activity_minutes',
+        metricValue: 45,
+        unit: 'minutes',
+        recordedAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+        dataQuality: 'excellent',
+        contextTags: ['pixel_watch', 'active_zone_minutes', 'cardio']
       }
     ];
     res.json(metrics);

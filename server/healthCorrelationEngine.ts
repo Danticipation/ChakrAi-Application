@@ -222,6 +222,8 @@ export function processHealthData(rawData: any, deviceType: string): HealthMetri
     switch (deviceType) {
       case 'apple_watch':
         return processAppleWatchData(rawData);
+      case 'pixel_watch':
+        return processPixelWatchData(rawData);
       case 'fitbit':
         return processFitbitData(rawData);
       case 'garmin':
@@ -299,6 +301,115 @@ function processFitbitData(data: any): HealthMetric[] {
       timestamp: new Date(data.heartRate.date),
       metadata: { source: 'fitbit', zones: data.heartRate.zones },
       confidence: 0.9
+    });
+  }
+
+  return metrics;
+}
+
+function processPixelWatchData(data: any): HealthMetric[] {
+  // Process Google Pixel Watch data structure
+  const metrics: any[] = [];
+  
+  // Process heart rate data - Pixel Watch provides detailed heart rate monitoring
+  if (data.heartRate) {
+    data.heartRate.forEach((hr: any) => {
+      metrics.push({
+        metricType: 'heart_rate',
+        value: hr.value || hr.beatsPerMinute,
+        unit: 'bpm',
+        timestamp: new Date(hr.timestamp || hr.time),
+        metadata: { 
+          source: 'pixel_watch', 
+          accuracy: hr.accuracy,
+          context: hr.context || 'continuous_monitoring'
+        },
+        confidence: 0.94
+      });
+    });
+  }
+
+  // Process sleep data - Pixel Watch sleep tracking
+  if (data.sleep) {
+    data.sleep.forEach((sleep: any) => {
+      metrics.push({
+        metricType: 'sleep_duration',
+        value: sleep.totalSleepHours || sleep.duration,
+        unit: 'hours',
+        timestamp: new Date(sleep.date || sleep.sleepDate),
+        metadata: { 
+          source: 'pixel_watch', 
+          deepSleep: sleep.deepSleepMinutes,
+          lightSleep: sleep.lightSleepMinutes,
+          remSleep: sleep.remSleepMinutes,
+          awakeTime: sleep.awakeMinutes,
+          sleepScore: sleep.sleepScore
+        },
+        confidence: 0.91
+      });
+
+      // Add sleep quality as separate metric
+      if (sleep.sleepScore) {
+        metrics.push({
+          metricType: 'sleep_quality',
+          value: sleep.sleepScore,
+          unit: 'score',
+          timestamp: new Date(sleep.date || sleep.sleepDate),
+          metadata: { source: 'pixel_watch', maxScore: 100 },
+          confidence: 0.89
+        });
+      }
+    });
+  }
+
+  // Process step count and activity data
+  if (data.steps) {
+    metrics.push({
+      metricType: 'steps',
+      value: data.steps.count || data.steps.totalSteps,
+      unit: 'count',
+      timestamp: new Date(data.steps.date || data.steps.timestamp),
+      metadata: { 
+        source: 'pixel_watch',
+        distance: data.steps.distance,
+        activeMinutes: data.steps.activeMinutes
+      },
+      confidence: 0.96
+    });
+  }
+
+  // Process stress levels if available
+  if (data.stress) {
+    data.stress.forEach((stress: any) => {
+      metrics.push({
+        metricType: 'stress_level',
+        value: stress.level || stress.stressScore,
+        unit: 'score',
+        timestamp: new Date(stress.timestamp || stress.time),
+        metadata: { 
+          source: 'pixel_watch',
+          stressType: stress.type,
+          duration: stress.duration
+        },
+        confidence: 0.85
+      });
+    });
+  }
+
+  // Process active minutes and exercise data
+  if (data.activity) {
+    metrics.push({
+      metricType: 'activity_minutes',
+      value: data.activity.activeMinutes || data.activity.totalActiveMinutes,
+      unit: 'minutes',
+      timestamp: new Date(data.activity.date || data.activity.timestamp),
+      metadata: { 
+        source: 'pixel_watch',
+        caloriesBurned: data.activity.calories,
+        workoutType: data.activity.workoutType,
+        intensity: data.activity.intensity
+      },
+      confidence: 0.92
     });
   }
 
