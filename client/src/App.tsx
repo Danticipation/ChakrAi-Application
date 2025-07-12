@@ -1412,7 +1412,7 @@ const AppLayout = ({ currentUserId, onDataReset }: AppLayoutProps) => {
                     <div className="absolute -top-1 -right-1 w-4 h-4 theme-accent rounded-full animate-ping"></div>
                   </div>
                   <h1 className="text-5xl font-bold theme-text mb-4 bg-gradient-to-r from-[var(--theme-primary)] to-[var(--theme-secondary)] bg-clip-text text-transparent font-serif">
-                    Welcome to Chakrai Mental Wellness
+                    Welcome to <span className="font-samarkan">Chakrai</span> Mental Wellness
                   </h1>
                   <p className="theme-text-secondary text-xl mb-8 font-light tracking-wide">Your AI companion is here to support your mental health and personal growth</p>
                   

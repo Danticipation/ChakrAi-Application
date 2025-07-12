@@ -1,6 +1,15 @@
 /* Import luxury fonts with clear character distinction */
 @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
 
+/* Load Samarkan Normal font */
+@font-face {
+  font-family: 'Samarkan Normal';
+  src: url('/fonts/Samarkan-Normal.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -45,6 +54,11 @@ h1, h2, h3, h4, h5, h6 {
   --silver: #c0c0c0;
   --silver-light: #e5e5e5;
   --silver-dark: #a8a8a8;
+  
+  /* Font families for different use cases */
+  --font-samarkan: 'Samarkan Normal', serif;
+  --font-luxury: 'Playfair Display', serif;
+  --font-body: 'Merriweather', serif;
   
   /* Luxury enhancements */
   --glass-blur: blur(20px);
@@ -105,6 +119,19 @@ h1, h2, h3, h4, h5, h6 {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+}
+
+/* Font utility classes */
+.font-samarkan {
+  font-family: var(--font-samarkan) !important;
+}
+
+.font-luxury {
+  font-family: var(--font-luxury) !important;
+}
+
+.font-body {
+  font-family: var(--font-body) !important;
 }
 
 .theme-background { background-color: var(--theme-background); }
