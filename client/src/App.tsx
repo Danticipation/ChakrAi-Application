@@ -1094,6 +1094,12 @@ const AppLayout = ({ currentUserId, onDataReset }: AppLayoutProps) => {
 
   return (
     <div className="min-h-screen theme-background flex flex-col mobile-polish-container">
+      {/* Sparkling Stars Background */}
+      <div className="stars-background">
+        {[...Array(30)].map((_, i) => (
+          <div key={i} className="star"></div>
+        ))}
+      </div>
       {/* Mobile-Optimized Header */}
       <div className="theme-background">
         {/* Mobile: Polished Header */}
