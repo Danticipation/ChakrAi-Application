@@ -1129,7 +1129,7 @@ const AppLayout = ({ currentUserId, onDataReset }: AppLayoutProps) => {
                 setActiveSection('horoscope');
                 updateUserActivity('horoscope_access');
               }}
-              className="theme-primary border-soft glass-luxury gradient-soft hover-lift p-3 flex flex-col cursor-pointer text-luxury border-2 border-silver"
+              className="theme-primary border-soft glass-luxury gradient-soft hover-lift p-3 flex flex-col cursor-pointer text-luxury border-2 border-silver rounded-xl"
             >
               <h3 className="text-sm font-bold theme-text mb-2 underline font-serif">Horoscope</h3>
               <p className="text-xs theme-text text-left leading-relaxed flex-1 font-light line-clamp-2">
@@ -1144,7 +1144,7 @@ const AppLayout = ({ currentUserId, onDataReset }: AppLayoutProps) => {
                 setActiveSection('affirmation');
                 updateUserActivity('affirmation_access');
               }}
-              className="theme-primary border-soft glass-luxury gradient-soft hover-lift p-3 flex flex-col cursor-pointer text-luxury overflow-hidden border-2 border-silver"
+              className="theme-primary border-soft glass-luxury gradient-soft hover-lift p-3 flex flex-col cursor-pointer text-luxury overflow-hidden border-2 border-silver rounded-xl"
             >
               <h3 className="text-sm font-bold theme-text mb-2 underline font-serif">Affirmation</h3>
               <div className="flex-1 overflow-hidden">
@@ -1164,14 +1164,14 @@ const AppLayout = ({ currentUserId, onDataReset }: AppLayoutProps) => {
             <div className="w-72"></div>
             <div className="flex-1">
               <div className="max-w-6xl mx-auto">
-                <div className="grid grid-cols-3 gap-4 h-[120px] sm:h-[200px]">
+                <div className="grid grid-cols-3 gap-4 h-[160px] sm:h-[240px]">
                   {/* Horoscope Section - Luxury Enhanced */}
                   <button 
                     onClick={() => {
                       setActiveSection('horoscope');
                       updateUserActivity('horoscope_access');
                     }}
-                    className="theme-primary border-soft glass-luxury gradient-soft hover-lift p-3 sm:p-8 flex flex-col cursor-pointer text-luxury border-2 border-silver"
+                    className="theme-primary border-soft glass-luxury gradient-soft hover-lift p-3 sm:p-8 flex flex-col cursor-pointer text-luxury border-2 border-silver rounded-2xl"
                   >
                     <h3 className="text-lg sm:text-2xl font-bold theme-text mb-3 sm:mb-6 underline font-serif">Horoscope</h3>
                     <p className="text-sm sm:text-base theme-text text-left leading-relaxed flex-1 font-light">
@@ -1183,7 +1183,7 @@ const AppLayout = ({ currentUserId, onDataReset }: AppLayoutProps) => {
                   {/* Logo Section - Luxury Center - Enhanced Centering */}
                   <button 
                     onClick={() => setActiveSection('logo')}
-                    className="theme-card border-luxury glass-luxury gradient-luxury shadow-luxury hover-lift p-3 sm:p-8 flex flex-col items-center justify-center border-2 border-silver hover:border-silver-light transition-all cursor-pointer text-luxury relative"
+                    className="theme-card border-luxury glass-luxury gradient-luxury shadow-luxury hover-lift p-3 sm:p-8 flex flex-col items-center justify-center border-2 border-silver hover:border-silver-light transition-all cursor-pointer text-luxury relative rounded-2xl"
                   >
                     <div className="flex flex-col items-center justify-center h-full w-full">
                       <img src={chakraiLogo} alt="Chakrai" className="h-20 sm:h-32 w-auto mb-2 sm:mb-4 drop-shadow-lg flex-shrink-0" />
@@ -1200,7 +1200,7 @@ const AppLayout = ({ currentUserId, onDataReset }: AppLayoutProps) => {
                       setActiveSection('affirmation');
                       updateUserActivity('affirmation_access');
                     }}
-                    className="theme-primary border-soft glass-luxury gradient-soft hover-lift p-3 sm:p-8 flex flex-col cursor-pointer text-luxury overflow-hidden border-2 border-silver"
+                    className="theme-primary border-soft glass-luxury gradient-soft hover-lift p-3 sm:p-8 flex flex-col cursor-pointer text-luxury overflow-hidden border-2 border-silver rounded-2xl"
                   >
                     <h3 className="text-lg sm:text-2xl font-bold theme-text mb-3 sm:mb-6 underline font-serif">Affirmation</h3>
                     <div className="flex-1 overflow-hidden">
