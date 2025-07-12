@@ -146,6 +146,18 @@ h1, h2, h3, h4, h5, h6 {
   mix-blend-mode: screen;
 }
 
+/* Ensure header cards display fully */
+.header-card-container {
+  min-height: 300px !important;
+  height: auto !important;
+  overflow: visible !important;
+}
+
+.header-card-grid {
+  min-height: 300px !important;
+  height: auto !important;
+}
+
 .star {
   position: absolute;
   border-radius: 50%;
