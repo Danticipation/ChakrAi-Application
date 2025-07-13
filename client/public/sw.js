@@ -1,11 +1,12 @@
-const CACHE_NAME = 'Chakrai-wellness-v1-fresh';
+const CACHE_NAME = 'Chakrai-wellness-v3-new-logo';
 const urlsToCache = [
   '/',
   '/static/js/bundle.js',
   '/static/css/main.css',
   '/manifest.webmanifest',
-  '/pwa-icon-small.png',
-  '/pwa-icon-large.png'
+  '/pwa-192x192.png',
+  '/pwa-512x512.png',
+  '/apple-touch-icon.png'
 ];
 
 // Install service worker
