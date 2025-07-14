@@ -525,10 +525,10 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
     );
   }
 
-  // Floating chat box when open
+  // Floating chat box when open - mobile full screen, desktop floating
   return (
     <div 
-      className="fixed bottom-6 right-6 w-96 h-[500px] backdrop-blur-xl border-2 border-silver rounded-2xl shadow-2xl z-50 flex flex-col overflow-hidden"
+      className="fixed inset-0 md:bottom-6 md:right-6 md:w-96 md:h-[500px] md:inset-auto w-full h-full backdrop-blur-xl border-2 border-silver md:rounded-2xl shadow-2xl z-50 flex flex-col overflow-hidden"
       style={{
         background: `linear-gradient(135deg, var(--theme-background), var(--theme-surface))`
       }}
@@ -554,10 +554,10 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
         </div>
         <button
           onClick={onToggle}
-          className="bg-red-500 hover:bg-red-600 text-white transition-colors p-2 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 min-w-[40px] min-h-[40px] flex items-center justify-center"
+          className="bg-red-500 hover:bg-red-600 text-white transition-colors p-3 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 min-w-[50px] min-h-[50px] flex items-center justify-center border-2 border-white"
           title="Close Chat"
         >
-          <X size={24} />
+          <X size={28} />
         </button>
       </div>
 
