@@ -4,6 +4,7 @@ import { storage } from './storage.js';
 import { analyzeEmotionalState } from './emotionalAnalysis.js';
 import { openai } from './openaiRetry.js';
 import { userSessionManager } from './userSessionManager.js';
+import { pool } from './db.js';
 import { 
   analyzeConversationForMemory, 
   getSemanticContext, 
@@ -91,6 +92,61 @@ router.post('/clear-user-data', async (req, res) => {
 // ====================
 // CHAT & AI ENDPOINTS
 // ====================
+
+// Chat history endpoint with database persistence
+router.get('/chat/history/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { limit = 50 } = req.query;
+    
+    // Get device fingerprint for anonymous user identification
+    const deviceFingerprint = req.headers['x-device-fingerprint'];
+    const sessionId = req.headers['x-session-id'];
+    
+    console.log('Loading chat history for:', { userId, deviceFingerprint, sessionId });
+    
+    // Query chat messages from database
+    const result = await pool.query(`
+      SELECT 
+        id,
+        CASE WHEN sender = 'bot' THEN 'bot' ELSE 'user' END as sender,
+        message_text as text,
+        TO_CHAR(created_at, 'HH12:MI AM') as time,
+        created_at
+      FROM chat_messages 
+      WHERE user_id = $1 OR device_fingerprint = $2
+      ORDER BY created_at ASC
+      LIMIT $3
+    `, [userId, deviceFingerprint, limit]);
+    
+    const messages = result.rows.map(row => ({
+      sender: row.sender,
+      text: row.text,
+      time: row.time
+    }));
+    
+    console.log(`Loaded ${messages.length} chat messages from database`);
+    
+    res.json({ messages });
+  } catch (error) {
+    console.error('Error loading chat history:', error);
+    res.json({ messages: [] }); // Return empty array instead of error to prevent app crashes
+  }
+});
+
+// Function to save chat messages to database
+async function saveChatMessage(userId, messageText, sender, deviceFingerprint, sessionId) {
+  try {
+    await pool.query(`
+      INSERT INTO chat_messages (user_id, message_text, sender, device_fingerprint, session_id, created_at, updated_at)
+      VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
+    `, [userId, messageText, sender, deviceFingerprint, sessionId]);
+    
+    console.log(`Chat message saved: ${sender} - ${messageText.substring(0, 50)}...`);
+  } catch (error) {
+    console.error('Error saving chat message:', error);
+  }
+}
 
 // Main chat endpoint with AI integration and semantic memory recall
 router.post('/chat', async (req, res) => {
@@ -265,21 +321,13 @@ Respond with semantic awareness, making natural references to past conversations
     try {
       console.log(`Storing messages for userId: ${userId}`);
       
-      // Store user message
-      const userMessage = await storage.createMessage({
-        userId: userId,
-        content: message,
-        isBot: false
-      });
-      console.log('User message stored:', userMessage.id);
+      // Store user message in database
+      await saveChatMessage(userId, message, 'user', sessionInfo.deviceFingerprint, sessionInfo.sessionId);
+      console.log('User message saved to database');
       
-      // Store bot response
-      const botMessage = await storage.createMessage({
-        userId: userId,
-        content: aiResponse,
-        isBot: true
-      });
-      console.log('Bot message stored:', botMessage.id);
+      // Store bot response in database
+      await saveChatMessage(userId, aiResponse, 'bot', sessionInfo.deviceFingerprint, sessionInfo.sessionId);
+      console.log('Bot message saved to database');
       
       console.log(`Chat messages stored successfully for user ${userId}`);
     } catch (error) {
