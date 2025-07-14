@@ -472,7 +472,7 @@ export class DbStorage implements IStorage {
   // Messages
   async getMessagesByUserId(userId: number, limit: number = 50): Promise<Message[]> {
     console.log(`Fetching messages for userId: ${userId} with limit: ${limit}`);
-    const result = await this.db.select().from(messages).where(eq(messages.userId, userId)).orderBy(desc(messages.timestamp)).limit(limit);
+    const result = await this.db.select().from(messages).where(eq(messages.userId, userId)).orderBy(messages.timestamp).limit(limit);
     console.log(`Found ${result.length} messages for user ${userId}`);
     return result;
   }
