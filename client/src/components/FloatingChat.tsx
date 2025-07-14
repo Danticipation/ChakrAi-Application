@@ -271,7 +271,7 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
         console.log('📊 Final chunks array length:', chunks.length);
         
         // Force a small delay to ensure all chunks are collected
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise(resolve => setTimeout(resolve, 200));
         
         console.log('📊 After delay - chunks array length:', chunks.length);
         
@@ -281,7 +281,7 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
           return;
         }
 
-        // Log each chunk
+        // Log each chunk and calculate total size
         let totalSize = 0;
         chunks.forEach((chunk, index) => {
           console.log(`📦 Processing chunk ${index + 1}: ${chunk.size} bytes, type: ${chunk.type}`);
@@ -315,6 +315,9 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
         
         // Cleanup
         stream.getTracks().forEach(track => track.stop());
+        setIsRecording(false);
+        setMediaRecorder(null);
+        setAudioChunks([]);
       };
 
       recorder.onerror = (event) => {
@@ -365,20 +368,26 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
   };
 
   const stopRecording = () => {
-    console.log('🛑 Stop recording button clicked');
-    console.log('📱 Current mediaRecorder:', mediaRecorder);
+    console.log('🛑 STOP BUTTON CLICKED - User wants to stop recording');
+    console.log('📱 Current mediaRecorder exists:', !!mediaRecorder);
     console.log('📊 MediaRecorder state:', mediaRecorder?.state);
+    console.log('🎤 Current recording state:', isRecording);
     
     if (mediaRecorder && mediaRecorder.state === 'recording') {
-      console.log('✅ Stopping MediaRecorder...');
+      console.log('✅ MediaRecorder is recording - calling stop()...');
+      console.log('📊 Audio chunks collected so far:', audioChunks.length);
       mediaRecorder.stop();
-      setIsRecording(false);
-      console.log('🔄 Component recording state set to false');
+      console.log('🔄 MediaRecorder.stop() called - waiting for onstop event...');
+    } else if (mediaRecorder && mediaRecorder.state === 'paused') {
+      console.log('⏸️ MediaRecorder is paused - stopping anyway...');
+      mediaRecorder.stop();
     } else {
-      console.warn('⚠️ Cannot stop recording - mediaRecorder not in recording state');
+      console.warn('⚠️ MediaRecorder not available or not recording');
       console.log('🔍 MediaRecorder exists:', !!mediaRecorder);
       console.log('🔍 MediaRecorder state:', mediaRecorder?.state);
+      console.log('🔍 Is recording state:', isRecording);
       setIsRecording(false); // Reset state anyway
+      alert('Recording session not active. Please start recording first.');
     }
   };
 
