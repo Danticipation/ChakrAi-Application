@@ -24,7 +24,9 @@ Chakrai is a professional mental wellness and therapy application designed for p
 - **Production Ready Chat Persistence**: Complete chat history system operational with PostgreSQL persistence, proper message ordering, and seamless user experience
 - **AI Agent Intelligence Restored**: Replaced hardcoded static responses with OpenAI GPT-4o-mini integration providing contextual, empathetic mental wellness support
 - **Dynamic Response Generation**: AI now provides personalized responses based on user input with emotional validation, practical wellness advice, and encouraging personal growth
-- **Therapeutic AI Personality**: Implemented Chakrai as intelligent mental wellness companion focused on supportive, empathetic responses rather than generic templates
+- **Natural Conversational AI**: Completely redesigned AI personality to engage in authentic conversation first, avoiding immediate "therapist mode" responses
+- **Contextual Support Mode**: AI only shifts to therapeutic support when users explicitly ask for help or share distress, allowing natural conversation flow
+- **Friend-Like Engagement**: AI now acts like a thoughtful friend who cares about wellbeing rather than a clinical therapist, asking genuine follow-up questions and sharing curiosity
 
 ### July 14, 2025 - CHAT NAVIGATION ISSUE COMPLETELY RESOLVED - Enhanced Mobile Close Button Implementation
 - **Critical Navigation Fix**: Successfully resolved chat interface navigation issue where users could not return to main wellness features
