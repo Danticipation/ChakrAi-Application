@@ -364,18 +364,28 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
       formData.append('audio', audioBlob, 'recording.webm');
 
       console.log('🚀 Uploading audio for transcription...');
+      console.log('📡 Request URL: /api/transcribe');
+      console.log('📋 FormData details:');
+      console.log('  - Audio blob size:', audioBlob.size);
+      console.log('  - Audio blob type:', audioBlob.type);
+      
       const response = await axios.post('/api/transcribe', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
         timeout: 30000 // 30 second timeout
       });
 
-      console.log('✅ Transcription response:', response.data);
+      console.log('✅ Transcription response received');
+      console.log('📊 Response status:', response.status);
+      console.log('📋 Response headers:', response.headers);
+      console.log('📝 Response data:', response.data);
 
       if (response.data.text && response.data.text.trim()) {
-        console.log('📝 Transcribed text:', response.data.text);
+        console.log('🎉 Transcribed text:', response.data.text);
+        console.log('💬 Sending transcribed text to chat...');
         await sendMessage(response.data.text);
       } else {
-        console.error('❌ No text transcribed');
+        console.error('❌ No text transcribed in response');
+        console.log('🔍 Full response object:', JSON.stringify(response.data, null, 2));
         alert('Could not understand the audio. Please try speaking more clearly.');
       }
     } catch (error) {

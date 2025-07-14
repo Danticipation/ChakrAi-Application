@@ -360,21 +360,36 @@ router.get('/chat/history/:userId?', async (req, res) => {
 // Voice transcription endpoint
 router.post('/transcribe', upload.single('audio'), async (req, res) => {
   try {
+    console.log('🎯 Transcribe endpoint called');
+    console.log('📁 File received:', !!req.file);
+    
     if (!req.file) {
+      console.error('❌ No audio file in request');
       return res.status(400).json({ error: 'No audio file provided' });
     }
 
+    console.log('📊 Audio file details:');
+    console.log('  - Size:', req.file.size, 'bytes');
+    console.log('  - Type:', req.file.mimetype);
+    console.log('  - Buffer length:', req.file.buffer.length);
+
     if (!process.env.OPENAI_API_KEY) {
+      console.error('❌ No OpenAI API key found');
       return res.status(503).json({ 
         error: 'Voice transcription temporarily unavailable',
         errorType: 'auth_error'
       });
     }
 
+    console.log('🔑 OpenAI API key exists:', process.env.OPENAI_API_KEY ? 'Yes' : 'No');
+
     const formData = new FormData();
     const audioBlob = new Blob([req.file.buffer], { type: req.file.mimetype });
     formData.append('file', audioBlob, 'audio.webm');
     formData.append('model', 'whisper-1');
+
+    console.log('🚀 Sending request to OpenAI Whisper API...');
+    console.log('📡 Request URL: https://api.openai.com/v1/audio/transcriptions');
 
     const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
       method: 'POST',
@@ -384,24 +399,37 @@ router.post('/transcribe', upload.single('audio'), async (req, res) => {
       body: formData
     });
 
+    console.log('📥 OpenAI response status:', response.status);
+    console.log('📋 Response headers:', Object.fromEntries(response.headers.entries()));
+
     if (!response.ok) {
+      console.error('❌ OpenAI API error response');
+      const errorText = await response.text();
+      console.error('🔍 Error details:', errorText);
+      
       if (response.status === 429) {
         return res.status(429).json({ 
           error: 'Voice transcription temporarily unavailable due to high demand',
           errorType: 'quota_exceeded'
         });
       }
-      throw new Error(`OpenAI API error: ${response.status}`);
+      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
     }
 
     const result = await response.json();
+    console.log('✅ Transcription successful!');
+    console.log('📝 Transcribed text:', result.text);
+    console.log('🎉 Sending response back to client');
+    
     res.json({ text: result.text });
 
   } catch (error) {
-    console.error('Transcription error:', error);
+    console.error('🚨 Transcription error:', error);
+    console.error('🔍 Error stack:', error.stack);
     res.status(500).json({ 
       error: 'Voice transcription failed. Please try again.',
-      errorType: 'transcription_error'
+      errorType: 'transcription_error',
+      details: error.message
     });
   }
 });
