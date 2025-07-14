@@ -525,6 +525,33 @@ app.post('/api/chat', async (req, res) => {
     
     console.log(`Chat request for userId: ${userId}, message: "${message}"`);
     
+    // Get recent conversation history for context
+    const recentMessages = await storage.getMessagesByUserId(userId, 10); // Get last 10 messages
+    
+    // Build conversation history for OpenAI
+    const conversationMessages = [
+      {
+        role: 'system',
+        content: 'You are Chakrai, a curious and engaging conversationalist. Have normal, authentic conversations like you would with a friend. Be genuinely interested in what people share - ask about their day, their interests, their thoughts. Respond naturally and personally. Share observations, ask follow-up questions, and engage with the actual content of what they\'re saying. DO NOT immediately jump into "support" mode or therapeutic language unless someone explicitly asks for help or shares something distressing. Just be a real person having a real conversation. Think of yourself as someone\'s friendly, thoughtful companion who happens to care about their wellbeing, not a therapist or counselor.'
+      }
+    ];
+    
+    // Add recent conversation history
+    recentMessages.forEach(msg => {
+      conversationMessages.push({
+        role: msg.isBot ? 'assistant' : 'user',
+        content: msg.content
+      });
+    });
+    
+    // Add current message
+    conversationMessages.push({
+      role: 'user',
+      content: message
+    });
+    
+    console.log(`Including ${recentMessages.length} previous messages for context`);
+    
     // Generate AI response using OpenAI
     let aiResponse = '';
     try {
@@ -536,16 +563,7 @@ app.post('/api/chat', async (req, res) => {
         },
         body: JSON.stringify({
           model: 'gpt-3.5-turbo',
-          messages: [
-            {
-              role: 'system',
-              content: 'You are Chakrai, a curious and engaging conversationalist. Have normal, authentic conversations like you would with a friend. Be genuinely interested in what people share - ask about their day, their interests, their thoughts. Respond naturally and personally. Share observations, ask follow-up questions, and engage with the actual content of what they\'re saying. DO NOT immediately jump into "support" mode or therapeutic language unless someone explicitly asks for help or shares something distressing. Just be a real person having a real conversation. Think of yourself as someone\'s friendly, thoughtful companion who happens to care about their wellbeing, not a therapist or counselor.'
-            },
-            {
-              role: 'user',
-              content: message
-            }
-          ],
+          messages: conversationMessages,
           max_tokens: 150,
           temperature: 0.7
         })

@@ -29,6 +29,7 @@ Chakrai is a professional mental wellness and therapy application designed for p
 - **Friend-Like Engagement**: AI now acts like a thoughtful friend who cares about wellbeing rather than a clinical therapist, asking genuine follow-up questions and sharing curiosity
 - **Extended Recording Time**: Increased voice recording timeout from 30 seconds to 3 minutes, eliminating mid-sentence cutoffs during longer voice responses
 - **Cost-Optimized Testing**: Switched AI model from GPT-4o-mini to GPT-3.5-turbo for significantly reduced testing costs during development phase
+- **Conversation Memory Restored**: Fixed AI memory system to include last 10 messages as context, eliminating repetitive questions and maintaining conversation continuity
 
 ### July 14, 2025 - CHAT NAVIGATION ISSUE COMPLETELY RESOLVED - Enhanced Mobile Close Button Implementation
 - **Critical Navigation Fix**: Successfully resolved chat interface navigation issue where users could not return to main wellness features
