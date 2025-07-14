@@ -374,13 +374,13 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
       console.log('✅ Recording started - state:', recorder.state);
       console.log('🎤 Component recording state updated');
 
-      // Auto-stop after 30 seconds for safety
+      // Auto-stop after 3 minutes for safety
       setTimeout(() => {
         if (recorder.state === 'recording') {
-          console.log('⏰ Auto-stopping recording after 30 seconds');
+          console.log('⏰ Auto-stopping recording after 3 minutes');
           stopRecording();
         }
-      }, 30000);
+      }, 180000);
 
     } catch (error) {
       console.error('🚨 Mobile microphone error:', error);
