@@ -264,8 +264,9 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
       };
 
       recorder.onstop = async () => {
-        console.log('🔴 Recording stopped, processing audio...');
+        console.log('🔴 MediaRecorder onstop event fired!');
         console.log('📊 Total chunks collected:', chunks.length);
+        console.log('🎯 Processing audio chunks...');
         
         if (chunks.length > 0) {
           // Log each chunk for debugging
@@ -282,15 +283,29 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
             console.log('🔍 This might be too short for transcription');
           }
 
-          console.log('🚀 Sending audio to transcription service...');
-          await sendAudioToWhisper(audioBlob);
+          console.log('🚀 About to call sendAudioToWhisper...');
+          console.log('📋 sendAudioToWhisper function exists:', typeof sendAudioToWhisper);
+          
+          try {
+            await sendAudioToWhisper(audioBlob);
+            console.log('✅ sendAudioToWhisper completed successfully');
+          } catch (error) {
+            console.error('❌ sendAudioToWhisper failed:', error);
+            console.error('🔍 Error details:', error.message);
+            console.error('🔍 Error stack:', error.stack);
+            alert(`Transcription error: ${error.message}`);
+          }
         } else {
-          console.error('❌ No audio data captured');
+          console.error('❌ No audio data captured - chunks array is empty');
           alert('No audio captured. Please try again and speak closer to the microphone.');
         }
         
         console.log('🧹 Cleaning up media stream...');
-        stream.getTracks().forEach(track => track.stop());
+        stream.getTracks().forEach(track => {
+          console.log('🔇 Stopping track:', track.kind, track.label);
+          track.stop();
+        });
+        console.log('✅ Media stream cleanup complete');
       };
 
       recorder.onerror = (event) => {
@@ -341,9 +356,20 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
   };
 
   const stopRecording = () => {
+    console.log('🛑 Stop recording button clicked');
+    console.log('📱 Current mediaRecorder:', mediaRecorder);
+    console.log('📊 MediaRecorder state:', mediaRecorder?.state);
+    
     if (mediaRecorder && mediaRecorder.state === 'recording') {
+      console.log('✅ Stopping MediaRecorder...');
       mediaRecorder.stop();
       setIsRecording(false);
+      console.log('🔄 Component recording state set to false');
+    } else {
+      console.warn('⚠️ Cannot stop recording - mediaRecorder not in recording state');
+      console.log('🔍 MediaRecorder exists:', !!mediaRecorder);
+      console.log('🔍 MediaRecorder state:', mediaRecorder?.state);
+      setIsRecording(false); // Reset state anyway
     }
   };
 
@@ -390,7 +416,13 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
       }
     } catch (error) {
       console.error('🚨 Transcription error:', error);
+      console.error('🔍 Error type:', typeof error);
+      console.error('🔍 Error constructor:', error.constructor.name);
+      
       const err = error as any;
+      console.error('🔍 Error response:', err?.response);
+      console.error('🔍 Error status:', err?.response?.status);
+      console.error('🔍 Error data:', err?.response?.data);
       
       let errorMessage = 'Voice transcription failed. ';
       if (err?.code === 'ECONNABORTED' || err?.message?.includes('timeout')) {
@@ -399,10 +431,13 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
         errorMessage += 'Recording file too large. Please record for less time.';
       } else if (err?.response?.status === 401) {
         errorMessage += 'API key issue. Please check voice settings.';
+      } else if (err?.response?.status === 500) {
+        errorMessage += `Server error: ${err?.response?.data?.error || 'Unknown server error'}`;
       } else {
-        errorMessage += 'Please check your internet connection and try again.';
+        errorMessage += `${err?.message || 'Please check your internet connection and try again.'}`;
       }
       
+      console.error('🚨 Final error message:', errorMessage);
       alert(errorMessage);
     }
   };
