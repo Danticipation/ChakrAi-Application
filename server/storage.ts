@@ -104,7 +104,7 @@ export interface IStorage {
   updateBot(id: number, data: Partial<InsertBot>): Promise<Bot>;
   
   // Messages
-  getMessagesByUserId(userId: number): Promise<Message[]>;
+  getMessagesByUserId(userId: number, limit?: number): Promise<Message[]>;
   createMessage(data: InsertMessage): Promise<Message>;
   
   // Learned Words
@@ -470,22 +470,31 @@ export class DbStorage implements IStorage {
   }
 
   // Messages
-  async getMessagesByUserId(userId: number): Promise<Message[]> {
-    return await this.db.select().from(messages).where(eq(messages.userId, userId)).orderBy(desc(messages.timestamp));
+  async getMessagesByUserId(userId: number, limit: number = 50): Promise<Message[]> {
+    console.log(`Fetching messages for userId: ${userId} with limit: ${limit}`);
+    const result = await this.db.select().from(messages).where(eq(messages.userId, userId)).orderBy(desc(messages.timestamp)).limit(limit);
+    console.log(`Found ${result.length} messages for user ${userId}`);
+    return result;
   }
 
   async createMessage(data: InsertMessage): Promise<Message> {
     // Map content to text field since text is NOT NULL and content is nullable
     const messageData = {
       userId: data.userId,
-      text: data.content,
+      text: data.content || '', // Ensure text is not null
       content: data.content,
       isBot: data.isBot || false,
       timestamp: new Date()
     };
     
-    const [message] = await this.db.insert(messages).values(messageData).returning();
-    return message;
+    try {
+      const [message] = await this.db.insert(messages).values(messageData).returning();
+      console.log('Message saved successfully:', message.id);
+      return message;
+    } catch (error) {
+      console.error('Error saving message:', error);
+      throw error;
+    }
   }
 
   // Learned Words
