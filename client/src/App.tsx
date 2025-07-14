@@ -36,7 +36,7 @@ import MicroSession from './components/MicroSession';
 import TherapeuticAnalytics from './components/TherapeuticAnalytics';
 import { EHRIntegration } from './components/EHRIntegration';
 import PrivacyPolicy from './components/PrivacyPolicy';
-import FloatingChat from './components/FloatingChat_new';
+import FloatingChat from './components/FloatingChat';
 import ChallengeSystem from './components/ChallengeSystem';
 import SettingsPanel from './components/SettingsPanel';
 // import DynamicAmbientSound from './components/DynamicAmbientSound'; // DISABLED due to audio issues
