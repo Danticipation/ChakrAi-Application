@@ -69,16 +69,16 @@ const DebugLog: React.FC<DebugLogProps> = ({ isVisible, onToggle }) => {
     return (
       <button
         onClick={onToggle}
-        className="fixed top-4 right-4 z-50 bg-blue-500 text-white px-3 py-1 rounded text-sm"
+        className="fixed top-4 right-4 z-50 bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded text-sm shadow-lg"
       >
-        Debug Log
+        Debug
       </button>
     );
   }
 
   return (
-    <div className="fixed top-0 left-0 right-0 bottom-0 z-40 bg-black/80 flex items-center justify-center p-4" style={{ pointerEvents: 'none' }}>
-      <div className="bg-gray-900 text-white rounded-lg w-full max-w-2xl h-[80vh] flex flex-col" style={{ pointerEvents: 'auto' }}>
+    <div className="fixed top-4 left-4 right-4 z-30 pointer-events-none">
+      <div className="bg-gray-900/95 text-white rounded-lg max-w-sm h-[60vh] flex flex-col ml-auto pointer-events-auto backdrop-blur-sm border border-gray-700">
         <div className="flex justify-between items-center p-4 border-b border-gray-700">
           <h3 className="text-lg font-semibold">Debug Log</h3>
           <div className="flex gap-2">
