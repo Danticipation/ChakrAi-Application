@@ -265,14 +265,31 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
 
       recorder.onstop = async () => {
         console.log('🔴 Recording stopped, processing audio...');
+        console.log('📊 Total chunks collected:', chunks.length);
+        
         if (chunks.length > 0) {
-          const audioBlob = new Blob(chunks, { type: mimeType });
-          console.log('🎵 Audio blob created:', audioBlob.size, 'bytes');
+          // Log each chunk for debugging
+          chunks.forEach((chunk, index) => {
+            console.log(`📦 Chunk ${index + 1}: ${chunk.size} bytes, type: ${chunk.type}`);
+          });
+
+          const audioBlob = new Blob(chunks, { type: recorder.mimeType || mimeType || 'audio/webm' });
+          console.log('🎵 Audio blob created:', audioBlob.size, 'bytes, type:', audioBlob.type);
+          console.log('🎯 Recorder MIME type used:', recorder.mimeType);
+          
+          if (audioBlob.size < 1000) {
+            console.warn('⚠️ Very small audio file:', audioBlob.size, 'bytes');
+            console.log('🔍 This might be too short for transcription');
+          }
+
+          console.log('🚀 Sending audio to transcription service...');
           await sendAudioToWhisper(audioBlob);
         } else {
           console.error('❌ No audio data captured');
           alert('No audio captured. Please try again and speak closer to the microphone.');
         }
+        
+        console.log('🧹 Cleaning up media stream...');
         stream.getTracks().forEach(track => track.stop());
       };
 
@@ -335,10 +352,12 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
       console.log('🎯 Sending audio to Whisper for transcription...');
       console.log('📊 Audio size:', audioBlob.size, 'bytes, type:', audioBlob.type);
       
-      if (audioBlob.size < 1000) {
+      if (audioBlob.size < 500) {
         console.error('❌ Audio file too small:', audioBlob.size, 'bytes');
         alert('Recording too short. Please speak for at least 1-2 seconds.');
         return;
+      } else if (audioBlob.size < 1000) {
+        console.warn('⚠️ Small audio file:', audioBlob.size, 'bytes - proceeding anyway');
       }
 
       const formData = new FormData();
