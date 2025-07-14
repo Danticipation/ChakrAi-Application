@@ -480,7 +480,8 @@ export class DbStorage implements IStorage {
   async createMessage(data: InsertMessage): Promise<Message> {
     const messageData = {
       userId: data.userId,
-      content: data.content || '', // Ensure content is not null (schema requirement)
+      text: data.content || '', // Use text field which is required by database schema
+      content: data.content || '', // Also set content for compatibility
       isBot: data.isBot || false,
       timestamp: new Date()
     };

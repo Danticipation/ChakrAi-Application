@@ -78,10 +78,14 @@ export const bots = pgTable("bots", {
 
 export const messages = pgTable("messages", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(),
-  content: text("content").notNull(),
+  userId: integer("user_id"),
+  botId: integer("bot_id"),
+  sender: text("sender"),
+  text: text("text").notNull(), // Required field matching database schema
+  content: text("content"), // Optional compatibility field
   isBot: boolean("is_bot").default(false),
   timestamp: timestamp("timestamp").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const learnedWords = pgTable("learned_words", {

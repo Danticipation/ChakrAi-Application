@@ -133,15 +133,15 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
 
       const botMessage: Message = {
         sender: 'bot',
-        text: response.data.response,
+        text: response.data.message,
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
 
       setMessages(prev => [...prev, botMessage]);
 
       // Auto-play voice response if voice is enabled
-      if (selectedVoice && response.data.response) {
-        playVoiceResponse(response.data.response);
+      if (selectedVoice && response.data.message) {
+        playVoiceResponse(response.data.message);
       }
     } catch (error) {
       console.error('Error sending message:', error);

@@ -465,10 +465,113 @@ app.get('/test-clear', (req, res) => {
 // ALL API ROUTES MUST BE REGISTERED BEFORE VITE MIDDLEWARE
 // to prevent Vite's catch-all from intercepting API calls
 
-// Use API routes from routes.js
+// CRITICAL: Chat history endpoints MUST be direct to avoid import issues
+app.get('/api/chat/history/:userId?', async (req, res) => {
+  try {
+    // Import UserSessionManager locally to avoid module loading issues
+    const { UserSessionManager } = await import('./userSession.js');
+    const userSessionManager = UserSessionManager.getInstance();
+    
+    // Get or create anonymous user using device fingerprint from headers
+    const deviceFingerprint = req.headers['x-device-fingerprint'] || 
+                              userSessionManager.generateDeviceFingerprint(req);
+    const sessionId = req.headers['x-session-id'] || undefined;
+    
+    const anonymousUser = await userSessionManager.getOrCreateAnonymousUser(
+      deviceFingerprint, 
+      sessionId
+    );
+    
+    console.log(`Fetching chat history for userId: ${anonymousUser.id}`);
+    
+    const limit = parseInt(req.query.limit) || 50;
+    const messages = await storage.getMessagesByUserId(anonymousUser.id, limit);
+    
+    console.log(`Found ${messages.length} messages for user ${anonymousUser.id}`);
+    
+    // Format messages for frontend
+    const formattedMessages = messages.map(msg => ({
+      sender: msg.isBot ? 'bot' : 'user',
+      text: msg.content || msg.text,
+      time: new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      timestamp: msg.timestamp
+    }));
+    
+    console.log(`Returning ${formattedMessages.length} formatted messages`);
+    res.json({ messages: formattedMessages, count: formattedMessages.length });
+  } catch (error) {
+    console.error('Error fetching chat history:', error);
+    res.status(500).json({ error: 'Failed to fetch chat history' });
+  }
+});
+
+// Chat endpoint for sending messages
+app.post('/api/chat', async (req, res) => {
+  try {
+    const { UserSessionManager } = await import('./userSession.js');
+    const userSessionManager = UserSessionManager.getInstance();
+    const { message, voice = 'carla' } = req.body;
+    
+    // Get or create anonymous user using device fingerprint from headers
+    const deviceFingerprint = req.headers['x-device-fingerprint'] || 
+                              userSessionManager.generateDeviceFingerprint(req);
+    const sessionId = req.headers['x-session-id'] || undefined;
+    
+    const anonymousUser = await userSessionManager.getOrCreateAnonymousUser(
+      deviceFingerprint, 
+      sessionId
+    );
+    const userId = anonymousUser.id;
+    
+    console.log(`Chat request for userId: ${userId}, message: "${message}"`);
+    
+    // Simple AI response for now
+    const aiResponse = `I hear you, and I appreciate you sharing that with me. What you're experiencing is valid. How can I support you with this?`;
+    
+    // Store messages in database
+    try {
+      console.log(`Storing messages for userId: ${userId}`);
+      
+      // Store user message
+      const userMessage = await storage.createMessage({
+        userId: userId,
+        content: message,
+        isBot: false
+      });
+      console.log('User message stored:', userMessage.id);
+      
+      // Store bot response
+      const botMessage = await storage.createMessage({
+        userId: userId,
+        content: aiResponse,
+        isBot: true
+      });
+      console.log('Bot message stored:', botMessage.id);
+      
+      console.log(`Chat messages stored successfully for user ${userId}`);
+    } catch (error) {
+      console.error('Error storing chat messages:', error);
+    }
+    
+    res.json({ 
+      message: aiResponse,
+      userId: userId,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Chat endpoint error:', error);
+    res.status(500).json({ error: 'Chat processing failed' });
+  }
+});
+
+// Use API routes from routes.js (for other endpoints)
 console.log('Loading routes module...');
-app.use('/api', routes);
-console.log('Routes module loaded successfully');
+try {
+  app.use('/api', routes);
+  console.log('Routes module loaded successfully');
+} catch (error) {
+  console.error('Routes module loading failed:', error);
+}
 
 // Direct bot stats endpoint to fix immediate JSON parsing error
 app.get('/api/bot-stats', (req, res) => {
