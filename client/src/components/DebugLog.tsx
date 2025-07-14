@@ -77,8 +77,8 @@ const DebugLog: React.FC<DebugLogProps> = ({ isVisible, onToggle }) => {
   }
 
   return (
-    <div className="fixed top-0 left-0 right-0 bottom-0 z-50 bg-black/80 flex items-center justify-center p-4">
-      <div className="bg-gray-900 text-white rounded-lg w-full max-w-2xl h-[80vh] flex flex-col">
+    <div className="fixed top-0 left-0 right-0 bottom-0 z-40 bg-black/80 flex items-center justify-center p-4" style={{ pointerEvents: 'none' }}>
+      <div className="bg-gray-900 text-white rounded-lg w-full max-w-2xl h-[80vh] flex flex-col" style={{ pointerEvents: 'auto' }}>
         <div className="flex justify-between items-center p-4 border-b border-gray-700">
           <h3 className="text-lg font-semibold">Debug Log</h3>
           <div className="flex gap-2">

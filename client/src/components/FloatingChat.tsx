@@ -300,11 +300,16 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
         }
 
         console.log('🚀 SENDING TO TRANSCRIPTION...');
+        console.log('🔍 About to call sendAudioToWhisper function');
         try {
-          await sendAudioToWhisper(audioBlob);
-          console.log('✅ Transcription process completed');
+          const result = await sendAudioToWhisper(audioBlob);
+          console.log('✅ Transcription process completed successfully');
+          console.log('📝 Transcription result:', result);
         } catch (error) {
           console.error('❌ TRANSCRIPTION FAILED:', error);
+          console.error('🔍 Error type:', typeof error);
+          console.error('🔍 Error message:', (error as Error)?.message);
+          console.error('🔍 Full error object:', error);
           alert(`Transcription failed: ${(error as Error).message}`);
         }
         
