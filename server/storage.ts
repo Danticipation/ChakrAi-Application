@@ -478,16 +478,15 @@ export class DbStorage implements IStorage {
   }
 
   async createMessage(data: InsertMessage): Promise<Message> {
-    // Map content to text field since text is NOT NULL and content is nullable
     const messageData = {
       userId: data.userId,
-      text: data.content || '', // Ensure text is not null
-      content: data.content,
+      content: data.content || '', // Ensure content is not null (schema requirement)
       isBot: data.isBot || false,
       timestamp: new Date()
     };
     
     try {
+      console.log('Attempting to save message:', messageData);
       const [message] = await this.db.insert(messages).values(messageData).returning();
       console.log('Message saved successfully:', message.id);
       return message;

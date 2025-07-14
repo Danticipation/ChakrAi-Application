@@ -554,9 +554,10 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
         </div>
         <button
           onClick={onToggle}
-          className="theme-text-secondary hover:theme-text transition-colors p-1 hover:bg-white/10 rounded-full"
+          className="bg-red-500 hover:bg-red-600 text-white transition-colors p-2 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 min-w-[40px] min-h-[40px] flex items-center justify-center"
+          title="Close Chat"
         >
-          <X size={20} />
+          <X size={24} />
         </button>
       </div>
 
