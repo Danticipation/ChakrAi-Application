@@ -29,7 +29,7 @@ Extract semantic information and return JSON with:
 Focus on therapeutically relevant information that could be referenced in future conversations.`;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-3.5-turbo",
       messages: [{ role: "user", content: analysisPrompt }],
       response_format: { type: "json_object" },
       temperature: 0.3
@@ -142,7 +142,7 @@ Return JSON with:
 }`;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-3.5-turbo",
       messages: [{ role: "user", content: contextPrompt }],
       response_format: { type: "json_object" },
       temperature: 0.2
@@ -211,7 +211,7 @@ Return JSON with:
 }`;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4o", 
+      model: "gpt-3.5-turbo", 
       messages: [{ role: "user", content: referencePrompt }],
       response_format: { type: "json_object" },
       temperature: 0.4
@@ -272,7 +272,7 @@ Generate insights about patterns, growth, concerns, and progress. Return JSON wi
 Focus on therapeutically valuable insights that show progress, patterns, or areas for attention.`;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-3.5-turbo",
       messages: [{ role: "user", content: insightPrompt }],
       response_format: { type: "json_object" },
       temperature: 0.3
