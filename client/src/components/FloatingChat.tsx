@@ -37,10 +37,14 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
     scrollToBottom();
   }, [messages]);
 
-  // Load chat history when component opens
+  // Load chat history when component opens and clear when closes
   useEffect(() => {
-    if (isOpen && messages.length === 0) {
+    if (isOpen) {
+      console.log('🔄 Chat opening - loading fresh history from database');
       loadChatHistory();
+    } else {
+      console.log('🔄 Chat closing - clearing message state for next session');
+      setMessages([]);
     }
   }, [isOpen]);
 
