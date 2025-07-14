@@ -470,25 +470,18 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
   // Chat bubble when closed
   if (!isOpen) {
     return (
-      <>
-        <div className="fixed bottom-6 right-6 z-50">
-          <button
-            onClick={onToggle}
-            className="theme-primary hover:theme-primary-dark theme-text p-4 rounded-full shadow-2xl transition-all duration-300 hover:scale-110 animate-pulse"
-            style={{ 
-              backdropFilter: 'blur(10px)',
-              background: `linear-gradient(135deg, var(--theme-primary), var(--theme-accent))`
-            }}
-          >
-            <MessageCircle size={24} />
-          </button>
-        </div>
-        {/* Debug Log always available */}
-        <DebugLog 
-          isVisible={showDebugLog} 
-          onToggle={() => setShowDebugLog(!showDebugLog)} 
-        />
-      </>
+      <div className="fixed bottom-6 right-6 z-50">
+        <button
+          onClick={onToggle}
+          className="theme-primary hover:theme-primary-dark theme-text p-4 rounded-full shadow-2xl transition-all duration-300 hover:scale-110 animate-pulse"
+          style={{ 
+            backdropFilter: 'blur(10px)',
+            background: `linear-gradient(135deg, var(--theme-primary), var(--theme-accent))`
+          }}
+        >
+          <MessageCircle size={24} />
+        </button>
+      </div>
     );
   }
 
@@ -669,7 +662,7 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
         )}
       </div>
       
-      {/* Debug Log for mobile testing */}
+      {/* Debug Log only when chat is open */}
       <DebugLog 
         isVisible={showDebugLog} 
         onToggle={() => setShowDebugLog(!showDebugLog)} 
