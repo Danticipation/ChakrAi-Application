@@ -139,7 +139,8 @@ const AppLayout = ({ currentUserId, onDataReset }: AppLayoutProps) => {
     'privacy': 'Advanced privacy controls with zero-knowledge encryption, differential privacy analytics, and GDPR compliance features.',
     'outcomes': 'Therapeutic outcome tracking with evidence-based metrics, progress indicators, and clinical assessment tools.',
     'ehr': 'Electronic health record integration with FHIR standards, insurance-eligible session summaries, and clinical data export.',
-    'privacy-policy': 'Complete privacy policy and legal compliance information for Chakrai mental wellness companion services.'
+    'privacy-policy': 'Complete privacy policy and legal compliance information for Chakrai mental wellness companion services.',
+    'microphone-test': 'Comprehensive microphone diagnostic tool to test browser compatibility, device permissions, MediaRecorder support, and audio recording functionality on your mobile device.'
   };
   const [newUserName, setNewUserName] = useState('');
   const [userQuery, setUserQuery] = useState('');
@@ -842,6 +843,9 @@ const AppLayout = ({ currentUserId, onDataReset }: AppLayoutProps) => {
 
       case 'privacy-policy':
         return <PrivacyCompliance />;
+
+      case 'microphone-test':
+        return <MicrophoneTest />;
 
       default:
         return (
