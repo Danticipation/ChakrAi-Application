@@ -257,57 +257,59 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
       console.log('🎛️ MediaRecorder mimeType:', recorder.mimeType);
 
       recorder.ondataavailable = (event) => {
-        console.log('📦 Audio data chunk:', event.data.size, 'bytes, type:', event.data.type);
+        console.log('📦 Audio data chunk received:', event.data.size, 'bytes, type:', event.data.type);
         if (event.data.size > 0) {
           chunks.push(event.data);
+          console.log('📊 Total chunks collected so far:', chunks.length);
         } else {
-          console.warn('⚠️ Received empty audio chunk');
+          console.warn('⚠️ Received empty audio chunk - this is unusual');
         }
       };
 
       recorder.onstop = async () => {
-        console.log('🔴 MediaRecorder onstop event fired!');
-        console.log('📊 Total chunks collected:', chunks.length);
-        console.log('🎯 Processing audio chunks...');
+        console.log('🔴 CRITICAL: MediaRecorder onstop event fired!');
+        console.log('📊 Final chunks array length:', chunks.length);
         
-        if (chunks.length > 0) {
-          // Log each chunk for debugging
-          chunks.forEach((chunk, index) => {
-            console.log(`📦 Chunk ${index + 1}: ${chunk.size} bytes, type: ${chunk.type}`);
-          });
+        // Force a small delay to ensure all chunks are collected
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        console.log('📊 After delay - chunks array length:', chunks.length);
+        
+        if (chunks.length === 0) {
+          console.error('❌ CRITICAL ERROR: No audio chunks collected at all!');
+          alert('Recording failed - no audio data captured. This suggests a MediaRecorder compatibility issue on your device.');
+          return;
+        }
 
-          const audioBlob = new Blob(chunks, { type: recorder.mimeType || mimeType || 'audio/webm' });
-          console.log('🎵 Audio blob created:', audioBlob.size, 'bytes, type:', audioBlob.type);
-          console.log('🎯 Recorder MIME type used:', recorder.mimeType);
-          
-          if (audioBlob.size < 1000) {
-            console.warn('⚠️ Very small audio file:', audioBlob.size, 'bytes');
-            console.log('🔍 This might be too short for transcription');
-          }
+        // Log each chunk
+        let totalSize = 0;
+        chunks.forEach((chunk, index) => {
+          console.log(`📦 Processing chunk ${index + 1}: ${chunk.size} bytes, type: ${chunk.type}`);
+          totalSize += chunk.size;
+        });
+        
+        console.log('📏 Total audio data size:', totalSize, 'bytes');
 
-          console.log('🚀 About to call sendAudioToWhisper...');
-          console.log('📋 sendAudioToWhisper function exists:', typeof sendAudioToWhisper);
-          
-          try {
-            await sendAudioToWhisper(audioBlob);
-            console.log('✅ sendAudioToWhisper completed successfully');
-          } catch (error) {
-            console.error('❌ sendAudioToWhisper failed:', error);
-            console.error('🔍 Error details:', error.message);
-            console.error('🔍 Error stack:', error.stack);
-            alert(`Transcription error: ${error.message}`);
-          }
-        } else {
-          console.error('❌ No audio data captured - chunks array is empty');
-          alert('No audio captured. Please try again and speak closer to the microphone.');
+        const audioBlob = new Blob(chunks, { type: recorder.mimeType || mimeType || 'audio/webm' });
+        console.log('🎵 Final audio blob:', audioBlob.size, 'bytes, type:', audioBlob.type);
+        
+        if (audioBlob.size < 100) {
+          console.error('❌ Audio blob extremely small:', audioBlob.size, 'bytes - recording likely failed');
+          alert('Recording too short or failed. Please try speaking louder and longer.');
+          return;
+        }
+
+        console.log('🚀 SENDING TO TRANSCRIPTION...');
+        try {
+          await sendAudioToWhisper(audioBlob);
+          console.log('✅ Transcription process completed');
+        } catch (error) {
+          console.error('❌ TRANSCRIPTION FAILED:', error);
+          alert(`Transcription failed: ${(error as Error).message}`);
         }
         
-        console.log('🧹 Cleaning up media stream...');
-        stream.getTracks().forEach(track => {
-          console.log('🔇 Stopping track:', track.kind, track.label);
-          track.stop();
-        });
-        console.log('✅ Media stream cleanup complete');
+        // Cleanup
+        stream.getTracks().forEach(track => track.stop());
       };
 
       recorder.onerror = (event) => {
@@ -454,18 +456,25 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
   // Chat bubble when closed
   if (!isOpen) {
     return (
-      <div className="fixed bottom-6 right-6 z-50">
-        <button
-          onClick={onToggle}
-          className="theme-primary hover:theme-primary-dark theme-text p-4 rounded-full shadow-2xl transition-all duration-300 hover:scale-110 animate-pulse"
-          style={{ 
-            backdropFilter: 'blur(10px)',
-            background: `linear-gradient(135deg, var(--theme-primary), var(--theme-accent))`
-          }}
-        >
-          <MessageCircle size={24} />
-        </button>
-      </div>
+      <>
+        <div className="fixed bottom-6 right-6 z-50">
+          <button
+            onClick={onToggle}
+            className="theme-primary hover:theme-primary-dark theme-text p-4 rounded-full shadow-2xl transition-all duration-300 hover:scale-110 animate-pulse"
+            style={{ 
+              backdropFilter: 'blur(10px)',
+              background: `linear-gradient(135deg, var(--theme-primary), var(--theme-accent))`
+            }}
+          >
+            <MessageCircle size={24} />
+          </button>
+        </div>
+        {/* Debug Log always available */}
+        <DebugLog 
+          isVisible={showDebugLog} 
+          onToggle={() => setShowDebugLog(!showDebugLog)} 
+        />
+      </>
     );
   }
 
