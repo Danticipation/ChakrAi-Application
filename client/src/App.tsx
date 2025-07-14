@@ -1231,13 +1231,13 @@ const AppLayout = ({ currentUserId, onDataReset }: AppLayoutProps) => {
             <div className="mobile-nav-grid-polish">
               {[
                 { id: 'chat', label: 'Home', icon: '🏠' },
-                { id: 'floating-chat', label: 'Chat', icon: '💬' },
+                { id: 'voice', label: 'Settings', icon: '⚙️' },
                 { id: 'daily', label: 'Reflect', icon: '🧠' },
                 { id: 'journal', label: 'Journal', icon: '📝' },
                 { id: 'memory', label: 'Memory', icon: '🎯' },
                 { id: 'analytics', label: 'Analytics', icon: '📊' },
                 { id: 'feedback', label: 'Feedback', icon: '💡' },
-                { id: 'voice', label: 'Voice', icon: '🎤' },
+                { id: 'floating-chat', label: 'Voice Chat', icon: '🎤' },
                 { id: 'themes', label: 'Themes', icon: '🎨' },
                 { id: 'challenges', label: 'Challenges', icon: '🏆' },
                 { id: 'rewards', label: 'Rewards', icon: '🎁' },
@@ -1249,7 +1249,7 @@ const AppLayout = ({ currentUserId, onDataReset }: AppLayoutProps) => {
                 { id: 'adaptive', label: 'AI Learn', icon: '🤖' },
                 { id: 'therapy-plans', label: 'Plans', icon: '📋' },
                 { id: 'questions', label: 'Questions', icon: '❓' },
-                { id: 'settings', label: 'Settings', icon: '⚙️' }
+
               ].map((tab) => (
                 <button
                   key={tab.id}
@@ -1261,8 +1261,6 @@ const AppLayout = ({ currentUserId, onDataReset }: AppLayoutProps) => {
                       setShowSettings(true);
                     } else if (tab.id === 'floating-chat') {
                       setIsFloatingChatOpen(true);
-                    } else if (tab.id === 'settings') {
-                      setShowSettings(true);
                     } else if (['journal', 'analytics', 'memory', 'daily', 'challenges', 'rewards', 'community', 'vr', 'health', 'agents', 'adaptive', 'therapy-plans', 'questions', 'feedback'].includes(tab.id)) {
                       // Track activity for specific sections
                       if (tab.id === 'journal') {

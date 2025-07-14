@@ -185,45 +185,108 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
 
   const startRecording = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
+      console.log('Starting recording on mobile device...');
+      
+      // Enhanced mobile-specific audio constraints
+      const constraints = {
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
           autoGainControl: true,
-          sampleRate: 44100,
+          sampleRate: 16000, // Lower sample rate for mobile compatibility
           channelCount: 1
-        } 
-      });
+        }
+      };
 
-      const options = { mimeType: 'audio/webm' };
-      if (!MediaRecorder.isTypeSupported(options.mimeType)) {
-        options.mimeType = 'audio/mp4';
-      }
-      if (!MediaRecorder.isTypeSupported(options.mimeType)) {
-        options.mimeType = 'audio/wav';
+      console.log('Requesting microphone permission...');
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      console.log('✅ Microphone access granted');
+
+      // Mobile-friendly MIME type detection with expanded fallbacks
+      let mimeType = 'audio/webm;codecs=opus';
+      const mimeTypes = [
+        'audio/webm;codecs=opus',
+        'audio/webm',
+        'audio/mp4;codecs=mp4a.40.2',
+        'audio/mp4',
+        'audio/aac',
+        'audio/mpeg',
+        'audio/wav',
+        '' // Default fallback
+      ];
+
+      for (const type of mimeTypes) {
+        if (MediaRecorder.isTypeSupported(type)) {
+          mimeType = type;
+          break;
+        }
       }
 
-      const recorder = new MediaRecorder(stream, options);
+      console.log('✅ Using MIME type:', mimeType);
+
+      const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : {});
       const chunks: Blob[] = [];
 
       recorder.ondataavailable = (event) => {
+        console.log('📦 Audio data chunk:', event.data.size, 'bytes');
         if (event.data.size > 0) {
           chunks.push(event.data);
         }
       };
 
       recorder.onstop = async () => {
-        const audioBlob = new Blob(chunks, { type: options.mimeType });
-        await sendAudioToWhisper(audioBlob);
+        console.log('🔴 Recording stopped, processing audio...');
+        if (chunks.length > 0) {
+          const audioBlob = new Blob(chunks, { type: mimeType });
+          console.log('🎵 Audio blob created:', audioBlob.size, 'bytes');
+          await sendAudioToWhisper(audioBlob);
+        } else {
+          console.error('❌ No audio data captured');
+          alert('No audio captured. Please try again and speak closer to the microphone.');
+        }
         stream.getTracks().forEach(track => track.stop());
       };
 
-      recorder.start(1000);
+      recorder.onerror = (event) => {
+        console.error('🔥 MediaRecorder error:', event);
+        alert('Recording error occurred. Please try again.');
+        stream.getTracks().forEach(track => track.stop());
+      };
+
+      // Start recording with frequent data collection for mobile
+      recorder.start(500); // 500ms intervals for better mobile compatibility
       setMediaRecorder(recorder);
       setAudioChunks(chunks);
       setIsRecording(true);
+      
+      console.log('🎤 Recording started successfully');
+
+      // Auto-stop after 30 seconds for safety
+      setTimeout(() => {
+        if (recorder.state === 'recording') {
+          console.log('⏰ Auto-stopping recording after 30 seconds');
+          stopRecording();
+        }
+      }, 30000);
+
     } catch (error) {
-      console.error('Error starting recording:', error);
+      console.error('🚨 Mobile microphone error:', error);
+      const err = error as any;
+      
+      let errorMessage = 'Microphone access failed. ';
+      if (err?.name === 'NotAllowedError') {
+        errorMessage += 'Please allow microphone permission in your browser settings and try again.';
+      } else if (err?.name === 'NotFoundError') {
+        errorMessage += 'No microphone detected. Please check your device.';
+      } else if (err?.name === 'NotReadableError') {
+        errorMessage += 'Microphone is being used by another app. Please close other apps and try again.';
+      } else if (err?.name === 'OverconstrainedError') {
+        errorMessage += 'Your device microphone doesn\'t support the required settings.';
+      } else {
+        errorMessage += `Error: ${err?.message || 'Unknown error'}`;
+      }
+      
+      alert(errorMessage);
     }
   };
 
@@ -236,18 +299,49 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
 
   const sendAudioToWhisper = async (audioBlob: Blob) => {
     try {
+      console.log('🎯 Sending audio to Whisper for transcription...');
+      console.log('📊 Audio size:', audioBlob.size, 'bytes, type:', audioBlob.type);
+      
+      if (audioBlob.size < 1000) {
+        console.error('❌ Audio file too small:', audioBlob.size, 'bytes');
+        alert('Recording too short. Please speak for at least 1-2 seconds.');
+        return;
+      }
+
       const formData = new FormData();
       formData.append('audio', audioBlob, 'recording.webm');
 
+      console.log('🚀 Uploading audio for transcription...');
       const response = await axios.post('/api/transcribe', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+        headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 30000 // 30 second timeout
       });
 
-      if (response.data.text) {
+      console.log('✅ Transcription response:', response.data);
+
+      if (response.data.text && response.data.text.trim()) {
+        console.log('📝 Transcribed text:', response.data.text);
         await sendMessage(response.data.text);
+      } else {
+        console.error('❌ No text transcribed');
+        alert('Could not understand the audio. Please try speaking more clearly.');
       }
     } catch (error) {
-      console.error('Error transcribing audio:', error);
+      console.error('🚨 Transcription error:', error);
+      const err = error as any;
+      
+      let errorMessage = 'Voice transcription failed. ';
+      if (err?.code === 'ECONNABORTED' || err?.message?.includes('timeout')) {
+        errorMessage += 'Request timed out. Please try a shorter recording.';
+      } else if (err?.response?.status === 413) {
+        errorMessage += 'Recording file too large. Please record for less time.';
+      } else if (err?.response?.status === 401) {
+        errorMessage += 'API key issue. Please check voice settings.';
+      } else {
+        errorMessage += 'Please check your internet connection and try again.';
+      }
+      
+      alert(errorMessage);
     }
   };
 
@@ -411,20 +505,26 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
             </button>
           )}
 
-          {/* Microphone button */}
+          {/* Enhanced Mobile Microphone button */}
           <button
             onClick={isRecording ? stopRecording : startRecording}
-            className={`p-2 rounded-xl transition-colors theme-text border-2 border-silver ${
-              isRecording ? 'animate-pulse' : ''
+            className={`p-3 rounded-xl transition-all duration-300 theme-text border-2 border-silver min-w-[48px] min-h-[48px] flex items-center justify-center shadow-lg hover:shadow-xl transform hover:scale-105 ${
+              isRecording ? 'animate-pulse scale-110' : 'hover:scale-110'
             }`}
             style={{
               backgroundColor: isRecording 
                 ? '#ef4444'
-                : `var(--theme-primary)`
+                : `var(--theme-primary)`,
+              touchAction: 'manipulation'
             }}
             disabled={isLoading}
+            title={isRecording ? "Tap to stop recording and send" : "Tap to start voice recording"}
           >
-            {isRecording ? <Square size={18} /> : <Mic size={24} />}
+            {isRecording ? (
+              <Square size={20} className="text-white" />
+            ) : (
+              <Mic size={24} className="text-white" />
+            )}
           </button>
 
           {/* Send button */}
