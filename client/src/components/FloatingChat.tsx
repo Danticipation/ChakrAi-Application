@@ -27,6 +27,7 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
   const [showDebugLog, setShowDebugLog] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
   const queryClient = useQueryClient();
 
   const scrollToBottom = () => {
@@ -43,6 +44,26 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
       loadChatHistory();
     }
   }, [isOpen]);
+
+  // Cleanup recording when component closes
+  useEffect(() => {
+    if (!isOpen && isRecording) {
+      console.log('🔄 Chat closing - stopping any active recording');
+      stopRecording();
+    }
+  }, [isOpen, isRecording]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+      }
+      if (mediaRecorder && mediaRecorder.state === 'recording') {
+        mediaRecorder.stop();
+      }
+    };
+  }, []);
 
   const loadChatHistory = async () => {
     try {
@@ -270,6 +291,17 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
         console.log('🔴 CRITICAL: MediaRecorder onstop event fired!');
         console.log('📊 Final chunks array length:', chunks.length);
         
+        // Stop all audio tracks immediately
+        if (streamRef.current) {
+          streamRef.current.getTracks().forEach(track => {
+            track.stop();
+            console.log('🛑 Audio track stopped:', track.label);
+          });
+          streamRef.current = null;
+        }
+        
+        setIsRecording(false);
+        
         // Force a small delay to ensure all chunks are collected
         await new Promise(resolve => setTimeout(resolve, 200));
         
@@ -332,6 +364,7 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
       
       console.log('📝 Setting component state...');
       setMediaRecorder(recorder);
+      streamRef.current = stream;
       setAudioChunks(chunks);
       setIsRecording(true);
       
@@ -373,6 +406,15 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
     console.log('📊 MediaRecorder state:', mediaRecorder?.state);
     console.log('🎤 Current recording state:', isRecording);
     
+    // Force stop all audio tracks immediately
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => {
+        track.stop();
+        console.log('🛑 Force stopping audio track:', track.label);
+      });
+      streamRef.current = null;
+    }
+    
     if (mediaRecorder && mediaRecorder.state === 'recording') {
       console.log('✅ MediaRecorder is recording - calling stop()...');
       console.log('📊 Audio chunks collected so far:', audioChunks.length);
@@ -383,10 +425,8 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
       mediaRecorder.stop();
     } else {
       console.warn('⚠️ MediaRecorder not available or not recording');
-      console.log('🔍 MediaRecorder exists:', !!mediaRecorder);
-      console.log('🔍 MediaRecorder state:', mediaRecorder?.state);
-      console.log('🔍 Is recording state:', isRecording);
-      setIsRecording(false); // Reset state anyway
+      setIsRecording(false);
+      setMediaRecorder(null);
       alert('Recording session not active. Please start recording first.');
     }
   };
