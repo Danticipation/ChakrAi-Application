@@ -17,6 +17,7 @@ import VoluntaryQuestionDeck from './components/VoluntaryQuestionDeck';
 import FeedbackSystem from './components/FeedbackSystem';
 import TherapeuticJournal from './components/TherapeuticJournal';
 import PersonalityReflection from './components/PersonalityReflection';
+import MicrophoneTest from './components/MicrophoneTest';
 import AnalyticsDashboard from './components/AnalyticsDashboard';
 import WellnessRewards from './components/WellnessRewards';
 import CommunitySupport from './components/CommunitySupport';
@@ -1249,6 +1250,7 @@ const AppLayout = ({ currentUserId, onDataReset }: AppLayoutProps) => {
                 { id: 'adaptive', label: 'AI Learn', icon: '🤖' },
                 { id: 'therapy-plans', label: 'Plans', icon: '📋' },
                 { id: 'questions', label: 'Questions', icon: '❓' },
+                { id: 'microphone-test', label: 'Mic Test', icon: '🔧' },
 
               ].map((tab) => (
                 <button
@@ -1261,7 +1263,7 @@ const AppLayout = ({ currentUserId, onDataReset }: AppLayoutProps) => {
                       setShowSettings(true);
                     } else if (tab.id === 'floating-chat') {
                       setIsFloatingChatOpen(true);
-                    } else if (['journal', 'analytics', 'memory', 'daily', 'challenges', 'rewards', 'community', 'vr', 'health', 'agents', 'adaptive', 'therapy-plans', 'questions', 'feedback'].includes(tab.id)) {
+                    } else if (['journal', 'analytics', 'memory', 'daily', 'challenges', 'rewards', 'community', 'vr', 'health', 'agents', 'adaptive', 'therapy-plans', 'questions', 'feedback', 'microphone-test'].includes(tab.id)) {
                       // Track activity for specific sections
                       if (tab.id === 'journal') {
                         updateUserActivity('journal_access');

@@ -185,7 +185,23 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
 
   const startRecording = async () => {
     try {
-      console.log('Starting recording on mobile device...');
+      console.log('🔧 MOBILE MICROPHONE DEBUG: Starting recording...');
+      console.log('📱 User Agent:', navigator.userAgent);
+      console.log('🎧 MediaDevices available:', !!navigator.mediaDevices);
+      console.log('🎤 getUserMedia available:', !!navigator.mediaDevices?.getUserMedia);
+      
+      // Test basic audio access first
+      console.log('🔍 Testing basic audio constraints...');
+      const basicConstraints = { audio: true };
+      
+      try {
+        const testStream = await navigator.mediaDevices.getUserMedia(basicConstraints);
+        console.log('✅ Basic audio access works');
+        testStream.getTracks().forEach(track => track.stop());
+      } catch (basicError) {
+        console.error('❌ Basic audio access failed:', basicError);
+        throw basicError;
+      }
       
       // Enhanced mobile-specific audio constraints
       const constraints = {
@@ -193,44 +209,57 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
           echoCancellation: true,
           noiseSuppression: true,
           autoGainControl: true,
-          sampleRate: 16000, // Lower sample rate for mobile compatibility
+          sampleRate: 16000,
           channelCount: 1
         }
       };
 
-      console.log('Requesting microphone permission...');
+      console.log('🎯 Requesting microphone with enhanced constraints...');
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
-      console.log('✅ Microphone access granted');
+      console.log('✅ Enhanced microphone access granted');
 
       // Mobile-friendly MIME type detection with expanded fallbacks
-      let mimeType = 'audio/webm;codecs=opus';
+      console.log('🧪 Testing MediaRecorder support...');
+      console.log('📊 MediaRecorder available:', !!window.MediaRecorder);
+      
       const mimeTypes = [
         'audio/webm;codecs=opus',
         'audio/webm',
-        'audio/mp4;codecs=mp4a.40.2',
+        'audio/mp4;codecs=mp4a.40.2', 
         'audio/mp4',
         'audio/aac',
         'audio/mpeg',
         'audio/wav',
         '' // Default fallback
       ];
-
+      
+      let mimeType = '';
       for (const type of mimeTypes) {
-        if (MediaRecorder.isTypeSupported(type)) {
+        const supported = MediaRecorder.isTypeSupported(type);
+        console.log(`🎵 ${type || 'default'}: ${supported ? '✅' : '❌'}`);
+        if (supported && !mimeType) {
           mimeType = type;
-          break;
         }
       }
 
-      console.log('✅ Using MIME type:', mimeType);
+      console.log('🎯 Selected MIME type:', mimeType || 'default');
 
-      const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : {});
+      console.log('🎬 Creating MediaRecorder...');
+      const recorderOptions = mimeType ? { mimeType } : {};
+      console.log('⚙️ Recorder options:', recorderOptions);
+      
+      const recorder = new MediaRecorder(stream, recorderOptions);
       const chunks: Blob[] = [];
+      
+      console.log('📡 MediaRecorder state:', recorder.state);
+      console.log('🎛️ MediaRecorder mimeType:', recorder.mimeType);
 
       recorder.ondataavailable = (event) => {
-        console.log('📦 Audio data chunk:', event.data.size, 'bytes');
+        console.log('📦 Audio data chunk:', event.data.size, 'bytes, type:', event.data.type);
         if (event.data.size > 0) {
           chunks.push(event.data);
+        } else {
+          console.warn('⚠️ Received empty audio chunk');
         }
       };
 
@@ -254,12 +283,16 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
       };
 
       // Start recording with frequent data collection for mobile
+      console.log('🚀 Starting MediaRecorder...');
       recorder.start(500); // 500ms intervals for better mobile compatibility
+      
+      console.log('📝 Setting component state...');
       setMediaRecorder(recorder);
       setAudioChunks(chunks);
       setIsRecording(true);
       
-      console.log('🎤 Recording started successfully');
+      console.log('✅ Recording started - state:', recorder.state);
+      console.log('🎤 Component recording state updated');
 
       // Auto-stop after 30 seconds for safety
       setTimeout(() => {
