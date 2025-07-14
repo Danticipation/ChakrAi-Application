@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import { MessageCircle, X, Send, Mic, Square, Volume2, VolumeX } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
-import DebugLog from './DebugLog';
 
 interface Message {
   sender: 'user' | 'bot';
@@ -24,7 +23,7 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
   const [isPlayingVoice, setIsPlayingVoice] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
-  const [showDebugLog, setShowDebugLog] = useState(false);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -702,12 +701,6 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
           </p>
         )}
       </div>
-      
-      {/* Debug Log only when chat is open */}
-      <DebugLog 
-        isVisible={showDebugLog} 
-        onToggle={() => setShowDebugLog(!showDebugLog)} 
-      />
     </div>
   );
 };
