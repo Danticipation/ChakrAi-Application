@@ -525,8 +525,44 @@ app.post('/api/chat', async (req, res) => {
     
     console.log(`Chat request for userId: ${userId}, message: "${message}"`);
     
-    // Simple AI response for now
-    const aiResponse = `I hear you, and I appreciate you sharing that with me. What you're experiencing is valid. How can I support you with this?`;
+    // Generate AI response using OpenAI
+    let aiResponse = '';
+    try {
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          messages: [
+            {
+              role: 'system',
+              content: 'You are Chakrai, a mental wellness companion. Provide supportive, empathetic, and helpful responses to users seeking emotional support and guidance. Keep responses concise but caring. Focus on emotional validation, practical wellness advice, and encouraging personal growth.'
+            },
+            {
+              role: 'user',
+              content: message
+            }
+          ],
+          max_tokens: 150,
+          temperature: 0.7
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        aiResponse = data.choices[0].message.content.trim();
+        console.log('OpenAI response generated successfully');
+      } else {
+        console.error('OpenAI API error:', response.status, response.statusText);
+        aiResponse = 'I understand you\'re reaching out. How can I support your wellness journey today?';
+      }
+    } catch (error) {
+      console.error('Error calling OpenAI:', error);
+      aiResponse = 'I\'m here to listen and support you. What\'s on your mind today?';
+    }
     
     // Store messages in database
     try {
