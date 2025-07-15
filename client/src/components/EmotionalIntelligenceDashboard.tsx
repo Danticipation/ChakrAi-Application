@@ -51,7 +51,7 @@ interface DashboardOverview {
 }
 
 export default function EmotionalIntelligenceDashboard() {
-  const [userId: getCurrentUserId();
+  const userId = getCurrentUserId();
   const [activeTab, setActiveTab] = useState('overview');
   const queryClient = useQueryClient();
 

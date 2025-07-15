@@ -69,7 +69,7 @@ export default function VRTherapyDashboard() {
   });
 
   const queryClient = useQueryClient();
-  const userId: getCurrentUserId() // Would get from auth context
+  const userId = getCurrentUserId(); // Would get from auth context
 
   // Fetch VR environments
   const { data: environments = [], isLoading: environmentsLoading } = useQuery({

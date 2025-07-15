@@ -36,7 +36,7 @@ const EMOTIONS = [
   { name: 'neutral', icon: '😐', color: '#D3D3D3' }
 ];
 
-export default function MoodTracker({ userId: getCurrentUserId()}: { userId?: number }) {
+export default function MoodTracker({ userId = getCurrentUserId()}: { userId?: number }) {
   const [selectedEmotion, setSelectedEmotion] = useState('');
   const [intensity, setIntensity] = useState(50);
   const [context, setContext] = useState('');

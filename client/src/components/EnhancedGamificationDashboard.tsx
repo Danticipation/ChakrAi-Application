@@ -74,7 +74,7 @@ const EnhancedGamificationDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'overview' | 'rewards' | 'challenges' | 'achievements'>('overview');
   const [selectedChallenge, setSelectedChallenge] = useState<CommunityChallenge | null>(null);
   const [selectedReward, setSelectedReward] = useState<TherapeuticReward | null>(null);
-  const userId: getCurrentUserId() // In production, get from auth context
+  const userId = getCurrentUserId(); // In production, get from auth context
   const queryClient = useQueryClient();
 
   // Fetch gamification dashboard data
