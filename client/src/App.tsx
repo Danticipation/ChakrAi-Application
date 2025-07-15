@@ -1739,16 +1739,25 @@ const AppLayout = ({ currentUserId, onDataReset }: AppLayoutProps) => {
                   <img src={chakraiLogo} alt="Chakrai" className="h-8 w-auto" />
                   <div>
                     <h1 className="text-lg font-bold theme-text">Reflective Chat with Chakrai</h1>
-                    <p className="theme-text-secondary text-xs">Your personal AI wellness companion</p>
+                    <p className="theme-text-secondary text-xs">Your personal AI wellness companion - Voice: {selectedVoice.charAt(0).toUpperCase() + selectedVoice.slice(1)}</p>
                   </div>
                 </div>
-                <button
-                  onClick={() => setIsFloatingChatOpen(false)}
-                  className="w-10 h-10 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center text-white transition-colors shadow-lg border-2 border-white"
-                  aria-label="Close chat"
-                >
-                  <X size={20} />
-                </button>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => setShowSettings(true)}
+                    className="w-10 h-10 bg-blue-500 hover:bg-blue-600 rounded-full flex items-center justify-center text-white transition-colors shadow-lg border-2 border-white"
+                    title="Voice & Settings"
+                  >
+                    <Settings size={16} />
+                  </button>
+                  <button
+                    onClick={() => setIsFloatingChatOpen(false)}
+                    className="w-10 h-10 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center text-white transition-colors shadow-lg border-2 border-white"
+                    aria-label="Close chat"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
               </div>
 
               {/* Compact Chat Messages Area */}
