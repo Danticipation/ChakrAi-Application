@@ -204,7 +204,7 @@ const AppLayout = ({ currentUserId, onDataReset }: AppLayoutProps) => {
   const [selectedReflectionVoice, setSelectedReflectionVoice] = useState('hope');
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingVoice, setIsLoadingVoice] = useState(false);
-  const [isFloatingChatOpen, setIsFloatingChatOpen] = useState(false);
+  const [isFloatingChatOpen, setIsFloatingChatOpen] = useState(true);
   const [dailyAffirmation, setDailyAffirmation] = useState('Today is a new opportunity for growth and healing.');
   const [horoscopeText, setHoroscopeText] = useState<string>('');
   const [userZodiacSign, setUserZodiacSign] = useState<string>('aries');
@@ -1412,8 +1412,8 @@ const AppLayout = ({ currentUserId, onDataReset }: AppLayoutProps) => {
           <div className="mb-6">
             <div className="theme-text-secondary text-sm font-medium px-6 pb-2">🟦 Core Companion</div>
             {[
-              { id: 'chat', label: 'Home' },
-              { id: 'floating-chat', label: 'Reflective Chat' },
+              { id: 'home', label: 'Home' },
+              { id: 'chat', label: 'Reflective Chat' },
               { id: 'challenges', label: 'Reflection Goals' },
               { id: 'rewards', label: 'Reflection Rewards' }
             ].map((tab) => (
@@ -1421,14 +1421,21 @@ const AppLayout = ({ currentUserId, onDataReset }: AppLayoutProps) => {
                 key={tab.id}
                 onClick={() => {
                   console.log('Desktop Core Companion: Clicked tab:', tab.id, tab.label);
-                  if (tab.id === 'floating-chat') {
+                  if (tab.id === 'chat') {
+                    setActiveSection('chat');
                     setIsFloatingChatOpen(true);
+                  } else if (tab.id === 'home') {
+                    setActiveSection('chat');
+                    setIsFloatingChatOpen(false);
                   } else {
                     setActiveSection(tab.id);
+                    setIsFloatingChatOpen(false);
                   }
                 }}
                 className={`shimmer-border w-full h-16 px-6 text-lg font-medium transition-all border-soft hover-lift text-luxury ${
-                  activeSection === tab.id || (tab.id === 'floating-chat' && isFloatingChatOpen)
+                  (tab.id === 'chat' && activeSection === 'chat' && isFloatingChatOpen) || 
+                  (tab.id === 'home' && activeSection === 'chat' && !isFloatingChatOpen) ||
+                  (activeSection === tab.id && tab.id !== 'chat' && tab.id !== 'home')
                     ? 'theme-surface theme-text glass-luxury shadow-luxury'
                     : 'theme-primary theme-text hover:theme-primary-light gradient-soft'
                 }`}
