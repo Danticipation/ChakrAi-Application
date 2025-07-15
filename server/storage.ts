@@ -1180,6 +1180,7 @@ export class DbStorage implements IStorage {
       .update(userChallengeProgress)
       .set({
         currentProgress: sql`${userChallengeProgress.currentProgress} + ${progressIncrement}`
+
       })
       .where(and(
         eq(userChallengeProgress.userId, userId),
