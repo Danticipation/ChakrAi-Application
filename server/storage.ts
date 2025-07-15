@@ -1,6 +1,6 @@
 import { db } from "./db";
 import { 
-  users, userProfiles, bots, messages, milestones, userMemories, userFacts,
+  users, userProfiles, bots, messages, userMemories, userFacts,
   journalEntries, moodEntries, therapeuticGoals, supportForums, forumPosts,
   userAchievements, wellnessStreaks, emotionalPatterns,
   moodForecasts, emotionalContexts, predictiveInsights, emotionalResponseAdaptations, crisisDetectionLogs,
@@ -15,8 +15,6 @@ import {
   type VoluntaryQuestion, type InsertVoluntaryQuestion,
   type Bot, type InsertBot,
   type Message, type InsertMessage,
-
-  type Milestone, type InsertMilestone,
   type UserMemory, type InsertUserMemory,
   type UserFact, type InsertUserFact,
   type JournalEntry, type InsertJournalEntry,
@@ -109,9 +107,7 @@ export interface IStorage {
   
 
   
-  // Milestones
-  getMilestonesByUserId(userId: number): Promise<Milestone[]>;
-  createMilestone(data: InsertMilestone): Promise<Milestone>;
+
   
   // User memories and facts
   getUserMemoriesByUserId(userId: number): Promise<UserMemory[]>;
@@ -490,15 +486,7 @@ export class DbStorage implements IStorage {
 
 
 
-  // Milestones
-  async getMilestonesByUserId(userId: number): Promise<Milestone[]> {
-    return await this.db.select().from(milestones).where(eq(milestones.userId, userId));
-  }
 
-  async createMilestone(data: InsertMilestone): Promise<Milestone> {
-    const [milestone] = await this.db.insert(milestones).values(data).returning();
-    return milestone;
-  }
 
   // User memories and facts
   async getUserMemoriesByUserId(userId: number): Promise<UserMemory[]> {

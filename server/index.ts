@@ -743,18 +743,7 @@ app.post('/api/adaptive-therapy/generate', async (req, res) => {
           effectivenessMetrics: ['mood_improvement', 'stress_reduction', 'focus_enhancement']
         }
       ],
-      weeklyMilestones: [
-        {
-          id: 'milestone-1',
-          title: 'Establish Daily Routine',
-          description: 'Complete morning meditation 5 out of 7 days',
-          targetWeek: 1,
-          requiredActivities: ['activity-1'],
-          completionThreshold: 5,
-          adaptiveAdjustments: { difficulty: 'maintain', frequency: 'increase', variety: 'expand' },
-          rewardSystem: { points: 50, badge: 'Routine Builder', encouragement: 'Great start on building healthy habits!' }
-        }
-      ],
+
       progressMetrics: [
         {
           id: 'metric-1',

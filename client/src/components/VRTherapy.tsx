@@ -32,7 +32,7 @@ interface VRProgress {
   average_effectiveness: number;
   stress_reduction_average: number;
   skill_development_level: string;
-  milestones_achieved: string[];
+
 }
 
 const VRTherapy: React.FC = () => {
@@ -246,20 +246,7 @@ const VRTherapy: React.FC = () => {
           </div>
         </div>
 
-        {/* Milestones */}
-        <div className="theme-card rounded-xl p-6 border border-silver hover:border-2 hover:animate-shimmer">
-          <h3 className="text-lg font-semibold theme-text mb-4">Milestones Achieved</h3>
-          <div className="space-y-2">
-            {progress?.milestones_achieved?.map((milestone, index) => (
-              <div key={index} className="flex items-center space-x-3 p-3 bg-white/10 rounded-lg">
-                <div className="p-2 rounded-full bg-green-500/20">
-                  <Star className="w-4 h-4 text-green-400" />
-                </div>
-                <span className="theme-text">{milestone}</span>
-              </div>
-            )) || <p className="theme-text/60">No milestones achieved yet</p>}
-          </div>
-        </div>
+
       </div>
     );
   };

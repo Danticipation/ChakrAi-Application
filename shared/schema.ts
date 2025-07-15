@@ -89,14 +89,7 @@ export const messages = pgTable("messages", {
 
 
 
-export const milestones = pgTable("milestones", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(),
-  level: integer("level").notNull(),
-  title: text("title").notNull(),
-  description: text("description"),
-  unlockedAt: timestamp("unlocked_at").defaultNow(),
-});
+
 
 export const userMemories = pgTable("user_memories", {
   id: serial("id").primaryKey(),
@@ -378,10 +371,7 @@ export const insertMessageSchema = createInsertSchema(messages).omit({
 
 
 
-export const insertMilestoneSchema = createInsertSchema(milestones).omit({
-  id: true,
-  unlockedAt: true,
-});
+
 
 export const insertUserMemorySchema = createInsertSchema(userMemories).omit({
   id: true,
@@ -457,7 +447,7 @@ export type User = typeof users.$inferSelect;
 export type Bot = typeof bots.$inferSelect;
 export type Message = typeof messages.$inferSelect;
 
-export type Milestone = typeof milestones.$inferSelect;
+
 export type UserMemory = typeof userMemories.$inferSelect;
 export type UserFact = typeof userFacts.$inferSelect;
 export type JournalEntry = typeof journalEntries.$inferSelect;
@@ -482,7 +472,7 @@ export type InsertVoluntaryQuestion = z.infer<typeof insertVoluntaryQuestionSche
 export type InsertBot = z.infer<typeof insertBotSchema>;
 export type InsertMessage = z.infer<typeof insertMessageSchema>;
 
-export type InsertMilestone = z.infer<typeof insertMilestoneSchema>;
+
 export type InsertUserMemory = z.infer<typeof insertUserMemorySchema>;
 export type InsertUserFact = z.infer<typeof insertUserFactSchema>;
 export type InsertJournalEntry = z.infer<typeof insertJournalEntrySchema>;

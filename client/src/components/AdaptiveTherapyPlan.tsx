@@ -28,7 +28,7 @@ interface TherapeuticPlan {
   adaptationLevel: number;
   therapeuticGoals: TherapeuticGoal[];
   dailyActivities: DailyActivity[];
-  weeklyMilestones: WeeklyMilestone[];
+
   progressMetrics: ProgressMetric[];
   adaptationTriggers: AdaptationTrigger[];
   confidenceScore: number;
@@ -289,7 +289,7 @@ function AdaptiveTherapyPlan({ userId, onPlanUpdate }: AdaptiveTherapyPlanProps)
           <TabsTrigger value="activities" className="text-xs md:text-sm px-2 py-2">Daily Activities</TabsTrigger>
           <TabsTrigger value="goals" className="text-xs md:text-sm px-2 py-2">Goals</TabsTrigger>
           <TabsTrigger value="progress" className="text-xs md:text-sm px-2 py-2">Progress</TabsTrigger>
-          <TabsTrigger value="milestones" className="text-xs md:text-sm px-2 py-2">Milestones</TabsTrigger>
+
         </TabsList>
 
         <TabsContent value="activities" className="space-y-3">
@@ -464,53 +464,7 @@ function AdaptiveTherapyPlan({ userId, onPlanUpdate }: AdaptiveTherapyPlanProps)
           </div>
         </TabsContent>
 
-        <TabsContent value="milestones" className="space-y-4">
-          <div className="grid gap-4">
-            {currentPlan.weeklyMilestones.map(milestone => (
-              <Card key={milestone.id} className="border-l-4 border-l-orange-400">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle className="text-lg">{milestone.goalTitle}</CardTitle>
-                      <p className="text-sm text-gray-600">Week {milestone.week}</p>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Award className="w-5 h-5 text-orange-500" />
-                      <Badge variant="outline">
-                        {milestone.adaptationPoints} points
-                      </Badge>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <p className="text-sm text-gray-700">{milestone.description}</p>
-                    
-                    {milestone.successCriteria && milestone.successCriteria.length > 0 && (
-                      <div>
-                        <p className="text-sm font-medium text-gray-700 mb-2">Success Criteria:</p>
-                        <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">
-                          {milestone.successCriteria.map((criteria, index) => (
-                            <li key={index}>{criteria}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                    
-                    <div className="bg-orange-50 p-3 rounded-lg">
-                      <div className="flex items-center space-x-2">
-                        <Heart className="w-4 h-4 text-orange-600" />
-                        <span className="text-sm text-orange-800 font-medium">
-                          Reward: {milestone.rewardType ? milestone.rewardType.replace('_', ' ') : 'Achievement unlock'}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </TabsContent>
+      
       </Tabs>
 
       {/* Plan Adaptation Information */}
@@ -523,7 +477,7 @@ function AdaptiveTherapyPlan({ userId, onPlanUpdate }: AdaptiveTherapyPlanProps)
               <ul className="space-y-1 text-xs">
                 <li>• Your plan automatically adapts based on your progress and emotional patterns</li>
                 <li>• Activities are personalized using AI analysis of your therapeutic needs</li>
-                <li>• Milestones adjust dynamically to maintain optimal challenge levels</li>
+
                 <li>• Real-time monitoring ensures interventions when support is needed</li>
               </ul>
             </div>

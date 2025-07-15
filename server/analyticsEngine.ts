@@ -30,7 +30,7 @@ export interface WellnessMetrics {
   };
   achievements: {
     badgesEarned: number;
-    milestonesReached: string[];
+
     personalBests: string[];
     consistencyScore: number; // 0 to 100
   };
@@ -178,7 +178,7 @@ async function calculateWellnessMetrics(
   // Achievements summary
   const achievements = {
     badgesEarned: data.achievements.length,
-    milestonesReached: extractMilestones(data.achievements),
+    achievementsUnlocked: data.achievements?.length || 0,
     personalBests: extractPersonalBests(data.activities),
     consistencyScore: calculateConsistencyScore(data.activities)
   };
@@ -413,12 +413,7 @@ async function analyzeTherapeuticProgress(journalEntries: any[], moodEntries: an
   };
 }
 
-function extractMilestones(achievements: any[]): string[] {
-  return achievements
-    .filter(a => a.type === 'milestone')
-    .map(a => a.name)
-    .slice(0, 5);
-}
+
 
 function extractPersonalBests(activities: any[]): string[] {
   return ['Longest meditation streak', '7-day wellness consistency', 'Monthly journaling goal']
@@ -628,7 +623,7 @@ function generateFallbackReport(userId: number, month: number, year: number): Mo
       },
       achievements: {
         badgesEarned: 0,
-        milestonesReached: [],
+        achievementsUnlocked: 0,
         personalBests: [],
         consistencyScore: 0
       },
