@@ -355,7 +355,7 @@ function analyzeEmotionalTrends(moodEntries: any[]) {
   // Determine progress direction
   const recentEntries = moodEntries.slice(-7); // Last 7 entries
   const recentValence = recentEntries.reduce((sum, entry) => sum + (entry.valence || 0), 0) / recentEntries.length;
-  const progressDirection = recentValence > averageValence ? 'improving' : 
+  const progressDirection: 'improving' | 'stable' | 'declining' = recentValence > averageValence ? 'improving' : 
                            recentValence < averageValence - 0.1 ? 'declining' : 'stable';
   
   return {
