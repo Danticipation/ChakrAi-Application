@@ -411,7 +411,7 @@ async function analyzeTherapeuticProgress(journalEntries: any[], moodEntries: an
 
 
 
-function extractPersonalBests(activities: any[]): string[] {
+function extractPersonalBests(_activities: any[]): string[] {
   return ['Longest meditation streak', '7-day wellness consistency', 'Monthly journaling goal']
     .slice(0, 3);
 }
@@ -426,9 +426,9 @@ function calculateConsistencyScore(activities: any[]): number {
 }
 
 function generateRecommendations(
-  emotionalTrends: any,
-  activityMetrics: any,
-  therapeuticProgress: any
+  _emotionalTrends: any,
+  _activityMetrics: any,
+  _therapeuticProgress: any
 ) {
   return {
     immediate: [
@@ -550,7 +550,7 @@ function calculateProgressTracking(goals: any[], achievements: any[]) {
   };
 }
 
-async function generateDashboardInsights(userId: number, data: any) {
+async function generateDashboardInsights(_userId: number, _data: any) {
   return {
     topAchievements: [
       'Maintained 7-day wellness streak',
@@ -633,7 +633,7 @@ function generateFallbackReport(userId: number, month: number, year: number): Mo
   };
 }
 
-function generateFallbackNarrative(month: number, year: number, metrics: WellnessMetrics) {
+function generateFallbackNarrative(month: number, year: number, _metrics: WellnessMetrics) {
   const monthName = format(new Date(year, month - 1), 'MMMM');
   return {
     summary: `${monthName} was a month of continued wellness journey engagement.`,
@@ -678,27 +678,27 @@ function generateFallbackDashboardData(userId: number, dateRange: { start: Date;
 }
 
 // Data retrieval functions (these would be implemented with actual database calls)
-async function getJournalEntriesForPeriod(userId: number, startDate: Date, endDate: Date): Promise<any[]> {
+async function getJournalEntriesForPeriod(_userId: number, _startDate: Date, _endDate: Date): Promise<any[]> {
   // Implementation would query the database for journal entries in the date range
   return [];
 }
 
-async function getMoodEntriesForPeriod(userId: number, startDate: Date, endDate: Date): Promise<any[]> {
+async function getMoodEntriesForPeriod(_userId: number, _startDate: Date, _endDate: Date): Promise<any[]> {
   // Implementation would query the database for mood entries in the date range
   return [];
 }
 
-async function getAchievementsForPeriod(userId: number, startDate: Date, endDate: Date): Promise<any[]> {
+async function getAchievementsForPeriod(_userId: number, _startDate: Date, _endDate: Date): Promise<any[]> {
   // Implementation would query the database for achievements in the date range
   return [];
 }
 
-async function getActivitiesForPeriod(userId: number, startDate: Date, endDate: Date): Promise<any[]> {
+async function getActivitiesForPeriod(_userId: number, _startDate: Date, _endDate: Date): Promise<any[]> {
   // Implementation would query the database for activities in the date range
   return [];
 }
 
-async function getGoalsProgressForPeriod(userId: number, startDate: Date, endDate: Date): Promise<any[]> {
+async function getGoalsProgressForPeriod(_userId: number, _startDate: Date, _endDate: Date): Promise<any[]> {
   // Implementation would query the database for goals progress in the date range
   return [];
 }
