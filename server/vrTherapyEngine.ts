@@ -462,13 +462,13 @@ Return as JSON with VR environment fields: name, description, category, scenePat
 
     const environmentData = JSON.parse(response.choices[0].message.content || '{}');
     
-    // Convert difficulty string to number (1-5 scale)
+    // Convert difficulty string to number (1-5 scale) to match schema
     const difficultyMapping = {
       'beginner': 1,
       'intermediate': 3,
       'advanced': 5
     };
-
+    
     return {
       name: environmentData.name || `${therapeuticGoal} Environment`,
       description: environmentData.description || '',
