@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { BarChart3, TrendingUp, AlertTriangle, Calendar, Download, RefreshCw, Brain, Target, Activity } from 'lucide-react';
+import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { BarChart3, TrendingUp, Calendar, Brain, Target, Activity } from 'lucide-react';
 
 interface WellnessMetrics {
   currentWellnessScore: number;
@@ -24,48 +24,13 @@ interface DashboardData {
   insights: string;
 }
 
-interface MonthlyReport {
-  id: number;
-  reportMonth: string;
-  wellnessScore: string;
-  emotionalVolatility: string;
-  aiGeneratedInsights: string;
-  progressSummary: string;
-  recommendations: string[];
-  milestonesAchieved: string[];
-  createdAt: string;
-}
 
-interface RiskAssessment {
-  id: number;
-  riskLevel: string;
-  riskScore: number;
-  riskFactors: string[];
-  protectiveFactors: string[];
-  recommendations: string[];
-  followUpRequired: boolean;
-  aiAnalysis: string;
-  assessmentDate: string;
-}
-
-interface LongitudinalTrend {
-  id: number;
-  trendType: string;
-  timeframe: string;
-  trendDirection: string;
-  trendStrength: number;
-  insights: string;
-  predictedOutcome: string;
-  confidenceInterval: { lower: number; upper: number };
-}
 
 const AnalyticsDashboard: React.FC<{ userId: number }> = ({ userId }) => {
   const [activeTab, setActiveTab] = useState('overview');
-  const [selectedTimeframe, setSelectedTimeframe] = useState('3months');
-  const queryClient = useQueryClient();
 
   // Fetch dashboard data with fallback
-  const { data: dashboardData, isLoading: dashboardLoading, refetch: refetchDashboard } = useQuery({
+  const { data: dashboardData, isLoading: dashboardLoading } = useQuery({
     queryKey: [`/api/analytics/simple/${userId}`],
     queryFn: async () => {
       try {
@@ -126,7 +91,7 @@ const AnalyticsDashboard: React.FC<{ userId: number }> = ({ userId }) => {
   }) as any;
 
   // Fetch monthly reports
-  const { data: reportsData, isLoading: reportsLoading } = useQuery({
+  const { data: reportsData } = useQuery({
     queryKey: [`/api/analytics/monthly-reports/${userId}`],
     queryFn: async () => {
       try {
@@ -155,11 +120,11 @@ const AnalyticsDashboard: React.FC<{ userId: number }> = ({ userId }) => {
   }) as any;
 
   // Fetch longitudinal trends
-  const { data: trendsData, isLoading: trendsLoading, refetch: refetchTrends } = useQuery({
-    queryKey: [`/api/analytics/trends/${userId}`, selectedTimeframe],
+  const { data: trendsData } = useQuery({
+    queryKey: [`/api/analytics/trends/${userId}`],
     queryFn: async () => {
       try {
-        const response = await fetch(`/api/analytics/trends/${userId}?timeframe=${selectedTimeframe}`);
+        const response = await fetch(`/api/analytics/trends/${userId}?timeframe=3months`);
         const data = await response.json();
         return data;
       } catch (error) {
@@ -169,7 +134,7 @@ const AnalyticsDashboard: React.FC<{ userId: number }> = ({ userId }) => {
             {
               id: 1,
               trendType: "mood_stability",
-              timeframe: selectedTimeframe,
+              timeframe: "3months",
               trendDirection: "improving",
               trendStrength: 0.7,
               insights: "Your mood patterns show increasing stability over time with fewer dramatic fluctuations.",
@@ -179,7 +144,7 @@ const AnalyticsDashboard: React.FC<{ userId: number }> = ({ userId }) => {
             {
               id: 2,
               trendType: "engagement_level",
-              timeframe: selectedTimeframe,
+              timeframe: "3months",
               trendDirection: "stable",
               trendStrength: 0.8,
               insights: "Consistent therapeutic engagement demonstrates strong commitment to wellness goals.",
@@ -189,7 +154,7 @@ const AnalyticsDashboard: React.FC<{ userId: number }> = ({ userId }) => {
             {
               id: 3,
               trendType: "wellness_progression",
-              timeframe: selectedTimeframe,
+              timeframe: "3months",
               trendDirection: "improving",
               trendStrength: 0.6,
               insights: "Overall wellness metrics indicate positive progress with room for continued growth.",
@@ -202,22 +167,7 @@ const AnalyticsDashboard: React.FC<{ userId: number }> = ({ userId }) => {
     },
   });
 
-  // Generate monthly report mutation
-  const generateReportMutation = useMutation({
-    mutationFn: (data: { userId: number; reportMonth?: string }) =>
-      fetch('/api/analytics/monthly-report', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      }).then(res => res.json()),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/analytics/monthly-reports/${userId}`] });
-    },
-  });
 
-  const handleGenerateReport = () => {
-    generateReportMutation.mutate({ userId });
-  };
 
   const renderOverviewTab = () => {
     if (dashboardLoading) {
