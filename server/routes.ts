@@ -185,6 +185,8 @@ router.post('/chat', async (req, res) => {
     const userId = anonymousUser.id;
 
     console.log('Chat request:', { message: message.substring(0, 50) + '...', voice, userId: anonymousUser.id, isAnonymous: anonymousUser.isAnonymous });
+    console.log('Voice parameter received:', voice);
+    console.log('ELEVENLABS_API_KEY present:', !!process.env.ELEVENLABS_API_KEY);
 
     // Crisis detection
     const crisisData = await detectCrisisSignals(message, userId);
@@ -263,7 +265,9 @@ Adapt your response to mirror the user's communication patterns while providing 
     const voiceId = voiceMap[selectedVoice] || voiceMap['james'];
     let audioUrl = null;
 
+    console.log('About to check ElevenLabs API key and generate voice...');
     if (process.env.ELEVENLABS_API_KEY) {
+      console.log('ElevenLabs API key found, proceeding with voice synthesis...');
       try {
         console.log(`Making ElevenLabs request for voice: ${selectedVoice} (ID: ${voiceId})`);
         console.log(`Text to synthesize: "${aiResponse.substring(0, 50)}..."`);
