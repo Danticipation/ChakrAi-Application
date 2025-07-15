@@ -48,7 +48,7 @@ import {
   type DailyActivity, type InsertDailyActivity,
   type UserFeedback, type InsertUserFeedback,
 } from "@shared/schema";
-import { eq, desc, and, lt, ne } from "drizzle-orm";
+import { eq, desc, and, lt, ne, sql } from "drizzle-orm";
 
 export interface IStorage {
   // Users
@@ -962,9 +962,9 @@ export class DbStorage implements IStorage {
     await this.db
       .update(userWellnessPoints)
       .set({
-        totalPoints: userWellnessPoints.totalPoints + points,
-        availablePoints: userWellnessPoints.availablePoints + points,
-        lifetimePoints: userWellnessPoints.lifetimePoints + points,
+        totalPoints: sql`${userWellnessPoints.totalPoints} + ${points}`,
+        availablePoints: sql`${userWellnessPoints.availablePoints} + ${points}`,
+        lifetimePoints: sql`${userWellnessPoints.lifetimePoints} + ${points}`,
         lastActivityDate: new Date()
       })
       .where(eq(userWellnessPoints.userId, userId));
@@ -994,8 +994,8 @@ export class DbStorage implements IStorage {
     await this.db
       .update(userWellnessPoints)
       .set({
-        currentLevel: userWellnessPoints.currentLevel + 1,
-        pointsToNextLevel: userWellnessPoints.pointsToNextLevel + 100
+        currentLevel: sql`${userWellnessPoints.currentLevel} + 1`,
+        pointsToNextLevel: sql`${userWellnessPoints.pointsToNextLevel} + 100`
       })
       .where(eq(userWellnessPoints.userId, userId));
   }
@@ -1170,7 +1170,7 @@ export class DbStorage implements IStorage {
     await this.db
       .update(communityChallenges)
       .set({
-        participantCount: communityChallenges.participantCount + 1
+        participantCount: sql`${communityChallenges.participantCount} + 1`
       })
       .where(eq(communityChallenges.id, challengeId));
   }
@@ -1254,7 +1254,7 @@ export class DbStorage implements IStorage {
   async updateMemoryAccessCount(memoryId: number): Promise<void> {
     await this.db.update(semanticMemories)
       .set({ 
-        accessCount: semanticMemories.accessCount + 1,
+        accessCount: sql`${semanticMemories.accessCount} + 1`,
         lastAccessedAt: new Date()
       })
       .where(eq(semanticMemories.id, memoryId));
@@ -1697,7 +1697,7 @@ export class DbStorage implements IStorage {
         currentStreak: newStreak,
         longestStreak: Math.max(userStreak.longestStreak || 0, newStreak),
         lastActivityDate: new Date(),
-        totalActiveDays: (userStreak.totalActiveDays || 0) + 1
+        totalActiveDays: sql`${userStreaks.totalActiveDays} + 1`
       };
       
       await this.updateUserStreak(userId, streakType, updates);
