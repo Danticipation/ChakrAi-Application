@@ -14,7 +14,7 @@ interface WellnessMetrics {
 interface ChartData {
   moodTrend: Array<{ date: string; value: number; emotion: string }>;
   wellnessTrend: Array<{ date: string; value: number; type: string }>;
-  emotionDistribution: Record<string, number>;
+  emotionDistribution: Array<{ emotion: string; count: number }>;
   progressTracking: Array<{ period: string; journalEntries: number; moodEntries: number; engagement: number }>;
 }
 
@@ -332,16 +332,16 @@ const AnalyticsDashboard: React.FC<{ userId: number }> = ({ userId }) => {
               {charts.emotionDistribution && charts.emotionDistribution.length > 0 ? (
                 <div className="space-y-3">
                   {charts.emotionDistribution
-                    .sort((a, b) => b.count - a.count)
+                    .sort((a: { emotion: string; count: number }, b: { emotion: string; count: number }) => b.count - a.count)
                     .slice(0, 5)
-                    .map((item) => (
+                    .map((item: { emotion: string; count: number }) => (
                       <div key={item.emotion} className="flex items-center justify-between">
                         <span className="text-sm text-white/80 capitalize">{item.emotion}</span>
                         <div className="flex items-center space-x-2">
                           <div className="w-24 bg-white/20 rounded-full h-2">
                             <div 
                               className="bg-white h-2 rounded-full"
-                              style={{ width: `${(item.count / Math.max(...charts.emotionDistribution.map(e => e.count))) * 100}%` }}
+                              style={{ width: `${(item.count / Math.max(...charts.emotionDistribution.map((e: { emotion: string; count: number }) => e.count))) * 100}%` }}
                             ></div>
                           </div>
                           <span className="text-xs font-medium w-6 text-white">{item.count}</span>
