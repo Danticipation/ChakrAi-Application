@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronRight, ChevronLeft, Heart, Users, Target, Coffee, Settings, Sparkles, Save, RotateCcw } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Heart, Users, Target, Coffee, Settings, Sparkles, Save, RotateCcw, Brain, Activity, Clock, Home } from 'lucide-react';
 import axios from 'axios';
 import { getCurrentUserId } from '../utils/userSession';
 
@@ -65,6 +65,57 @@ const questionCategories: QuestionCategory[] = [
         text: "When you're stressed, what's your first instinct?",
         type: 'multiple_choice',
         options: ['Move/exercise', 'Talk to someone', 'Shut down/withdraw', 'Distract myself', 'Problem-solve immediately']
+      },
+      {
+        id: 'p7',
+        text: "What's your biggest strength that you're proud of?",
+        type: 'text'
+      },
+      {
+        id: 'p8',
+        text: "What's something you'd like to change about yourself?",
+        type: 'text'
+      },
+      {
+        id: 'p9',
+        text: 'How do you handle criticism?',
+        type: 'multiple_choice',
+        options: ['Take it to heart', 'Consider it objectively', 'Get defensive initially', 'Use it for growth', 'Depends on who it comes from']
+      },
+      {
+        id: 'p10',
+        text: 'What motivates you most in life?',
+        type: 'multiple_choice',
+        options: ['Personal achievement', 'Helping others', 'Learning and growth', 'Security and stability', 'Adventure and experiences']
+      },
+      {
+        id: 'p11',
+        text: 'How do you typically make important decisions?',
+        type: 'multiple_choice',
+        options: ['Analyze pros and cons logically', 'Go with my gut feeling', 'Seek advice from others', 'Sleep on it', 'Research extensively first']
+      },
+      {
+        id: 'p12',
+        text: 'What does success mean to you personally?',
+        type: 'text'
+      },
+      {
+        id: 'p13',
+        text: 'How do you prefer to spend your free time?',
+        type: 'multiple_choice',
+        options: ['Relaxing at home', 'Socializing with friends', 'Pursuing hobbies', 'Learning something new', 'Being active/outdoors']
+      },
+      {
+        id: 'p14',
+        text: 'What role does spirituality or personal beliefs play in your life?',
+        type: 'multiple_choice',
+        options: ['Very important - guides my decisions', 'Somewhat important', 'Not very important', 'Still exploring/questioning', 'Prefer not to discuss']
+      },
+      {
+        id: 'p15',
+        text: 'How do you handle uncertainty or unexpected changes?',
+        type: 'multiple_choice',
+        options: ['Adapt quickly', 'Need time to process', 'Get anxious', 'See it as an opportunity', 'Prefer to have backup plans']
       }
     ]
   },
@@ -102,6 +153,64 @@ const questionCategories: QuestionCategory[] = [
         text: "What's your relationship with change—exciting, scary, or both?",
         type: 'multiple_choice',
         options: ['Mostly exciting', 'Mostly scary', 'Both exciting and scary', 'Neutral - depends on the change']
+      },
+      {
+        id: 'e6',
+        text: 'When you feel anxious, what physical sensations do you notice?',
+        type: 'multiple_choice',
+        options: ['Rapid heartbeat', 'Tight chest or breathing changes', 'Stomach issues', 'Muscle tension', 'Sweating or trembling', 'None that I notice']
+      },
+      {
+        id: 'e7',
+        text: 'How do you typically express anger or frustration?',
+        type: 'multiple_choice',
+        options: ['Talk it out immediately', 'Need time to cool down first', 'Write about it', 'Physical activity', 'Tend to bottle it up', 'Depends on the situation']
+      },
+      {
+        id: 'e8',
+        text: 'What helps you feel most grounded during difficult times?',
+        type: 'text'
+      },
+      {
+        id: 'e9',
+        text: 'How do you handle disappointment?',
+        type: 'multiple_choice',
+        options: ['Allow myself to feel sad for a while', 'Try to find the lesson or positive', 'Distract myself with activities', 'Talk to someone about it', 'Move on quickly']
+      },
+      {
+        id: 'e10',
+        text: 'What emotion do you struggle with most?',
+        type: 'multiple_choice',
+        options: ['Anxiety', 'Sadness/Depression', 'Anger', 'Loneliness', 'Overwhelm', 'Fear', 'Guilt/Shame', 'All emotions feel difficult']
+      },
+      {
+        id: 'e11',
+        text: 'How comfortable are you with crying or showing vulnerability?',
+        type: 'scale',
+        options: ['1 - Very uncomfortable', '2', '3', '4', '5 - Very comfortable']
+      },
+      {
+        id: 'e12',
+        text: 'What triggers your stress most often?',
+        type: 'multiple_choice',
+        options: ['Work/school pressure', 'Relationship conflicts', 'Financial concerns', 'Health issues', 'Social situations', 'Uncertainty about the future']
+      },
+      {
+        id: 'e13',
+        text: 'How do you know when you need to take a mental health break?',
+        type: 'text'
+      },
+      {
+        id: 'e14',
+        text: 'What helps you bounce back from setbacks?',
+        type: 'multiple_choice',
+        options: ['Self-compassion and patience', 'Support from others', 'Focusing on lessons learned', 'Getting back into routine', 'Taking action on solutions']
+      },
+      {
+        id: 'e15',
+        text: 'How do you handle overwhelming emotions?',
+        type: 'multiple_choice',
+        options: ['Take deep breaths/meditation', 'Call someone I trust', 'Write in a journal', 'Go for a walk', 'Use grounding techniques', 'Wait for them to pass']
       }
     ]
   },
@@ -138,6 +247,64 @@ const questionCategories: QuestionCategory[] = [
         text: 'How do you prefer to show care for others?',
         type: 'multiple_choice',
         options: ['Listening and emotional support', 'Practical help and actions', 'Spending quality time', 'Giving thoughtful gifts', 'Physical affection']
+      },
+      {
+        id: 'r6',
+        text: 'How comfortable are you with conflict in relationships?',
+        type: 'multiple_choice',
+        options: ['Very uncomfortable - avoid it', 'Somewhat uncomfortable but will address it', 'Neutral - depends on the issue', 'Comfortable addressing conflicts', 'Actually prefer to address issues directly']
+      },
+      {
+        id: 'r7',
+        text: 'What makes you feel most connected to others?',
+        type: 'multiple_choice',
+        options: ['Deep conversations', 'Shared activities', 'Physical presence', 'Shared humor/laughter', 'Working toward common goals']
+      },
+      {
+        id: 'r8',
+        text: 'How do you typically respond when someone is upset with you?',
+        type: 'multiple_choice',
+        options: ['Apologize immediately', 'Try to understand their perspective', 'Get defensive', 'Give them space first', 'Want to fix it right away']
+      },
+      {
+        id: 'r9',
+        text: 'What kind of boundaries do you struggle with most?',
+        type: 'multiple_choice',
+        options: ['Saying no to requests', 'Limiting time with draining people', 'Not overcommitting myself', 'Protecting my energy', 'Setting emotional boundaries']
+      },
+      {
+        id: 'r10',
+        text: 'How do you handle loneliness?',
+        type: 'multiple_choice',
+        options: ['Reach out to friends/family', 'Engage in solo activities I enjoy', 'Use social media or online communities', 'Focus on self-care', 'Sometimes just sit with the feeling']
+      },
+      {
+        id: 'r11',
+        text: 'What role does family play in your life currently?',
+        type: 'multiple_choice',
+        options: ['Very close and supportive', 'Close but complicated', 'Somewhat distant', 'Strained or difficult', 'Minimal contact', 'Prefer not to share']
+      },
+      {
+        id: 'r12',
+        text: 'How do you know when a relationship is healthy for you?',
+        type: 'text'
+      },
+      {
+        id: 'r13',
+        text: 'What do you need most in your relationships right now?',
+        type: 'multiple_choice',
+        options: ['More emotional support', 'Better communication', 'More fun and lightness', 'Deeper connections', 'Healthy boundaries', 'More understanding']
+      },
+      {
+        id: 'r14',
+        text: 'How do you prefer to receive feedback from people you care about?',
+        type: 'multiple_choice',
+        options: ['Gently and with care', 'Direct but supportive', 'In private conversations', 'With specific examples', 'Only when I ask for it']
+      },
+      {
+        id: 'r15',
+        text: 'What makes you feel most appreciated in relationships?',
+        type: 'text'
       }
     ]
   },
@@ -247,6 +414,386 @@ const questionCategories: QuestionCategory[] = [
         text: 'Do you want me to ask follow-up questions about your answers, or keep it light?',
         type: 'multiple_choice',
         options: ['Deep dive with follow-ups', 'Keep conversations light', 'Depends on the topic', 'Let me guide the depth']
+      }
+    ]
+  },
+  {
+    id: 'mental_health',
+    name: 'Mental Health & History',
+    icon: Brain,
+    description: 'Help me understand your mental health background and current state',
+    questions: [
+      {
+        id: 'mh1',
+        text: 'Have you ever worked with a therapist, counselor, or mental health professional?',
+        type: 'multiple_choice',
+        options: ['Yes, currently', 'Yes, in the past', 'Never, but interested', 'Never, not interested', 'Prefer not to share']
+      },
+      {
+        id: 'mh2',
+        text: 'How would you rate your current mental health?',
+        type: 'scale',
+        options: ['1 - Struggling significantly', '2', '3', '4', '5 - Doing very well']
+      },
+      {
+        id: 'mh3',
+        text: 'What mental health challenges have you experienced? (Select all that apply)',
+        type: 'multiple_choice',
+        options: ['Anxiety', 'Depression', 'PTSD/Trauma', 'ADHD', 'Eating disorders', 'Substance use', 'Bipolar', 'OCD', 'None', 'Prefer not to share']
+      },
+      {
+        id: 'mh4',
+        text: 'Are you currently taking any medication for mental health?',
+        type: 'multiple_choice',
+        options: ['Yes, and it helps', 'Yes, but not sure if it helps', 'No, but considering it', 'No, prefer other approaches', 'Prefer not to share']
+      },
+      {
+        id: 'mh5',
+        text: 'What has been most helpful for your mental wellness so far?',
+        type: 'text'
+      },
+      {
+        id: 'mh6',
+        text: 'How often do you experience anxiety or worry?',
+        type: 'multiple_choice',
+        options: ['Daily', 'Several times a week', 'Occasionally', 'Rarely', 'Never']
+      },
+      {
+        id: 'mh7',
+        text: 'How often do you feel sad or down?',
+        type: 'multiple_choice',
+        options: ['Daily', 'Several times a week', 'Occasionally', 'Rarely', 'Never']
+      },
+      {
+        id: 'mh8',
+        text: 'Do you have thoughts of self-harm or suicide?',
+        type: 'multiple_choice',
+        options: ['Never', 'Rarely', 'Sometimes', 'Often', 'Prefer not to answer']
+      },
+      {
+        id: 'mh9',
+        text: 'What triggers your mental health struggles most?',
+        type: 'multiple_choice',
+        options: ['Stress', 'Relationship issues', 'Work/school', 'Health concerns', 'Financial pressure', 'Trauma memories', 'Seasonal changes', 'Unknown triggers']
+      },
+      {
+        id: 'mh10',
+        text: 'How do you typically cope with mental health challenges?',
+        type: 'multiple_choice',
+        options: ['Talk to someone', 'Self-care activities', 'Exercise', 'Medication', 'Avoid/isolate', 'Therapy techniques', 'Creative outlets']
+      },
+      {
+        id: 'mh11',
+        text: 'What would improve your mental health most right now?',
+        type: 'text'
+      },
+      {
+        id: 'mh12',
+        text: 'How comfortable are you discussing mental health topics?',
+        type: 'scale',
+        options: ['1 - Very uncomfortable', '2', '3', '4', '5 - Very comfortable']
+      },
+      {
+        id: 'mh13',
+        text: 'Do you have family history of mental health conditions?',
+        type: 'multiple_choice',
+        options: ['Yes, and it affects me', 'Yes, but minimal impact', 'No family history', 'Unknown', 'Prefer not to share']
+      },
+      {
+        id: 'mh14',
+        text: 'What mental health stigma have you experienced?',
+        type: 'multiple_choice',
+        options: ['From family', 'From friends', 'At work/school', 'Self-stigma', 'Healthcare settings', 'None', 'Prefer not to share']
+      },
+      {
+        id: 'mh15',
+        text: 'How important is mental health in your daily life priorities?',
+        type: 'scale',
+        options: ['1 - Not a priority', '2', '3', '4', '5 - Top priority']
+      }
+    ]
+  },
+  {
+    id: 'physical_health',
+    name: 'Physical Health & Wellness',
+    icon: Activity,
+    description: 'Share about your physical health and wellness habits',
+    questions: [
+      {
+        id: 'ph1',
+        text: 'How would you rate your current physical health?',
+        type: 'scale',
+        options: ['1 - Poor', '2', '3', '4', '5 - Excellent']
+      },
+      {
+        id: 'ph2',
+        text: 'How often do you exercise or do physical activity?',
+        type: 'multiple_choice',
+        options: ['Daily', '3-5 times per week', '1-2 times per week', 'Occasionally', 'Rarely or never']
+      },
+      {
+        id: 'ph3',
+        text: 'What type of physical activity do you enjoy most?',
+        type: 'multiple_choice',
+        options: ['Walking/hiking', 'Running', 'Gym/weights', 'Yoga/stretching', 'Sports', 'Dancing', 'Swimming', 'None really appeal to me']
+      },
+      {
+        id: 'ph4',
+        text: 'How many hours of sleep do you typically get?',
+        type: 'multiple_choice',
+        options: ['Less than 5 hours', '5-6 hours', '6-7 hours', '7-8 hours', '8+ hours']
+      },
+      {
+        id: 'ph5',
+        text: 'How would you describe your sleep quality?',
+        type: 'multiple_choice',
+        options: ['Very poor', 'Poor', 'Fair', 'Good', 'Excellent']
+      },
+      {
+        id: 'ph6',
+        text: 'Do you have any chronic health conditions?',
+        type: 'multiple_choice',
+        options: ['Yes, affects daily life significantly', 'Yes, but manageable', 'Minor conditions only', 'No chronic conditions', 'Prefer not to share']
+      },
+      {
+        id: 'ph7',
+        text: 'How do you feel about your current diet/nutrition?',
+        type: 'multiple_choice',
+        options: ['Very healthy', 'Mostly healthy', 'Mixed - some good, some bad', 'Not very healthy', 'Poor']
+      },
+      {
+        id: 'ph8',
+        text: 'What affects your energy levels most?',
+        type: 'multiple_choice',
+        options: ['Sleep quality', 'Diet/nutrition', 'Exercise', 'Stress levels', 'Health conditions', 'Work schedule', 'Mood']
+      },
+      {
+        id: 'ph9',
+        text: 'Do you use substances to cope with stress? (alcohol, drugs, etc.)',
+        type: 'multiple_choice',
+        options: ['Never', 'Rarely', 'Occasionally', 'Regularly', 'Daily', 'Prefer not to share']
+      },
+      {
+        id: 'ph10',
+        text: 'How much water do you drink daily?',
+        type: 'multiple_choice',
+        options: ['Less than 2 glasses', '2-4 glasses', '4-6 glasses', '6-8 glasses', '8+ glasses']
+      },
+      {
+        id: 'ph11',
+        text: 'What physical symptoms do you notice when stressed?',
+        type: 'text'
+      },
+      {
+        id: 'ph12',
+        text: 'Do you take any vitamins or supplements?',
+        type: 'multiple_choice',
+        options: ['Yes, regularly', 'Yes, occasionally', 'No, but interested', 'No, not interested', 'Only when sick']
+      },
+      {
+        id: 'ph13',
+        text: 'How often do you go to medical checkups?',
+        type: 'multiple_choice',
+        options: ['Annually as recommended', 'Every few years', 'Only when sick', 'Rarely', 'Never']
+      },
+      {
+        id: 'ph14',
+        text: 'What health goal would you most like to achieve?',
+        type: 'text'
+      },
+      {
+        id: 'ph15',
+        text: 'How does your physical health affect your mental health?',
+        type: 'multiple_choice',
+        options: ['Significantly - they\'re very connected', 'Somewhat connected', 'Minimally connected', 'Not connected', 'I\'m not sure']
+      }
+    ]
+  },
+  {
+    id: 'daily_life',
+    name: 'Daily Life & Routines',
+    icon: Clock,
+    description: 'Tell me about your daily routines and lifestyle patterns',
+    questions: [
+      {
+        id: 'dl1',
+        text: 'What does a typical morning routine look like for you?',
+        type: 'text'
+      },
+      {
+        id: 'dl2',
+        text: 'How structured vs. flexible do you prefer your days?',
+        type: 'multiple_choice',
+        options: ['Highly structured with set routines', 'Somewhat structured with flexibility', 'Balanced structure and spontaneity', 'Mostly flexible and spontaneous', 'No structure - go with the flow']
+      },
+      {
+        id: 'dl3',
+        text: 'What time do you typically wake up?',
+        type: 'multiple_choice',
+        options: ['Before 6 AM', '6-7 AM', '7-8 AM', '8-9 AM', '9-10 AM', 'After 10 AM', 'Varies greatly']
+      },
+      {
+        id: 'dl4',
+        text: 'What time do you typically go to bed?',
+        type: 'multiple_choice',
+        options: ['Before 9 PM', '9-10 PM', '10-11 PM', '11 PM-12 AM', '12-1 AM', 'After 1 AM', 'Varies greatly']
+      },
+      {
+        id: 'dl5',
+        text: 'How do you typically spend your evenings?',
+        type: 'multiple_choice',
+        options: ['Relaxing at home', 'Social activities', 'Hobbies/personal projects', 'Exercise', 'Work/studying', 'Screen time', 'Varies daily']
+      },
+      {
+        id: 'dl6',
+        text: 'What part of your day do you feel most productive?',
+        type: 'multiple_choice',
+        options: ['Early morning', 'Late morning', 'Afternoon', 'Evening', 'Late night', 'Varies']
+      },
+      {
+        id: 'dl7',
+        text: 'How much screen time do you have daily (excluding work)?',
+        type: 'multiple_choice',
+        options: ['Less than 1 hour', '1-2 hours', '2-4 hours', '4-6 hours', '6+ hours']
+      },
+      {
+        id: 'dl8',
+        text: 'What daily habit would you most like to change?',
+        type: 'text'
+      },
+      {
+        id: 'dl9',
+        text: 'What daily habit are you most proud of?',
+        type: 'text'
+      },
+      {
+        id: 'dl10',
+        text: 'How do you typically handle household chores?',
+        type: 'multiple_choice',
+        options: ['Do them as needed', 'Set schedule/routine', 'Batch them on weekends', 'Minimal cleaning', 'Share with others', 'Procrastinate on them']
+      },
+      {
+        id: 'dl11',
+        text: 'What makes a day feel successful to you?',
+        type: 'text'
+      },
+      {
+        id: 'dl12',
+        text: 'How do you typically spend your weekends?',
+        type: 'multiple_choice',
+        options: ['Relaxing and recharging', 'Social activities', 'Household tasks', 'Hobbies/personal projects', 'Work or catching up', 'Adventure/exploration']
+      },
+      {
+        id: 'dl13',
+        text: 'What daily routine grounds you most?',
+        type: 'multiple_choice',
+        options: ['Morning routine', 'Exercise', 'Meals', 'Evening wind-down', 'Meditation/reflection', 'None - I prefer flexibility']
+      },
+      {
+        id: 'dl14',
+        text: 'How do you handle unexpected changes to your plans?',
+        type: 'multiple_choice',
+        options: ['Adapt easily', 'Need some time to adjust', 'Get stressed/anxious', 'Try to stick to original plan', 'See it as an opportunity']
+      },
+      {
+        id: 'dl15',
+        text: 'What would improve your daily life quality most?',
+        type: 'text'
+      }
+    ]
+  },
+  {
+    id: 'work_life',
+    name: 'Work & Life Balance',
+    icon: Home,
+    description: 'Share about your work, career, and work-life balance',
+    questions: [
+      {
+        id: 'wl1',
+        text: 'What is your current work/life situation?',
+        type: 'multiple_choice',
+        options: ['Full-time employed', 'Part-time employed', 'Self-employed/freelance', 'Student', 'Unemployed', 'Retired', 'Stay-at-home parent', 'Other']
+      },
+      {
+        id: 'wl2',
+        text: 'How satisfied are you with your current work situation?',
+        type: 'scale',
+        options: ['1 - Very dissatisfied', '2', '3', '4', '5 - Very satisfied']
+      },
+      {
+        id: 'wl3',
+        text: 'How would you describe your work-life balance?',
+        type: 'multiple_choice',
+        options: ['Work dominates my life', 'Work takes too much time', 'Fairly balanced', 'Life gets more time than work', 'I control the balance well']
+      },
+      {
+        id: 'wl4',
+        text: 'What stresses you most about work/career?',
+        type: 'multiple_choice',
+        options: ['Workload/pressure', 'Difficult relationships', 'Lack of purpose/meaning', 'Financial concerns', 'Career uncertainty', 'Work environment', 'Nothing significant']
+      },
+      {
+        id: 'wl5',
+        text: 'How many hours do you typically work per week?',
+        type: 'multiple_choice',
+        options: ['Less than 20', '20-30', '30-40', '40-50', '50-60', '60+', 'Varies greatly']
+      },
+      {
+        id: 'wl6',
+        text: 'Do you work from home, office, or mixed?',
+        type: 'multiple_choice',
+        options: ['Fully remote/home', 'Mostly home', 'Hybrid/mixed', 'Mostly office', 'Fully in office', 'Multiple locations', 'Not applicable']
+      },
+      {
+        id: 'wl7',
+        text: 'What motivates you most in your work/career?',
+        type: 'multiple_choice',
+        options: ['Purpose and meaning', 'Financial security', 'Growth and learning', 'Recognition and achievement', 'Helping others', 'Creative expression', 'Flexibility and freedom']
+      },
+      {
+        id: 'wl8',
+        text: 'How do you handle work stress?',
+        type: 'multiple_choice',
+        options: ['Talk to colleagues', 'Take breaks during day', 'Exercise after work', 'Disconnect completely', 'Work through it', 'Seek support from manager']
+      },
+      {
+        id: 'wl9',
+        text: 'What career goal are you working toward?',
+        type: 'text'
+      },
+      {
+        id: 'wl10',
+        text: 'How supportive is your work environment for mental health?',
+        type: 'multiple_choice',
+        options: ['Very supportive', 'Somewhat supportive', 'Neutral', 'Not very supportive', 'Unsupportive', 'Not applicable']
+      },
+      {
+        id: 'wl11',
+        text: 'Do you feel financially secure?',
+        type: 'multiple_choice',
+        options: ['Very secure', 'Mostly secure', 'Somewhat secure', 'Insecure', 'Very insecure']
+      },
+      {
+        id: 'wl12',
+        text: 'What would improve your work-life balance most?',
+        type: 'text'
+      },
+      {
+        id: 'wl13',
+        text: 'How do you separate work time from personal time?',
+        type: 'multiple_choice',
+        options: ['Clear boundaries', 'Somewhat clear', 'Blurred boundaries', 'Very blurred', 'No separation', 'Not applicable']
+      },
+      {
+        id: 'wl14',
+        text: 'What skills would you most like to develop?',
+        type: 'text'
+      },
+      {
+        id: 'wl15',
+        text: 'How does your work impact your mental health?',
+        type: 'multiple_choice',
+        options: ['Very positive impact', 'Somewhat positive', 'Neutral', 'Somewhat negative', 'Very negative impact']
       }
     ]
   }
