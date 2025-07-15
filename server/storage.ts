@@ -1064,7 +1064,7 @@ export class DbStorage implements IStorage {
     await this.db
       .update(userWellnessPoints)
       .set({
-        availablePoints: userWellnessPoints.availablePoints - cost
+        availablePoints: sql`${userWellnessPoints.availablePoints} - ${cost}`
       })
       .where(eq(userWellnessPoints.userId, userId));
 
