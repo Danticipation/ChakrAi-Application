@@ -184,7 +184,7 @@ router.post('/chat', async (req, res) => {
     );
     const userId = anonymousUser.id;
 
-    console.log('Chat request:', { message: message.substring(0, 50) + '...', voice, userId: anonymousUser.id, isAnonymous: anonymousUser.isAnonymous });
+    console.log('Chat request for userId:', userId, 'message:', message.substring(0, 50) + '...');
     console.log('Voice parameter received:', voice);
     console.log('ELEVENLABS_API_KEY present:', !!process.env.ELEVENLABS_API_KEY);
 
@@ -317,6 +317,9 @@ Adapt your response to mirror the user's communication patterns while providing 
       console.error('ELEVENLABS_API_KEY not configured');
     }
 
+    console.log('Final response - audioUrl length:', audioUrl ? audioUrl.length : 'null');
+    console.log('Final response - selectedVoice:', selectedVoice);
+    
     res.json({
       message: aiResponse,
       response: aiResponse,
