@@ -1806,6 +1806,18 @@ const AppLayout = ({ currentUserId, onDataReset }: AppLayoutProps) => {
                       className="flex-1 p-3 theme-card backdrop-blur-sm border-2 border-silver rounded-xl theme-text placeholder-white/50 focus:outline-none focus:border-purple-400 text-sm"
                     />
                     <button
+                      onClick={isRecording ? stopRecording : startRecording}
+                      className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 border-2 border-silver shadow-lg ${
+                        isRecording 
+                          ? 'bg-red-500 hover:bg-red-600 text-white animate-pulse' 
+                          : 'bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white'
+                      }`}
+                      disabled={loading}
+                      title={isRecording ? 'Stop recording' : 'Start voice recording'}
+                    >
+                      {isRecording ? <Square size={20} /> : <Mic size={20} />}
+                    </button>
+                    <button
                       onClick={sendMessage}
                       disabled={loading || !input.trim()}
                       className="px-4 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-medium hover:from-purple-700 hover:to-blue-700 transition-all duration-300 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed border-2 border-silver text-sm"
