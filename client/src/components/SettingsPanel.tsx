@@ -244,15 +244,23 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                         {voices.map((voice) => (
                           <button
                             key={voice.id}
-                            onClick={() => onVoiceChange(voice.id)}
+                            onClick={() => {
+                              console.log('Voice selection clicked:', voice.id);
+                              onVoiceChange(voice.id);
+                            }}
                             className={`p-3 md:p-4 rounded-lg border-2 transition-all ${
                               selectedVoice === voice.id
-                                ? 'border-silver-light bg-[var(--theme-accent)]/10'
-                                : 'border-silver hover:border-silver-light'
+                                ? 'border-white bg-white/20 ring-2 ring-white/50'
+                                : 'border-white/30 hover:border-white/50 hover:bg-white/10'
                             }`}
                           >
                             <div className="text-left">
-                              <h5 className="font-semibold theme-text text-sm md:text-base">{voice.name}</h5>
+                              <div className="flex items-center justify-between">
+                                <h5 className="font-semibold theme-text text-sm md:text-base">{voice.name}</h5>
+                                {selectedVoice === voice.id && (
+                                  <div className="w-3 h-3 bg-white rounded-full"></div>
+                                )}
+                              </div>
                               <p className="text-xs md:text-sm theme-text-secondary">{voice.description}</p>
                             </div>
                           </button>
