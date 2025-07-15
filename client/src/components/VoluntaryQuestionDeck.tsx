@@ -262,13 +262,20 @@ export default function VoluntaryQuestionDeck() {
   const [answeredQuestions, setAnsweredQuestions] = useState<Set<string>>(new Set());
 
   useEffect(() => {
+    console.log('VoluntaryQuestionDeck component mounted');
+    
     const initializeUser = async () => {
-      const currentUserId = await getCurrentUserId();
-      setUserId(currentUserId);
-      
-      // Load existing answers
-      if (currentUserId) {
-        loadExistingAnswers(currentUserId);
+      try {
+        const currentUserId = await getCurrentUserId();
+        console.log('VoluntaryQuestionDeck: Got user ID:', currentUserId);
+        setUserId(currentUserId);
+        
+        // Load existing answers
+        if (currentUserId) {
+          loadExistingAnswers(currentUserId);
+        }
+      } catch (error) {
+        console.error('VoluntaryQuestionDeck: Error initializing user:', error);
       }
     };
     
@@ -277,8 +284,10 @@ export default function VoluntaryQuestionDeck() {
 
   const loadExistingAnswers = async (userId: number) => {
     try {
+      console.log('VoluntaryQuestionDeck: Loading existing answers for user:', userId);
       setLoading(true);
       const response = await axios.get(`/api/voluntary-questions/${userId}`);
+      console.log('VoluntaryQuestionDeck: API response:', response.data);
       const existingAnswers = response.data.answers || [];
       
       const answersMap: Record<string, UserAnswer> = {};
@@ -291,8 +300,9 @@ export default function VoluntaryQuestionDeck() {
       
       setAnswers(answersMap);
       setAnsweredQuestions(answeredSet);
+      console.log('VoluntaryQuestionDeck: Loaded answers:', answersMap);
     } catch (error) {
-      console.error('Failed to load existing answers:', error);
+      console.error('VoluntaryQuestionDeck: Failed to load existing answers:', error);
     } finally {
       setLoading(false);
     }
@@ -346,6 +356,27 @@ export default function VoluntaryQuestionDeck() {
 
   const currentCategory = questionCategories.find(c => c.id === activeCategory);
   const currentQuestion = currentCategory?.questions[currentQuestionIndex];
+
+  console.log('VoluntaryQuestionDeck: Rendering with state:', {
+    activeCategory,
+    loading,
+    userId,
+    answeredQuestions: answeredQuestions.size,
+    totalQuestions: questionCategories.reduce((sum, cat) => sum + cat.questions.length, 0)
+  });
+
+  if (loading) {
+    return (
+      <div className="min-h-screen theme-background p-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+            <p className="theme-text">Loading your question deck...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!activeCategory) {
     return (
