@@ -462,16 +462,6 @@ export class DbStorage implements IStorage {
     await this.db.delete(authTokens).where(lt(authTokens.expiresAt, new Date()));
   }
 
-  async createBot(data: InsertBot): Promise<Bot> {
-    const [bot] = await this.db.insert(bots).values(data).returning();
-    return bot;
-  }
-
-  async updateBot(id: number, data: Partial<InsertBot>): Promise<Bot> {
-    const [bot] = await this.db.update(bots).set(data).where(eq(bots.id, id)).returning();
-    return bot;
-  }
-
   // Messages
   async getMessagesByUserId(userId: number, limit: number = 50): Promise<Message[]> {
     console.log(`Fetching messages for userId: ${userId} with limit: ${limit}`);
@@ -1618,10 +1608,6 @@ export class DbStorage implements IStorage {
       .update(userStreaks)
       .set({ ...updates, updatedAt: new Date() })
       .where(and(eq(userStreaks.userId, userId), eq(userStreaks.streakType, streakType)));
-  }
-
-  async getUserStreaks(userId: number): Promise<UserStreak[]> {
-    return await this.db.select().from(userStreaks).where(eq(userStreaks.userId, userId));
   }
 
   async getUserStreak(userId: number, streakType: string): Promise<UserStreak | null> {

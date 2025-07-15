@@ -3,7 +3,7 @@ import multer from 'multer';
 import { storage } from './storage.js';
 import { analyzeEmotionalState } from './emotionalAnalysis.js';
 import { openai } from './openaiRetry.js';
-import { userSessionManager } from './userSessionManager.js';
+import { userSessionManager } from './userSession.js';
 import { pool } from './db.js';
 import { 
   analyzeConversationForMemory, 
