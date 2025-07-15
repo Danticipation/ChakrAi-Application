@@ -1179,7 +1179,7 @@ export class DbStorage implements IStorage {
     const [updated] = await this.db
       .update(userChallengeProgress)
       .set({
-        currentProgress: userChallengeProgress.currentProgress + progressIncrement
+        currentProgress: sql`${userChallengeProgress.currentProgress} + ${progressIncrement}`
       })
       .where(and(
         eq(userChallengeProgress.userId, userId),
@@ -1697,7 +1697,7 @@ export class DbStorage implements IStorage {
         currentStreak: newStreak,
         longestStreak: Math.max(userStreak.longestStreak || 0, newStreak),
         lastActivityDate: new Date(),
-        totalActiveDays: sql`${userStreaks.totalActiveDays} + 1`
+        totalActiveDays: (userStreak.totalActiveDays || 0) + 1
       };
       
       await this.updateUserStreak(userId, streakType, updates);
