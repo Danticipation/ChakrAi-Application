@@ -1365,14 +1365,15 @@ export class DbStorage implements IStorage {
   }
 
   async getTherapistSessionNotes(therapistId: number, clientUserId?: number): Promise<TherapistSessionNotes[]> {
-    let query = this.db.select().from(therapistSessionNotes)
-      .where(eq(therapistSessionNotes.therapistId, therapistId));
+    const whereConditions = [eq(therapistSessionNotes.therapistId, therapistId)];
     
     if (clientUserId) {
-      query = query.where(eq(therapistSessionNotes.clientUserId, clientUserId));
+      whereConditions.push(eq(therapistSessionNotes.clientUserId, clientUserId));
     }
     
-    return await query.orderBy(desc(therapistSessionNotes.sessionDate));
+    return await this.db.select().from(therapistSessionNotes)
+      .where(and(...whereConditions))
+      .orderBy(desc(therapistSessionNotes.sessionDate));
   }
 
   async createRiskAlert(data: InsertRiskAlert): Promise<RiskAlert> {
@@ -1381,18 +1382,19 @@ export class DbStorage implements IStorage {
   }
 
   async getRiskAlerts(therapistId: number, clientUserId?: number, acknowledged?: boolean): Promise<RiskAlert[]> {
-    let query = this.db.select().from(riskAlerts)
-      .where(eq(riskAlerts.therapistId, therapistId));
+    const whereConditions = [eq(riskAlerts.therapistId, therapistId)];
     
     if (clientUserId) {
-      query = query.where(eq(riskAlerts.clientUserId, clientUserId));
+      whereConditions.push(eq(riskAlerts.clientUserId, clientUserId));
     }
     
     if (acknowledged !== undefined) {
-      query = query.where(eq(riskAlerts.acknowledged, acknowledged));
+      whereConditions.push(eq(riskAlerts.acknowledged, acknowledged));
     }
     
-    return await query.orderBy(desc(riskAlerts.createdAt));
+    return await this.db.select().from(riskAlerts)
+      .where(and(...whereConditions))
+      .orderBy(desc(riskAlerts.createdAt));
   }
 
   async acknowledgeRiskAlert(id: number): Promise<RiskAlert> {
