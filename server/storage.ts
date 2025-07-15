@@ -1419,7 +1419,7 @@ export class DbStorage implements IStorage {
       // Get recent mood data
       const recentMoods = await this.db.select().from(moodEntries)
         .where(eq(moodEntries.userId, clientUserId))
-        .orderBy(desc(moodEntries.timestamp))
+        .orderBy(desc(moodEntries.createdAt))
         .limit(30);
       dashboardData.allowedData.moodData = recentMoods;
     }
