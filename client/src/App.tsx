@@ -2098,12 +2098,14 @@ const AppLayout = ({ currentUserId, onDataReset }: AppLayoutProps) => {
         }}
       />
 
-      {/* Floating Chat Component */}
-      <FloatingChat
-        isOpen={isFloatingChatOpen}
-        onToggle={() => setIsFloatingChatOpen(!isFloatingChatOpen)}
-        selectedVoice={selectedVoice}
-      />
+      {/* Floating Chat Component - Only show when NOT in desktop main chat mode */}
+      {!(activeSection === 'chat' && isFloatingChatOpen) && (
+        <FloatingChat
+          isOpen={isFloatingChatOpen}
+          onToggle={() => setIsFloatingChatOpen(!isFloatingChatOpen)}
+          selectedVoice={selectedVoice}
+        />
+      )}
     </div>
   );
 };
