@@ -770,6 +770,7 @@ const AppLayout = ({ currentUserId, onDataReset }: AppLayoutProps) => {
 
   // Function to render main content (shared between modal and main view)
   const renderMainContent = (section: string) => {
+    console.log('App: Rendering section:', section);
     switch (section) {
       case 'daily':
         return <PersonalityReflection userId={getCurrentUserId()} />;
@@ -792,6 +793,7 @@ const AppLayout = ({ currentUserId, onDataReset }: AppLayoutProps) => {
         return <AnalyticsDashboard userId={getCurrentUserId()} />;
 
       case 'questions':
+        console.log('App: Rendering VoluntaryQuestionDeck component');
         return <VoluntaryQuestionDeck />;
 
       case 'feedback':
@@ -1085,6 +1087,20 @@ const AppLayout = ({ currentUserId, onDataReset }: AppLayoutProps) => {
           </div>
         );
 
+      case 'questions':
+        console.log('Desktop: Rendering VoluntaryQuestionDeck component');
+        return <VoluntaryQuestionDeck />;
+
+      case 'feedback':
+        return (
+          <div className="flex items-center justify-center h-64 text-white/60">
+            <p>Feedback feature coming soon...</p>
+          </div>
+        );
+
+      case 'microphone-test':
+        return <MicrophoneTest />;
+
       default:
         return (
           <div className="flex items-center justify-center h-full theme-background">
@@ -1259,14 +1275,19 @@ const AppLayout = ({ currentUserId, onDataReset }: AppLayoutProps) => {
                 <button
                   key={tab.id}
                   onClick={() => {
+                    console.log('Mobile Navigation: Clicked tab:', tab.id, tab.label);
                     // Special modal handling for certain sections on mobile
                     if (tab.id === 'themes') {
+                      console.log('Mobile Navigation: Opening theme modal');
                       setShowThemeModal(true);
                     } else if (tab.id === 'voice') {
+                      console.log('Mobile Navigation: Opening settings');
                       setShowSettings(true);
                     } else if (tab.id === 'floating-chat') {
+                      console.log('Mobile Navigation: Opening floating chat');
                       setIsFloatingChatOpen(true);
                     } else if (['journal', 'analytics', 'memory', 'daily', 'challenges', 'rewards', 'community', 'vr', 'health', 'agents', 'adaptive', 'therapy-plans', 'questions', 'feedback', 'microphone-test'].includes(tab.id)) {
+                      console.log('Mobile Navigation: Opening modal for tab:', tab.id);
                       // Track activity for specific sections
                       if (tab.id === 'journal') {
                         updateUserActivity('journal_access');
@@ -1276,9 +1297,14 @@ const AppLayout = ({ currentUserId, onDataReset }: AppLayoutProps) => {
                       setContentLoading(true);
                       setMobileModalContent(tab.id);
                       setShowMobileModal(true);
+                      console.log('Mobile Navigation: Modal state set - showMobileModal:', true, 'mobileModalContent:', tab.id);
                       // Simulate content loading time
-                      setTimeout(() => setContentLoading(false), 800);
+                      setTimeout(() => {
+                        console.log('Mobile Navigation: Content loading complete for:', tab.id);
+                        setContentLoading(false);
+                      }, 800);
                     } else {
+                      console.log('Mobile Navigation: Setting active section:', tab.id);
                       setActiveSection(tab.id);
                     }
                   }}
@@ -1355,9 +1381,12 @@ const AppLayout = ({ currentUserId, onDataReset }: AppLayoutProps) => {
               <button
                 key={tab.id}
                 onClick={() => {
+                  console.log('Desktop Navigation: Clicked tab:', tab.id, tab.label);
                   if (tab.id === 'settings') {
+                    console.log('Desktop Navigation: Opening settings');
                     setShowSettings(true);
                   } else {
+                    console.log('Desktop Navigation: Setting active section to:', tab.id);
                     setActiveSection(tab.id);
                   }
                 }}
@@ -1384,7 +1413,10 @@ const AppLayout = ({ currentUserId, onDataReset }: AppLayoutProps) => {
             ].map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveSection(tab.id)}
+                onClick={() => {
+                  console.log('Desktop Professional Tools: Clicked tab:', tab.id, tab.label);
+                  setActiveSection(tab.id);
+                }}
                 className={`shimmer-border w-full h-16 px-6 text-lg font-medium transition-all border-soft hover-lift text-luxury ${
                   activeSection === tab.id
                     ? 'theme-surface theme-text glass-luxury shadow-luxury'
@@ -1621,6 +1653,8 @@ const AppLayout = ({ currentUserId, onDataReset }: AppLayoutProps) => {
                     {activeSection === 'outcomes' && 'Therapeutic Outcomes'}
                     {activeSection === 'ehr' && 'EHR Integration'}
                     {activeSection === 'privacy-policy' && 'Privacy Policy & Terms'}
+                    {activeSection === 'questions' && 'Question Deck'}
+                    {activeSection === 'feedback' && 'Feedback & Suggestions'}
                   </h2>
                 </div>
                 

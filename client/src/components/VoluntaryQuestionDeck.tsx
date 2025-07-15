@@ -380,29 +380,29 @@ export default function VoluntaryQuestionDeck() {
 
   if (!activeCategory) {
     return (
-      <div className="min-h-screen theme-background p-4">
-        <div className="max-w-4xl mx-auto">
+      <div className="w-full h-full theme-background p-2 md:p-4 overflow-y-auto">
+        <div className="max-w-5xl mx-auto">
           {/* Header */}
-          <div className="text-center mb-8">
-            <div className="flex items-center justify-center mb-4">
-              <Sparkles className="mr-3 theme-text" size={32} />
-              <h1 className="text-3xl font-bold theme-text font-serif">Question Deck</h1>
+          <div className="text-center mb-4 md:mb-8">
+            <div className="flex items-center justify-center mb-2 md:mb-4">
+              <Sparkles className="mr-2 md:mr-3 theme-text" size={24} />
+              <h1 className="text-xl md:text-3xl font-bold theme-text font-serif">Question Deck</h1>
             </div>
-            <p className="theme-text-secondary text-lg leading-relaxed max-w-2xl mx-auto">
+            <p className="theme-text-secondary text-sm md:text-lg leading-relaxed max-w-2xl mx-auto px-2">
               These optional questions help me understand you better so I can provide more personalized support. 
               <strong className="theme-text">Click any category below to start answering questions!</strong><br/>
               Answer what you want, when you want - there's no pressure!
             </p>
             
             {/* Overall Progress */}
-            <div className="mt-6 max-w-md mx-auto">
+            <div className="mt-3 md:mt-6 max-w-md mx-auto px-2">
               <div className="flex justify-between items-center mb-2">
-                <span className="theme-text text-sm">Overall Progress</span>
-                <span className="theme-text text-sm">{answeredQuestions.size} questions answered</span>
+                <span className="theme-text text-xs md:text-sm">Overall Progress</span>
+                <span className="theme-text text-xs md:text-sm">{answeredQuestions.size} questions answered</span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-3">
+              <div className="w-full bg-gray-200 rounded-full h-2 md:h-3">
                 <div 
-                  className="bg-gradient-to-r from-green-400 to-blue-500 h-3 rounded-full transition-all duration-300"
+                  className="bg-gradient-to-r from-green-400 to-blue-500 h-2 md:h-3 rounded-full transition-all duration-300"
                   style={{ width: `${getTotalProgress()}%` }}
                 ></div>
               </div>
@@ -410,10 +410,10 @@ export default function VoluntaryQuestionDeck() {
           </div>
 
           {/* Sample Questions Preview */}
-          <div className="max-w-2xl mx-auto mb-8">
-            <div className="theme-card rounded-xl p-6 border border-[var(--theme-accent)]/30">
-              <h3 className="text-lg font-semibold theme-text mb-4 text-center">💭 Sample Questions You'll Find:</h3>
-              <div className="space-y-3 text-sm theme-text-secondary">
+          <div className="max-w-2xl mx-auto mb-4 md:mb-8 px-2">
+            <div className="theme-card rounded-xl p-3 md:p-6 border border-[var(--theme-accent)]/30">
+              <h3 className="text-sm md:text-lg font-semibold theme-text mb-2 md:mb-4 text-center">💭 Sample Questions You'll Find:</h3>
+              <div className="space-y-2 md:space-y-3 text-xs md:text-sm theme-text-secondary">
                 <div className="flex items-start">
                   <span className="mr-2">❤️</span>
                   <span>"If your friends had to describe you in 3 words, what would they say?"</span>
@@ -435,7 +435,7 @@ export default function VoluntaryQuestionDeck() {
           </div>
 
           {/* Category Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6 px-2">
             {questionCategories.map((category) => {
               const IconComponent = category.icon;
               const progress = getProgressForCategory(category.id);
@@ -445,33 +445,33 @@ export default function VoluntaryQuestionDeck() {
                 <div
                   key={category.id}
                   onClick={() => setActiveCategory(category.id)}
-                  className="theme-card rounded-xl p-6 border border-[var(--theme-accent)]/30 shadow-lg cursor-pointer transform hover:scale-105 transition-all duration-300 group"
+                  className="theme-card rounded-xl p-3 md:p-6 border border-[var(--theme-accent)]/30 shadow-lg cursor-pointer transform hover:scale-105 transition-all duration-300 group"
                 >
-                  <div className="flex items-center mb-4">
-                    <IconComponent className="mr-3 theme-accent" size={24} />
-                    <h3 className="text-xl font-semibold theme-text">{category.name}</h3>
+                  <div className="flex items-center mb-2 md:mb-4">
+                    <IconComponent className="mr-2 md:mr-3 theme-accent" size={20} />
+                    <h3 className="text-sm md:text-xl font-semibold theme-text">{category.name}</h3>
                   </div>
                   
-                  <p className="theme-text-secondary text-sm leading-relaxed mb-4">
+                  <p className="theme-text-secondary text-xs md:text-sm leading-relaxed mb-2 md:mb-4">
                     {category.description}
                   </p>
                   
                   {/* Progress Bar */}
-                  <div className="mb-4">
-                    <div className="flex justify-between items-center mb-2">
+                  <div className="mb-2 md:mb-4">
+                    <div className="flex justify-between items-center mb-1 md:mb-2">
                       <span className="theme-text text-xs">Progress</span>
                       <span className="theme-text text-xs">{answeredCount}/{category.questions.length}</span>
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div className="w-full bg-gray-200 rounded-full h-1 md:h-2">
                       <div 
-                        className="bg-gradient-to-r from-blue-400 to-purple-500 h-2 rounded-full transition-all duration-300"
+                        className="bg-gradient-to-r from-blue-400 to-purple-500 h-1 md:h-2 rounded-full transition-all duration-300"
                         style={{ width: `${progress}%` }}
                       ></div>
                     </div>
                   </div>
                   
                   <div className="flex items-center justify-between">
-                    <span className="theme-accent text-sm group-hover:underline font-semibold">
+                    <span className="theme-accent text-xs md:text-sm group-hover:underline font-semibold">
                       {progress === 100 ? '✓ Review Answers' : '→ Click to Start Questions'}
                     </span>
                     <ChevronRight className="theme-accent group-hover:translate-x-1 transition-transform duration-300" size={16} />
