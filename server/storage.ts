@@ -308,7 +308,7 @@ export class DbStorage implements IStorage {
     await this.db.delete(users).where(
       and(
         eq(users.isAnonymous, true),
-        eq(users.lastActiveAt, beforeDate)
+        lt(users.lastActiveAt, beforeDate)
       )
     );
   }
@@ -317,6 +317,16 @@ export class DbStorage implements IStorage {
   async getBotByUserId(userId: number): Promise<Bot | null> {
     const [bot] = await this.db.select().from(bots).where(eq(bots.userId, userId));
     return bot || null;
+  }
+
+  async createBot(data: InsertBot): Promise<Bot> {
+    const [bot] = await this.db.insert(bots).values(data).returning();
+    return bot;
+  }
+
+  async updateBot(id: number, data: Partial<InsertBot>): Promise<Bot> {
+    const [bot] = await this.db.update(bots).set(data).where(eq(bots.id, id)).returning();
+    return bot;
   }
 
   // User Profiles
@@ -390,13 +400,6 @@ export class DbStorage implements IStorage {
   }
 
   // Feedback System
-  async getUserFeedback(userId: number): Promise<UserFeedback[]> {
-    return await this.db.select()
-      .from(userFeedback)
-      .where(eq(userFeedback.userId, userId))
-      .orderBy(desc(userFeedback.createdAt));
-  }
-
   async getUserFeedback(userId: number): Promise<UserFeedback[]> {
     return await this.db.select()
       .from(userFeedback)
