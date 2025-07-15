@@ -236,13 +236,26 @@ export function AccessibilitySettings({ userId, onSettingsChange }: Accessibilit
   };
 
   const updateSetting = (category: keyof AccessibilitySettings, key: string, value: any) => {
-    setSettings(prev => ({
-      ...prev,
-      [category]: {
-        ...prev[category],
-        [key]: value
+    setSettings(prev => {
+      const currentValue = prev[category];
+      
+      // Handle primitive values (language, speechRate, preferredInteractionMode)
+      if (typeof currentValue !== 'object' || currentValue === null) {
+        return {
+          ...prev,
+          [category]: value
+        };
       }
-    }));
+      
+      // Handle object values (visualImpairment, hearingImpairment, etc.)
+      return {
+        ...prev,
+        [category]: {
+          ...currentValue,
+          [key]: value
+        }
+      };
+    });
   };
 
   if (loading) {
