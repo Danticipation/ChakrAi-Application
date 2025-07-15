@@ -101,7 +101,7 @@ export default function MemoryDashboard() {
             <Brain className="w-8 h-8 text-white" />
             <div>
               <h1 className="text-2xl font-bold text-white">Insight Vault</h1>
-              <p className="text-white/80">What Chakrai has learned about you</p>
+              <p className="text-white/80">A secure space for your emotional and cognitive patterns</p>
             </div>
           </div>
           <Button 
@@ -121,7 +121,7 @@ export default function MemoryDashboard() {
               <div className="flex items-center space-x-2">
                 <MessageCircle className="w-5 h-5 text-white" />
                 <div>
-                  <p className="text-sm text-white/80">Total Memories</p>
+                  <p className="text-sm text-white/80">Total Reflections</p>
                   <p className="text-2xl font-bold text-white">{dashboard?.summary.totalMemories || 0}</p>
                 </div>
               </div>
@@ -133,7 +133,7 @@ export default function MemoryDashboard() {
               <div className="flex items-center space-x-2">
                 <Brain className="w-5 h-5 text-white" />
                 <div>
-                  <p className="text-sm text-white/80">Active Memories</p>
+                  <p className="text-sm text-white/80">Active Threads</p>
                   <p className="text-2xl font-bold text-white">{dashboard?.summary.activeMemories || 0}</p>
                 </div>
               </div>
@@ -157,7 +157,7 @@ export default function MemoryDashboard() {
               <div className="flex items-center space-x-2">
                 <Clock className="w-5 h-5 text-white" />
                 <div>
-                  <p className="text-sm text-white/80">Last Memory</p>
+                  <p className="text-sm text-white/80">Last Insight</p>
                   <p className="text-sm font-medium text-white">{dashboard?.summary.lastMemoryDate ? formatDate(dashboard.summary.lastMemoryDate) : 'None yet'}</p>
                 </div>
               </div>
@@ -172,7 +172,7 @@ export default function MemoryDashboard() {
             <div className="p-6">
               <div className="flex items-center space-x-2 mb-4">
                 <MessageCircle className="w-5 h-5 text-white" />
-                <span className="text-lg font-semibold text-white">Recent Memories</span>
+                <span className="text-lg font-semibold text-white">Recent Reflections</span>
               </div>
               <p className="text-white/80 mb-6">Latest conversations and insights</p>
               <div className="space-y-4">
@@ -201,7 +201,7 @@ export default function MemoryDashboard() {
                 )) || (
                   <div className="text-center py-8 text-white/60">
                     <MessageCircle className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                    <p>No memories yet. Start a conversation to build your memory profile!</p>
+                    <p>No reflections yet. Start a conversation to build your insight profile!</p>
                   </div>
                 )}
               </div>
@@ -213,9 +213,9 @@ export default function MemoryDashboard() {
             <div className="p-6">
               <div className="flex items-center space-x-2 mb-4">
                 <TrendingUp className="w-5 h-5 text-white" />
-                <span className="text-lg font-semibold text-white">Top Topics</span>
+                <span className="text-lg font-semibold text-white">Recurring Themes</span>
               </div>
-              <p className="text-white/80 mb-6">Most discussed themes in our conversations</p>
+              <p className="text-white/80 mb-6">Most discussed themes in our reflective conversations</p>
               <div className="space-y-3">
                 {dashboard?.topTopics?.slice(0, 6).map((topic, index) => (
                   <div key={index} className="flex items-center justify-between">
@@ -230,7 +230,7 @@ export default function MemoryDashboard() {
                 )) || (
                   <div className="text-center py-8 text-white/60">
                     <TrendingUp className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                    <p>Topics will appear as we have more conversations</p>
+                    <p>Themes will appear as we have more reflective conversations</p>
                   </div>
                 )}
               </div>
@@ -244,9 +244,9 @@ export default function MemoryDashboard() {
             <div className="p-6">
               <div className="flex items-center space-x-2 mb-4">
                 <Lightbulb className="w-5 h-5 text-white" />
-                <span className="text-lg font-semibold text-white">AI Insights</span>
+                <span className="text-lg font-semibold text-white">Cognitive Insights</span>
               </div>
-              <p className="text-white/80 mb-6">Patterns and insights from your conversations</p>
+              <p className="text-white/80 mb-6">Patterns and insights from your reflective conversations</p>
               <div className="space-y-4">
                 {dashboard?.memoryInsights?.slice(0, 4).map((insight, index) => (
                   <div key={index} className="border border-white/30 rounded-lg p-3 theme-primary">
@@ -262,7 +262,7 @@ export default function MemoryDashboard() {
                 )) || (
                   <div className="text-center py-8 text-white/60">
                     <Lightbulb className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                    <p>AI insights will develop as we learn more about you</p>
+                    <p>Cognitive insights will develop as we learn more about your patterns</p>
                   </div>
                 )}
               </div>
@@ -274,7 +274,7 @@ export default function MemoryDashboard() {
             <div className="p-6">
               <div className="flex items-center space-x-2 mb-4">
                 <Calendar className="w-5 h-5 text-white" />
-                <span className="text-lg font-semibold text-white">Emotional Patterns</span>
+                <span className="text-lg font-semibold text-white">Emotional Evolution</span>
               </div>
               <p className="text-white/80 mb-6">How your emotional state has evolved</p>
               <div className="space-y-4">
