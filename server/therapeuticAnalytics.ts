@@ -7,7 +7,7 @@ import {
   userEngagementMetrics,
   therapeuticEfficacyReports 
 } from '@shared/analyticsSchema';
-import { eq, gte, lte, sql, desc, asc } from 'drizzle-orm';
+import { eq, gte, lte, sql, desc, asc, and } from 'drizzle-orm';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -178,8 +178,10 @@ export class TherapeuticAnalyticsSystem {
       // Store or update the metrics
       const existingGoal = await db.select()
         .from(wellnessGoalMetrics)
-        .where(eq(wellnessGoalMetrics.userId, userId))
-        .where(eq(wellnessGoalMetrics.goalType, goalType))
+        .where(and(
+          eq(wellnessGoalMetrics.userId, userId),
+          eq(wellnessGoalMetrics.goalType, goalType)
+        ))
         .orderBy(desc(wellnessGoalMetrics.createdAt))
         .limit(1);
 
@@ -270,8 +272,10 @@ export class TherapeuticAnalyticsSystem {
         totalSessions: sql<number>`COUNT(DISTINCT ${emotionalToneMetrics.sessionId})`,
       })
       .from(emotionalToneMetrics)
-      .where(gte(emotionalToneMetrics.recordedAt, startDate))
-      .where(lte(emotionalToneMetrics.recordedAt, endDate));
+      .where(and(
+        gte(emotionalToneMetrics.recordedAt, startDate),
+        lte(emotionalToneMetrics.recordedAt, endDate)
+      ));
 
       // Calculate goal completion rates
       const goalMetrics = await db.select({
@@ -280,8 +284,10 @@ export class TherapeuticAnalyticsSystem {
         completedGoals: sql<number>`COUNT(*) FILTER (WHERE ${wellnessGoalMetrics.completionRate} >= 100)`,
       })
       .from(wellnessGoalMetrics)
-      .where(gte(wellnessGoalMetrics.createdAt, startDate))
-      .where(lte(wellnessGoalMetrics.createdAt, endDate));
+      .where(and(
+        gte(wellnessGoalMetrics.createdAt, startDate),
+        lte(wellnessGoalMetrics.createdAt, endDate)
+      ));
 
       // Calculate affirmation efficacy
       const affirmationMetrics = await db.select({
@@ -289,16 +295,20 @@ export class TherapeuticAnalyticsSystem {
         topAffirmations: sql<string[]>`ARRAY_AGG(DISTINCT ${affirmationResponseMetrics.affirmationType})`,
       })
       .from(affirmationResponseMetrics)
-      .where(gte(affirmationResponseMetrics.presentedAt, startDate))
-      .where(lte(affirmationResponseMetrics.presentedAt, endDate));
+      .where(and(
+        gte(affirmationResponseMetrics.presentedAt, startDate),
+        lte(affirmationResponseMetrics.presentedAt, endDate)
+      ));
 
       // Count unique users
       const userCount = await db.select({
         totalUsers: sql<number>`COUNT(DISTINCT ${emotionalToneMetrics.userId})`,
       })
       .from(emotionalToneMetrics)
-      .where(gte(emotionalToneMetrics.recordedAt, startDate))
-      .where(lte(emotionalToneMetrics.recordedAt, endDate));
+      .where(and(
+        gte(emotionalToneMetrics.recordedAt, startDate),
+        lte(emotionalToneMetrics.recordedAt, endDate)
+      ));
 
       const report = {
         reportType,
@@ -345,8 +355,10 @@ export class TherapeuticAnalyticsSystem {
         daysActive: sql<number>`EXTRACT(DAYS FROM (NOW() - MIN(${wellnessGoalMetrics.createdAt})))`,
       })
       .from(wellnessGoalMetrics)
-      .where(eq(wellnessGoalMetrics.userId, userId))
-      .where(eq(wellnessGoalMetrics.goalType, goalType));
+      .where(and(
+        eq(wellnessGoalMetrics.userId, userId),
+        eq(wellnessGoalMetrics.goalType, goalType)
+      ));
 
       return Math.max(1, result[0]?.daysActive || 1);
     } catch (error) {
@@ -360,8 +372,10 @@ export class TherapeuticAnalyticsSystem {
         updateCount: sql<number>`COUNT(*)`,
       })
       .from(wellnessGoalMetrics)
-      .where(eq(wellnessGoalMetrics.userId, userId))
-      .where(eq(wellnessGoalMetrics.goalType, goalType));
+      .where(and(
+        eq(wellnessGoalMetrics.userId, userId),
+        eq(wellnessGoalMetrics.goalType, goalType)
+      ));
 
       const expectedUpdates = Math.max(1, daysActive);
       const actualUpdates = updates[0]?.updateCount || 1;
@@ -402,8 +416,10 @@ export class TherapeuticAnalyticsSystem {
       dominantTone: sql<string>`MODE() WITHIN GROUP (ORDER BY ${emotionalToneMetrics.emotionalTone})`,
     })
     .from(emotionalToneMetrics)
-    .where(eq(emotionalToneMetrics.userId, userId))
-    .where(gte(emotionalToneMetrics.recordedAt, startDate))
+    .where(and(
+      eq(emotionalToneMetrics.userId, userId),
+      gte(emotionalToneMetrics.recordedAt, startDate)
+    ))
     .groupBy(sql`DATE(${emotionalToneMetrics.recordedAt})`)
     .orderBy(asc(sql`DATE(${emotionalToneMetrics.recordedAt})`));
   }

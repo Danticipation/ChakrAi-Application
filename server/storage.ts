@@ -1459,7 +1459,7 @@ export class DbStorage implements IStorage {
     // Check for mood spikes (3+ negative moods in 7 days)
     const recentMoods = await this.db.select().from(moodEntries)
       .where(eq(moodEntries.userId, clientUserId))
-      .orderBy(desc(moodEntries.timestamp))
+      .orderBy(desc(moodEntries.createdAt))
       .limit(10);
 
     const negativeMoods = recentMoods.filter(mood => 
