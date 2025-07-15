@@ -925,3 +925,134 @@ export type UserFeedback = typeof userFeedback.$inferSelect;
 export type InsertUserStreak = z.infer<typeof insertUserStreakSchema>;
 export type InsertDailyActivity = z.infer<typeof insertDailyActivitySchema>;
 export type InsertUserFeedback = z.infer<typeof insertUserFeedbackSchema>;
+
+// VR/AR Therapeutic Experiences System
+export const vrEnvironments = pgTable("vr_environments", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description").notNull(),
+  environmentType: text("environment_type").notNull(), // mindfulness, relaxation, exposure, etc.
+  therapeuticFocus: text("therapeutic_focus").notNull(),
+  difficultyLevel: integer("difficulty_level").default(1), // 1-5
+  durationMinutes: integer("duration_minutes").default(15),
+  scenePath: text("scene_path"), // VR scene file path
+  audioPath: text("audio_path"), // Background audio file path
+  instructions: text("instructions").array(),
+  therapeuticGoals: text("therapeutic_goals").array(),
+  contraindications: text("contraindications").array(),
+  vrSettings: jsonb("vr_settings"), // VR specific settings
+  accessibility: jsonb("accessibility"), // Accessibility features
+  tags: text("tags").array(),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const vrSessions = pgTable("vr_sessions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  environmentId: integer("environment_id").notNull(),
+  startTime: timestamp("start_time").defaultNow(),
+  endTime: timestamp("end_time"),
+  durationMinutes: integer("duration_minutes"),
+  completionStatus: text("completion_status").notNull(), // completed, partial, interrupted
+  effectivenessRating: integer("effectiveness_rating"), // 1-10
+  stressLevelBefore: integer("stress_level_before"), // 1-10
+  stressLevelAfter: integer("stress_level_after"), // 1-10
+  heartRateData: jsonb("heart_rate_data"),
+  sessionGoals: text("session_goals").array(),
+  personalizedSettings: jsonb("personalized_settings"),
+  insights: jsonb("insights"), // AI-generated insights
+  sideEffects: text("side_effects").array(),
+  therapeuticNotes: text("therapeutic_notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const vrProgressTracking = pgTable("vr_progress_tracking", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  environmentId: integer("environment_id").notNull(),
+  totalSessions: integer("total_sessions").default(0),
+  totalDuration: integer("total_duration").default(0), // minutes
+  averageEffectiveness: decimal("average_effectiveness", { precision: 3, scale: 2 }),
+  bestEffectivenessRating: integer("best_effectiveness_rating"),
+  averageStressReduction: decimal("average_stress_reduction", { precision: 3, scale: 2 }),
+  skillDevelopmentLevel: integer("skill_development_level").default(1), // 1-10
+  milestonesAchieved: text("milestones_achieved").array(),
+  lastSessionDate: timestamp("last_session_date"),
+  streakCount: integer("streak_count").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const vrTherapeuticPlans = pgTable("vr_therapeutic_plans", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  planName: text("plan_name").notNull(),
+  therapeuticGoals: text("therapeutic_goals").array(),
+  recommendedEnvironments: jsonb("recommended_environments"), // Array of environment configs
+  durationWeeks: integer("duration_weeks").default(4),
+  progressMetrics: jsonb("progress_metrics"),
+  adaptationRules: jsonb("adaptation_rules"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const vrAccessibilityProfiles = pgTable("vr_accessibility_profiles", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  motionSensitivity: text("motion_sensitivity").default("medium"), // low, medium, high
+  audioDescriptions: boolean("audio_descriptions").default(false),
+  highContrast: boolean("high_contrast").default(false),
+  simplifiedControls: boolean("simplified_controls").default(false),
+  comfortSettings: jsonb("comfort_settings"),
+  visualAdjustments: jsonb("visual_adjustments"),
+  audioPreferences: jsonb("audio_preferences"),
+  triggerWarnings: text("trigger_warnings").array(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// VR Schema validators
+export const insertVrEnvironmentSchema = createInsertSchema(vrEnvironments).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertVrSessionSchema = createInsertSchema(vrSessions).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertVrProgressTrackingSchema = createInsertSchema(vrProgressTracking).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertVrTherapeuticPlanSchema = createInsertSchema(vrTherapeuticPlans).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertVrAccessibilityProfileSchema = createInsertSchema(vrAccessibilityProfiles).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+// VR Types
+export type VrEnvironment = typeof vrEnvironments.$inferSelect;
+export type VrSession = typeof vrSessions.$inferSelect;
+export type VrProgressTracking = typeof vrProgressTracking.$inferSelect;
+export type VrTherapeuticPlan = typeof vrTherapeuticPlans.$inferSelect;
+export type VrAccessibilityProfile = typeof vrAccessibilityProfiles.$inferSelect;
+
+export type InsertVrEnvironment = z.infer<typeof insertVrEnvironmentSchema>;
+export type InsertVrSession = z.infer<typeof insertVrSessionSchema>;
+export type InsertVrProgressTracking = z.infer<typeof insertVrProgressTrackingSchema>;
+export type InsertVrTherapeuticPlan = z.infer<typeof insertVrTherapeuticPlanSchema>;
+export type InsertVrAccessibilityProfile = z.infer<typeof insertVrAccessibilityProfileSchema>;

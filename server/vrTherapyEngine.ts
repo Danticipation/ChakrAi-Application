@@ -65,7 +65,7 @@ You are a VR therapy specialist. Analyze the user's profile and recommend person
 User Context:
 - Current mood: ${currentMood || 'Not specified'}
 - Therapeutic goals: ${therapeuticGoals?.join(', ') || 'General wellness'}
-- Recent emotional patterns: ${recentMoods.map(m => `${m.emotion} (${m.intensity}/10)`).join(', ')}
+- Recent emotional patterns: ${recentMoods.map(m => `${m.mood} (${m.intensity}/10)`).join(', ')}
 - VR experience level: ${progress.length > 0 ? 'Experienced' : 'Beginner'}
 - Motion sensitivity: ${accessibilityProfile?.motionSensitivity || 'medium'}
 
@@ -225,7 +225,7 @@ ${environments.map(env =>
   `ID: ${env.id}, Name: ${env.name}, Type: ${env.environmentType}, Focus: ${env.therapeuticFocus}, Duration: ${env.durationMinutes}min`
 ).join('\n')}
 
-Recent emotional patterns: ${recentMoods.map(m => `${m.emotion} (intensity: ${m.intensity})`).slice(0, 10).join(', ')}
+Recent emotional patterns: ${recentMoods.map(m => `${m.mood} (intensity: ${m.intensity})`).slice(0, 10).join(', ')}
 
 Design a progressive plan with:
 1. Gradual exposure therapy progression

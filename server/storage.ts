@@ -9,6 +9,7 @@ import {
   dailyActivities, communityChallenges, userChallengeProgress, userLevels, userStreaks,
   conversationSummaries, semanticMemories, memoryConnections, memoryInsights,
   therapists, clientTherapistRelationships, clientPrivacySettings, therapistSessionNotes, riskAlerts,
+  vrEnvironments, vrSessions, vrProgressTracking, vrTherapeuticPlans, vrAccessibilityProfiles,
   voluntaryQuestions, userFeedback, authTokens,
   type User, type InsertUser,
   type UserProfile, type InsertUserProfile,
@@ -44,6 +45,11 @@ import {
   type ClientPrivacySettings, type InsertClientPrivacySettings,
   type TherapistSessionNotes, type InsertTherapistSessionNotes,
   type RiskAlert, type InsertRiskAlert,
+  type VrEnvironment, type InsertVrEnvironment,
+  type VrSession, type InsertVrSession,
+  type VrProgressTracking, type InsertVrProgressTracking,
+  type VrTherapeuticPlan, type InsertVrTherapeuticPlan,
+  type VrAccessibilityProfile, type InsertVrAccessibilityProfile,
   type UserStreak, type InsertUserStreak,
   type DailyActivity, type InsertDailyActivity,
   type UserFeedback, type InsertUserFeedback,
@@ -259,6 +265,31 @@ export interface IStorage {
   
   calculateStreak(userId: number, streakType: string): Promise<number>;
   updateStreakOnActivity(userId: number, activityType: string): Promise<void>;
+  
+  // VR/AR Therapeutic Experiences methods
+  getVrEnvironments(category?: string): Promise<VrEnvironment[]>;
+  getVrEnvironment(id: number): Promise<VrEnvironment | null>;
+  createVrEnvironment(environment: InsertVrEnvironment): Promise<VrEnvironment>;
+  updateVrEnvironment(id: number, updates: Partial<InsertVrEnvironment>): Promise<VrEnvironment>;
+  
+  getUserVrSessions(userId: number, limit?: number): Promise<VrSession[]>;
+  getVrSession(id: number): Promise<VrSession | null>;
+  createVrSession(session: InsertVrSession): Promise<VrSession>;
+  updateVrSession(id: number, updates: Partial<InsertVrSession>): Promise<VrSession>;
+  
+  getUserVrProgress(userId: number, environmentId?: number): Promise<VrProgressTracking[]>;
+  getVrProgress(userId: number, environmentId: number): Promise<VrProgressTracking | null>;
+  createVrProgress(progress: InsertVrProgressTracking): Promise<VrProgressTracking>;
+  updateVrProgress(userId: number, environmentId: number, updates: Partial<InsertVrProgressTracking>): Promise<VrProgressTracking>;
+  
+  getUserVrTherapeuticPlans(userId: number): Promise<VrTherapeuticPlan[]>;
+  getVrTherapeuticPlan(id: number): Promise<VrTherapeuticPlan | null>;
+  createVrTherapeuticPlan(plan: InsertVrTherapeuticPlan): Promise<VrTherapeuticPlan>;
+  updateVrTherapeuticPlan(id: number, updates: Partial<InsertVrTherapeuticPlan>): Promise<VrTherapeuticPlan>;
+  
+  getUserVrAccessibilityProfile(userId: number): Promise<VrAccessibilityProfile | null>;
+  createVrAccessibilityProfile(profile: InsertVrAccessibilityProfile): Promise<VrAccessibilityProfile>;
+  updateVrAccessibilityProfile(userId: number, updates: Partial<InsertVrAccessibilityProfile>): Promise<VrAccessibilityProfile>;
 }
 
 export class DbStorage implements IStorage {
@@ -1748,6 +1779,153 @@ export class DbStorage implements IStorage {
     
     // In a full implementation, this would use a proper database table
     return usage;
+  }
+
+  // VR/AR Therapeutic Experiences methods implementation
+  async getVrEnvironments(category?: string): Promise<VrEnvironment[]> {
+    let query = this.db.select().from(vrEnvironments).where(eq(vrEnvironments.isActive, true));
+    
+    if (category) {
+      query = this.db.select().from(vrEnvironments).where(
+        and(
+          eq(vrEnvironments.isActive, true),
+          eq(vrEnvironments.environmentType, category)
+        )
+      );
+    }
+    
+    return await query.orderBy(vrEnvironments.name);
+  }
+
+  async getVrEnvironment(id: number): Promise<VrEnvironment | null> {
+    const [environment] = await this.db.select().from(vrEnvironments).where(eq(vrEnvironments.id, id));
+    return environment || null;
+  }
+
+  async createVrEnvironment(environment: InsertVrEnvironment): Promise<VrEnvironment> {
+    const [newEnvironment] = await this.db.insert(vrEnvironments).values(environment).returning();
+    return newEnvironment;
+  }
+
+  async updateVrEnvironment(id: number, updates: Partial<InsertVrEnvironment>): Promise<VrEnvironment> {
+    const [updatedEnvironment] = await this.db.update(vrEnvironments)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(vrEnvironments.id, id))
+      .returning();
+    return updatedEnvironment;
+  }
+
+  async getUserVrSessions(userId: number, limit?: number): Promise<VrSession[]> {
+    let query = this.db.select().from(vrSessions)
+      .where(eq(vrSessions.userId, userId))
+      .orderBy(desc(vrSessions.startTime));
+      
+    if (limit) {
+      query = query.limit(limit);
+    }
+    
+    return await query;
+  }
+
+  async getVrSession(id: number): Promise<VrSession | null> {
+    const [session] = await this.db.select().from(vrSessions).where(eq(vrSessions.id, id));
+    return session || null;
+  }
+
+  async createVrSession(session: InsertVrSession): Promise<VrSession> {
+    const [newSession] = await this.db.insert(vrSessions).values(session).returning();
+    return newSession;
+  }
+
+  async updateVrSession(id: number, updates: Partial<InsertVrSession>): Promise<VrSession> {
+    const [updatedSession] = await this.db.update(vrSessions)
+      .set(updates)
+      .where(eq(vrSessions.id, id))
+      .returning();
+    return updatedSession;
+  }
+
+  async getUserVrProgress(userId: number, environmentId?: number): Promise<VrProgressTracking[]> {
+    let query = this.db.select().from(vrProgressTracking).where(eq(vrProgressTracking.userId, userId));
+    
+    if (environmentId) {
+      query = this.db.select().from(vrProgressTracking).where(
+        and(
+          eq(vrProgressTracking.userId, userId),
+          eq(vrProgressTracking.environmentId, environmentId)
+        )
+      );
+    }
+    
+    return await query.orderBy(desc(vrProgressTracking.updatedAt));
+  }
+
+  async getVrProgress(userId: number, environmentId: number): Promise<VrProgressTracking | null> {
+    const [progress] = await this.db.select().from(vrProgressTracking)
+      .where(and(
+        eq(vrProgressTracking.userId, userId),
+        eq(vrProgressTracking.environmentId, environmentId)
+      ));
+    return progress || null;
+  }
+
+  async createVrProgress(progress: InsertVrProgressTracking): Promise<VrProgressTracking> {
+    const [newProgress] = await this.db.insert(vrProgressTracking).values(progress).returning();
+    return newProgress;
+  }
+
+  async updateVrProgress(userId: number, environmentId: number, updates: Partial<InsertVrProgressTracking>): Promise<VrProgressTracking> {
+    const [updatedProgress] = await this.db.update(vrProgressTracking)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(and(
+        eq(vrProgressTracking.userId, userId),
+        eq(vrProgressTracking.environmentId, environmentId)
+      ))
+      .returning();
+    return updatedProgress;
+  }
+
+  async getUserVrTherapeuticPlans(userId: number): Promise<VrTherapeuticPlan[]> {
+    return await this.db.select().from(vrTherapeuticPlans)
+      .where(eq(vrTherapeuticPlans.userId, userId))
+      .orderBy(desc(vrTherapeuticPlans.updatedAt));
+  }
+
+  async getVrTherapeuticPlan(id: number): Promise<VrTherapeuticPlan | null> {
+    const [plan] = await this.db.select().from(vrTherapeuticPlans).where(eq(vrTherapeuticPlans.id, id));
+    return plan || null;
+  }
+
+  async createVrTherapeuticPlan(plan: InsertVrTherapeuticPlan): Promise<VrTherapeuticPlan> {
+    const [newPlan] = await this.db.insert(vrTherapeuticPlans).values(plan).returning();
+    return newPlan;
+  }
+
+  async updateVrTherapeuticPlan(id: number, updates: Partial<InsertVrTherapeuticPlan>): Promise<VrTherapeuticPlan> {
+    const [updatedPlan] = await this.db.update(vrTherapeuticPlans)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(vrTherapeuticPlans.id, id))
+      .returning();
+    return updatedPlan;
+  }
+
+  async getUserVrAccessibilityProfile(userId: number): Promise<VrAccessibilityProfile | null> {
+    const [profile] = await this.db.select().from(vrAccessibilityProfiles)
+      .where(eq(vrAccessibilityProfiles.userId, userId));
+    return profile || null;
+  }
+
+  async createVrAccessibilityProfile(profile: InsertVrAccessibilityProfile): Promise<VrAccessibilityProfile> {
+    const [newProfile] = await this.db.insert(vrAccessibilityProfiles).values(profile).returning();
+    return newProfile;
+  }
+
+  async updateVrAccessibilityProfile(userId: number, updates: Partial<InsertVrAccessibilityProfile>): Promise<VrAccessibilityProfile> {
+    const [updatedProfile] = await this.db.update(vrAccessibilityProfiles)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(vrAccessibilityProfiles.userId, userId))
+      .returning();
+    return updatedProfile;
   }
 }
 
