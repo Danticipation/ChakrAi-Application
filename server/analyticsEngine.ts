@@ -1,6 +1,6 @@
 // Advanced analytics engine for comprehensive wellness reporting
 import OpenAI from 'openai';
-import { format, subDays, subMonths, startOfMonth, endOfMonth } from 'date-fns';
+import { format, startOfMonth, endOfMonth } from 'date-fns';
 
 export interface WellnessMetrics {
   period: 'weekly' | 'monthly' | 'quarterly';
@@ -107,7 +107,6 @@ export async function generateMonthlyReport(
     
     // Calculate metrics
     const metrics = await calculateWellnessMetrics(
-      userId,
       'monthly',
       startDate,
       endDate,
@@ -116,7 +115,6 @@ export async function generateMonthlyReport(
     
     // Generate AI-powered narrative summary
     const reportNarrative = await generateReportNarrative(
-      userId,
       month,
       year,
       metrics,
@@ -149,7 +147,6 @@ export async function generateMonthlyReport(
 
 // Calculate comprehensive wellness metrics
 async function calculateWellnessMetrics(
-  userId: number,
   period: 'weekly' | 'monthly' | 'quarterly',
   startDate: Date,
   endDate: Date,
@@ -204,7 +201,6 @@ async function calculateWellnessMetrics(
 
 // Generate AI-powered narrative summary
 async function generateReportNarrative(
-  userId: number,
   month: number,
   year: number,
   metrics: WellnessMetrics,
@@ -511,7 +507,7 @@ function calculateEmotionalOverview(moodEntries: any[]) {
     ['sad', 'anxious', 'angry', 'stressed'].includes(entry.emotion)
   ).length;
   
-  const riskLevel = recentNegativeEntries >= 4 ? 'high' : 
+  const riskLevel: 'low' | 'medium' | 'high' = recentNegativeEntries >= 4 ? 'high' : 
                    recentNegativeEntries >= 2 ? 'medium' : 'low';
   
   return {
