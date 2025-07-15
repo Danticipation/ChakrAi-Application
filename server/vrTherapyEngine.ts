@@ -462,11 +462,18 @@ Return as JSON with VR environment fields: name, description, category, scenePat
 
     const environmentData = JSON.parse(response.choices[0].message.content || '{}');
     
+    // Convert difficulty string to number (1-5 scale)
+    const difficultyMapping = {
+      'beginner': 1,
+      'intermediate': 3,
+      'advanced': 5
+    };
+
     return {
       name: environmentData.name || `${therapeuticGoal} Environment`,
       description: environmentData.description || '',
       environmentType: environmentData.category || 'mindfulness',
-      difficultyLevel: difficulty,
+      difficultyLevel: difficultyMapping[difficulty as keyof typeof difficultyMapping] || 3,
       durationMinutes: difficulty === 'beginner' ? 10 : difficulty === 'intermediate' ? 20 : 30,
       therapeuticFocus: environmentData.therapeuticFocus || 'general',
       immersionLevel: environmentData.immersionLevel || 'medium',
