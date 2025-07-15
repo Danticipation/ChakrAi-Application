@@ -57,7 +57,7 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | null>;
   getUserByDeviceFingerprint(fingerprint: string): Promise<User | null>;
   getUserByEmail(email: string): Promise<User | null>;
-  createRegisteredUser(data: Partial<InsertUser>): Promise<User>;
+  createRegisteredUser(data: Partial<InsertUser> & { username: string }): Promise<User>;
   migrateAnonymousToRegistered(userId: number, data: Partial<InsertUser>): Promise<User>;
   updateUser(id: number, data: Partial<InsertUser>): Promise<User>;
   updateUserLastActive(id: number): Promise<void>;
@@ -417,7 +417,7 @@ export class DbStorage implements IStorage {
     return result[0] || null;
   }
 
-  async createRegisteredUser(data: Partial<InsertUser>): Promise<User> {
+  async createRegisteredUser(data: Partial<InsertUser> & { username: string }): Promise<User> {
     const userData = {
       ...data,
       isAnonymous: false,
