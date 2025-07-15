@@ -30,7 +30,7 @@ export interface WellnessMetrics {
   };
   achievements: {
     badgesEarned: number;
-
+    achievementsUnlocked: number;
     personalBests: string[];
     consistencyScore: number; // 0 to 100
   };
