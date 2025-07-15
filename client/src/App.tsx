@@ -55,7 +55,6 @@ const chakraiLogo = './TrAI-Logo.png';
 interface BotStats {
   level: number;
   stage: string;
-  wordsLearned: number;
 }
 
 interface Message {

@@ -1,6 +1,6 @@
 import { db } from "./db";
 import { 
-  users, userProfiles, bots, messages, learnedWords, milestones, userMemories, userFacts,
+  users, userProfiles, bots, messages, milestones, userMemories, userFacts,
   journalEntries, moodEntries, therapeuticGoals, supportForums, forumPosts,
   userAchievements, wellnessStreaks, emotionalPatterns,
   moodForecasts, emotionalContexts, predictiveInsights, emotionalResponseAdaptations, crisisDetectionLogs,
@@ -15,7 +15,7 @@ import {
   type VoluntaryQuestion, type InsertVoluntaryQuestion,
   type Bot, type InsertBot,
   type Message, type InsertMessage,
-  type LearnedWord, type InsertLearnedWord,
+
   type Milestone, type InsertMilestone,
   type UserMemory, type InsertUserMemory,
   type UserFact, type InsertUserFact,
@@ -107,9 +107,7 @@ export interface IStorage {
   getMessagesByUserId(userId: number, limit?: number): Promise<Message[]>;
   createMessage(data: InsertMessage): Promise<Message>;
   
-  // Learned Words
-  getLearnedWordsByUserId(userId: number): Promise<LearnedWord[]>;
-  createLearnedWord(data: InsertLearnedWord): Promise<LearnedWord>;
+
   
   // Milestones
   getMilestonesByUserId(userId: number): Promise<Milestone[]>;
@@ -490,15 +488,7 @@ export class DbStorage implements IStorage {
     }
   }
 
-  // Learned Words
-  async getLearnedWordsByUserId(userId: number): Promise<LearnedWord[]> {
-    return await this.db.select().from(learnedWords).where(eq(learnedWords.userId, userId));
-  }
 
-  async createLearnedWord(data: InsertLearnedWord): Promise<LearnedWord> {
-    const [word] = await this.db.insert(learnedWords).values(data).returning();
-    return word;
-  }
 
   // Milestones
   async getMilestonesByUserId(userId: number): Promise<Milestone[]> {

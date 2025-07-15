@@ -68,9 +68,8 @@ export const bots = pgTable("bots", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull(),
   name: text("name").notNull(),
-  level: integer("level").default(1),
-  wordsLearned: integer("words_learned").default(0),
-  personalityMode: text("personality_mode").default("friend"),
+  level: integer("level").default(3),
+  personalityMode: text("personality_mode").default("companion"),
   voiceId: text("voice_id").default("james"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -88,14 +87,7 @@ export const messages = pgTable("messages", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const learnedWords = pgTable("learned_words", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(),
-  word: text("word").notNull(),
-  definition: text("definition"),
-  context: text("context"),
-  createdAt: timestamp("created_at").defaultNow(),
-});
+
 
 export const milestones = pgTable("milestones", {
   id: serial("id").primaryKey(),
@@ -384,10 +376,7 @@ export const insertMessageSchema = createInsertSchema(messages).omit({
   timestamp: true,
 });
 
-export const insertLearnedWordSchema = createInsertSchema(learnedWords).omit({
-  id: true,
-  createdAt: true,
-});
+
 
 export const insertMilestoneSchema = createInsertSchema(milestones).omit({
   id: true,
@@ -467,7 +456,7 @@ export const insertCrisisDetectionLogSchema = createInsertSchema(crisisDetection
 export type User = typeof users.$inferSelect;
 export type Bot = typeof bots.$inferSelect;
 export type Message = typeof messages.$inferSelect;
-export type LearnedWord = typeof learnedWords.$inferSelect;
+
 export type Milestone = typeof milestones.$inferSelect;
 export type UserMemory = typeof userMemories.$inferSelect;
 export type UserFact = typeof userFacts.$inferSelect;
@@ -492,7 +481,7 @@ export type InsertUserProfile = z.infer<typeof insertUserProfileSchema>;
 export type InsertVoluntaryQuestion = z.infer<typeof insertVoluntaryQuestionSchema>;
 export type InsertBot = z.infer<typeof insertBotSchema>;
 export type InsertMessage = z.infer<typeof insertMessageSchema>;
-export type InsertLearnedWord = z.infer<typeof insertLearnedWordSchema>;
+
 export type InsertMilestone = z.infer<typeof insertMilestoneSchema>;
 export type InsertUserMemory = z.infer<typeof insertUserMemorySchema>;
 export type InsertUserFact = z.infer<typeof insertUserFactSchema>;
