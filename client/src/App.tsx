@@ -1243,66 +1243,32 @@ const AppLayout = ({ currentUserId, onDataReset }: AppLayoutProps) => {
 
       {/* Main Content Area - Mobile Responsive */}
       <div className="flex-1 flex flex-col lg:flex-row theme-background">
-        {/* Mobile and iPad Navigation - Polished Professional Design */}
+        {/* Mobile and iPad Navigation - 4-Tier Hierarchy */}
         <div className="lg:hidden mobile-nav-polish">
-          {/* User Features Section */}
+          {/* Core Companion Section */}
           <div className="mobile-nav-section">
-            <div className="mobile-nav-section-title">Wellness Features</div>
+            <div className="mobile-nav-section-title">🟦 Core Companion</div>
             <div className="mobile-nav-grid-polish">
               {[
                 { id: 'chat', label: 'Home', icon: '🏠' },
-                { id: 'voice', label: 'Settings', icon: '⚙️' },
-                { id: 'daily', label: 'Reflect', icon: '🧠' },
-                { id: 'journal', label: 'Journal', icon: '📝' },
-                { id: 'memory', label: 'Memory', icon: '🎯' },
-                { id: 'analytics', label: 'Analytics', icon: '📊' },
-                { id: 'feedback', label: 'Feedback', icon: '💡' },
-                { id: 'floating-chat', label: 'Voice Chat', icon: '🎤' },
-                { id: 'themes', label: 'Themes', icon: '🎨' },
-                { id: 'challenges', label: 'Challenges', icon: '🏆' },
-                { id: 'rewards', label: 'Rewards', icon: '🎁' },
-                { id: 'community', label: 'Community', icon: '👥' },
-                { id: 'vr', label: 'VR Therapy', icon: '🥽' },
-                { id: 'health', label: 'Health', icon: '💗' },
-                // { id: 'ambient-sound', label: 'Ambient', icon: '🎵' }, // DISABLED due to audio quality issues
-                { id: 'agents', label: 'Specialists', icon: '🧩' },
-                { id: 'adaptive', label: 'AI Learn', icon: '🤖' },
-                { id: 'therapy-plans', label: 'Plans', icon: '📋' },
-                { id: 'questions', label: 'Questions', icon: '❓' },
-                { id: 'microphone-test', label: 'Mic Test', icon: '🔧' },
+                { id: 'floating-chat', label: 'Reflective Chat', icon: '💭' },
+                { id: 'challenges', label: 'Reflection Goals', icon: '🎯' },
+                { id: 'rewards', label: 'Reflection Rewards', icon: '🎁' },
 
               ].map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => {
                     console.log('Mobile Navigation: Clicked tab:', tab.id, tab.label);
-                    // Special modal handling for certain sections on mobile
-                    if (tab.id === 'themes') {
-                      console.log('Mobile Navigation: Opening theme modal');
-                      setShowThemeModal(true);
-                    } else if (tab.id === 'voice') {
-                      console.log('Mobile Navigation: Opening settings');
-                      setShowSettings(true);
-                    } else if (tab.id === 'floating-chat') {
+                    if (tab.id === 'floating-chat') {
                       console.log('Mobile Navigation: Opening floating chat');
                       setIsFloatingChatOpen(true);
-                    } else if (['journal', 'analytics', 'memory', 'daily', 'challenges', 'rewards', 'community', 'vr', 'health', 'agents', 'adaptive', 'therapy-plans', 'questions', 'feedback', 'microphone-test'].includes(tab.id)) {
+                    } else if (['challenges', 'rewards'].includes(tab.id)) {
                       console.log('Mobile Navigation: Opening modal for tab:', tab.id);
-                      // Track activity for specific sections
-                      if (tab.id === 'journal') {
-                        updateUserActivity('journal_access');
-                      } else if (tab.id === 'daily') {
-                        updateUserActivity('reflection_access');
-                      }
                       setContentLoading(true);
                       setMobileModalContent(tab.id);
                       setShowMobileModal(true);
-                      console.log('Mobile Navigation: Modal state set - showMobileModal:', true, 'mobileModalContent:', tab.id);
-                      // Simulate content loading time
-                      setTimeout(() => {
-                        console.log('Mobile Navigation: Content loading complete for:', tab.id);
-                        setContentLoading(false);
-                      }, 800);
+                      setTimeout(() => setContentLoading(false), 800);
                     } else {
                       console.log('Mobile Navigation: Setting active section:', tab.id);
                       setActiveSection(tab.id);
@@ -1319,26 +1285,114 @@ const AppLayout = ({ currentUserId, onDataReset }: AppLayoutProps) => {
             </div>
           </div>
 
-          {/* Internal Tools Section */}
+          {/* Mirrors of You Section */}
           <div className="mobile-nav-section">
-            <div className="mobile-nav-section-title">Professional Tools</div>
+            <div className="mobile-nav-section-title">💠 Mirrors of You</div>
             <div className="mobile-nav-grid-polish">
               {[
-                { id: 'therapist', label: 'Therapist', icon: '🩺' },
-                { id: 'privacy', label: 'Privacy', icon: '🔒' },
-                { id: 'outcomes', label: 'Outcomes', icon: '📈' },
-                { id: 'ehr', label: 'EHR', icon: '🏥' },
-                { id: 'privacy-policy', label: 'Legal', icon: '📜' }
+                { id: 'questions', label: 'Get to Know Me', icon: '❓' },
+                { id: 'journal', label: 'Journal', icon: '📝' },
+                { id: 'memory', label: 'Insight Vault', icon: '🧠' },
+                { id: 'adaptive', label: 'Mind Mirror', icon: '🪞' },
+                { id: 'analytics', label: 'State of Self', icon: '📊' },
+                { id: 'health', label: 'Somatic Mirror', icon: '💗' },
+
               ].map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => {
-                    // Show professional tools in modals too with loading state
+                    console.log('Mobile Navigation: Clicked tab:', tab.id, tab.label);
+                    if (['journal', 'memory', 'analytics', 'adaptive', 'health', 'questions'].includes(tab.id)) {
+                      console.log('Mobile Navigation: Opening modal for tab:', tab.id);
+                      // Track activity for specific sections
+                      if (tab.id === 'journal') {
+                        updateUserActivity('journal_access');
+                      }
+                      setContentLoading(true);
+                      setMobileModalContent(tab.id);
+                      setShowMobileModal(true);
+                      setTimeout(() => setContentLoading(false), 800);
+                    } else {
+                      setActiveSection(tab.id);
+                    }
+                  }}
+                  className={`mobile-nav-btn-polish touch-target ${
+                    activeSection === tab.id ? 'selected' : ''
+                  }`}
+                >
+                  <span className="mobile-nav-icon">{tab.icon}</span>
+                  <span className="mobile-nav-label">{tab.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Guided Support Section */}
+          <div className="mobile-nav-section">
+            <div className="mobile-nav-section-title">🧘 Guided Support</div>
+            <div className="mobile-nav-grid-polish">
+              {[
+                { id: 'agents', label: 'Reflective Allies', icon: '🤝' },
+                { id: 'vr', label: 'InnerScape', icon: '🌌' },
+                { id: 'therapy-plans', label: 'Therapy Plans', icon: '📋' },
+                { id: 'community', label: 'Community', icon: '👥' },
+
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => {
+                    console.log('Mobile Navigation: Clicked tab:', tab.id, tab.label);
                     setContentLoading(true);
                     setMobileModalContent(tab.id);
                     setShowMobileModal(true);
-                    // Simulate content loading time
                     setTimeout(() => setContentLoading(false), 800);
+                  }}
+                  className={`mobile-nav-btn-polish touch-target ${
+                    activeSection === tab.id ? 'selected' : ''
+                  }`}
+                >
+                  <span className="mobile-nav-icon">{tab.icon}</span>
+                  <span className="mobile-nav-label">{tab.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Personalization & Settings Section */}
+          <div className="mobile-nav-section">
+            <div className="mobile-nav-section-title">⚙️ Personalization & Settings</div>
+            <div className="mobile-nav-grid-polish">
+              {[
+                { id: 'voice', label: 'Voice Settings', icon: '🎤' },
+                { id: 'themes', label: 'Themes', icon: '🎨' },
+                { id: 'daily', label: 'Reflection', icon: '🔮' },
+                { id: 'feedback', label: 'Feedback', icon: '💡' },
+                { id: 'microphone-test', label: 'Mic Test', icon: '🔧' },
+                { id: 'privacy', label: 'Privacy', icon: '🔒' },
+
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => {
+                    console.log('Mobile Navigation: Clicked tab:', tab.id, tab.label);
+                    if (tab.id === 'themes') {
+                      console.log('Mobile Navigation: Opening theme modal');
+                      setShowThemeModal(true);
+                    } else if (tab.id === 'voice') {
+                      console.log('Mobile Navigation: Opening settings');
+                      setShowSettings(true);
+                    } else if (['daily', 'feedback', 'microphone-test', 'privacy'].includes(tab.id)) {
+                      console.log('Mobile Navigation: Opening modal for tab:', tab.id);
+                      if (tab.id === 'daily') {
+                        updateUserActivity('reflection_access');
+                      }
+                      setContentLoading(true);
+                      setMobileModalContent(tab.id);
+                      setShowMobileModal(true);
+                      setTimeout(() => setContentLoading(false), 800);
+                    } else {
+                      setActiveSection(tab.id);
+                    }
                   }}
                   className={`mobile-nav-btn-polish touch-target ${
                     activeSection === tab.id ? 'selected' : ''
@@ -1352,43 +1406,54 @@ const AppLayout = ({ currentUserId, onDataReset }: AppLayoutProps) => {
           </div>
         </div>
 
-        {/* Desktop Left Sidebar Navigation */}
+        {/* Desktop Left Sidebar Navigation - 4-Tier Hierarchy */}
         <div className="hidden lg:flex w-72 flex-col justify-center py-8">
-          {/* User Features Section */}
-          <div className="mb-4">
-            <div className="theme-text-secondary text-sm font-medium px-6 pb-2">Wellness Features</div>
+          {/* Core Companion Section */}
+          <div className="mb-6">
+            <div className="theme-text-secondary text-sm font-medium px-6 pb-2">🟦 Core Companion</div>
             {[
               { id: 'chat', label: 'Home' },
-              { id: 'daily', label: 'Reflection' },
-              { id: 'journal', label: 'Journal' },
-              { id: 'memory', label: 'Memory' },
-              { id: 'analytics', label: 'Analytics' },
-              { id: 'voice', label: 'Voice Settings' },
-              { id: 'themes', label: 'Color Themes' },
-              { id: 'challenges', label: 'Challenges' },
-              { id: 'rewards', label: 'Rewards' },
-              { id: 'community', label: 'Community' },
-              { id: 'adaptive', label: 'AI Learning' },
-              { id: 'therapy-plans', label: 'Therapy Plans' },
-              { id: 'agents', label: 'AI Specialists' },
-              { id: 'vr', label: 'VR Therapy' },
-              { id: 'health', label: 'Wearables' },
-              // { id: 'ambient-sound', label: 'Ambient Sound' }, // DISABLED due to audio quality issues
-              { id: 'questions', label: 'Question Deck' },
-              { id: 'feedback', label: 'Feedback & Suggestions' },
-              { id: 'settings', label: 'Settings' }
+              { id: 'floating-chat', label: 'Reflective Chat' },
+              { id: 'challenges', label: 'Reflection Goals' },
+              { id: 'rewards', label: 'Reflection Rewards' }
             ].map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => {
-                  console.log('Desktop Navigation: Clicked tab:', tab.id, tab.label);
-                  if (tab.id === 'settings') {
-                    console.log('Desktop Navigation: Opening settings');
-                    setShowSettings(true);
+                  console.log('Desktop Core Companion: Clicked tab:', tab.id, tab.label);
+                  if (tab.id === 'floating-chat') {
+                    setIsFloatingChatOpen(true);
                   } else {
-                    console.log('Desktop Navigation: Setting active section to:', tab.id);
                     setActiveSection(tab.id);
                   }
+                }}
+                className={`shimmer-border w-full h-16 px-6 text-lg font-medium transition-all border-soft hover-lift text-luxury ${
+                  activeSection === tab.id || (tab.id === 'floating-chat' && isFloatingChatOpen)
+                    ? 'theme-surface theme-text glass-luxury shadow-luxury'
+                    : 'theme-primary theme-text hover:theme-primary-light gradient-soft'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Mirrors of You Section */}
+          <div className="mb-6 border-t border-white/10 pt-4">
+            <div className="theme-text-secondary text-sm font-medium px-6 pb-2">💠 Mirrors of You</div>
+            {[
+              { id: 'questions', label: 'Get to Know Me' },
+              { id: 'journal', label: 'Journal' },
+              { id: 'memory', label: 'Insight Vault' },
+              { id: 'adaptive', label: 'Mind Mirror' },
+              { id: 'analytics', label: 'State of Self' },
+              { id: 'health', label: 'Somatic Mirror' }
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => {
+                  console.log('Desktop Mirrors of You: Clicked tab:', tab.id, tab.label);
+                  setActiveSection(tab.id);
                 }}
                 className={`shimmer-border w-full h-16 px-6 text-lg font-medium transition-all border-soft hover-lift text-luxury ${
                   activeSection === tab.id
@@ -1401,21 +1466,53 @@ const AppLayout = ({ currentUserId, onDataReset }: AppLayoutProps) => {
             ))}
           </div>
 
-          {/* Internal Tools Section */}
-          <div className="border-t border-white/20 pt-4">
-            <div className="theme-text-secondary text-sm font-medium px-6 pb-2">Professional Tools</div>
+          {/* Guided Support Section */}
+          <div className="mb-6 border-t border-white/10 pt-4">
+            <div className="theme-text-secondary text-sm font-medium px-6 pb-2">🧘 Guided Support</div>
             {[
-              { id: 'therapist', label: 'Therapist Portal' },
-              { id: 'privacy', label: 'Privacy & Compliance' },
-              { id: 'outcomes', label: 'Therapeutic Outcomes' },
-              { id: 'ehr', label: 'EHR Integration' },
-              { id: 'privacy-policy', label: 'Privacy Policy' }
+              { id: 'agents', label: 'Reflective Allies' },
+              { id: 'vr', label: 'InnerScape' },
+              { id: 'therapy-plans', label: 'Therapy Plans' },
+              { id: 'community', label: 'Community' }
             ].map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => {
-                  console.log('Desktop Professional Tools: Clicked tab:', tab.id, tab.label);
+                  console.log('Desktop Guided Support: Clicked tab:', tab.id, tab.label);
                   setActiveSection(tab.id);
+                }}
+                className={`shimmer-border w-full h-16 px-6 text-lg font-medium transition-all border-soft hover-lift text-luxury ${
+                  activeSection === tab.id
+                    ? 'theme-surface theme-text glass-luxury shadow-luxury'
+                    : 'theme-primary theme-text hover:theme-primary-light gradient-soft'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Personalization & Settings Section */}
+          <div className="border-t border-white/10 pt-4">
+            <div className="theme-text-secondary text-sm font-medium px-6 pb-2">⚙️ Personalization & Settings</div>
+            {[
+              { id: 'daily', label: 'Reflection' },
+              { id: 'voice', label: 'Voice Settings' },
+              { id: 'themes', label: 'Color Themes' },
+              { id: 'feedback', label: 'Feedback & Suggestions' },
+              { id: 'microphone-test', label: 'Mic Test' },
+              { id: 'privacy', label: 'Privacy & Compliance' },
+              { id: 'settings', label: 'Settings' }
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => {
+                  console.log('Desktop Personalization: Clicked tab:', tab.id, tab.label);
+                  if (tab.id === 'settings') {
+                    setShowSettings(true);
+                  } else {
+                    setActiveSection(tab.id);
+                  }
                 }}
                 className={`shimmer-border w-full h-16 px-6 text-lg font-medium transition-all border-soft hover-lift text-luxury ${
                   activeSection === tab.id
@@ -1429,9 +1526,9 @@ const AppLayout = ({ currentUserId, onDataReset }: AppLayoutProps) => {
           </div>
         </div>
 
-        {/* Center Content Area - Mobile Responsive */}
-        <div className="flex-1 mobile-content-scroll-area" data-main-content>
-          {activeSection === 'chat' ? (
+        {/* Center Content Area - Mobile Responsive with Prominent Chat */}
+        <div className="flex-1 mobile-content-scroll-area relative" data-main-content>
+          {activeSection === 'chat' && !isFloatingChatOpen ? (
             /* Enhanced Home Dashboard - Lively Wellness Overview */
             <div className="w-full h-full theme-background p-6 overflow-y-auto relative">
               {/* Animated Background Elements */}
@@ -1626,6 +1723,92 @@ const AppLayout = ({ currentUserId, onDataReset }: AppLayoutProps) => {
 
               </div>
             </div>
+          ) : activeSection === 'chat' && isFloatingChatOpen ? (
+            /* Prominent Desktop Chat Interface */
+            <div className="w-full h-full theme-background relative flex flex-col">
+              {/* Chat Header */}
+              <div className="flex items-center justify-between p-6 border-b border-white/10">
+                <div className="flex items-center space-x-4">
+                  <img src={chakraiLogo} alt="Chakrai" className="h-12 w-auto" />
+                  <div>
+                    <h1 className="text-2xl font-bold theme-text">Reflective Chat with Chakrai</h1>
+                    <p className="theme-text-secondary text-sm">Your personal AI wellness companion</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setIsFloatingChatOpen(false)}
+                  className="w-12 h-12 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center text-white transition-colors shadow-lg border-2 border-white"
+                  aria-label="Close chat"
+                >
+                  <X size={24} />
+                </button>
+              </div>
+
+              {/* Chat Messages Area */}
+              <div className="flex-1 p-6 overflow-y-auto">
+                <div className="max-w-4xl mx-auto space-y-4">
+                  {messages.length === 0 ? (
+                    <div className="text-center py-12">
+                      <div className="theme-card backdrop-blur-sm rounded-xl p-8 border-2 border-silver">
+                        <div className="text-6xl mb-4">💭</div>
+                        <h3 className="text-xl font-semibold theme-text mb-2">Start Your Reflection</h3>
+                        <p className="theme-text-secondary">Share what's on your mind. I'm here to listen and support your wellness journey.</p>
+                      </div>
+                    </div>
+                  ) : (
+                    messages.map((message, index) => (
+                      <div key={index} className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+                        <div 
+                          className={`max-w-[80%] p-4 rounded-2xl border-2 border-silver ${
+                            message.sender === 'user' 
+                              ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white' 
+                              : 'theme-card backdrop-blur-sm theme-text'
+                          }`}
+                        >
+                          <p className="leading-relaxed">{message.text}</p>
+                          <p className="text-xs opacity-70 mt-2">{message.time}</p>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                  {loading && (
+                    <div className="flex justify-start">
+                      <div className="theme-card backdrop-blur-sm rounded-2xl p-4 border-2 border-silver">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce"></div>
+                          <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                          <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                          <span className="text-sm theme-text ml-2">Chakrai is thinking...</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Chat Input Area */}
+              <div className="p-6 border-t border-white/10">
+                <div className="max-w-4xl mx-auto">
+                  <div className="flex space-x-4">
+                    <input
+                      type="text"
+                      value={input}
+                      onChange={(e) => setInput(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && !loading && sendMessage()}
+                      placeholder="Share your thoughts or ask for guidance..."
+                      className="flex-1 p-4 theme-card backdrop-blur-sm border-2 border-silver rounded-xl theme-text placeholder-white/50 focus:outline-none focus:border-purple-400"
+                    />
+                    <button
+                      onClick={sendMessage}
+                      disabled={loading || !input.trim()}
+                      className="px-6 py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-medium hover:from-purple-700 hover:to-blue-700 transition-all duration-300 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed border-2 border-silver"
+                    >
+                      Send
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
           ) : (
             /* Separate Full Panels for Other Sections */
             <div className="w-full h-full theme-background p-6 overflow-y-auto">
@@ -1635,7 +1818,7 @@ const AppLayout = ({ currentUserId, onDataReset }: AppLayoutProps) => {
                   <h2 className="text-2xl font-bold theme-text text-center">
                     {activeSection === 'daily' && 'Personality Reflection'}
                     {activeSection === 'journal' && 'Therapeutic Journal'}
-                    {activeSection === 'memory' && 'Memory Dashboard'}
+                    {activeSection === 'memory' && 'Insight Vault'}
                     {activeSection === 'analytics' && 'Analytics & Reporting'}
                     {activeSection === 'challenges' && 'Wellness Challenges'}
                     {activeSection === 'rewards' && 'Wellness Rewards'}

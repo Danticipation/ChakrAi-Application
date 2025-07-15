@@ -100,8 +100,8 @@ export default function MemoryDashboard() {
           <div className="flex items-center space-x-3">
             <Brain className="w-8 h-8 text-white" />
             <div>
-              <h1 className="text-2xl font-bold text-white">Memory Dashboard</h1>
-              <p className="text-white/80">What TraI has learned about you</p>
+              <h1 className="text-2xl font-bold text-white">Insight Vault</h1>
+              <p className="text-white/80">What Chakrai has learned about you</p>
             </div>
           </div>
           <Button 
