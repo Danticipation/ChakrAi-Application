@@ -1731,56 +1731,56 @@ const AppLayout = ({ currentUserId, onDataReset }: AppLayoutProps) => {
               </div>
             </div>
           ) : activeSection === 'chat' && isFloatingChatOpen ? (
-            /* Prominent Desktop Chat Interface */
-            <div className="w-full h-full theme-background relative flex flex-col">
-              {/* Chat Header */}
-              <div className="flex items-center justify-between p-6 border-b border-white/10">
-                <div className="flex items-center space-x-4">
-                  <img src={chakraiLogo} alt="Chakrai" className="h-12 w-auto" />
+            /* Prominent Desktop Chat Interface - Compact Layout */
+            <div className="w-full h-full theme-background relative flex flex-col max-h-screen">
+              {/* Compact Chat Header */}
+              <div className="flex items-center justify-between p-4 border-b border-white/10 shrink-0">
+                <div className="flex items-center space-x-3">
+                  <img src={chakraiLogo} alt="Chakrai" className="h-8 w-auto" />
                   <div>
-                    <h1 className="text-2xl font-bold theme-text">Reflective Chat with Chakrai</h1>
-                    <p className="theme-text-secondary text-sm">Your personal AI wellness companion</p>
+                    <h1 className="text-lg font-bold theme-text">Reflective Chat with Chakrai</h1>
+                    <p className="theme-text-secondary text-xs">Your personal AI wellness companion</p>
                   </div>
                 </div>
                 <button
                   onClick={() => setIsFloatingChatOpen(false)}
-                  className="w-12 h-12 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center text-white transition-colors shadow-lg border-2 border-white"
+                  className="w-10 h-10 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center text-white transition-colors shadow-lg border-2 border-white"
                   aria-label="Close chat"
                 >
-                  <X size={24} />
+                  <X size={20} />
                 </button>
               </div>
 
-              {/* Chat Messages Area */}
-              <div className="flex-1 p-6 overflow-y-auto">
-                <div className="max-w-4xl mx-auto space-y-4">
+              {/* Compact Chat Messages Area */}
+              <div className="flex-1 p-4 overflow-y-auto min-h-0">
+                <div className="max-w-4xl mx-auto space-y-3">
                   {messages.length === 0 ? (
-                    <div className="text-center py-12">
-                      <div className="theme-card backdrop-blur-sm rounded-xl p-8 border-2 border-silver">
-                        <div className="text-6xl mb-4">💭</div>
-                        <h3 className="text-xl font-semibold theme-text mb-2">Start Your Reflection</h3>
-                        <p className="theme-text-secondary">Share what's on your mind. I'm here to listen and support your wellness journey.</p>
+                    <div className="text-center py-6">
+                      <div className="theme-card backdrop-blur-sm rounded-xl p-6 border-2 border-silver">
+                        <div className="text-4xl mb-3">💭</div>
+                        <h3 className="text-lg font-semibold theme-text mb-2">Start Your Reflection</h3>
+                        <p className="theme-text-secondary text-sm">Share what's on your mind. I'm here to listen and support your wellness journey.</p>
                       </div>
                     </div>
                   ) : (
                     messages.map((message, index) => (
                       <div key={index} className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
                         <div 
-                          className={`max-w-[80%] p-4 rounded-2xl border-2 border-silver ${
+                          className={`max-w-[75%] p-3 rounded-2xl border-2 border-silver ${
                             message.sender === 'user' 
                               ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white' 
                               : 'theme-card backdrop-blur-sm theme-text'
                           }`}
                         >
-                          <p className="leading-relaxed">{message.text}</p>
-                          <p className="text-xs opacity-70 mt-2">{message.time}</p>
+                          <p className="leading-relaxed text-sm">{message.text}</p>
+                          <p className="text-xs opacity-70 mt-1">{message.time}</p>
                         </div>
                       </div>
                     ))
                   )}
                   {loading && (
                     <div className="flex justify-start">
-                      <div className="theme-card backdrop-blur-sm rounded-2xl p-4 border-2 border-silver">
+                      <div className="theme-card backdrop-blur-sm rounded-2xl p-3 border-2 border-silver">
                         <div className="flex items-center space-x-2">
                           <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce"></div>
                           <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
@@ -1793,22 +1793,22 @@ const AppLayout = ({ currentUserId, onDataReset }: AppLayoutProps) => {
                 </div>
               </div>
 
-              {/* Chat Input Area */}
-              <div className="p-6 border-t border-white/10">
+              {/* Compact Chat Input Area - Fixed at Bottom */}
+              <div className="p-4 border-t border-white/10 shrink-0">
                 <div className="max-w-4xl mx-auto">
-                  <div className="flex space-x-4">
+                  <div className="flex space-x-3">
                     <input
                       type="text"
                       value={input}
                       onChange={(e) => setInput(e.target.value)}
                       onKeyPress={(e) => e.key === 'Enter' && !loading && sendMessage()}
                       placeholder="Share your thoughts or ask for guidance..."
-                      className="flex-1 p-4 theme-card backdrop-blur-sm border-2 border-silver rounded-xl theme-text placeholder-white/50 focus:outline-none focus:border-purple-400"
+                      className="flex-1 p-3 theme-card backdrop-blur-sm border-2 border-silver rounded-xl theme-text placeholder-white/50 focus:outline-none focus:border-purple-400 text-sm"
                     />
                     <button
                       onClick={sendMessage}
                       disabled={loading || !input.trim()}
-                      className="px-6 py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-medium hover:from-purple-700 hover:to-blue-700 transition-all duration-300 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed border-2 border-silver"
+                      className="px-4 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-medium hover:from-purple-700 hover:to-blue-700 transition-all duration-300 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed border-2 border-silver text-sm"
                     >
                       Send
                     </button>
