@@ -67,6 +67,11 @@ h1, h2, h3, h4, h5, h6 {
   --shadow-deep: 0 16px 60px rgba(0, 0, 0, 0.35);
   --border-radius-soft: 16px;
   --border-radius-luxury: 24px;
+  
+  /* Neon cursor trail optimization */
+  --neon-cyan: #00ffff;
+  --neon-cyan-glow: rgba(0, 255, 255, 0.8);
+  --neon-cyan-dim: rgba(0, 255, 255, 0.4);
 }
 
 /* Luxury glass effect */
@@ -1266,4 +1271,11 @@ input:focus, button:focus {
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
+}
+
+/* Neon cursor trail performance optimizations */
+.neon-cursor-trail {
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }

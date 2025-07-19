@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import NeonCursor from '@/components/neon-cursor';
 import { QueryClient, QueryClientProvider, useQuery, useQueryClient } from '@tanstack/react-query';
 import { MessageCircle, Brain, BookOpen, Mic, User, Square, Send, Target, RotateCcw, Sun, Star, Heart, BarChart3, Gift, Headphones, Shield, X, Palette, Settings } from 'lucide-react';
 import axios from 'axios';
@@ -2270,6 +2271,7 @@ export default function App() {
         <AuthProvider>
           <SubscriptionProvider>
             <AppWithOnboarding />
+            <NeonCursor />
           </SubscriptionProvider>
         </AuthProvider>
       </ThemeProvider>
