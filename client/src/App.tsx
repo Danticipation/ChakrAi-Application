@@ -964,10 +964,10 @@ const AppLayout = ({ currentUserId, onDataReset }: AppLayoutProps) => {
                         <button
                           key={voice.id}
                           onClick={() => setSelectedVoice(voice.id)}
-                          className={`p-4 rounded-xl border-2 transition-all text-left ${
+                          className={`p-4 rounded-xl border-2 transition-all text-left glass-button hover-lift ${
                             selectedVoice === voice.id
-                              ? 'border-white bg-white/20 shadow-lg scale-105'
-                              : 'border-white/30 bg-white/10 hover:border-white/50 hover:bg-white/15'
+                              ? 'border-white/50 gradient-blue scale-105'
+                              : 'border-white/30 hover:border-white/50'
                           }`}
                         >
                           <div className="flex items-center justify-between mb-2">
