@@ -30,12 +30,37 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
   const queryClient = useQueryClient();
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messagesEndRef.current) {
+      // Find the scrollable messages container
+      const chatContainer = messagesEndRef.current.closest('.overflow-y-auto');
+      if (chatContainer) {
+        // Immediate scroll for instant feedback
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+        
+        // Smooth scroll as backup
+        setTimeout(() => {
+          messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        }, 10);
+        
+        // Force scroll after DOM updates
+        setTimeout(() => {
+          chatContainer.scrollTop = chatContainer.scrollHeight;
+        }, 100);
+      }
+    }
   };
 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Additional scroll trigger after message updates
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      scrollToBottom();
+    }, 200);
+    return () => clearTimeout(timer);
+  }, [messages.length]);
 
   // Load chat history when component opens and clear when closes
   useEffect(() => {
@@ -113,7 +138,12 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    setMessages(prev => {
+      const newMessages = [...prev, userMessage];
+      // Trigger scroll after state update
+      setTimeout(() => scrollToBottom(), 50);
+      return newMessages;
+    });
     setInputMessage('');
     setIsLoading(true);
 
@@ -137,7 +167,12 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
 
-      setMessages(prev => [...prev, botMessage]);
+      setMessages(prev => {
+        const newMessages = [...prev, botMessage];
+        // Trigger scroll after bot response
+        setTimeout(() => scrollToBottom(), 50);
+        return newMessages;
+      });
 
       // Auto-play voice response if voice is enabled
       if (selectedVoice && response.data.message) {
@@ -150,7 +185,12 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
         text: 'I apologize, but I\'m having trouble responding right now. Please try again.',
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
-      setMessages(prev => [...prev, errorMessage]);
+      setMessages(prev => {
+        const newMessages = [...prev, errorMessage];
+        // Trigger scroll after error message
+        setTimeout(() => scrollToBottom(), 50);
+        return newMessages;
+      });
     } finally {
       setIsLoading(false);
     }
