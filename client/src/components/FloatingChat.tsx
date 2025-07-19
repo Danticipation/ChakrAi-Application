@@ -31,22 +31,43 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
 
   const scrollToBottom = () => {
     if (messagesEndRef.current) {
-      // Find the scrollable messages container
-      const chatContainer = messagesEndRef.current.closest('.overflow-y-auto');
-      if (chatContainer) {
-        // Immediate scroll for instant feedback
-        chatContainer.scrollTop = chatContainer.scrollHeight;
-        
-        // Smooth scroll as backup
-        setTimeout(() => {
-          messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
-        }, 10);
-        
-        // Force scroll after DOM updates
-        setTimeout(() => {
-          chatContainer.scrollTop = chatContainer.scrollHeight;
-        }, 100);
+      // Multiple approaches to ensure scrolling works
+      
+      // Method 1: Direct scrollIntoView
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+      
+      // Method 2: Find scrollable parent and scroll to bottom
+      let scrollContainer = messagesEndRef.current.parentElement;
+      while (scrollContainer && !scrollContainer.classList.contains('overflow-y-auto')) {
+        scrollContainer = scrollContainer.parentElement;
       }
+      
+      if (scrollContainer) {
+        scrollContainer.scrollTop = scrollContainer.scrollHeight;
+      }
+      
+      // Method 3: Force scroll after a delay for DOM updates
+      setTimeout(() => {
+        if (messagesEndRef.current) {
+          messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+          
+          // Also try to find and scroll the container
+          let container = messagesEndRef.current.parentElement;
+          while (container && !container.classList.contains('overflow-y-auto')) {
+            container = container.parentElement;
+          }
+          if (container) {
+            container.scrollTop = container.scrollHeight;
+          }
+        }
+      }, 150);
+      
+      // Method 4: Use requestAnimationFrame for better timing
+      requestAnimationFrame(() => {
+        if (messagesEndRef.current) {
+          messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        }
+      });
     }
   };
 
@@ -54,13 +75,42 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
     scrollToBottom();
   }, [messages]);
 
-  // Additional scroll trigger after message updates
+  // Additional scroll triggers with multiple timing approaches
   useEffect(() => {
-    const timer = setTimeout(() => {
+    // Immediate scroll
+    scrollToBottom();
+    
+    // Short delay for DOM update
+    const timer1 = setTimeout(() => {
       scrollToBottom();
-    }, 200);
-    return () => clearTimeout(timer);
+    }, 100);
+    
+    // Longer delay for complex updates
+    const timer2 = setTimeout(() => {
+      scrollToBottom();
+    }, 300);
+    
+    // Final scroll after all animations
+    const timer3 = setTimeout(() => {
+      scrollToBottom();
+    }, 500);
+    
+    return () => {
+      clearTimeout(timer1);
+      clearTimeout(timer2); 
+      clearTimeout(timer3);
+    };
   }, [messages.length]);
+
+  // Scroll when loading state changes
+  useEffect(() => {
+    if (isLoading) {
+      setTimeout(() => scrollToBottom(), 100);
+    } else {
+      // When loading finishes, scroll to show new bot response
+      setTimeout(() => scrollToBottom(), 200);
+    }
+  }, [isLoading]);
 
   // Load chat history when component opens and clear when closes
   useEffect(() => {
