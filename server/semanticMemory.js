@@ -9,24 +9,24 @@ import { storage } from './storage.js';
 // Analyze conversation and extract semantic meaning
 export async function analyzeConversationForMemory(userId, userMessage, botResponse, sessionId = null) {
   try {
-    const analysisPrompt = `Analyze this therapeutic conversation for semantic memory storage:
+    const analysisPrompt = `Analyze this conversation for semantic memory storage:
 
 USER: ${userMessage}
 BOT: ${botResponse}
 
-Extract semantic information and return JSON with:
+Extract semantic information and return JSON with exactly these fields:
 {
-  "keyTopics": ["work_stress", "anxiety", "coping_strategies"],
-  "emotionalContext": "feeling overwhelmed about deadlines at work",
-  "temporalContext": "this week", 
-  "memoryType": "conversation|insight|pattern|milestone",
-  "importance": 7,
-  "semanticTags": ["work", "stress", "deadlines", "overwhelmed"],
-  "relatedTopics": ["work_life_balance", "time_management", "anxiety"],
-  "summary": "User discussed feeling overwhelmed by work deadlines and exploring coping strategies"
+  "keyTopics": ["actual_topic1", "actual_topic2"],
+  "emotionalContext": "user's actual emotional state or feeling",
+  "temporalContext": "time reference (today, this week, recently, etc)", 
+  "memoryType": "conversation",
+  "importance": 5,
+  "semanticTags": ["actual", "tags", "from", "conversation"],
+  "relatedTopics": ["related_topic1", "related_topic2"],
+  "summary": "Accurate summary of what the user actually discussed in this specific conversation"
 }
 
-Focus on therapeutically relevant information that could be referenced in future conversations.`;
+CRITICAL: Base the summary and all fields on the ACTUAL conversation content above, not on examples. The summary must reflect what was really discussed.`;
 
     const response = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
