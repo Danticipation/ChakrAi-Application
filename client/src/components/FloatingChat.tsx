@@ -29,6 +29,21 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
   const streamRef = useRef<MediaStream | null>(null);
   const queryClient = useQueryClient();
 
+  // Generate consistent device fingerprint and session ID
+  const getConsistentDeviceInfo = () => {
+    // Create a stable device fingerprint
+    const deviceFingerprint = `browser_${navigator.userAgent.slice(0, 50)}_${screen.width}x${screen.height}_${new Date().getTimezoneOffset()}`;
+    
+    // Get or create consistent session ID from localStorage
+    let sessionId = localStorage.getItem('chakrai_session_id');
+    if (!sessionId) {
+      sessionId = `session_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
+      localStorage.setItem('chakrai_session_id', sessionId);
+    }
+    
+    return { deviceFingerprint, sessionId };
+  };
+
   const scrollToBottom = () => {
     if (messagesEndRef.current) {
       // Multiple approaches to ensure scrolling works
@@ -145,13 +160,13 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
 
   const loadChatHistory = async () => {
     try {
-      // Generate device fingerprint for anonymous user identification
-      const deviceFingerprint = `browser_${navigator.userAgent.slice(0, 50)}_${screen.width}x${screen.height}_${new Date().getTimezoneOffset()}`;
+      // Get consistent device info for persistent user identification
+      const { deviceFingerprint, sessionId } = getConsistentDeviceInfo();
       
       const response = await axios.get('/api/chat/history/1?limit=50', {
         headers: {
           'X-Device-Fingerprint': deviceFingerprint,
-          'X-Session-Id': `session_${Date.now()}`
+          'X-Session-Id': sessionId
         }
       });
       const chatHistory = response.data.messages || [];
@@ -198,8 +213,8 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
     setIsLoading(true);
 
     try {
-      // Generate device fingerprint for anonymous user identification
-      const deviceFingerprint = `browser_${navigator.userAgent.slice(0, 50)}_${screen.width}x${screen.height}_${new Date().getTimezoneOffset()}`;
+      // Get consistent device info for persistent user identification
+      const { deviceFingerprint, sessionId } = getConsistentDeviceInfo();
       
       const response = await axios.post('/api/chat', {
         message: text.trim(),
@@ -207,7 +222,7 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
       }, {
         headers: {
           'X-Device-Fingerprint': deviceFingerprint,
-          'X-Session-Id': `session_${Date.now()}`
+          'X-Session-Id': sessionId
         }
       });
 

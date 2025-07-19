@@ -41,10 +41,12 @@ export class UserSessionManager {
         };
       }
 
-      // Create new anonymous user
+      // Create new anonymous user with unique username
       const newSessionId = sessionId || nanoid(12);
+      const uniqueUsername = `anonymous_${newSessionId}_${Date.now()}_${nanoid(6)}`;
+      
       const newUser = await storage.createUser({
-        username: `anonymous_${newSessionId}`,
+        username: uniqueUsername,
         sessionId: newSessionId,
         deviceFingerprint,
         isAnonymous: true
@@ -60,6 +62,37 @@ export class UserSessionManager {
       };
     } catch (error) {
       console.error('Error creating anonymous user:', error);
+      
+      // Handle duplicate constraint violations (username or session_id)
+      if (error.code === '23505' && (error.constraint === 'users_username_unique' || error.constraint === 'users_session_id_key')) {
+        console.log('Username collision detected, retrying with new unique identifier...');
+        
+        // Generate a completely unique username with timestamp and random suffix
+        const fallbackSessionId = nanoid(16);
+        const fallbackUsername = `anon_${Date.now()}_${nanoid(10)}`;
+        
+        try {
+          const fallbackUser = await storage.createUser({
+            username: fallbackUsername,
+            sessionId: fallbackSessionId,
+            deviceFingerprint,
+            isAnonymous: true
+          });
+          
+          return {
+            id: fallbackUser.id,
+            sessionId: fallbackSessionId,
+            deviceFingerprint,
+            isAnonymous: true,
+            createdAt: fallbackUser.createdAt || new Date(),
+            lastActiveAt: new Date()
+          };
+        } catch (retryError) {
+          console.error('Fallback user creation also failed:', retryError);
+          throw new Error('Failed to create anonymous user session after retry');
+        }
+      }
+      
       throw new Error('Failed to create anonymous user session');
     }
   }
