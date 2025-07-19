@@ -539,10 +539,10 @@ app.post('/api/chat', async (req, res) => {
           `"${mem.content}" (${mem.temporalContext || 'recently'}) [${mem.emotionalContext || 'neutral'}]`
         ).join('\n- ');
         
-        memoryContext = `\n\nCRITICAL MEMORY CONTEXT - Reference these past conversations naturally:
+        memoryContext = `\n\nPAST CONVERSATIONS CONTEXT (only reference if truly relevant to current topic):
 - ${memoryDetails}
 
-INSTRUCTION: You MUST acknowledge and reference relevant memories from above in your response. For example, say things like "I remember you mentioned..." or "Last time we talked about..." or "You told me before that...". Make the conversation feel continuous and connected.`;
+INSTRUCTION: Only reference the above memories when they are genuinely relevant to what the user is currently discussing. Do NOT say "I remember" about things the user just told you in this conversation. Be natural - only mention past conversations when it actually adds value to the current discussion.`;
         console.log(`Including ${semanticContext.relevantMemories.length} relevant memories for context`);
       }
     } catch (memoryError) {
@@ -557,9 +557,9 @@ INSTRUCTION: You MUST acknowledge and reference relevant memories from above in 
 
 Be genuinely interested in what people share - ask about their day, their interests, their thoughts. Respond naturally and personally. Share observations, ask follow-up questions, and engage with the actual content of what they're saying. 
 
-IMPORTANT: When you have memory context about past conversations, naturally reference them in your responses. Use phrases like "I remember you mentioned...", "Last time we talked about...", "You told me before that...", or "How has that been going since we last spoke about it?". This makes the conversation feel continuous and shows you're truly listening and remembering.
+IMPORTANT: Only reference past conversations when they're genuinely relevant to the current topic. NEVER say "I remember" about something the user just told you in the current conversation - that's ridiculous and breaks the natural flow. Only use memory context when it truly adds value.
 
-DO NOT immediately jump into "support" mode or therapeutic language unless someone explicitly asks for help or shares something distressing. Just be a real person having a real conversation with good memory.${memoryContext}`
+DO NOT immediately jump into "support" mode or therapeutic language unless someone explicitly asks for help or shares something distressing. Just be a real person having a real conversation.${memoryContext}`
       }
     ];
     
