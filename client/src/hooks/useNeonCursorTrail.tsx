@@ -26,6 +26,7 @@ export const useNeonCursorTrail = (): Point[] => {
   // Mouse move handler - captures the latest position
   const handleMouseMove = useCallback((event: MouseEvent) => {
     lastPosition.current = { x: event.clientX, y: event.clientY };
+    console.log('Mouse moved to:', lastPosition.current);
   }, []);
 
   // Animation loop function
@@ -37,6 +38,7 @@ export const useNeonCursorTrail = (): Point[] => {
     if (timeDelta >= UPDATE_INTERVAL || lastUpdateTime.current === 0) {
       setPoints(prevPoints => {
         const newPoints = [...prevPoints, { x: lastPosition.current.x, y: lastPosition.current.y }];
+        console.log('Updating trail points:', newPoints.length, 'latest position:', lastPosition.current);
         // Keep only the last TRAIL_LENGTH points
         return newPoints.slice(Math.max(newPoints.length - TRAIL_LENGTH, 0));
       });
@@ -48,6 +50,7 @@ export const useNeonCursorTrail = (): Point[] => {
   }, []); // Dependencies: updateTrail depends on itself implicitly via requestAnimationFrame
 
   useEffect(() => {
+    console.log('useNeonCursorTrail hook mounted - setting up mouse listener');
     window.addEventListener('mousemove', handleMouseMove, { passive: true }); // Use passive listener for performance
 
     // Start the animation loop
@@ -55,6 +58,7 @@ export const useNeonCursorTrail = (): Point[] => {
 
     // Cleanup function
     return () => {
+      console.log('useNeonCursorTrail hook unmounted - cleaning up');
       window.removeEventListener('mousemove', handleMouseMove);
       if (animationFrameId.current !== null) {
         cancelAnimationFrame(animationFrameId.current);

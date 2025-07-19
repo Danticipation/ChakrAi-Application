@@ -4,6 +4,9 @@ import React from 'react';
 const NeonCursor: React.FC = () => {
   const points = useNeonCursorTrail();
 
+  // Debug logging
+  console.log('NeonCursor points:', points.length);
+
   if (points.length === 0) {
     return null;
   }
