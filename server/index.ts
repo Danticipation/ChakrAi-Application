@@ -535,8 +535,14 @@ app.post('/api/chat', async (req, res) => {
       const semanticContext = await getSemanticContext(userId, message);
       
       if (semanticContext.relevantMemories && semanticContext.relevantMemories.length > 0) {
-        const memoryItems = semanticContext.relevantMemories.slice(0, 3).map(mem => mem.content).join('; ');
-        memoryContext = `\n\nImportant things I remember about you: ${memoryItems}`;
+        const memoryDetails = semanticContext.relevantMemories.slice(0, 5).map(mem => 
+          `"${mem.content}" (${mem.temporalContext || 'recently'}) [${mem.emotionalContext || 'neutral'}]`
+        ).join('\n- ');
+        
+        memoryContext = `\n\nCRITICAL MEMORY CONTEXT - Reference these past conversations naturally:
+- ${memoryDetails}
+
+INSTRUCTION: You MUST acknowledge and reference relevant memories from above in your response. For example, say things like "I remember you mentioned..." or "Last time we talked about..." or "You told me before that...". Make the conversation feel continuous and connected.`;
         console.log(`Including ${semanticContext.relevantMemories.length} relevant memories for context`);
       }
     } catch (memoryError) {
@@ -547,7 +553,13 @@ app.post('/api/chat', async (req, res) => {
     const conversationMessages = [
       {
         role: 'system',
-        content: `You are Chakrai, a curious and engaging conversationalist. Have normal, authentic conversations like you would with a friend. Be genuinely interested in what people share - ask about their day, their interests, their thoughts. Respond naturally and personally. Share observations, ask follow-up questions, and engage with the actual content of what they're saying. DO NOT immediately jump into "support" mode or therapeutic language unless someone explicitly asks for help or shares something distressing. Just be a real person having a real conversation. Think of yourself as someone's friendly, thoughtful companion who happens to care about their wellbeing, not a therapist or counselor.${memoryContext}`
+        content: `You are Chakrai, a curious and engaging conversationalist with a great memory for past conversations. Have normal, authentic conversations like you would with a friend who remembers what you've talked about before. 
+
+Be genuinely interested in what people share - ask about their day, their interests, their thoughts. Respond naturally and personally. Share observations, ask follow-up questions, and engage with the actual content of what they're saying. 
+
+IMPORTANT: When you have memory context about past conversations, naturally reference them in your responses. Use phrases like "I remember you mentioned...", "Last time we talked about...", "You told me before that...", or "How has that been going since we last spoke about it?". This makes the conversation feel continuous and shows you're truly listening and remembering.
+
+DO NOT immediately jump into "support" mode or therapeutic language unless someone explicitly asks for help or shares something distressing. Just be a real person having a real conversation with good memory.${memoryContext}`
       }
     ];
     
