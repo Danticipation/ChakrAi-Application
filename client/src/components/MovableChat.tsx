@@ -44,9 +44,11 @@ const MovableChat: React.FC<MovableChatProps> = ({ selectedVoice, onVoiceChange,
   useEffect(() => {
     const loadChatHistory = async () => {
       try {
+        console.log('MovableChat: Starting to load chat history...');
         const { deviceFingerprint, sessionId } = getDeviceInfo();
+        console.log('MovableChat: Device info:', { deviceFingerprint, sessionId });
         
-        const response = await fetch('/api/chat-history', {
+        const response = await fetch('/api/chat/history/1?limit=50', {
           method: 'GET',
           headers: {
             'X-Device-Fingerprint': deviceFingerprint,
@@ -54,17 +56,26 @@ const MovableChat: React.FC<MovableChatProps> = ({ selectedVoice, onVoiceChange,
           },
         });
 
+        console.log('MovableChat: Chat history response status:', response.status);
+
         if (response.ok) {
           const data = await response.json();
-          const formattedMessages = data.messages.map((msg: any) => ({
-            sender: msg.isBot ? 'bot' : 'user',
-            text: msg.text,
-            time: new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-          }));
-          setMessages(formattedMessages);
+          console.log('MovableChat: Raw chat history data:', data);
+          
+          const chatHistory = data.messages || [];
+          console.log('MovableChat: Chat history loaded:', chatHistory.length, 'messages');
+          
+          if (chatHistory.length > 0) {
+            // Use the messages as they come from the API (they're already formatted)
+            setMessages(chatHistory);
+          } else {
+            console.log('MovableChat: No chat history found, will show welcome message');
+          }
+        } else {
+          console.error('MovableChat: Failed to fetch chat history:', response.statusText);
         }
       } catch (error) {
-        console.error('Failed to load chat history:', error);
+        console.error('MovableChat: Failed to load chat history:', error);
       } finally {
         setIsLoadingHistory(false);
       }
