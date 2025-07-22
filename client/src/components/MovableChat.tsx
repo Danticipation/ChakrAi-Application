@@ -24,6 +24,7 @@ const MovableChat: React.FC<MovableChatProps> = ({ selectedVoice, onVoiceChange,
   const [position, setPosition] = useState({ x: 100, y: 100 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   
   const chatRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -38,6 +39,39 @@ const MovableChat: React.FC<MovableChatProps> = ({ selectedVoice, onVoiceChange,
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Load chat history when component mounts
+  useEffect(() => {
+    const loadChatHistory = async () => {
+      try {
+        const { deviceFingerprint, sessionId } = getDeviceInfo();
+        
+        const response = await fetch('/api/chat-history', {
+          method: 'GET',
+          headers: {
+            'X-Device-Fingerprint': deviceFingerprint,
+            'X-Session-Id': sessionId,
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const formattedMessages = data.messages.map((msg: any) => ({
+            sender: msg.isBot ? 'bot' : 'user',
+            text: msg.text,
+            time: new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          }));
+          setMessages(formattedMessages);
+        }
+      } catch (error) {
+        console.error('Failed to load chat history:', error);
+      } finally {
+        setIsLoadingHistory(false);
+      }
+    };
+
+    loadChatHistory();
+  }, []);
 
   // Generate device fingerprint for anonymous user identification
   const getDeviceInfo = () => {
@@ -305,7 +339,14 @@ const MovableChat: React.FC<MovableChatProps> = ({ selectedVoice, onVoiceChange,
         <>
           {/* Messages Area */}
           <div className="flex-1 p-4 overflow-y-auto h-80 space-y-3">
-            {messages.length === 0 ? (
+            {isLoadingHistory ? (
+              <div className="text-center py-8">
+                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full mx-auto mb-4 flex items-center justify-center animate-spin">
+                  <span className="text-white font-bold text-lg">AI</span>
+                </div>
+                <p className="text-blue-200 text-sm">Loading your conversation history...</p>
+              </div>
+            ) : messages.length === 0 ? (
               <div className="text-center py-8">
                 <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full mx-auto mb-4 flex items-center justify-center">
                   <span className="text-white font-bold text-lg">AI</span>
