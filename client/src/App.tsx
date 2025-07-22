@@ -82,7 +82,7 @@ const AppLayout = ({ currentUserId, onDataReset }: AppLayoutProps) => {
   const { currentTheme, changeTheme } = useTheme();
   const { user, isAuthenticated } = useAuth();
   const { subscription, canUseFeature, updateUsage } = useSubscription();
-  const [activeSection, setActiveSection] = useState('chat');
+  const [activeSection, setActiveSection] = useState('welcome');
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
   const [showUsageLimitModal, setShowUsageLimitModal] = useState(false);
@@ -1116,9 +1116,31 @@ const AppLayout = ({ currentUserId, onDataReset }: AppLayoutProps) => {
         return <MicrophoneTest />;
 
       default:
+        // Default to showing the welcome/home content instead of empty space
         return (
-          <div className="flex items-center justify-center h-full theme-background">
-            <p className="theme-text-secondary">Select a section to get started</p>
+          <div className="p-6 space-y-6 max-h-full overflow-y-auto">
+            {/* Welcome Message */}
+            <div className="text-center space-y-4 mb-8">
+              <h1 className="text-4xl font-bold theme-text font-serif tracking-wide">
+                Welcome to <span className="font-samarkan">Chakrai</span>
+              </h1>
+              <p className="theme-text-secondary text-xl font-light max-w-2xl mx-auto leading-relaxed">
+                Your Personal AI Wellness Companion
+              </p>
+              <p className="theme-text text-lg max-w-3xl mx-auto leading-relaxed font-light opacity-90">
+                Connect with your inner wisdom through AI-powered reflection and growth. Click "Chat with Chakrai" to begin your wellness journey.
+              </p>
+            </div>
+
+            {/* Quick Action to Start Chat */}
+            <div className="flex justify-center mb-8">
+              <button
+                onClick={() => setShowMovableChat(true)}
+                className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold text-lg rounded-2xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 border-2 border-white/20"
+              >
+                🧘 Start Your Reflection Journey
+              </button>
+            </div>
           </div>
         );
     }
@@ -1427,8 +1449,7 @@ const AppLayout = ({ currentUserId, onDataReset }: AppLayoutProps) => {
           <div className="mb-6">
             <div className="theme-text-secondary text-sm font-medium px-6 pb-2">🟦 Core Companion</div>
             {[
-              { id: 'home', label: 'Home' },
-              { id: 'chat', label: 'Reflective Chat' },
+              { id: 'home', label: 'Chat with Chakrai' },
               { id: 'challenges', label: 'Reflection Goals' },
               { id: 'rewards', label: 'Reflection Rewards' }
             ].map((tab) => (
@@ -1436,22 +1457,17 @@ const AppLayout = ({ currentUserId, onDataReset }: AppLayoutProps) => {
                 key={tab.id}
                 onClick={() => {
                   console.log('Desktop Core Companion: Clicked tab:', tab.id, tab.label);
-                  if (tab.id === 'chat') {
-                    console.log('Desktop: Opening MovableChat, current state:', showMovableChat);
+                  if (tab.id === 'home') {
+                    console.log('Desktop: Opening MovableChat directly from Home');
                     setShowMovableChat(true);
-                    console.log('Desktop: MovableChat state set to true');
-                  } else if (tab.id === 'home') {
-                    setActiveSection('chat');
-                    setIsFloatingChatOpen(false);
                   } else {
                     setActiveSection(tab.id);
                     setIsFloatingChatOpen(false);
                   }
                 }}
                 className={`shimmer-border w-full h-16 px-6 text-lg font-medium transition-all border-soft hover-lift text-luxury ${
-                  (tab.id === 'chat' && showMovableChat) || 
-                  (tab.id === 'home' && activeSection === 'chat' && !isFloatingChatOpen) ||
-                  (activeSection === tab.id && tab.id !== 'chat' && tab.id !== 'home')
+                  (tab.id === 'home' && showMovableChat) || 
+                  (activeSection === tab.id && tab.id !== 'home')
                     ? 'theme-surface theme-text glass-luxury shadow-luxury'
                     : 'theme-primary theme-text hover:theme-primary-light gradient-soft'
                 }`}

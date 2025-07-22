@@ -225,9 +225,11 @@ const MovableChat: React.FC<MovableChatProps> = ({ selectedVoice, onVoiceChange,
       e.preventDefault();
       e.stopPropagation();
       
-      // Keep chat widget within viewport bounds
-      const newX = Math.max(0, Math.min(window.innerWidth - 384, e.clientX - dragOffset.x));
-      const newY = Math.max(0, Math.min(window.innerHeight - 500, e.clientY - dragOffset.y));
+      // Keep chat widget within viewport bounds (more permissive for minimized state)
+      const chatWidth = isMinimized ? 320 : 384;
+      const chatHeight = isMinimized ? 64 : 500;
+      const newX = Math.max(-50, Math.min(window.innerWidth - chatWidth + 50, e.clientX - dragOffset.x));
+      const newY = Math.max(-20, Math.min(window.innerHeight - chatHeight + 20, e.clientY - dragOffset.y));
       
       setPosition({
         x: newX,
