@@ -429,15 +429,26 @@ const AppLayout = ({ currentUserId, onDataReset }: AppLayoutProps) => {
     setLoading(true);
 
     try {
+      // Generate device fingerprint for anonymous user identification
+      const deviceFingerprintValue = `browser_${navigator.userAgent.slice(0, 50)}_${screen.width}x${screen.height}_${new Date().getTimezoneOffset()}`;
+      
+      // Get or create session ID from localStorage  
+      let sessionId = localStorage.getItem('chakrai_session_id');
+      if (!sessionId) {
+        sessionId = `session_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
+        localStorage.setItem('chakrai_session_id', sessionId);
+      }
+      
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'X-Device-Fingerprint': deviceFingerprintValue,
+          'X-Session-Id': sessionId
         },
         body: JSON.stringify({
           message: input,
-          voice: selectedVoice,
-          deviceFingerprint: deviceFingerprint
+          voice: selectedVoice
         }),
       });
 
@@ -445,7 +456,7 @@ const AppLayout = ({ currentUserId, onDataReset }: AppLayoutProps) => {
         const data = await response.json();
         const botMessage: Message = {
           sender: 'bot',
-          text: data.message,
+          text: data.response || data.message || 'I understand.',
           time: new Date().toLocaleTimeString()
         };
 

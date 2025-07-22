@@ -478,13 +478,15 @@ app.get('/api/chat/history/:userId?', async (req, res) => {
     const sessionId = req.headers['x-session-id'] || undefined;
     
     const anonymousUser = await userSessionManager.getOrCreateAnonymousUser(
-      deviceFingerprint, 
-      sessionId
+      (Array.isArray(deviceFingerprint) ? deviceFingerprint[0] : deviceFingerprint) || 'unknown', 
+      Array.isArray(sessionId) ? sessionId[0] : sessionId
     );
     
     console.log(`Fetching chat history for userId: ${anonymousUser.id}`);
     
-    const limit = parseInt((Array.isArray(req.query.limit) ? req.query.limit[0] : req.query.limit) || '50') || 50;
+    const limitParam = req.query.limit;
+    const limitStr = Array.isArray(limitParam) ? limitParam[0] : limitParam;
+    const limit = parseInt((typeof limitStr === 'string' ? limitStr : '50')) || 50;
     const messages = await storage.getMessagesByUserId(anonymousUser.id, limit);
     
     console.log(`Found ${messages.length} messages for user ${anonymousUser.id}`);
@@ -518,8 +520,8 @@ app.post('/api/chat', async (req, res) => {
     const sessionId = req.headers['x-session-id'] || undefined;
     
     const anonymousUser = await userSessionManager.getOrCreateAnonymousUser(
-      deviceFingerprint, 
-      sessionId
+      (Array.isArray(deviceFingerprint) ? deviceFingerprint[0] : deviceFingerprint) || 'unknown-chat', 
+      Array.isArray(sessionId) ? sessionId[0] : sessionId
     );
     const userId = anonymousUser.id;
     
