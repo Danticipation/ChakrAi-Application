@@ -200,8 +200,16 @@ const MovableChat: React.FC<MovableChatProps> = ({ selectedVoice, onVoiceChange,
 
   // Drag functionality
   const handleMouseDown = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget || (e.target as HTMLElement).classList.contains('drag-handle')) {
+    // Only allow dragging from header/drag-handle elements
+    const target = e.target as HTMLElement;
+    const isHeaderElement = target.classList.contains('drag-handle') || 
+                           target.closest('.drag-handle') !== null;
+    
+    if (isHeaderElement) {
+      e.preventDefault();
+      e.stopPropagation();
       setIsDragging(true);
+      
       const rect = chatRef.current?.getBoundingClientRect();
       if (rect) {
         setDragOffset({
@@ -214,14 +222,25 @@ const MovableChat: React.FC<MovableChatProps> = ({ selectedVoice, onVoiceChange,
 
   const handleMouseMove = (e: MouseEvent) => {
     if (isDragging) {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      // Keep chat widget within viewport bounds
+      const newX = Math.max(0, Math.min(window.innerWidth - 384, e.clientX - dragOffset.x));
+      const newY = Math.max(0, Math.min(window.innerHeight - 500, e.clientY - dragOffset.y));
+      
       setPosition({
-        x: e.clientX - dragOffset.x,
-        y: e.clientY - dragOffset.y
+        x: newX,
+        y: newY
       });
     }
   };
 
-  const handleMouseUp = () => {
+  const handleMouseUp = (e?: MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     setIsDragging(false);
   };
 
@@ -245,20 +264,22 @@ const MovableChat: React.FC<MovableChatProps> = ({ selectedVoice, onVoiceChange,
       style={{
         left: position.x,
         top: position.y,
-        cursor: isDragging ? 'grabbing' : 'grab'
+        userSelect: isDragging ? 'none' : 'auto'
       }}
       onMouseDown={handleMouseDown}
     >
       {/* Header with Avatar and Controls */}
-      <div className="drag-handle flex items-center justify-between p-4 border-b border-blue-400/20">
-        <div className="flex items-center space-x-3">
+      <div className={`drag-handle flex items-center justify-between p-4 border-b border-blue-400/20 ${
+        isDragging ? 'cursor-grabbing' : 'cursor-grab'
+      }`}>
+        <div className="flex items-center space-x-3 drag-handle">
           {/* Chakrai Avatar */}
-          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg">
-            <span className="text-white font-bold text-sm">AI</span>
+          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg drag-handle">
+            <span className="text-white font-bold text-sm drag-handle">AI</span>
           </div>
-          <div>
-            <h3 className="text-white font-semibold text-sm">Chakrai</h3>
-            <p className="text-blue-300 text-xs">AI Wellness Companion</p>
+          <div className="drag-handle">
+            <h3 className="text-white font-semibold text-sm drag-handle">Chakrai</h3>
+            <p className="text-blue-300 text-xs drag-handle">AI Wellness Companion</p>
           </div>
         </div>
         
