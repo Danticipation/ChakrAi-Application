@@ -109,7 +109,7 @@ app.post('/api/auth/login', async (req, res) => {
     }
 
     // Verify password
-    const isValidPassword = await bcrypt.compare(password, user.passwordHash);
+    const isValidPassword = await bcrypt.compare(password, user.passwordHash || '');
     if (!isValidPassword) {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
@@ -159,7 +159,7 @@ app.post('/api/auth/logout', authenticateToken, async (req: any, res) => {
 
 app.get('/api/auth/verify', authenticateToken, async (req: any, res) => {
   try {
-    const user = await storage.getUser(req.user.userId);
+    const user = await storage.getUserById(req.user.userId);
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
@@ -190,7 +190,7 @@ app.post('/api/auth/migrate', async (req, res) => {
     }
 
     // Get anonymous user
-    const anonymousUser = await storage.getUser(anonymousUserId);
+    const anonymousUser = await storage.getUserById(anonymousUserId);
     if (!anonymousUser || !anonymousUser.isAnonymous) {
       return res.status(400).json({ error: 'Invalid anonymous user' });
     }
@@ -484,7 +484,7 @@ app.get('/api/chat/history/:userId?', async (req, res) => {
     
     console.log(`Fetching chat history for userId: ${anonymousUser.id}`);
     
-    const limit = parseInt(req.query.limit) || 50;
+    const limit = parseInt((Array.isArray(req.query.limit) ? req.query.limit[0] : req.query.limit) || '50') || 50;
     const messages = await storage.getMessagesByUserId(anonymousUser.id, limit);
     
     console.log(`Found ${messages.length} messages for user ${anonymousUser.id}`);
@@ -493,7 +493,7 @@ app.get('/api/chat/history/:userId?', async (req, res) => {
     const formattedMessages = messages.map(msg => ({
       sender: msg.isBot ? 'bot' : 'user',
       text: msg.content || msg.text,
-      time: new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      time: new Date(msg.timestamp || new Date()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       timestamp: msg.timestamp
     }));
     
@@ -567,7 +567,7 @@ DO NOT immediately jump into "support" mode or therapeutic language unless someo
     recentMessages.forEach(msg => {
       conversationMessages.push({
         role: msg.isBot ? 'assistant' : 'user',
-        content: msg.content
+        content: msg.content || msg.text || ''
       });
     });
     
@@ -616,6 +616,7 @@ DO NOT immediately jump into "support" mode or therapeutic language unless someo
       // Store user message
       const userMessage = await storage.createMessage({
         userId: userId,
+        text: message,
         content: message,
         isBot: false
       });
@@ -624,6 +625,7 @@ DO NOT immediately jump into "support" mode or therapeutic language unless someo
       // Store bot response
       const botMessage = await storage.createMessage({
         userId: userId,
+        text: aiResponse,
         content: aiResponse,
         isBot: true
       });

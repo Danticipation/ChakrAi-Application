@@ -798,7 +798,7 @@ const AppLayout = ({ currentUserId, onDataReset }: AppLayoutProps) => {
         return <VoluntaryQuestionDeck />;
 
       case 'feedback':
-        return <FeedbackSystem userId={getCurrentUserId()} />;
+        return <FeedbackSystem />;
 
       case 'challenges':
         return <ChallengeSystem onNavigate={setActiveSection} onMobileModalNavigate={handleMobileModalNavigation} />;

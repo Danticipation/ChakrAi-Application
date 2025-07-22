@@ -1816,15 +1816,16 @@ export class DbStorage implements IStorage {
   }
 
   async getUserVrSessions(userId: number, limit?: number): Promise<VrSession[]> {
-    let query = this.db.select().from(vrSessions)
-      .where(eq(vrSessions.userId, userId))
-      .orderBy(desc(vrSessions.startTime));
-      
     if (limit) {
-      query = query.limit(limit);
+      return await this.db.select().from(vrSessions)
+        .where(eq(vrSessions.userId, userId))
+        .orderBy(desc(vrSessions.startTime))
+        .limit(limit);
+    } else {
+      return await this.db.select().from(vrSessions)
+        .where(eq(vrSessions.userId, userId))
+        .orderBy(desc(vrSessions.startTime));
     }
-    
-    return await query;
   }
 
   async getVrSession(id: number): Promise<VrSession | null> {

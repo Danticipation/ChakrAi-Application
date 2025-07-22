@@ -861,11 +861,11 @@ router.post('/emotional-intelligence/detect', async (req, res) => {
 
     const emotionalState = await analyzeEmotionalState(message);
     
-    // Store emotional context
+    // Store emotional context - fix property name mismatches
     await storage.createEmotionalContext({
       userId: parseInt(userId),
       intensity: emotionalState.intensity || 5,
-      currentMood: emotionalState.emotion || 'neutral',
+      currentMood: emotionalState.mood || 'neutral',
       volatility: emotionalState.volatility || 'stable',
       urgency: emotionalState.urgency || 'low',
       contextData: emotionalState
@@ -894,11 +894,10 @@ router.get('/emotional-intelligence/mood-forecast/:userId', async (req, res) => 
     await storage.createMoodForecast({
       userId,
       predictedMood: forecast.predictedMood,
-      confidenceScore: forecast.confidenceScore,
+      confidenceScore: forecast.confidenceScore?.toString() || '0.5',
       riskLevel: forecast.riskLevel,
       triggerFactors: forecast.triggerFactors,
-      preventiveRecommendations: forecast.preventiveRecommendations,
-      generatedAt: new Date()
+      preventiveRecommendations: forecast.preventiveRecommendations
     });
 
     res.json({
@@ -927,10 +926,14 @@ router.post('/emotional-intelligence/adapt-response', async (req, res) => {
     await storage.createEmotionalResponseAdaptation({
       userId: parseInt(userId),
       originalMessage,
-      adaptedMessage: adaptedResponse.response,
+      adaptedResponse: adaptedResponse.response,
+      tone: adaptedResponse.tone || 'supportive',
+      intensity: adaptedResponse.intensity?.toString() || 'moderate',
+      responseLength: adaptedResponse.responseLength || 'moderate',
+      communicationStyle: adaptedResponse.communicationStyle,
+      priorityFocus: adaptedResponse.priorityFocus,
       emotionalContext: emotionalState || {},
-      adaptationReason: adaptedResponse.priorityFocus?.join(', ') || 'emotional support',
-      createdAt: new Date()
+      adaptationReason: adaptedResponse.priorityFocus?.join(', ') || 'emotional support'
     });
 
     res.json({
