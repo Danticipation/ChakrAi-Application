@@ -1275,8 +1275,8 @@ const AppLayout = ({ currentUserId, onDataReset }: AppLayoutProps) => {
                   onClick={() => {
                     console.log('Mobile Navigation: Clicked tab:', tab.id, tab.label);
                     if (tab.id === 'floating-chat') {
-                      console.log('Mobile Navigation: Opening floating chat');
-                      setIsFloatingChatOpen(true);
+                      console.log('Mobile Navigation: Opening movable chat');
+                      setShowMovableChat(true);
                     } else if (['challenges', 'rewards'].includes(tab.id)) {
                       console.log('Mobile Navigation: Opening modal for tab:', tab.id);
                       setContentLoading(true);
@@ -1436,8 +1436,7 @@ const AppLayout = ({ currentUserId, onDataReset }: AppLayoutProps) => {
                 onClick={() => {
                   console.log('Desktop Core Companion: Clicked tab:', tab.id, tab.label);
                   if (tab.id === 'chat') {
-                    setActiveSection('chat');
-                    setIsFloatingChatOpen(true);
+                    setShowMovableChat(true);
                   } else if (tab.id === 'home') {
                     setActiveSection('chat');
                     setIsFloatingChatOpen(false);
@@ -1447,7 +1446,7 @@ const AppLayout = ({ currentUserId, onDataReset }: AppLayoutProps) => {
                   }
                 }}
                 className={`shimmer-border w-full h-16 px-6 text-lg font-medium transition-all border-soft hover-lift text-luxury ${
-                  (tab.id === 'chat' && activeSection === 'chat' && isFloatingChatOpen) || 
+                  (tab.id === 'chat' && showMovableChat) || 
                   (tab.id === 'home' && activeSection === 'chat' && !isFloatingChatOpen) ||
                   (activeSection === tab.id && tab.id !== 'chat' && tab.id !== 'home')
                     ? 'theme-surface theme-text glass-luxury shadow-luxury'
@@ -1744,8 +1743,8 @@ const AppLayout = ({ currentUserId, onDataReset }: AppLayoutProps) => {
 
               </div>
             </div>
-          ) : activeSection === 'chat' && isFloatingChatOpen ? (
-            /* Prominent Desktop Chat Interface - Compact Layout */
+          ) : false ? (
+            /* OLD CHAT INTERFACE DISABLED - USE MOVABLE CHAT INSTEAD */
             <div className="w-full h-full theme-background relative flex flex-col max-h-screen">
               {/* Compact Chat Header */}
               <div className="flex items-center justify-between p-4 border-b border-white/10 shrink-0">
