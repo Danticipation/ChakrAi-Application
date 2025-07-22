@@ -1275,8 +1275,9 @@ const AppLayout = ({ currentUserId, onDataReset }: AppLayoutProps) => {
                   onClick={() => {
                     console.log('Mobile Navigation: Clicked tab:', tab.id, tab.label);
                     if (tab.id === 'floating-chat') {
-                      console.log('Mobile Navigation: Opening movable chat');
+                      console.log('Mobile Navigation: Opening movable chat, current state:', showMovableChat);
                       setShowMovableChat(true);
+                      console.log('Mobile Navigation: MovableChat state set to true');
                     } else if (['challenges', 'rewards'].includes(tab.id)) {
                       console.log('Mobile Navigation: Opening modal for tab:', tab.id);
                       setContentLoading(true);
@@ -1436,7 +1437,9 @@ const AppLayout = ({ currentUserId, onDataReset }: AppLayoutProps) => {
                 onClick={() => {
                   console.log('Desktop Core Companion: Clicked tab:', tab.id, tab.label);
                   if (tab.id === 'chat') {
+                    console.log('Desktop: Opening MovableChat, current state:', showMovableChat);
                     setShowMovableChat(true);
+                    console.log('Desktop: MovableChat state set to true');
                   } else if (tab.id === 'home') {
                     setActiveSection('chat');
                     setIsFloatingChatOpen(false);
@@ -2150,11 +2153,17 @@ const AppLayout = ({ currentUserId, onDataReset }: AppLayoutProps) => {
 
       {/* Movable Chat with Avatar */}
       {showMovableChat && (
-        <MovableChat
-          selectedVoice={selectedVoice}
-          onVoiceChange={setSelectedVoice}
-          onClose={() => setShowMovableChat(false)}
-        />
+        <>
+          {console.log('Rendering MovableChat, showMovableChat:', showMovableChat)}
+          <MovableChat
+            selectedVoice={selectedVoice}
+            onVoiceChange={setSelectedVoice}
+            onClose={() => {
+              console.log('MovableChat onClose called');
+              setShowMovableChat(false);
+            }}
+          />
+        </>
       )}
     </div>
   );

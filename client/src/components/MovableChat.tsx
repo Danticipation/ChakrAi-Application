@@ -14,6 +14,8 @@ interface MovableChatProps {
 }
 
 const MovableChat: React.FC<MovableChatProps> = ({ selectedVoice, onVoiceChange, onClose }) => {
+  console.log('MovableChat component rendering');
+  
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
