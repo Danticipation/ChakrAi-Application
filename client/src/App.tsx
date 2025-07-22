@@ -38,6 +38,7 @@ import TherapeuticAnalytics from './components/TherapeuticAnalytics';
 import { EHRIntegration } from './components/EHRIntegration';
 import PrivacyPolicy from './components/PrivacyPolicy';
 import FloatingChat from './components/FloatingChat';
+import MovableChat from './components/MovableChat';
 import ChallengeSystem from './components/ChallengeSystem';
 import SettingsPanel from './components/SettingsPanel';
 // import DynamicAmbientSound from './components/DynamicAmbientSound'; // DISABLED due to audio issues
@@ -103,6 +104,7 @@ const AppLayout = ({ currentUserId, onDataReset }: AppLayoutProps) => {
   };
 
   const [isRecording, setIsRecording] = useState(false);
+  const [showMovableChat, setShowMovableChat] = useState(false);
 
   const [input, setInput] = useState('');
   const [botStats, setBotStats] = useState<BotStats | null>(null);
@@ -1578,10 +1580,10 @@ const AppLayout = ({ currentUserId, onDataReset }: AppLayoutProps) => {
                   
                   {/* Enhanced Chat Button with Pulse Animation */}
                   <button
-                    onClick={() => setIsFloatingChatOpen(true)}
+                    onClick={() => setShowMovableChat(true)}
                     className="relative mt-4 px-10 py-4 bg-gradient-to-r from-purple-600 via-blue-600 to-purple-600 text-white rounded-2xl font-bold text-lg hover:from-purple-700 hover:via-blue-700 hover:to-purple-700 transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:scale-105 animate-pulse border-2 border-silver"
                   >
-                    <span className="relative z-10">💬 Start Conversation with Chakrai</span>
+                    <span className="relative z-10">💬 Chat with Chakrai Avatar</span>
                     <div className="absolute inset-0 bg-gradient-to-r from-purple-400 to-blue-400 rounded-2xl blur opacity-30 animate-pulse"></div>
                   </button>
                   
@@ -2144,6 +2146,15 @@ const AppLayout = ({ currentUserId, onDataReset }: AppLayoutProps) => {
           isOpen={isFloatingChatOpen}
           onToggle={() => setIsFloatingChatOpen(!isFloatingChatOpen)}
           selectedVoice={selectedVoice}
+        />
+      )}
+
+      {/* Movable Chat with Avatar */}
+      {showMovableChat && (
+        <MovableChat
+          selectedVoice={selectedVoice}
+          onVoiceChange={setSelectedVoice}
+          onClose={() => setShowMovableChat(false)}
         />
       )}
     </div>
