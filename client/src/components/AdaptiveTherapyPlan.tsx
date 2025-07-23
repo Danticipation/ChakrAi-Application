@@ -423,7 +423,7 @@ function AdaptiveTherapyPlan({ userId, onPlanUpdate }: AdaptiveTherapyPlanProps)
         return newSet;
       });
     }
-  }, [activityId, userId, processingActivities, currentPlan, completedActivities, persistCompletedActivities, adaptPlan, toast]);
+  }, [userId, processingActivities, currentPlan, completedActivities, persistCompletedActivities, adaptPlan, toast]);
 
   // Undo activity completion
   const uncompleteActivity = useCallback(async (activityId: string) => {
@@ -482,7 +482,7 @@ function AdaptiveTherapyPlan({ userId, onPlanUpdate }: AdaptiveTherapyPlanProps)
         return newSet;
       });
     }
-  }, [activityId, userId, completedActivities, currentPlan, persistCompletedActivities, toast]);
+  }, [userId, completedActivities, currentPlan, persistCompletedActivities, toast]);
 
   // Enhanced utility functions using enums and memoization
   const getPriorityColor = useMemo(() => (priority: string) => {
