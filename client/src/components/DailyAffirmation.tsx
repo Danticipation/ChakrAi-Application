@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Heart, RefreshCw, Volume2, VolumeX, Loader2, Settings, KeyboardIcon } from 'lucide-react';
+import { Heart, RefreshCw, Volume2, VolumeX, Loader2, Settings, Keyboard } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface AffirmationData {
@@ -54,7 +54,8 @@ export default function DailyAffirmation({ onBack, currentUser }: DailyAffirmati
     try {
       const cached = localStorage.getItem('daily-affirmations');
       if (cached) {
-        const affirmationsMap = new Map(JSON.parse(cached));
+        const entries = JSON.parse(cached) as [string, AffirmationData][];
+        const affirmationsMap = new Map<string, AffirmationData>(entries);
         setCachedAffirmations(affirmationsMap);
         
         // Check if we have today's affirmation
@@ -111,15 +112,27 @@ export default function DailyAffirmation({ onBack, currentUser }: DailyAffirmati
     setError(null);
     
     try {
+      console.log('Fetching daily affirmation from:', '/api/daily-affirmation');
       const response = await fetch('/api/daily-affirmation');
+      console.log('Response status:', response.status, response.statusText);
       
       if (response.ok) {
         const data = await response.json();
+        console.log('API response data:', data);
+        
+        // Clean up the affirmation text (remove extra quotes if present)
+        let cleanAffirmation = data.affirmation;
+        if (typeof cleanAffirmation === 'string') {
+          cleanAffirmation = cleanAffirmation.replace(/^["']|["']$/g, '');
+        }
+        
         const newAffirmation: AffirmationData = {
-          affirmation: data.affirmation,
+          affirmation: cleanAffirmation,
           category: data.category || 'Daily Inspiration',
           date: new Date().toLocaleDateString()
         };
+        
+        console.log('Processed affirmation:', newAffirmation);
         
         // Update state
         setAffirmationData(newAffirmation);
@@ -133,11 +146,8 @@ export default function DailyAffirmation({ onBack, currentUser }: DailyAffirmati
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
         const cleanupDate = sevenDaysAgo.toISOString().split('T')[0];
         
-        for (const [key] of newCache) {
-          if (key < cleanupDate) {
-            newCache.delete(key);
-          }
-        }
+        const keysToDelete = Array.from(newCache.keys()).filter(key => key < cleanupDate);
+        keysToDelete.forEach(key => newCache.delete(key));
         
         setCachedAffirmations(newCache);
         
@@ -502,6 +512,17 @@ export default function DailyAffirmation({ onBack, currentUser }: DailyAffirmati
     fetchDailyAffirmation(true); // Force refresh
   }, [fetchDailyAffirmation]);
 
+  // Debug function to clear cache
+  const clearCache = useCallback(() => {
+    localStorage.removeItem('daily-affirmations');
+    setCachedAffirmations(new Map());
+    toast({
+      title: "Cache Cleared",
+      description: "All cached affirmations have been cleared.",
+      duration: 2000,
+    });
+  }, [toast]);
+
   return (
     <div className="h-full bg-gradient-to-br from-[#1a237e] to-[#3949ab] p-6 overflow-y-auto" role="main">
       {/* Screen reader announcements */}
@@ -546,7 +567,7 @@ export default function DailyAffirmation({ onBack, currentUser }: DailyAffirmati
           {/* Keyboard shortcuts help */}
           <div className="mb-4 bg-blue-500/20 border border-blue-400/30 rounded-lg p-3 text-sm text-white/80">
             <div className="flex items-center space-x-2 mb-1">
-              <KeyboardIcon className="w-4 h-4" aria-hidden="true" />
+              <Keyboard className="w-4 h-4" aria-hidden="true" />
               <span className="font-medium">Keyboard Shortcuts:</span>
             </div>
             <div className="text-xs space-y-1">
@@ -665,7 +686,7 @@ export default function DailyAffirmation({ onBack, currentUser }: DailyAffirmati
           <div className="mt-4 text-center">
             <div className="inline-flex items-center space-x-2 text-xs text-white/50">
               <span>
-                {getTodayKey() in [...cachedAffirmations.keys()] 
+                {Array.from(cachedAffirmations.keys()).includes(getTodayKey())
                   ? "✓ Cached for today" 
                   : "◦ Fresh content"}
               </span>

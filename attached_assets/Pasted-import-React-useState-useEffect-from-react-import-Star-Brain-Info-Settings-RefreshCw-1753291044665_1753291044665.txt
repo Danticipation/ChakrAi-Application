@@ -1,0 +1,451 @@
+import React, { useState, useEffect } from 'react';
+import { Star, Brain, Info, Settings, RefreshCw, Heart, Target, Calendar, User } from 'lucide-react';
+
+interface User {
+  id: number;
+  name: string;
+  firstName: string;
+  zodiacSign?: string;
+  personalityType?: string;
+  recentMoodPattern: string;
+  stressLevel: 'low' | 'moderate' | 'high';
+  therapyGoals: string[];
+  preferences: {
+    guidanceStyle: 'therapeutic' | 'astrological' | 'both';
+    showDisclaimers: boolean;
+  };
+}
+
+interface GuidanceContent {
+  id: string;
+  title: string;
+  mainMessage: string;
+  practicalSteps: string[];
+  resources: string[];
+  focusArea: string;
+  confidenceLevel: number;
+  source: 'evidence-based' | 'astrological' | 'hybrid';
+}
+
+interface WellnessGuidanceProps {
+  currentUser?: User;
+  onUpdatePreferences?: (prefs: any) => void;
+}
+
+// Default user data for demo purposes
+const defaultUser: User = {
+  id: 1,
+  name: "Alex Johnson",
+  firstName: "Alex",
+  zodiacSign: "Pisces",
+  personalityType: "Empathetic",
+  recentMoodPattern: "Processing Recent Changes",
+  stressLevel: "moderate",
+  therapyGoals: ["Manage anxiety", "Improve sleep", "Build confidence"],
+  preferences: {
+    guidanceStyle: "both",
+    showDisclaimers: true
+  }
+};
+
+export default function WellnessGuidance({ 
+  currentUser = defaultUser, 
+  onUpdatePreferences = () => {} 
+}: WellnessGuidanceProps) {
+  const [activeTab, setActiveTab] = useState(currentUser?.preferences?.guidanceStyle || 'therapeutic');
+  const [therapeuticGuidance, setTherapeuticGuidance] = useState<GuidanceContent | null>(null);
+  const [astrologicalGuidance, setAstrologicalGuidance] = useState<GuidanceContent | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [lastGenerated, setLastGenerated] = useState<string>('');
+
+  // Generate evidence-based therapeutic guidance
+  const generateTherapeuticGuidance = (user: User): GuidanceContent => {
+    const guidanceOptions = {
+      low: {
+        title: "Maintaining Your Emotional Balance",
+        message: `You're currently experiencing stable emotional patterns, which is wonderful! Your recent mood tracking shows consistent positive trends. This is an excellent time to reinforce healthy habits and perhaps explore new areas of personal growth.`,
+        steps: [
+          "Continue your current self-care routines that are working well",
+          "Consider setting a new personal growth goal",
+          "Practice gratitude journaling to maintain positive momentum",
+          "Engage in activities that bring you joy and fulfillment"
+        ]
+      },
+      moderate: {
+        title: "Navigating Life's Natural Rhythms",
+        message: `Your recent patterns show some natural fluctuations in mood and stress levels. This is completely normal and indicates you're processing life experiences in a healthy way. Now is a good time to focus on coping strategies and emotional regulation.`,
+        steps: [
+          "Practice daily mindfulness meditation for 10-15 minutes",
+          "Use breathing exercises during stressful moments",
+          "Maintain regular sleep and exercise schedules",
+          "Connect with supportive friends or family members"
+        ]
+      },
+      high: {
+        title: "Supporting Yourself Through Challenging Times",
+        message: `Your recent mood and stress indicators suggest you're going through a particularly challenging period. This is temporary, and you have the strength to navigate through this. Focus on foundational self-care and don't hesitate to reach out for additional support.`,
+        steps: [
+          "Prioritize basic needs: sleep, nutrition, and hydration",
+          "Practice grounding techniques when overwhelmed",
+          "Consider reaching out to a mental health professional",
+          "Limit stressors where possible and ask for help when needed"
+        ]
+      }
+    };
+
+    const guidance = guidanceOptions[user.stressLevel];
+    
+    return {
+      id: `therapeutic-${Date.now()}`,
+      title: guidance.title,
+      mainMessage: guidance.message,
+      practicalSteps: guidance.steps,
+      resources: [
+        "Mindfulness meditation guide",
+        "Stress management techniques",
+        "Professional therapy resources",
+        "Crisis support contacts"
+      ],
+      focusArea: user.recentMoodPattern,
+      confidenceLevel: 0.95,
+      source: 'evidence-based'
+    };
+  };
+
+  // Generate astrological-framed guidance (with same therapeutic principles)
+  const generateAstrologicalGuidance = (user: User): GuidanceContent => {
+    const zodiacFraming = {
+      'Aries': { element: 'Fire', traits: 'natural leadership and determination', color: 'vibrant red' },
+      'Taurus': { element: 'Earth', traits: 'grounding presence and perseverance', color: 'emerald green' },
+      'Gemini': { element: 'Air', traits: 'adaptability and communication', color: 'bright yellow' },
+      'Cancer': { element: 'Water', traits: 'intuition and emotional depth', color: 'silver moonlight' },
+      'Leo': { element: 'Fire', traits: 'creativity and self-expression', color: 'golden sunshine' },
+      'Virgo': { element: 'Earth', traits: 'attention to detail and service', color: 'deep forest green' },
+      'Libra': { element: 'Air', traits: 'balance and harmony-seeking', color: 'soft pink' },
+      'Scorpio': { element: 'Water', traits: 'transformation and depth', color: 'deep crimson' },
+      'Sagittarius': { element: 'Fire', traits: 'adventure and wisdom-seeking', color: 'royal purple' },
+      'Capricorn': { element: 'Earth', traits: 'discipline and achievement', color: 'charcoal gray' },
+      'Aquarius': { element: 'Air', traits: 'innovation and humanitarian spirit', color: 'electric blue' },
+      'Pisces': { element: 'Water', traits: 'compassion and artistic vision', color: 'sea foam green' }
+    };
+
+    const signInfo = zodiacFraming[user.zodiacSign || 'Pisces'];
+    
+    // Use the same therapeutic content but frame it astrologically
+    const therapeuticBase = generateTherapeuticGuidance(user);
+    
+    return {
+      id: `astrological-${Date.now()}`,
+      title: `${user.zodiacSign}: Embracing Your ${signInfo.element} Energy`,
+      mainMessage: `Dear ${user.zodiacSign}, the celestial energies are highlighting your natural ${signInfo.traits}. ${therapeuticBase.mainMessage.replace('Your recent patterns show', 'The cosmic currents reveal that you are experiencing').replace('This is completely normal', 'The universe recognizes this as a natural cycle of growth')}`,
+      practicalSteps: therapeuticBase.practicalSteps.map(step => 
+        step.replace('Practice', 'The stars encourage you to practice')
+           .replace('Use', 'Channel your ${signInfo.element} energy by using')
+           .replace('Consider', 'The cosmic alignment suggests you consider')
+      ),
+      resources: [
+        "Meditation aligned with your elemental energy",
+        "Therapeutic practices for your sign",
+        "Professional support resources",
+        "Crisis support (always available regardless of sign)"
+      ],
+      focusArea: user.recentMoodPattern,
+      confidenceLevel: 0.75, // Lower confidence since it's entertainment-based
+      source: 'astrological'
+    };
+  };
+
+  // Generate guidance based on current settings
+  const generateGuidance = async () => {
+    setLoading(true);
+    
+    // Simulate API call with actual logic
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    const therapeutic = generateTherapeuticGuidance(currentUser);
+    const astrological = generateAstrologicalGuidance(currentUser);
+    
+    setTherapeuticGuidance(therapeutic);
+    setAstrologicalGuidance(astrological);
+    setLastGenerated(new Date().toLocaleTimeString());
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    generateGuidance();
+  }, [currentUser?.preferences?.guidanceStyle]);
+
+  const GuidanceCard = ({ guidance, type }: { guidance: GuidanceContent; type: 'therapeutic' | 'astrological' }) => (
+    <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+      {/* Header with source indicator */}
+      <div className={`p-4 ${type === 'therapeutic' ? 'bg-gradient-to-r from-blue-500 to-teal-500' : 'bg-gradient-to-r from-purple-500 to-indigo-500'} text-white`}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            {type === 'therapeutic' ? <Brain className="w-5 h-5" /> : <Star className="w-5 h-5" />}
+            <h3 className="text-lg font-semibold">{guidance.title}</h3>
+          </div>
+          <div className="flex items-center gap-1 text-xs bg-white/20 px-2 py-1 rounded-full">
+            <span>{Math.round(guidance.confidenceLevel * 100)}% evidence-based</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Disclaimer for astrological content */}
+      {type === 'astrological' && currentUser?.preferences?.showDisclaimers && (
+        <div className="bg-yellow-50 border-b border-yellow-200 p-3">
+          <div className="flex items-start gap-2">
+            <Info className="w-4 h-4 text-yellow-600 mt-0.5 flex-shrink-0" />
+            <p className="text-xs text-yellow-700">
+              This astrological framing is for inspiration and entertainment. The practical advice is based on evidence-based mental health practices.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Main content */}
+      <div className="p-6 space-y-6">
+        <div>
+          <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+            <Heart className="w-4 h-4 text-red-500" />
+            Today's Focus: {guidance.focusArea}
+          </h4>
+          <p className="text-gray-700 leading-relaxed">{guidance.mainMessage}</p>
+        </div>
+
+        <div>
+          <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+            <Target className="w-4 h-4 text-green-500" />
+            Recommended Actions
+          </h4>
+          <ul className="space-y-2">
+            {guidance.practicalSteps.map((step, index) => (
+              <li key={index} className="flex items-start gap-2 text-sm text-gray-700">
+                <span className="w-1.5 h-1.5 bg-blue-400 rounded-full mt-2 flex-shrink-0"></span>
+                {step}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div>
+          <h4 className="font-semibold text-gray-800 mb-3">Available Resources</h4>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {guidance.resources.map((resource, index) => (
+              <button
+                key={index}
+                className="text-left p-2 text-xs bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                {resource}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const SettingsModal = () => (
+    showSettings ? (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-2xl p-6 w-full max-w-md">
+          <h3 className="text-xl font-bold mb-4">Guidance Preferences</h3>
+          
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Preferred Guidance Style
+              </label>
+              <div className="space-y-2">
+                {[
+                  { value: 'therapeutic', label: 'Evidence-based only', desc: 'Clinical and research-backed guidance' },
+                  { value: 'astrological', label: 'Astrological framing', desc: 'Same advice with cosmic inspiration' },
+                  { value: 'both', label: 'Show both options', desc: 'Compare different presentations' }
+                ].map(option => (
+                  <label key={option.value} className="flex items-start gap-3 p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="guidanceStyle"
+                      value={option.value}
+                      checked={currentUser?.preferences?.guidanceStyle === option.value}
+                      onChange={(e) => onUpdatePreferences({
+                        ...currentUser?.preferences,
+                        guidanceStyle: e.target.value
+                      })}
+                      className="mt-1"
+                    />
+                    <div>
+                      <div className="font-medium text-gray-800">{option.label}</div>
+                      <div className="text-xs text-gray-600">{option.desc}</div>
+                    </div>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={currentUser?.preferences?.showDisclaimers || false}
+                  onChange={(e) => onUpdatePreferences({
+                    ...currentUser?.preferences,
+                    showDisclaimers: e.target.checked
+                  })}
+                />
+                <span className="text-sm text-gray-700">Show disclaimers for astrological content</span>
+              </label>
+            </div>
+          </div>
+
+          <div className="flex gap-3 mt-6">
+            <button
+              onClick={() => setShowSettings(false)}
+              className="flex-1 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => setShowSettings(false)}
+              className="flex-1 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+            >
+              Save
+            </button>
+          </div>
+        </div>
+      </div>
+    ) : null
+  );
+
+  return (
+    <div className="max-w-4xl mx-auto p-6">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-800">Personal Wellness Guidance</h1>
+          <p className="text-gray-600 mt-1">
+            Personalized insights for your mental health journey
+            {lastGenerated && <span className="text-sm"> • Last updated: {lastGenerated}</span>}
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={generateGuidance}
+            disabled={loading}
+            className="p-2 text-gray-600 hover:text-gray-800 rounded-lg hover:bg-gray-100 disabled:opacity-50"
+            title="Refresh guidance"
+          >
+            <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
+          </button>
+          <button
+            onClick={() => setShowSettings(true)}
+            className="p-2 text-gray-600 hover:text-gray-800 rounded-lg hover:bg-gray-100"
+            title="Settings"
+          >
+            <Settings className="w-5 h-5" />
+          </button>
+        </div>
+      </div>
+
+      {/* User Profile Summary */}
+      <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl p-4 mb-6">
+        <div className="flex items-center gap-4">
+          <User className="w-8 h-8 text-blue-500" />
+          <div>
+            <h2 className="font-semibold text-gray-800">
+              {currentUser.firstName}'s Profile
+            </h2>
+            <div className="flex items-center gap-4 text-sm text-gray-600 mt-1">
+              <span>Stress Level: <span className={`font-medium ${
+                currentUser.stressLevel === 'low' ? 'text-green-600' :
+                currentUser.stressLevel === 'moderate' ? 'text-yellow-600' : 'text-red-600'
+              }`}>{currentUser.stressLevel}</span></span>
+              <span>Recent Pattern: {currentUser.recentMoodPattern}</span>
+              {currentUser.zodiacSign && <span>Sign: {currentUser.zodiacSign}</span>}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <RefreshCw className="w-8 h-8 text-blue-500 animate-spin mx-auto mb-3" />
+            <p className="text-gray-600">Generating your personalized guidance...</p>
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {/* Tab Navigation for 'both' preference */}
+          {currentUser?.preferences?.guidanceStyle === 'both' && (
+            <div className="flex bg-gray-100 rounded-xl p-1">
+              <button
+                onClick={() => setActiveTab('therapeutic')}
+                className={`flex-1 py-3 px-4 rounded-lg transition-all ${
+                  activeTab === 'therapeutic' 
+                    ? 'bg-white shadow-sm text-blue-600' 
+                    : 'text-gray-600 hover:text-gray-800'
+                }`}
+              >
+                <div className="flex items-center justify-center gap-2">
+                  <Brain className="w-4 h-4" />
+                  Evidence-Based
+                </div>
+              </button>
+              <button
+                onClick={() => setActiveTab('astrological')}
+                className={`flex-1 py-3 px-4 rounded-lg transition-all ${
+                  activeTab === 'astrological' 
+                    ? 'bg-white shadow-sm text-purple-600' 
+                    : 'text-gray-600 hover:text-gray-800'
+                }`}
+              >
+                <div className="flex items-center justify-center gap-2">
+                  <Star className="w-4 h-4" />
+                  Astrological
+                </div>
+              </button>
+            </div>
+          )}
+
+          {/* Guidance Display */}
+          {currentUser?.preferences?.guidanceStyle === 'therapeutic' && therapeuticGuidance && (
+            <GuidanceCard guidance={therapeuticGuidance} type="therapeutic" />
+          )}
+
+          {currentUser?.preferences?.guidanceStyle === 'astrological' && astrologicalGuidance && (
+            <GuidanceCard guidance={astrologicalGuidance} type="astrological" />
+          )}
+
+          {currentUser?.preferences?.guidanceStyle === 'both' && (
+            <>
+              {activeTab === 'therapeutic' && therapeuticGuidance && (
+                <GuidanceCard guidance={therapeuticGuidance} type="therapeutic" />
+              )}
+              {activeTab === 'astrological' && astrologicalGuidance && (
+                <GuidanceCard guidance={astrologicalGuidance} type="astrological" />
+              )}
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Crisis Support Banner */}
+      <div className="mt-8 bg-red-50 border border-red-200 rounded-xl p-4">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
+            <span className="text-red-600">🆘</span>
+          </div>
+          <div>
+            <h3 className="font-semibold text-red-800">Need Immediate Support?</h3>
+            <p className="text-red-700 text-sm">
+              If you're having thoughts of self-harm, please reach out immediately: Crisis Lifeline 988
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <SettingsModal />
+    </div>
+  );
+}
