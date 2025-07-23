@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Users, MessageSquare, Heart, Calendar, Star, Plus, Shield, UserCheck, Flag, Send } from 'lucide-react';
+import { Users, MessageSquare, Heart, Calendar, Star, Plus, Shield, UserCheck, Flag, Send, Loader2, AlertCircle, RefreshCw, X } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface Forum {
   id: number;
@@ -41,251 +42,582 @@ interface PeerCheckIn {
   last_contact: string;
 }
 
-const CommunitySupport: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('forums');
-  const queryClient = useQueryClient();
+interface User {
+  id: number;
+  name: string;
+  isAuthenticated: boolean;
+}
 
-  const { data: forums } = useQuery<Forum[]>({
+interface CommunitySupportProps {
+  currentUser?: User;
+}
+
+// Utility Components
+const LoadingSpinner = () => (
+  <div className="flex items-center justify-center py-8">
+    <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+  </div>
+);
+
+const ErrorMessage = ({ message, onRetry }: { message: string; onRetry?: () => void }) => (
+  <div className="text-center py-8">
+    <AlertCircle className="w-12 h-12 mx-auto mb-3 text-red-400" />
+    <p className="text-gray-600 mb-4">{message}</p>
+    {onRetry && (
+      <button
+        onClick={onRetry}
+        className="bg-blue-500 text-white px-4 py-2 rounded-xl flex items-center gap-2 mx-auto hover:bg-blue-600 transition-colors"
+      >
+        <RefreshCw className="w-4 h-4" />
+        Try Again
+      </button>
+    )}
+  </div>
+);
+
+const EmptyState = ({ 
+  icon: Icon, 
+  title, 
+  description,
+  actionLabel,
+  onAction
+}: { 
+  icon: React.ComponentType<any>;
+  title: string;
+  description: string;
+  actionLabel?: string;
+  onAction?: () => void;
+}) => (
+  <div className="text-center py-12">
+    <Icon className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+    <h3 className="text-lg font-semibold text-gray-600 mb-2">{title}</h3>
+    <p className="text-gray-500 max-w-md mx-auto mb-4">{description}</p>
+    {actionLabel && onAction && (
+      <button
+        onClick={onAction}
+        className="bg-blue-500 text-white px-4 py-2 rounded-xl hover:bg-blue-600 transition-colors"
+      >
+        {actionLabel}
+      </button>
+    )}
+  </div>
+);
+
+const CommunitySupport: React.FC<CommunitySupportProps> = ({ currentUser }) => {
+  const [activeTab, setActiveTab] = useState('forums');
+  const [replyingToPost, setReplyingToPost] = useState<number | null>(null);
+  const [replyContent, setReplyContent] = useState('');
+  const [flaggingContent, setFlaggingContent] = useState<{id: number, type: string} | null>(null);
+  const [flagReason, setFlagReason] = useState('');
+  const [flagDetails, setFlagDetails] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  // Authentication check
+  if (!currentUser?.isAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <Shield className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+          <h2 className="text-xl font-semibold text-gray-700 mb-2">Authentication Required</h2>
+          <p className="text-gray-600">Please log in to access community support features</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Flag reasons specific to mental health communities
+  const flagReasons = useMemo(() => [
+    { value: 'harmful_advice', label: 'Potentially harmful medical/mental health advice' },
+    { value: 'crisis_content', label: 'Crisis situation requiring immediate attention' },
+    { value: 'spam', label: 'Spam or promotional content' },
+    { value: 'harassment', label: 'Harassment or inappropriate behavior' },
+    { value: 'misinformation', label: 'Medical misinformation' },
+    { value: 'other', label: 'Other (please specify)' }
+  ], []);
+
+  // Data fetching with proper error handling (no fallback data)
+  const { data: forums, isLoading: forumsLoading, error: forumsError, refetch: refetchForums } = useQuery<Forum[]>({
     queryKey: ['/api/support-forums'],
     queryFn: async () => {
-      try {
-        const res = await fetch('/api/support-forums');
-        if (!res.ok) throw new Error('Failed to fetch forums');
-        return res.json();
-      } catch (error) {
-        console.warn('Forums API failed, using fallback data:', error);
-        return [
-          {
-            id: 1,
-            name: "Anxiety Support",
-            description: "Share experiences and coping strategies for anxiety",
-            category: "Mental Health",
-            member_count: 234,
-            is_active: true
-          },
-          {
-            id: 2,
-            name: "Depression Recovery",
-            description: "Supporting each other through depression recovery",
-            category: "Mental Health",
-            member_count: 189,
-            is_active: true
-          }
-        ];
-      }
+      const res = await fetch('/api/support-forums', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+        }
+      });
+      if (!res.ok) throw new Error('Failed to fetch forums');
+      return res.json();
     },
   });
 
-  const { data: posts } = useQuery<ForumPost[]>({
+  const { data: posts, isLoading: postsLoading, error: postsError, refetch: refetchPosts } = useQuery<ForumPost[]>({
     queryKey: ['/api/forum-posts'],
     queryFn: async () => {
-      try {
-        const res = await fetch('/api/forum-posts');
-        if (!res.ok) throw new Error('Failed to fetch posts');
-        return res.json();
-      } catch (error) {
-        console.warn('Posts API failed, using fallback data:', error);
-        return [
-          {
-            id: 1,
-            title: "How to manage morning anxiety",
-            content: "I've been struggling with morning anxiety and wanted to share some techniques that have helped me...",
-            author_id: 1,
-            author_name: "Sarah K.",
-            created_at: "2025-07-15T08:30:00Z",
-            heart_count: 12,
-            reply_count: 5
-          },
-          {
-            id: 2,
-            title: "Finding motivation during tough days",
-            content: "Some days are harder than others. Here's what keeps me going...",
-            author_id: 2,
-            author_name: "Michael R.",
-            created_at: "2025-07-14T14:20:00Z",
-            heart_count: 8,
-            reply_count: 3
-          }
-        ];
-      }
+      const res = await fetch('/api/forum-posts', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+        }
+      });
+      if (!res.ok) throw new Error('Failed to fetch posts');
+      return res.json();
     },
   });
 
-  const { data: checkIns } = useQuery<PeerCheckIn[]>({
-    queryKey: ['/api/peer-check-ins/1'],
+  const { data: checkIns, isLoading: checkInsLoading, error: checkInsError, refetch: refetchCheckIns } = useQuery<PeerCheckIn[]>({
+    queryKey: ['/api/peer-check-ins', currentUser.id],
     queryFn: async () => {
-      try {
-        const res = await fetch('/api/peer-check-ins/1');
-        if (!res.ok) throw new Error('Failed to fetch check-ins');
-        return res.json();
-      } catch (error) {
-        console.warn('Check-ins API failed, using fallback data:', error);
-        return [
-          {
-            id: 1,
-            paired_user_name: "Alex M.",
-            check_in_type: "Daily Check-in",
-            scheduled_time: "2025-07-15T09:00:00Z",
-            completion_status: "completed",
-            last_contact: "2025-07-15T09:15:00Z"
-          },
-          {
-            id: 2,
-            paired_user_name: "Jordan L.",
-            check_in_type: "Weekly Check-in",
-            scheduled_time: "2025-07-15T15:00:00Z",
-            completion_status: "pending",
-            last_contact: "2025-07-13T15:30:00Z"
-          }
-        ];
-      }
+      const res = await fetch(`/api/peer-check-ins/${currentUser.id}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+        }
+      });
+      if (!res.ok) throw new Error('Failed to fetch check-ins');
+      return res.json();
     },
   });
 
-  const { data: replies } = useQuery<ForumReply[]>({
+  const { data: replies, isLoading: repliesLoading, error: repliesError, refetch: refetchReplies } = useQuery<ForumReply[]>({
     queryKey: ['/api/forum-replies'],
     queryFn: async () => {
-      try {
-        const res = await fetch('/api/forum-replies');
-        if (!res.ok) throw new Error('Failed to fetch replies');
-        return res.json();
-      } catch (error) {
-        console.warn('Replies API failed, using fallback data:', error);
-        return [
-          {
-            id: 1,
-            post_id: 1,
-            content: "Thank you for sharing this, it really helped me too!",
-            author_id: 3,
-            author_name: "Emma D.",
-            created_at: "2025-07-15T10:00:00Z",
-            heart_count: 4
-          }
-        ];
-      }
+      const res = await fetch('/api/forum-replies', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+        }
+      });
+      if (!res.ok) throw new Error('Failed to fetch replies');
+      return res.json();
     },
   });
 
-  // Mutation for joining forum discussions
+  // Enhanced mutations with proper error handling
   const joinForumMutation = useMutation({
     mutationFn: async (forumId: number) => {
       const response = await fetch(`/api/forums/${forumId}/join`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+        },
+        body: JSON.stringify({ userId: currentUser.id }),
       });
-      if (!response.ok) throw new Error('Failed to join forum');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to join forum');
+      }
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/support-forums'] });
+      setError(null);
+      toast({
+        title: "Success",
+        description: "Successfully joined the forum!",
+        duration: 3000,
+      });
+    },
+    onError: (error) => {
+      const errorMessage = `Failed to join forum: ${error.message}`;
+      setError(errorMessage);
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+        duration: 5000,
+      });
     }
   });
 
-  // Mutation for sending messages
+  // Fixed message sending mutation
   const sendMessageMutation = useMutation({
-    mutationFn: async (messageData: { content: string; postId?: number }) => {
+    mutationFn: async (messageData: { content: string; postId: number }) => {
+      if (!messageData.content.trim()) {
+        throw new Error('Message content cannot be empty');
+      }
       const response = await fetch('/api/forum-messages', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(messageData)
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+        },
+        body: JSON.stringify({
+          ...messageData,
+          authorId: currentUser.id,
+          content: messageData.content.trim(),
+        })
       });
-      if (!response.ok) throw new Error('Failed to send message');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to send message');
+      }
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/forum-posts'] });
       queryClient.invalidateQueries({ queryKey: ['/api/forum-replies'] });
+      setError(null);
+      toast({
+        title: "Success",
+        description: "Reply posted successfully!",
+        duration: 3000,
+      });
+    },
+    onError: (error) => {
+      const errorMessage = `Failed to send reply: ${error.message}`;
+      setError(errorMessage);
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+        duration: 5000,
+      });
     }
   });
 
-  // Mutation for flagging inappropriate content
+  // Enhanced flagging mutation
   const flagContentMutation = useMutation({
-    mutationFn: async (contentData: { contentId: number; contentType: string; reason: string }) => {
+    mutationFn: async (contentData: { contentId: number; contentType: string; reason: string; details?: string }) => {
       const response = await fetch('/api/content/flag', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(contentData)
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+        },
+        body: JSON.stringify({
+          ...contentData,
+          reportedBy: currentUser.id,
+        })
       });
-      if (!response.ok) throw new Error('Failed to flag content');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to flag content');
+      }
       return response.json();
     },
     onSuccess: () => {
-      // Refresh relevant data
       queryClient.invalidateQueries({ queryKey: ['/api/forum-posts'] });
+      setError(null);
+      toast({
+        title: "Report Submitted",
+        description: "Thank you for helping keep our community safe. The content has been reported for review.",
+        duration: 5000,
+      });
+    },
+    onError: (error) => {
+      const errorMessage = `Failed to report content: ${error.message}`;
+      setError(errorMessage);
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+        duration: 5000,
+      });
     }
   });
 
+  // Helper functions
+  const handleReplySubmit = useCallback((postId: number) => {
+    if (replyContent.trim()) {
+      sendMessageMutation.mutate({ 
+        content: replyContent.trim(), 
+        postId: postId 
+      });
+      setReplyContent('');
+      setReplyingToPost(null);
+    } else {
+      toast({
+        title: "Validation Error",
+        description: "Please enter a reply before submitting",
+        variant: "destructive",
+        duration: 3000,
+      });
+    }
+  }, [replyContent, sendMessageMutation, toast]);
+
+  const handleFlagSubmit = useCallback(() => {
+    if (flagReason && flaggingContent) {
+      flagContentMutation.mutate({
+        contentId: flaggingContent.id,
+        contentType: flaggingContent.type,
+        reason: flagReason,
+        details: flagDetails
+      });
+      setFlaggingContent(null);
+      setFlagReason('');
+      setFlagDetails('');
+    }
+  }, [flagReason, flaggingContent, flagDetails, flagContentMutation]);
+
+  // Reply Composer Component
+  const ReplyComposer = ({ postId, onClose }: { postId: number; onClose: () => void }) => (
+    <div className="mt-4 p-4 bg-gray-50 rounded-lg border">
+      <textarea
+        value={replyContent}
+        onChange={(e) => setReplyContent(e.target.value)}
+        placeholder="Share your thoughts or offer support..."
+        className="w-full p-3 border border-gray-200 rounded-lg resize-none focus:border-blue-300 focus:outline-none"
+        rows={3}
+        aria-label="Reply content"
+      />
+      <div className="flex gap-2 mt-3">
+        <button
+          onClick={() => handleReplySubmit(postId)}
+          disabled={!replyContent.trim() || sendMessageMutation.isPending}
+          className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 disabled:opacity-50 flex items-center gap-2"
+          aria-label="Submit reply"
+        >
+          {sendMessageMutation.isPending ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Sending...
+            </>
+          ) : (
+            'Send Reply'
+          )}
+        </button>
+        <button
+          onClick={onClose}
+          className="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300"
+          aria-label="Cancel reply"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  );
+
+  // Flag Modal Component
+  const FlagModal = () => (
+    flaggingContent ? (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" role="dialog" aria-modal="true">
+        <div className="bg-white rounded-xl p-6 w-full max-w-md">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold">Report Content</h3>
+            <button
+              onClick={() => {
+                setFlaggingContent(null);
+                setFlagReason('');
+                setFlagDetails('');
+              }}
+              className="text-gray-400 hover:text-gray-600"
+              aria-label="Close modal"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+          <p className="text-gray-600 text-sm mb-4">
+            Help us maintain a safe, supportive community by reporting content that violates our guidelines.
+          </p>
+          
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="flag-reason">
+                Reason for reporting
+              </label>
+              <select 
+                id="flag-reason"
+                value={flagReason}
+                onChange={(e) => setFlagReason(e.target.value)}
+                className="w-full p-3 border border-gray-200 rounded-lg focus:border-blue-300 focus:outline-none"
+                aria-label="Select reason for reporting"
+              >
+                <option value="">Select a reason...</option>
+                {flagReasons.map(reason => (
+                  <option key={reason.value} value={reason.value}>
+                    {reason.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            
+            {flagReason && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="flag-details">
+                  Additional details (optional)
+                </label>
+                <textarea
+                  id="flag-details"
+                  value={flagDetails}
+                  onChange={(e) => setFlagDetails(e.target.value)}
+                  placeholder="Please provide additional details..."
+                  className="w-full p-3 border border-gray-200 rounded-lg focus:border-blue-300 focus:outline-none resize-none"
+                  rows={3}
+                  aria-label="Additional details for report"
+                />
+              </div>
+            )}
+          </div>
+          
+          <div className="flex gap-3 mt-6">
+            <button
+              onClick={() => {
+                setFlaggingContent(null);
+                setFlagReason('');
+                setFlagDetails('');
+              }}
+              className="flex-1 py-2 text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50"
+              aria-label="Cancel report"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleFlagSubmit}
+              disabled={!flagReason || flagContentMutation.isPending}
+              className="flex-1 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-50 flex items-center justify-center gap-2"
+              aria-label="Submit report"
+            >
+              {flagContentMutation.isPending ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Reporting...
+                </>
+              ) : (
+                'Report'
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+    ) : null
+  );
+
   const renderForumsTab = () => {
+    if (forumsLoading || postsLoading) return <LoadingSpinner />;
+    
+    if (forumsError) {
+      return <ErrorMessage message="Unable to load forums. Please try again." onRetry={refetchForums} />;
+    }
+    
+    if (postsError) {
+      return <ErrorMessage message="Unable to load posts. Please try again." onRetry={refetchPosts} />;
+    }
+
     return (
       <div className="space-y-6">
+        {/* Error Display */}
+        {error && (
+          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-red-700 text-sm">{error}</p>
+            <button 
+              onClick={() => setError(null)}
+              className="text-red-600 hover:text-red-800 text-sm underline mt-1"
+              aria-label="Dismiss error"
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
+
         {/* Forum Categories */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {Array.isArray(forums) && forums.map((forum) => (
-            <div key={forum.id} className="theme-card rounded-xl p-6 border border-silver hover:border-2 hover:animate-shimmer">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-lg font-semibold theme-text">{forum.name}</h3>
-                <div className="flex items-center space-x-1 theme-text-secondary">
-                  <Users className="w-4 h-4" />
-                  <span className="text-sm">{forum.member_count}</span>
+          {!forums || forums.length === 0 ? (
+            <EmptyState 
+              icon={MessageSquare}
+              title="No Forums Available"
+              description="Forums are not available at the moment. Please check back later or contact support if this issue persists."
+            />
+          ) : (
+            forums.map((forum) => (
+              <div key={forum.id} className="bg-white rounded-xl p-6 border border-gray-200 hover:border-blue-200 transition-colors">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-lg font-semibold text-gray-800">{forum.name}</h3>
+                  <div className="flex items-center space-x-1 text-gray-500">
+                    <Users className="w-4 h-4" />
+                    <span className="text-sm">{forum.member_count}</span>
+                  </div>
+                </div>
+                <p className="text-gray-600 text-sm mb-4">{forum.description}</p>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-500 px-2 py-1 bg-blue-50 text-blue-600 rounded">
+                    {forum.category}
+                  </span>
+                  <button 
+                    onClick={() => joinForumMutation.mutate(forum.id)}
+                    disabled={joinForumMutation.isPending}
+                    className="text-blue-500 hover:bg-blue-50 text-sm font-medium px-3 py-1 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
+                    aria-label={`Join ${forum.name} forum`}
+                  >
+                    {joinForumMutation.isPending ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Joining...
+                      </>
+                    ) : (
+                      'Join Discussion →'
+                    )}
+                  </button>
                 </div>
               </div>
-              <p className="theme-text-secondary text-sm mb-4">{forum.description}</p>
-              <div className="flex items-center justify-between">
-                <span className="text-xs theme-text-secondary px-2 py-1 bg-[var(--theme-accent)] rounded">
-                  {forum.category}
-                </span>
-                <button 
-                  onClick={() => joinForumMutation.mutate(forum.id)}
-                  disabled={joinForumMutation.isPending}
-                  className="theme-text hover:bg-[var(--theme-accent)]/20 text-sm font-medium px-3 py-1 rounded-lg transition-colors disabled:opacity-50"
-                >
-                  {joinForumMutation.isPending ? 'Joining...' : 'Join Discussion →'}
-                </button>
-              </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
 
         {/* Recent Posts */}
-        <div className="theme-card rounded-xl p-6 border border-silver hover:border-2 hover:animate-shimmer">
-          <h3 className="text-lg font-semibold theme-text mb-4">Recent Posts</h3>
+        <div className="bg-white rounded-xl p-6 border border-gray-200">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">Recent Posts</h3>
           <div className="space-y-4">
-            {Array.isArray(posts) && posts.slice(0, 5).map((post) => (
-              <div key={post.id} className="p-4 bg-[var(--theme-accent)] rounded-lg">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <h4 className="font-medium theme-text mb-1">{post.title}</h4>
-                    <p className="theme-text-secondary text-sm mb-2 line-clamp-2">{post.content}</p>
-                    <div className="flex items-center space-x-4 text-xs theme-text-secondary">
-                      <span>by {post.author_name}</span>
-                      <span>{new Date(post.created_at).toLocaleDateString()}</span>
+            {!posts || posts.length === 0 ? (
+              <EmptyState 
+                icon={MessageSquare}
+                title="No Posts Yet"
+                description="Be the first to start a conversation and share your experience with the community."
+                actionLabel="Create First Post"
+                onAction={() => {
+                  // Handle create post action
+                  toast({
+                    title: "Feature Coming Soon",
+                    description: "Post creation will be available soon!",
+                    duration: 3000,
+                  });
+                }}
+              />
+            ) : (
+              posts.slice(0, 5).map((post) => (
+                <div key={post.id} className="p-4 bg-gray-50 rounded-lg border">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <h4 className="font-medium text-gray-800 mb-1">{post.title}</h4>
+                      <p className="text-gray-600 text-sm mb-2 line-clamp-2">{post.content}</p>
+                      <div className="flex items-center space-x-4 text-xs text-gray-500">
+                        <span>by {post.author_name}</span>
+                        <span>{new Date(post.created_at).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2 text-gray-500">
+                      <div className="flex items-center space-x-1">
+                        <Heart className="w-4 h-4" />
+                        <span className="text-sm">{post.heart_count}</span>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <MessageSquare className="w-4 h-4" />
+                        <span className="text-sm">{post.reply_count}</span>
+                      </div>
+                      <button 
+                        onClick={() => setReplyingToPost(post.id)}
+                        className="hover:bg-blue-500/20 p-1 rounded transition-colors"
+                        aria-label="Reply to this post"
+                      >
+                        <Send className="w-4 h-4" />
+                      </button>
+                      <button 
+                        onClick={() => setFlaggingContent({ id: post.id, type: 'post' })}
+                        className="hover:bg-red-500/20 p-1 rounded transition-colors"
+                        aria-label="Report this post"
+                      >
+                        <Flag className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-2 theme-text-secondary">
-                    <div className="flex items-center space-x-1">
-                      <Heart className="w-4 h-4" />
-                      <span className="text-sm">{post.heart_count}</span>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <MessageSquare className="w-4 h-4" />
-                      <span className="text-sm">{post.reply_count}</span>
-                    </div>
-                    <button 
-                      onClick={() => sendMessageMutation.mutate({ content: '', postId: post.id })}
-                      className="hover:bg-[var(--theme-accent)]/20 p-1 rounded transition-colors"
-                    >
-                      <Send className="w-4 h-4" />
-                    </button>
-                    <button 
-                      onClick={() => flagContentMutation.mutate({ contentId: post.id, contentType: 'post', reason: 'inappropriate' })}
-                      className="hover:bg-red-500/20 p-1 rounded transition-colors"
-                    >
-                      <Flag className="w-4 h-4" />
-                    </button>
-                  </div>
+                  {replyingToPost === post.id && (
+                    <ReplyComposer 
+                      postId={post.id} 
+                      onClose={() => setReplyingToPost(null)} 
+                    />
+                  )}
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
       </div>
@@ -293,72 +625,108 @@ const CommunitySupport: React.FC = () => {
   };
 
   const renderPeerSupportTab = () => {
+    if (checkInsLoading) return <LoadingSpinner />;
+    
+    if (checkInsError) {
+      return <ErrorMessage message="Unable to load peer check-ins. Please try again." onRetry={refetchCheckIns} />;
+    }
+
     return (
       <div className="space-y-6">
+        {/* Error Display */}
+        {error && (
+          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-red-700 text-sm">{error}</p>
+            <button 
+              onClick={() => setError(null)}
+              className="text-red-600 hover:text-red-800 text-sm underline mt-1"
+              aria-label="Dismiss error"
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
+
         {/* Peer Check-ins Overview */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="theme-card rounded-xl p-6 border border-silver hover:border-2 hover:animate-shimmer">
+          <div className="bg-white rounded-xl p-6 border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm theme-text-secondary">Active Connections</p>
-                <p className="text-2xl font-bold theme-text">{Array.isArray(checkIns) ? checkIns.length : 0}</p>
+                <p className="text-sm text-gray-500">Active Connections</p>
+                <p className="text-2xl font-bold text-gray-800">{checkIns ? checkIns.length : 0}</p>
               </div>
-              <div className="p-3 rounded-full bg-[var(--theme-accent)]">
-                <UserCheck className="w-6 h-6 theme-text" />
+              <div className="p-3 rounded-full bg-blue-50">
+                <UserCheck className="w-6 h-6 text-blue-500" />
               </div>
             </div>
           </div>
 
-          <div className="theme-card rounded-xl p-6 border border-silver hover:border-2 hover:animate-shimmer">
+          <div className="bg-white rounded-xl p-6 border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm theme-text-secondary">This Week</p>
-                <p className="text-2xl font-bold theme-text">
-                  {Array.isArray(checkIns) ? checkIns.filter(c => c.completion_status === 'completed').length : 0}
+                <p className="text-sm text-gray-500">This Week</p>
+                <p className="text-2xl font-bold text-gray-800">
+                  {checkIns ? checkIns.filter(c => c.completion_status === 'completed').length : 0}
                 </p>
               </div>
-              <div className="p-3 rounded-full bg-[var(--theme-accent)]">
-                <Calendar className="w-6 h-6 theme-text" />
+              <div className="p-3 rounded-full bg-green-50">
+                <Calendar className="w-6 h-6 text-green-500" />
               </div>
             </div>
           </div>
 
-          <div className="theme-card rounded-xl p-6 border border-silver hover:border-2 hover:animate-shimmer">
+          <div className="bg-white rounded-xl p-6 border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm theme-text-secondary">Support Score</p>
-                <p className="text-2xl font-bold theme-text">4.8</p>
+                <p className="text-sm text-gray-500">Support Score</p>
+                <p className="text-2xl font-bold text-gray-800">4.8</p>
               </div>
-              <div className="p-3 rounded-full bg-[var(--theme-accent)]">
-                <Star className="w-6 h-6 theme-text" />
+              <div className="p-3 rounded-full bg-yellow-50">
+                <Star className="w-6 h-6 text-yellow-500" />
               </div>
             </div>
           </div>
         </div>
 
         {/* Scheduled Check-ins */}
-        <div className="theme-card rounded-xl p-6 border border-silver hover:border-2 hover:animate-shimmer">
-          <h3 className="text-lg font-semibold theme-text mb-4">Scheduled Check-ins</h3>
+        <div className="bg-white rounded-xl p-6 border border-gray-200">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">Scheduled Check-ins</h3>
           <div className="space-y-3">
-            {Array.isArray(checkIns) && checkIns.map((checkIn) => (
-              <div key={checkIn.id} className="flex items-center justify-between p-3 bg-[var(--theme-accent)]/20 rounded-lg">
-                <div className="flex items-center space-x-3">
-                  <div className="p-2 rounded-full bg-[var(--theme-accent)]/30">
-                    <Users className="w-4 h-4 theme-text" />
+            {!checkIns || checkIns.length === 0 ? (
+              <EmptyState 
+                icon={Users}
+                title="No Check-ins Scheduled"
+                description="Connect with peers for mutual support and accountability. Schedule your first check-in to get started."
+                actionLabel="Find Peer Support"
+                onAction={() => {
+                  toast({
+                    title: "Feature Coming Soon",
+                    description: "Peer matching will be available soon!",
+                    duration: 3000,
+                  });
+                }}
+              />
+            ) : (
+              checkIns.map((checkIn) => (
+                <div key={checkIn.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 rounded-full bg-blue-50">
+                      <Users className="w-4 h-4 text-blue-500" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-800">{checkIn.paired_user_name}</p>
+                      <p className="text-sm text-gray-600 capitalize">{checkIn.check_in_type} check-in</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-medium theme-text">{checkIn.paired_user_name}</p>
-                    <p className="text-sm theme-text-secondary capitalize">{checkIn.check_in_type} check-in</p>
+                  <div className="text-right">
+                    <p className="text-sm text-gray-800 font-medium">
+                      {new Date(checkIn.scheduled_time).toLocaleDateString()}
+                    </p>
+                    <p className="text-xs text-gray-500 capitalize">{checkIn.completion_status}</p>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-sm theme-text font-medium">
-                    {new Date(checkIn.scheduled_time).toLocaleDateString()}
-                  </p>
-                  <p className="text-xs theme-text-secondary capitalize">{checkIn.completion_status}</p>
-                </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
       </div>
@@ -366,104 +734,85 @@ const CommunitySupport: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen theme-background p-4">
+    <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-3xl font-bold theme-text mb-2">Community Support</h1>
-          <p className="theme-text-secondary">Connect with others on their wellness journey</p>
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">Community Support</h1>
+          <p className="text-gray-600">Connect with others on their wellness journey</p>
         </div>
 
         {/* Navigation Tabs */}
-        <div className="w-full bg-[var(--theme-surface)] rounded-lg p-1 mb-6 shadow-lg border-2 border-[var(--theme-accent)]">
+        <div className="w-full bg-white rounded-lg p-1 mb-6 shadow-sm border border-gray-200" role="tablist">
           <div className="grid grid-cols-3 gap-1">
             <button
               onClick={() => setActiveTab('forums')}
-              className={`shimmer-border theme-button w-full px-4 py-3 text-sm font-semibold rounded-lg transition-all duration-200 ${
+              role="tab"
+              aria-selected={activeTab === 'forums'}
+              aria-controls="forums-panel"
+              className={`w-full px-4 py-3 text-sm font-semibold rounded-lg transition-all duration-200 ${
                 activeTab === 'forums'
-                  ? 'shadow-lg border-2 animate-shimmer'
-                  : 'hover:shadow-md border hover:border-2 hover:animate-shimmer'
+                  ? 'bg-blue-500 text-white shadow-sm'
+                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
               }`}
             >
-              <MessageSquare 
-                className="w-4 h-4 mx-auto mb-1" 
-                style={{ 
-                  background: 'none',
-                  backgroundColor: 'transparent',
-                  color: 'white',
-                  fill: 'white'
-                }}
-              />
-              <span
-                style={{ 
-                  background: 'none',
-                  backgroundColor: 'transparent',
-                  color: 'white'
-                }}
-              >Forums</span>
+              <MessageSquare className="w-4 h-4 mx-auto mb-1" />
+              <span>Forums</span>
             </button>
             <button
               onClick={() => setActiveTab('peer')}
-              className={`shimmer-border theme-button w-full px-4 py-3 text-sm font-semibold rounded-lg transition-all duration-200 ${
+              role="tab"
+              aria-selected={activeTab === 'peer'}
+              aria-controls="peer-panel"
+              className={`w-full px-4 py-3 text-sm font-semibold rounded-lg transition-all duration-200 ${
                 activeTab === 'peer'
-                  ? 'shadow-lg border-2 animate-shimmer'
-                  : 'hover:shadow-md border hover:border-2 hover:animate-shimmer'
+                  ? 'bg-green-500 text-white shadow-sm'
+                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
               }`}
             >
-              <Users 
-                className="w-4 h-4 mx-auto mb-1" 
-                style={{ 
-                  background: 'none',
-                  backgroundColor: 'transparent',
-                  color: 'white',
-                  fill: 'white'
-                }}
-              />
-              <span
-                style={{ 
-                  background: 'none',
-                  backgroundColor: 'transparent',
-                  color: 'white'
-                }}
-              >Check-ins</span>
+              <Users className="w-4 h-4 mx-auto mb-1" />
+              <span>Peer Support</span>
             </button>
             <button
               onClick={() => setActiveTab('moderation')}
-              className={`shimmer-border theme-button w-full px-4 py-3 text-sm font-semibold rounded-lg transition-all duration-200 ${
+              role="tab"
+              aria-selected={activeTab === 'moderation'}
+              aria-controls="moderation-panel"
+              className={`w-full px-4 py-3 text-sm font-semibold rounded-lg transition-all duration-200 ${
                 activeTab === 'moderation'
-                  ? 'shadow-lg border-2 animate-shimmer'
-                  : 'hover:shadow-md border hover:border-2 hover:animate-shimmer'
+                  ? 'bg-orange-500 text-white shadow-sm'
+                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
               }`}
             >
-              <Shield 
-                className="w-4 h-4 mx-auto mb-1" 
-                style={{ 
-                  background: 'none',
-                  backgroundColor: 'transparent',
-                  color: 'white',
-                  fill: 'white'
-                }}
-              />
-              <span
-                style={{ 
-                  background: 'none',
-                  backgroundColor: 'transparent',
-                  color: 'white'
-                }}
-              >Guidelines</span>
+              <Shield className="w-4 h-4 mx-auto mb-1" />
+              <span>Moderation</span>
             </button>
           </div>
         </div>
 
         {/* Tab Content */}
-        {activeTab === 'forums' && renderForumsTab()}
-        {activeTab === 'peer' && renderPeerSupportTab()}
-        {activeTab === 'moderation' && (
-          <div className="text-center py-8 theme-text-secondary">
-            <Shield className="w-12 h-12 mx-auto mb-3 opacity-50" />
-            <p>Community guidelines and moderation tools coming soon</p>
+        {activeTab === 'forums' && (
+          <div role="tabpanel" id="forums-panel" aria-labelledby="forums-tab">
+            {renderForumsTab()}
           </div>
         )}
+        {activeTab === 'peer' && (
+          <div role="tabpanel" id="peer-panel" aria-labelledby="peer-tab">
+            {renderPeerSupportTab()}
+          </div>
+        )}
+        {activeTab === 'moderation' && (
+          <div role="tabpanel" id="moderation-panel" aria-labelledby="moderation-tab">
+            <div className="text-center py-8 text-gray-500">
+              <Shield className="w-12 h-12 mx-auto mb-3 opacity-50" />
+              <h3 className="text-lg font-semibold mb-2">Moderation Tools</h3>
+              <p>Community guidelines and moderation tools will be available soon</p>
+            </div>
+          </div>
+        )}
+
+        {/* Modals */}
+        <FlagModal />
       </div>
     </div>
   );
