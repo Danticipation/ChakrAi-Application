@@ -1,0 +1,72 @@
+ID mismatches in navigation map
+In getChallengeNavigationTarget you’ve hard‑coded IDs like 'weekly-journal', 'wellness-warrior', etc., but your challenges use IDs such as "weekly-journals", "streak-7-day", "monthly-mindfulness", etc. Every unmapped ID will fall through to the default case, so those buttons will never navigate correctly.
+
+Mutating leaderboard array in render
+Calling leaderboard.sort() inside your JSX permanently reorders the original state. That can cause subtle bugs and re‑renders.
+
+RewardPreview lookup keys don’t match
+Your rewardPreviews object uses keys like 'growth-seeker' and 'zen-garden', but your challenges have IDs such as "weekly-journals" and "monthly-mindfulness". If the lookup fails, you fall back to a generic preview, which is probably not what you intended.
+
+Direct DOM manipulation for notifications/navigation
+Manually creating <div>s, appending <style> tags, tweaking button style properties and timeouts is brittle and sidesteps React’s render flow. It’s harder to maintain and can introduce memory leaks or styling conflicts.
+
+User stats never update derived fields
+You increment totalPoints and completedChallenges on reward claim, but you never recalculate activeStreaks or longestStreak. Those remain at their initial zeros.
+
+revised code:
+Fix the ID mapping and leaderboard sort without full rewrite — just replace these two helpers:
+
+ts
+Copy
+Edit
+// 1) Correct challenge‑ID mapping
+const getChallengeNavigationTarget = (challengeId: string) => {
+  switch (challengeId) {
+    case 'weekly-journals':
+      return { section: 'journal', description: 'Go to Journal' };
+    case 'streak-7-day':
+      return { section: 'daily', description: 'Track Mood' };
+    case 'monthly-mindfulness':
+      return { section: 'daily', description: 'Daily Reflection' };
+    case 'seasonal-self-love':
+      return { section: 'daily', description: 'View Affirmations' };
+    case 'daily-gratitude':
+      return { section: 'journal', description: 'Write Gratitude' };
+    case 'weekly-reflection':
+      return { section: 'daily', description: 'Weekly Reflection' };
+    case 'chat-engagement':
+      return { section: 'chat', description: 'Chat with AI' };
+    case 'goal-tracker':
+      return { section: 'analytics', description: 'Set Goals' };
+    case 'holiday-wellness':
+      return { section: 'daily', description: 'Wellness Check‑in' };
+    default:
+      return { section: 'journal', description: 'Complete Challenge' };
+  }
+};
+
+// 2) Non‑mutating leaderboard sort
+const topPoints = useMemo(
+  () => [...leaderboard].sort((a,b) => b.totalPoints - a.totalPoints).slice(0,5),
+  [leaderboard]
+);
+const topStreaks = useMemo(
+  () => [...leaderboard].sort((a,b) => b.longestStreak - a.longestStreak).slice(0,5),
+  [leaderboard]
+);
+suggestions:
+
+Derive stats in useEffect or useMemo: Recalculate activeStreaks and longestStreak from challenges whenever they update, rather than leaving them static.
+
+Replace manual notifications with toasts: Use your existing toast system (or a light library) instead of injecting DOM nodes and <style> tags.
+
+Abstract DOM animation: Move inline confetti CSS/animation into Tailwind classes or a dedicated CSS module—this will improve readability and prevent style conflicts.
+
+Memoize heavy computations: In lists like activeChallenges.map(...), wrap calculateProgress, getTypeIcon, getTypeColor in useCallback or useMemo to avoid re‑creating functions on every render.
+
+Match rewardPreviews keys to challenge.id: Use challenge IDs as the keys so your tooltip always shows the correct preview.
+
+Improve accessibility: Add ARIA roles to your tabs (role="tablist", role="tab", role="tabpanel"), include aria-selected, and ensure focus management when switching content.
+
+conclusion:
+Your ChallengeSystem is feature‑rich and well‑styled, but a handful of ID mismatches and in‑render mutations are causing silent failures. Fix those mappings, switch to non‑destructive sorts, and lean on React hooks and toasts for state and UI feedback. That will make the component more stable, maintainable, and user‑friendly.

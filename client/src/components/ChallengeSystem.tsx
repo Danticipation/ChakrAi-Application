@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Trophy, Target, Clock, Calendar, Star, Award, CheckCircle, Timer, Users, TrendingUp, ExternalLink } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface Challenge {
   id: string;
@@ -393,6 +394,7 @@ interface ChallengeSystemProps {
 }
 
 const ChallengeSystem: React.FC<ChallengeSystemProps> = ({ onNavigate, onMobileModalNavigate }) => {
+  const { toast } = useToast();
   const [challenges, setChallenges] = useState<Challenge[]>(starterChallenges);
   const [selectedTab, setSelectedTab] = useState('active');
   const [userStats, setUserStats] = useState({
@@ -403,31 +405,31 @@ const ChallengeSystem: React.FC<ChallengeSystemProps> = ({ onNavigate, onMobileM
     longestStreak: 0
   });
 
-  // Get navigation target for challenge completion - fixed to match actual App.tsx sections
-  const getChallengeNavigationTarget = (challengeId: string): { section: string; description: string } => {
+  // Get navigation target for challenge completion - fixed to match actual challenge IDs
+  const getChallengeNavigationTarget = useCallback((challengeId: string): { section: string; description: string } => {
     switch (challengeId) {
-      case 'weekly-journal':
+      case 'weekly-journals':
         return { section: 'journal', description: 'Go to Journal' };
-      case 'wellness-warrior':
-        return { section: 'daily', description: 'Track Mood' }; // 'daily' section contains mood tracking
-      case 'mindful-monthly':
-        return { section: 'daily', description: 'Daily Reflection' }; // 'daily' section for reflection
+      case 'streak-7-day':
+        return { section: 'daily', description: 'Track Mood' };
+      case 'monthly-mindfulness':
+        return { section: 'daily', description: 'Daily Reflection' };
       case 'seasonal-self-love':
-        return { section: 'daily', description: 'View Affirmations' }; // 'daily' section has affirmations
+        return { section: 'daily', description: 'View Affirmations' };
       case 'daily-gratitude':
         return { section: 'journal', description: 'Write Gratitude' };
       case 'weekly-reflection':
-        return { section: 'daily', description: 'Weekly Reflection' }; // 'daily' section for reflection
+        return { section: 'daily', description: 'Weekly Reflection' };
       case 'chat-engagement':
         return { section: 'chat', description: 'Chat with AI' };
       case 'goal-tracker':
-        return { section: 'analytics', description: 'Set Goals' }; // 'analytics' section has goal tracking
+        return { section: 'analytics', description: 'Set Goals' };
       case 'holiday-wellness':
-        return { section: 'daily', description: 'Wellness Check-in' }; // 'daily' section for wellness
+        return { section: 'daily', description: 'Wellness Check-in' };
       default:
         return { section: 'journal', description: 'Complete Challenge' };
     }
-  };
+  }, []);
 
   const handleChallengeNavigation = (challengeId: string) => {
     const target = getChallengeNavigationTarget(challengeId);
@@ -438,81 +440,27 @@ const ChallengeSystem: React.FC<ChallengeSystemProps> = ({ onNavigate, onMobileM
     if (onNavigate) {
       console.log('🎯 Calling navigation with section:', target.section);
       
-      // Create a prominent visual feedback that navigation is happening
-      const button = document.activeElement as HTMLButtonElement;
-      if (button) {
-        button.style.transform = 'scale(0.95)';
-        button.style.opacity = '0.7';
-        setTimeout(() => {
-          button.style.transform = '';
-          button.style.opacity = '';
-        }, 150);
+      // Check if we're on mobile and this section should use modal navigation
+      const isMobile = window.innerWidth < 768; // md breakpoint
+      const modalSections = ['journal', 'analytics', 'daily', 'challenges', 'rewards', 'community', 'vr', 'health', 'agents', 'adaptive', 'therapy-plans'];
+      
+      if (isMobile && modalSections.includes(target.section) && onMobileModalNavigate) {
+        console.log('🎯 Using mobile modal navigation for:', target.section);
+        onMobileModalNavigate(target.section);
+      } else {
+        console.log('🎯 Using standard navigation for:', target.section);
+        onNavigate(target.section);
       }
       
-      // Add a slight delay to let user see the button press, then navigate
-      setTimeout(() => {
-        console.log('🎯 About to call navigation with section:', target.section);
-        
-        // Check if we're on mobile and this section should use modal navigation
-        const isMobile = window.innerWidth < 768; // md breakpoint
-        const modalSections = ['journal', 'analytics', 'daily', 'challenges', 'rewards', 'community', 'vr', 'health', 'agents', 'adaptive', 'therapy-plans'];
-        
-        if (isMobile && modalSections.includes(target.section) && onMobileModalNavigate) {
-          console.log('🎯 Using mobile modal navigation for:', target.section);
-          onMobileModalNavigate(target.section);
-        } else {
-          console.log('🎯 Using standard navigation for:', target.section);
-          onNavigate(target.section);
-        }
-        console.log('🎯 Navigation called successfully');
-        
-        // Create a prominent navigation notification
-        const notification = document.createElement('div');
-        notification.innerHTML = `🎯 Navigating to ${target.description}...`;
-        notification.style.cssText = `
-          position: fixed;
-          top: 20px;
-          left: 50%;
-          transform: translateX(-50%);
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          color: white;
-          padding: 12px 24px;
-          border-radius: 12px;
-          font-weight: bold;
-          z-index: 10000;
-          box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-          animation: slideInDown 0.3s ease-out;
-        `;
-        
-        // Add slide animation
-        const style = document.createElement('style');
-        style.textContent = `
-          @keyframes slideInDown {
-            from { transform: translateX(-50%) translateY(-100%); opacity: 0; }
-            to { transform: translateX(-50%) translateY(0); opacity: 1; }
-          }
-        `;
-        document.head.appendChild(style);
-        document.body.appendChild(notification);
-        
-        // Remove notification after delay
-        setTimeout(() => {
-          notification.style.animation = 'slideInDown 0.3s ease-out reverse';
-          setTimeout(() => {
-            document.body.removeChild(notification);
-            document.head.removeChild(style);
-          }, 300);
-        }, 2000);
-        
-        // Scroll to top to ensure new section is prominently visible
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        
-        // Force a re-render to bring new section to foreground
-        const mainContent = document.querySelector('[data-main-content]');
-        if (mainContent) {
-          mainContent.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-      }, 150);
+      // Use toast notification instead of manual DOM manipulation
+      toast({
+        title: "Navigation",
+        description: `🎯 Navigating to ${target.description}...`,
+        duration: 2000,
+      });
+      
+      // Scroll to top to ensure new section is prominently visible
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
       console.error('onNavigate function not available');
     }
@@ -529,32 +477,53 @@ const ChallengeSystem: React.FC<ChallengeSystemProps> = ({ onNavigate, onMobileM
     { id: '5', username: 'CalmCrafter', totalPoints: 220, longestStreak: 15, rank: 5, avatar: '🎨' }
   ]);
 
-  // Reward previews for interactive tooltips
+  // Reward previews for interactive tooltips - updated to match challenge IDs
   const rewardPreviews: Record<string, RewardPreview> = {
-    'growth-seeker': {
+    'weekly-journals': {
       type: 'badge',
       name: 'Growth Seeker Badge',
-      description: 'Unlocked for 7 consecutive days of self-reflection',
+      description: 'Unlocked for completing weekly journal writing',
       preview: '🌱 A beautiful growing plant animation',
       rarity: 'rare'
     },
-    'zen-garden': {
+    'monthly-mindfulness': {
       type: 'theme',
       name: 'Zen Garden Theme',
       description: 'Peaceful green and earth tones with bamboo accents',
       preview: '🎋 Soft greens, gentle animations, nature sounds',
       rarity: 'epic'
     },
-    'holiday-hero': {
+    'holiday-wellness': {
       type: 'badge',
       name: 'Holiday Wellness Hero',
       description: 'Maintained wellness routine during holiday season',
       preview: '🎄 Festive badge with snowflake animations',
       rarity: 'legendary'
+    },
+    'streak-7-day': {
+      type: 'badge',
+      name: 'Wellness Warrior',
+      description: '7-day streak achievement badge',
+      preview: '🌟 Sparkling star animation with flame effects',
+      rarity: 'epic'
+    },
+    'chat-engagement': {
+      type: 'badge',
+      name: 'Digital Wellness Partner',
+      description: 'Connected with AI companion for meaningful conversations',
+      preview: '🤖 Interactive chat bubble animation',
+      rarity: 'rare'
+    },
+    'goal-tracker': {
+      type: 'badge',
+      name: 'Goal Getter',
+      description: 'Successfully tracked and achieved personal goals',
+      preview: '🎯 Target hit animation with celebration',
+      rarity: 'rare'
     }
   };
 
-  const getTypeIcon = (type: Challenge['type']) => {
+  const getTypeIcon = useCallback((type: Challenge['type']) => {
     switch (type) {
       case 'daily': return <Calendar className="h-4 w-4" />;
       case 'weekly': return <Clock className="h-4 w-4" />;
@@ -562,9 +531,9 @@ const ChallengeSystem: React.FC<ChallengeSystemProps> = ({ onNavigate, onMobileM
       case 'seasonal': return <Star className="h-4 w-4" />;
       default: return <Trophy className="h-4 w-4" />;
     }
-  };
+  }, []);
 
-  const getTypeColor = (type: Challenge['type']) => {
+  const getTypeColor = useCallback((type: Challenge['type']) => {
     switch (type) {
       case 'daily': return 'bg-blue-500';
       case 'weekly': return 'bg-green-500';
@@ -572,11 +541,11 @@ const ChallengeSystem: React.FC<ChallengeSystemProps> = ({ onNavigate, onMobileM
       case 'seasonal': return 'bg-purple-500';
       default: return 'bg-gray-500';
     }
-  };
+  }, []);
 
-  const calculateProgress = (current: number, goal: number) => {
+  const calculateProgress = useCallback((current: number, goal: number) => {
     return Math.min((current / goal) * 100, 100);
-  };
+  }, []);
 
   // Enhanced completion with animations and sound
   const playCompletionSound = () => {
@@ -602,29 +571,62 @@ const ChallengeSystem: React.FC<ChallengeSystemProps> = ({ onNavigate, onMobileM
       )
     );
 
-    // Update user stats
+    // Update user stats - derivedStats will automatically recalculate streaks
     setUserStats(prev => ({
       ...prev,
       totalPoints: prev.totalPoints + challenge.reward.points,
       completedChallenges: prev.completedChallenges + 1
     }));
 
-    // Trigger celebration animations
+    // Trigger celebration animations and toast notification
     setShowConfetti(true);
     setCompletionMessage(`${challenge.reward.badge || 'Achievement'} Unlocked!`);
     playCompletionSound();
+    
+    toast({
+      title: "Challenge Complete!",
+      description: `🎉 ${challenge.reward.badge || 'Achievement'} Unlocked! +${challenge.reward.points} points`,
+      duration: 4000,
+    });
   };
 
-  const getProgressColor = (current: number, goal: number, type: Challenge['type']): 'active' | 'near-complete' | 'streak' => {
+  const getProgressColor = useCallback((current: number, goal: number, type: Challenge['type']): 'active' | 'near-complete' | 'streak' => {
     const progress = (current / goal) * 100;
     if (type === 'streak') return 'streak';
     if (progress >= 80) return 'near-complete';
     return 'active';
-  };
+  }, []);
 
-  const activeChallenges = challenges.filter(c => c.active);
-  const completedChallenges = challenges.filter(c => c.progress.current >= c.progress.goal);
-  const upcomingChallenges = challenges.filter(c => !c.active);
+  // Derive stats in useMemo to recalculate activeStreaks and longestStreak
+  const derivedStats = useMemo(() => {
+    const completedStreakChallenges = challenges.filter(c => 
+      c.type === 'streak' && c.progress.current >= c.progress.goal
+    );
+    const activeStreakChallenges = challenges.filter(c => 
+      c.type === 'streak' && c.progress.current > 0 && c.progress.current < c.progress.goal
+    );
+    
+    return {
+      ...userStats,
+      activeStreaks: activeStreakChallenges.length,
+      longestStreak: Math.max(0, ...completedStreakChallenges.map(c => c.progress.goal))
+    };
+  }, [challenges, userStats]);
+
+  // Non-mutating leaderboard sorts using useMemo
+  const topPoints = useMemo(
+    () => [...leaderboard].sort((a, b) => b.totalPoints - a.totalPoints).slice(0, 5),
+    [leaderboard]
+  );
+  
+  const topStreaks = useMemo(
+    () => [...leaderboard].sort((a, b) => b.longestStreak - a.longestStreak).slice(0, 5),
+    [leaderboard]
+  );
+
+  const activeChallenges = useMemo(() => challenges.filter(c => c.active), [challenges]);
+  const completedChallenges = useMemo(() => challenges.filter(c => c.progress.current >= c.progress.goal), [challenges]);
+  const upcomingChallenges = useMemo(() => challenges.filter(c => !c.active), [challenges]);
 
   return (
     <div className="w-full max-w-6xl mx-auto p-6 space-y-6">
@@ -674,30 +676,54 @@ const ChallengeSystem: React.FC<ChallengeSystemProps> = ({ onNavigate, onMobileM
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-red-600">{userStats.activeStreaks}</div>
+            <div className="text-3xl font-bold text-red-600">{derivedStats.activeStreaks}</div>
           </CardContent>
         </Card>
       </div>
 
       {/* Challenge Tabs - Enhanced with Leaderboard */}
       <Tabs value={selectedTab} onValueChange={setSelectedTab}>
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4">
-          <TabsTrigger value="active" className="text-xs md:text-sm">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4" role="tablist">
+          <TabsTrigger 
+            value="active" 
+            className="text-xs md:text-sm" 
+            role="tab" 
+            aria-selected={selectedTab === 'active'}
+            aria-controls="active-panel"
+          >
             Active ({activeChallenges.length})
           </TabsTrigger>
-          <TabsTrigger value="completed" className="text-xs md:text-sm">
+          <TabsTrigger 
+            value="completed" 
+            className="text-xs md:text-sm" 
+            role="tab" 
+            aria-selected={selectedTab === 'completed'}
+            aria-controls="completed-panel"
+          >
             Completed ({completedChallenges.length})
           </TabsTrigger>
-          <TabsTrigger value="upcoming" className="text-xs md:text-sm">
+          <TabsTrigger 
+            value="upcoming" 
+            className="text-xs md:text-sm" 
+            role="tab" 
+            aria-selected={selectedTab === 'upcoming'}
+            aria-controls="upcoming-panel"
+          >
             Upcoming ({upcomingChallenges.length})
           </TabsTrigger>
-          <TabsTrigger value="leaderboard" className="text-xs md:text-sm">
+          <TabsTrigger 
+            value="leaderboard" 
+            className="text-xs md:text-sm" 
+            role="tab" 
+            aria-selected={selectedTab === 'leaderboard'}
+            aria-controls="leaderboard-panel"
+          >
             <Users className="h-3 w-3 md:h-4 md:w-4 mr-1" />
             Leaderboard
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="active" className="space-y-4">
+        <TabsContent value="active" className="space-y-4" role="tabpanel" id="active-panel" aria-labelledby="active-tab">
           {/* Mobile: Single Column Stack */}
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
             {activeChallenges.map((challenge) => (
@@ -885,7 +911,7 @@ const ChallengeSystem: React.FC<ChallengeSystemProps> = ({ onNavigate, onMobileM
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  {leaderboard.slice(0, 5).map((entry, index) => (
+                  {topPoints.map((entry, index) => (
                     <div key={entry.id} className={`flex items-center justify-between p-3 rounded-lg ${
                       entry.username === 'You' ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800' : 'theme-card'
                     }`}>
@@ -927,7 +953,7 @@ const ChallengeSystem: React.FC<ChallengeSystemProps> = ({ onNavigate, onMobileM
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  {leaderboard.sort((a, b) => b.longestStreak - a.longestStreak).slice(0, 5).map((entry, index) => (
+                  {topStreaks.map((entry, index) => (
                     <div key={entry.id} className={`flex items-center justify-between p-3 rounded-lg ${
                       entry.username === 'You' ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800' : 'theme-card'
                     }`}>
