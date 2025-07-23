@@ -1,6 +1,6 @@
-import React, { useState, useMemo, useCallback, lazy, Suspense } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { BarChart3, TrendingUp, Calendar, Brain, Target, Activity, Download, RefreshCw, AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
+import { BarChart3, TrendingUp, Brain, Target, Activity, Download, RefreshCw, AlertCircle, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface WellnessMetrics {
@@ -226,26 +226,22 @@ const AnalyticsDashboard: React.FC<{ userId: number }> = ({ userId }) => {
     queryClient.invalidateQueries({ queryKey: [`/api/analytics/reports/${userId}`] });
   }, [queryClient, userId, selectedTimeframe]);
 
-  const calculateProgress = useMemo(() => {
-    return (value: number, max: number = 100): number => {
-      if (typeof value !== 'number' || typeof max !== 'number') return 0;
-      if (max === 0) return 0;
-      return Math.min(Math.max((value / max) * 100, 0), 100);
-    };
+  const calculateProgress = useCallback((value: number, max: number = 100): number => {
+    if (typeof value !== 'number' || typeof max !== 'number') return 0;
+    if (max === 0) return 0;
+    return Math.min(Math.max((value / max) * 100, 0), 100);
   }, []);
 
-  const formatDate = useMemo(() => {
-    return (dateString: string): string => {
-      try {
-        return new Intl.DateTimeFormat(navigator.language || 'en-US', {
-          year: 'numeric',
-          month: 'short',
-          day: 'numeric'
-        }).format(new Date(dateString));
-      } catch {
-        return dateString;
-      }
-    };
+  const formatDate = useCallback((dateString: string): string => {
+    try {
+      return new Intl.DateTimeFormat(navigator.language || 'en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      }).format(new Date(dateString));
+    } catch {
+      return dateString;
+    }
   }, []);
 
   const renderOverviewTab = useCallback(() => {
@@ -339,9 +335,10 @@ const AnalyticsDashboard: React.FC<{ userId: number }> = ({ userId }) => {
           <div className="theme-card p-4 rounded-lg">
             <h3 className="text-lg font-semibold text-white mb-3">Emotion Distribution</h3>
             <div className="space-y-2">
-              {charts.emotionDistribution.map((emotion) => {
+              {(() => {
                 const maxCount = Math.max(...charts.emotionDistribution.map(item => item.count));
-                const percentage = maxCount > 0 ? (emotion.count / maxCount) * 100 : 0;
+                return charts.emotionDistribution.map((emotion) => {
+                  const percentage = maxCount > 0 ? (emotion.count / maxCount) * 100 : 0;
                 
                 return (
                   <div key={`emotion-${emotion.emotion}`} className="flex items-center space-x-2">
@@ -354,8 +351,9 @@ const AnalyticsDashboard: React.FC<{ userId: number }> = ({ userId }) => {
                     </div>
                     <span className="text-sm text-white font-medium w-6">{emotion.count}</span>
                   </div>
-                );
-              })}
+                  );
+                });
+              })()}
             </div>
           </div>
         </div>
