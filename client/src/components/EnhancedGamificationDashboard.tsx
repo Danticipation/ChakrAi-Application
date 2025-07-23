@@ -614,12 +614,12 @@ const EnhancedGamificationDashboard: React.FC = () => {
                 </div>
                 
                 <div className="text-center p-4 bg-gradient-to-r from-green-50 to-green-100 rounded-xl">
-                  <div className="text-2xl font-bold text-green-600">{dashboardData?.stats?.totalAchievements || 0}</div>
+                  <div className="text-2xl font-bold text-green-600">{userAchievements.length || 0}</div>
                   <div className="text-sm text-green-800">Achievements</div>
                 </div>
                 
                 <div className="text-center p-4 bg-gradient-to-r from-purple-50 to-purple-100 rounded-xl">
-                  <div className="text-2xl font-bold text-purple-600">{dashboardData?.stats?.activeChallengesCount || 0}</div>
+                  <div className="text-2xl font-bold text-purple-600">{challenges.filter(c => c.isParticipating).length || 0}</div>
                   <div className="text-sm text-purple-800">Active Challenges</div>
                 </div>
                 
