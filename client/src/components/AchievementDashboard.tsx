@@ -184,6 +184,47 @@ export default function AchievementDashboard({ userId }: AchievementDashboardPro
   const levelProgress = totalPoints % 100;
   const progressPercentage = Math.round((levelProgress / 100) * 100);
 
+  // Icon mapping for badges when icon is not provided or is a string reference
+  const getIconForBadge = (badge: Badge) => {
+    if (badge.icon && !badge.icon.startsWith('icon-')) {
+      return badge.icon; // Return the actual emoji or icon
+    }
+    
+    // Fallback icon mapping based on category and name
+    const iconMap: Record<string, string> = {
+      'first-chat': '💬',
+      'early-bird': '🌅',
+      'night-owl': '🌙',
+      'journal-starter': '📝',
+      'mood-tracker': '😊',
+      'wellness-warrior': '🏆',
+      'mindful-master': '🧘',
+      'streak-keeper': '🔥',
+      'goal-getter': '🎯',
+      'community-helper': '🤝',
+      'growth-mindset': '🌱',
+      'reflection-master': '🪞',
+      'therapeutic-ally': '💙',
+      'progress-champion': '📈',
+      'milestone-achiever': '🏅'
+    };
+
+    // Try to find by badge ID first
+    if (iconMap[badge.id]) {
+      return iconMap[badge.id];
+    }
+
+    // Fallback by category
+    const categoryIcons: Record<string, string> = {
+      'engagement': '💬',
+      'milestone': '🏆',
+      'wellness': '🌟',
+      'achievement': '🎖️'
+    };
+
+    return categoryIcons[badge.category] || '🏅';
+  };
+
   const getStreakIcon = (type: string) => {
     switch (type) {
       case 'daily_checkin': return <Calendar className="w-4 h-4" />;
@@ -356,11 +397,11 @@ export default function AchievementDashboard({ userId }: AchievementDashboardPro
             >
               <div className="flex items-start space-x-3">
                 <div className="relative">
-                  <div className={`text-3xl transition-all ${isEarned ? 'scale-110' : 'grayscale opacity-50'}`}>
-                    {badge.icon}
+                  <div className={`text-4xl transition-all duration-300 ${isEarned ? 'scale-110 filter-none' : 'grayscale opacity-50 scale-90'}`}>
+                    {getIconForBadge(badge)}
                   </div>
                   {!isEarned && (
-                    <div className="absolute -top-1 -right-1 bg-gray-600 rounded-full p-1">
+                    <div className="absolute -top-1 -right-1 bg-gray-600 rounded-full p-1 shadow-lg">
                       <Lock className="w-3 h-3 text-white" aria-hidden="true" />
                     </div>
                   )}
