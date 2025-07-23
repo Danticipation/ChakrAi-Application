@@ -1,574 +1,606 @@
-import { getCurrentUserId } from "../utils/userSession";
-import { useState, useEffect } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Plus, BookOpen, TrendingUp, Download, Calendar, Search, Filter } from 'lucide-react';
+import { Plus, BookOpen, TrendingUp, Download, Calendar, Search, Filter, Edit3, Eye, Clock, BarChart3, Star, MessageCircle, Loader2, RefreshCw, AlertCircle } from 'lucide-react';
 import JournalEditor from './JournalEditor';
-// import JournalExportModal from './JournalExportModal';
-import type { JournalEntry, JournalAnalytics } from '@shared/schema';
 import { format } from 'date-fns';
+
+// Types based on actual database schema
+interface JournalEntry {
+  id: number;
+  userId: number;
+  title: string | null;
+  content: string;
+  mood: string | null;
+  moodIntensity: number | null;
+  tags: string[] | null;
+  isPrivate: boolean | null;
+  createdAt: Date | null;
+}
+
+interface JournalAnalytics {
+  totalEntries: number;
+  averageMoodIntensity: number;
+  themes: Array<{ theme: string; count: number }>;
+  sentimentTrend: 'positive' | 'neutral' | 'negative';
+  writingStreak: number;
+  averageWordsPerEntry: number;
+}
 
 interface JournalDashboardProps {
   userId: number;
 }
 
+// Utility Components
+const LoadingSpinner: React.FC<{ message?: string }> = ({ message = "Loading..." }) => (
+  <div className="flex flex-col items-center justify-center p-8 space-y-3">
+    <Loader2 className="animate-spin theme-text-secondary" size={32} />
+    <p className="text-sm theme-text-secondary">{message}</p>
+  </div>
+);
+
+const ErrorMessage: React.FC<{ error: string; onRetry?: () => void }> = ({ error, onRetry }) => (
+  <div className="flex flex-col items-center justify-center p-8 space-y-4">
+    <AlertCircle className="theme-text-secondary" size={48} />
+    <div className="text-center space-y-2">
+      <p className="theme-text font-medium">Something went wrong</p>
+      <p className="text-sm theme-text-secondary">{error}</p>
+    </div>
+    {onRetry && (
+      <button
+        onClick={onRetry}
+        className="flex items-center space-x-2 px-4 py-2 bg-[var(--theme-accent)] text-white rounded-lg hover:shadow-lg transition-all"
+      >
+        <RefreshCw size={16} />
+        <span>Try Again</span>
+      </button>
+    )}
+  </div>
+);
+
+const EmptyState: React.FC<{ 
+  icon: React.ReactNode; 
+  title: string; 
+  description: string; 
+  action?: React.ReactNode 
+}> = ({ icon, title, description, action }) => (
+  <div className="flex flex-col items-center justify-center p-12 space-y-6">
+    {icon}
+    <div className="text-center space-y-2">
+      <h3 className="text-lg font-semibold theme-text">{title}</h3>
+      <p className="theme-text-secondary">{description}</p>
+    </div>
+    {action}
+  </div>
+);
+
+// Helper function to determine if this is a fresh start
+const useIsFreshStart = () => {
+  const [isFreshStart, setIsFreshStart] = useState(false);
+  
+  useEffect(() => {
+    const freshStart = localStorage.getItem('freshStart') === 'true';
+    setIsFreshStart(freshStart);
+    
+    // Clean up fresh start flag after reading
+    if (freshStart) {
+      localStorage.removeItem('freshStart');
+    }
+  }, []);
+  
+  return isFreshStart;
+};
+
+// Main Component
 export default function JournalDashboard({ userId }: JournalDashboardProps) {
-  const [activeView, setActiveView] = useState<'list' | 'editor' | 'analytics' | 'export'>('list');
+  const [activeView, setActiveView] = useState<'list' | 'editor' | 'analytics'>('list');
   const [selectedEntry, setSelectedEntry] = useState<JournalEntry | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [moodFilter, setMoodFilter] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [entriesPerPage] = useState(10);
+  const [showEntryModal, setShowEntryModal] = useState(false);
+  
   const queryClient = useQueryClient();
+  const isFreshStart = useIsFreshStart();
 
-  // Always clear any fresh start flags and load journal entries
+  // Clear cache only when truly necessary (fresh start)
   useEffect(() => {
-    localStorage.removeItem('freshStart');
-    queryClient.removeQueries({ queryKey: ['/api/journal'] });
-    queryClient.removeQueries({ queryKey: ['/api/journal/analytics'] });
-  }, [queryClient]);
+    if (isFreshStart) {
+      queryClient.removeQueries({ queryKey: ['/api/journal'] });
+      queryClient.removeQueries({ queryKey: ['/api/journal/analytics'] });
+    }
+  }, [isFreshStart, queryClient]);
 
-  const { data: entries = [], isLoading: entriesLoading } = useQuery({
-    queryKey: ['/api/journal', 13],
-    enabled: true // Always fetch journal entries for user ID 13 where migrated data lives
+  // Data fetching with proper typing
+  const { 
+    data: entries = [], 
+    isLoading: entriesLoading, 
+    error: entriesError,
+    refetch: refetchEntries 
+  } = useQuery<JournalEntry[]>({
+    queryKey: ['/api/journal', userId],
+    enabled: !!userId,
+    retry: 2,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
-  const { data: analytics = null } = useQuery({
-    queryKey: ['/api/journal/analytics', 13],
-    enabled: activeView === 'analytics'
+  const { 
+    data: analytics = null, 
+    isLoading: analyticsLoading,
+    error: analyticsError,
+    refetch: refetchAnalytics
+  } = useQuery<JournalAnalytics>({
+    queryKey: ['/api/journal/analytics', userId],
+    enabled: !!userId && activeView === 'analytics',
+    retry: 2,
+    staleTime: 10 * 60 * 1000, // 10 minutes
   });
 
+  // Enhanced filtering with tags support
   const filteredEntries = entries.filter((entry: JournalEntry) => {
+    const searchLower = searchQuery.toLowerCase();
     const matchesSearch = !searchQuery || 
-      entry.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      entry.content.toLowerCase().includes(searchQuery.toLowerCase());
+      entry.title?.toLowerCase().includes(searchLower) ||
+      entry.content.toLowerCase().includes(searchLower) ||
+      entry.tags?.some(tag => tag.toLowerCase().includes(searchLower));
     
     const matchesMood = moodFilter === 'all' || entry.mood === moodFilter;
     
     return matchesSearch && matchesMood;
   });
 
-  const recentEntries = filteredEntries.slice(0, 10);
+  // Pagination
+  const totalPages = Math.ceil(filteredEntries.length / entriesPerPage);
+  const startIndex = (currentPage - 1) * entriesPerPage;
+  const paginatedEntries = filteredEntries.slice(startIndex, startIndex + entriesPerPage);
 
-  const handleNewEntry = () => {
+  // Event handlers
+  const handleNewEntry = useCallback(() => {
     setSelectedEntry(null);
     setActiveView('editor');
-  };
+  }, []);
 
-  const handleEditEntry = (entry: JournalEntry) => {
+  const handleEditEntry = useCallback((entry: JournalEntry) => {
     setSelectedEntry(entry);
     setActiveView('editor');
-  };
+  }, []);
 
-  const handleSaveEntry = () => {
+  const handleViewEntry = useCallback((entry: JournalEntry) => {
+    setSelectedEntry(entry);
+    setShowEntryModal(true);
+  }, []);
+
+  const handleSaveEntry = useCallback(() => {
     setActiveView('list');
     setSelectedEntry(null);
-  };
+    // Invalidate queries to refresh data
+    queryClient.invalidateQueries({ queryKey: ['/api/journal', userId] });
+    queryClient.invalidateQueries({ queryKey: ['/api/journal/analytics', userId] });
+  }, [queryClient, userId]);
 
-  const handleCancelEdit = () => {
+  const handleCancelEdit = useCallback(() => {
     setActiveView('list');
     setSelectedEntry(null);
-  };
+  }, []);
 
-  const renderEntryCard = (entry: JournalEntry) => {
-    const entryAnalytics = analytics.find((a: JournalAnalytics) => a.entryId === entry.id);
-    const sentimentColor = !entryAnalytics?.sentimentScore ? '#6B7280' :
-      entryAnalytics.sentimentScore > 0.2 ? '#10B981' :
-      entryAnalytics.sentimentScore < -0.2 ? '#EF4444' : '#F59E0B';
+  const handleCloseModal = useCallback(() => {
+    setShowEntryModal(false);
+    setSelectedEntry(null);
+  }, []);
 
+  // Mood utility functions (single implementation)
+  const getMoodEmoji = useCallback((mood: string): string => {
+    const moodEmojis: Record<string, string> = {
+      'very_happy': '😄',
+      'happy': '😊',
+      'neutral': '😐',
+      'sad': '😢',
+      'very_sad': '😭',
+      'angry': '😠',
+      'anxious': '😰',
+      'excited': '🤩',
+      'calm': '😌',
+      'frustrated': '😤'
+    };
+    return moodEmojis[mood] || '😐';
+  }, []);
+
+  const getMoodColor = useCallback((mood: string): string => {
+    const moodColors: Record<string, string> = {
+      'very_happy': '#10B981',
+      'happy': '#34D399',
+      'neutral': '#6B7280',
+      'sad': '#F59E0B',
+      'very_sad': '#EF4444',
+      'angry': '#DC2626',
+      'anxious': '#F97316',
+      'excited': '#8B5CF6',
+      'calm': '#06B6D4',
+      'frustrated': '#EC4899'
+    };
+    return moodColors[mood] || '#6B7280';
+  }, []);
+
+  // Entry Card Component
+  const renderEntryCard = useCallback((entry: JournalEntry) => {
+    const wordCount = entry.content.split(/\s+/).filter(word => word.length > 0).length;
+    
     return (
       <div
-        key={entry.id}
-        onClick={() => setSelectedEntry(entry)}
-        className="rounded-2xl p-4 shadow-sm cursor-pointer transition-all hover:shadow-md"
-        style={{ backgroundColor: 'var(--surface-secondary)' }}
+        key={`entry-${entry.id}`}
+        className="theme-card rounded-lg p-4 border border-[var(--theme-accent)]/30 hover:border-[var(--theme-accent)]/50 transition-all hover-lift"
       >
-        <div className="flex items-start justify-between mb-2">
+        <div className="flex items-start justify-between mb-3">
           <div className="flex-1">
-            <h3 className="font-semibold text-sm mb-1" style={{ color: 'var(--text-primary)' }}>
-              {entry.title || 'Untitled'}
+            <h3 className="font-semibold theme-text mb-1">
+              {entry.title || 'Untitled Entry'}
             </h3>
-            <div className="flex items-center gap-3 text-xs" style={{ color: 'var(--text-secondary)' }}>
-              <span>{format(new Date(entry.createdAt!), 'MMM dd, yyyy')}</span>
-              <span>{entry.wordCount || 0} words</span>
+            <div className="flex items-center gap-3 text-xs theme-text-secondary">
+              <span className="flex items-center gap-1">
+                <Clock size={12} />
+                {entry.createdAt ? format(new Date(entry.createdAt), 'MMM dd, yyyy') : 'Unknown date'}
+              </span>
+              <span>{wordCount} words</span>
               {entry.mood && (
-                <span className="px-2 py-1 rounded-full text-xs" style={{ 
-                  backgroundColor: getMoodColor(entry.mood) + '20',
-                  color: getMoodColor(entry.mood)
-                }}>
-                  {getMoodLabel(entry.mood)}
+                <span 
+                  className="px-2 py-1 rounded-full text-xs font-medium"
+                  style={{ 
+                    backgroundColor: getMoodColor(entry.mood) + '20',
+                    color: getMoodColor(entry.mood)
+                  }}
+                >
+                  {getMoodEmoji(entry.mood)} {entry.mood.replace('_', ' ')}
                 </span>
               )}
             </div>
           </div>
-          {entryAnalytics && (
-            <div className="flex items-center gap-2">
-              <div 
-                className="w-3 h-3 rounded-full"
-                style={{ backgroundColor: sentimentColor }}
-                title={`Sentiment: ${((entryAnalytics.sentimentScore || 0) * 100).toFixed(0)}%`}
-              />
-              <div className="text-xs" style={{ color: 'var(--text-secondary)' }}>
-                {entryAnalytics.emotionalIntensity || 0}%
-              </div>
-            </div>
-          )}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => handleViewEntry(entry)}
+              className="p-1 rounded theme-text-secondary hover:theme-text transition-colors"
+              title="View entry"
+            >
+              <Eye size={16} />
+            </button>
+            <button
+              onClick={() => handleEditEntry(entry)}
+              className="p-1 rounded theme-text-secondary hover:theme-text transition-colors"
+              title="Edit entry"
+            >
+              <Edit3 size={16} />
+            </button>
+          </div>
         </div>
         
-        <p className="text-xs leading-relaxed mb-3" style={{ color: 'var(--text-secondary)' }}>
-          {entry.content.substring(0, 120)}
-          {entry.content.length > 120 && '...'}
+        <p className="text-sm theme-text-secondary leading-relaxed mb-3">
+          {entry.content.substring(0, 150)}
+          {entry.content.length > 150 && '...'}
         </p>
 
-        {entry.emotionalTags && entry.emotionalTags.length > 0 && (
+        {entry.tags && entry.tags.length > 0 && (
           <div className="flex flex-wrap gap-1">
-            {entry.emotionalTags.slice(0, 3).map(tag => (
+            {entry.tags.slice(0, 3).map((tag: string) => (
               <span
-                key={tag}
-                className="px-2 py-1 rounded-full text-xs"
-                style={{ 
-                  backgroundColor: 'var(--gentle-lavender)',
-                  color: 'var(--text-primary)'
-                }}
+                key={`tag-${entry.id}-${tag}`}
+                className="px-2 py-1 text-xs rounded-full theme-surface theme-text-secondary border border-[var(--theme-accent)]/20"
               >
-                {tag}
+                #{tag}
               </span>
             ))}
-            {entry.emotionalTags.length > 3 && (
-              <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>
-                +{entry.emotionalTags.length - 3} more
+            {entry.tags.length > 3 && (
+              <span className="px-2 py-1 text-xs rounded-full theme-surface theme-text-secondary">
+                +{entry.tags.length - 3} more
               </span>
             )}
           </div>
         )}
       </div>
     );
-  };
+  }, [getMoodColor, getMoodEmoji, handleViewEntry, handleEditEntry]);
 
-  const renderAnalyticsSummary = () => {
-    if (!analytics || analytics.totalEntries === 0) {
+  // Analytics View
+  const renderAnalytics = () => {
+    if (analyticsLoading) {
+      return <LoadingSpinner message="Analyzing your journal data..." />;
+    }
+
+    if (analyticsError) {
       return (
-        <div className="text-center py-8">
-          <TrendingUp className="w-12 h-12 mx-auto mb-3" style={{ color: 'var(--text-secondary)' }} />
-          <p className="text-lg font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
-            No emotional journey data available
-          </p>
-          <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-            Start journaling to see your emotional patterns and insights
-          </p>
-        </div>
+        <ErrorMessage 
+          error="Failed to load analytics data" 
+          onRetry={refetchAnalytics}
+        />
       );
     }
 
-    const topThemes = Object.entries(analytics.themes || {})
-      .sort(([,a], [,b]) => (b as number) - (a as number))
-      .slice(0, 5);
+    if (!analytics) {
+      return (
+        <EmptyState
+          icon={<BarChart3 className="theme-text-secondary" size={48} />}
+          title="No analytics available"
+          description="Write a few journal entries to see your analytics"
+          action={
+            <button
+              onClick={handleNewEntry}
+              className="px-6 py-2 bg-[var(--theme-accent)] text-white rounded-lg hover:shadow-lg transition-all"
+            >
+              Write Your First Entry
+            </button>
+          }
+        />
+      );
+    }
 
     return (
-      <div className="space-y-4">
-        {/* Overview Stats */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="rounded-2xl p-4 text-center" style={{ backgroundColor: 'var(--pale-green)' }}>
-            <div className="text-2xl font-bold mb-1" style={{ color: 'var(--soft-blue-dark)' }}>
-              {analytics.totalEntries}
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="theme-card rounded-lg p-6 border border-[var(--theme-accent)]/30">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="font-semibold theme-text">Total Entries</h3>
+              <BookOpen className="theme-text-secondary" size={20} />
             </div>
-            <div className="text-xs" style={{ color: 'var(--text-secondary)' }}>Total Entries</div>
+            <p className="text-2xl font-bold theme-text">{analytics.totalEntries || 0}</p>
+            <p className="text-sm theme-text-secondary mt-1">
+              {analytics.writingStreak || 0} day writing streak
+            </p>
           </div>
-          <div className="rounded-2xl p-4 text-center" style={{ backgroundColor: 'var(--gentle-lavender)' }}>
-            <div className="text-2xl font-bold mb-1" style={{ color: 'var(--soft-blue-dark)' }}>
-              {analytics.averageMoodIntensity?.toFixed(1) || '0'}
+
+          <div className="theme-card rounded-lg p-6 border border-[var(--theme-accent)]/30">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="font-semibold theme-text">Avg. Words</h3>
+              <MessageCircle className="theme-text-secondary" size={20} />
             </div>
-            <div className="text-xs" style={{ color: 'var(--text-secondary)' }}>Average Mood</div>
+            <p className="text-2xl font-bold theme-text">{Math.round(analytics.averageWordsPerEntry || 0)}</p>
+            <p className="text-sm theme-text-secondary mt-1">per entry</p>
+          </div>
+
+          <div className="theme-card rounded-lg p-6 border border-[var(--theme-accent)]/30">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="font-semibold theme-text">Mood Intensity</h3>
+              <Star className="theme-text-secondary" size={20} />
+            </div>
+            <p className="text-2xl font-bold theme-text">{Math.round((analytics.averageMoodIntensity || 0) * 10)}%</p>
+            <p className="text-sm theme-text-secondary mt-1">average intensity</p>
           </div>
         </div>
 
-        {/* Top Themes */}
-        <div className="rounded-2xl p-4 shadow-sm" style={{ backgroundColor: 'var(--surface-secondary)' }}>
-          <h3 className="font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>Recurring Themes</h3>
-          {topThemes.length > 0 ? (
-            <div className="space-y-2">
-              {topThemes.map(([theme, count]) => (
-                <div key={theme} className="flex items-center justify-between">
-                  <span className="text-sm capitalize" style={{ color: 'var(--text-primary)' }}>{theme.replace('_', ' ')}</span>
-                  <div className="flex items-center gap-2">
-                    <div 
-                      className="h-2 rounded-full"
-                      style={{ 
-                        width: `${Math.max(20, (count as number) / analytics.totalEntries * 100)}px`,
-                        backgroundColor: 'var(--soft-blue-dark)'
-                      }}
-                    />
-                    <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>{count}</span>
-                  </div>
+        {analytics.themes && analytics.themes.length > 0 && (
+          <div className="theme-card rounded-lg p-6 border border-[var(--theme-accent)]/30">
+            <h3 className="font-semibold theme-text mb-4">Common Themes</h3>
+            <div className="space-y-3">
+              {analytics.themes.slice(0, 5).map((theme, index) => (
+                <div key={`theme-${index}`} className="flex items-center justify-between">
+                  <span className="theme-text">{theme.theme}</span>
+                  <span className="text-sm theme-text-secondary">{theme.count} entries</span>
                 </div>
               ))}
             </div>
-          ) : (
-            <p className="text-sm text-center py-4" style={{ color: 'var(--text-secondary)' }}>
-              Add tags to your entries to see recurring themes
-            </p>
-          )}
-        </div>
-        
-        {/* Therapeutic Progress */}
-        <div className="rounded-2xl p-4 shadow-sm" style={{ backgroundColor: 'var(--surface-secondary)' }}>
-          <h3 className="font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>Therapeutic Progress</h3>
-          <div className="text-center py-4">
-            <div className="text-lg font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
-              Good progress
-            </div>
-            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-              You've been consistent with journaling. Keep expressing your thoughts and feelings.
-            </p>
           </div>
-        </div>
+        )}
       </div>
     );
   };
 
+  // Main Render Logic
   if (activeView === 'editor') {
     return (
-      <JournalEditor
-        entry={selectedEntry || undefined}
-        onSave={handleSaveEntry}
-        onCancel={handleCancelEdit}
-        userId={13}
-      />
-    );
-  }
-
-  if (activeView === 'export') {
-    return (
-      <div className="p-4">
-        <h2 className="text-xl font-bold mb-4" style={{ color: 'var(--text-primary)' }}>Export Journal</h2>
-        <div className="rounded-2xl p-4 shadow-sm" style={{ backgroundColor: 'var(--surface-secondary)' }}>
-          <p className="text-sm mb-4" style={{ color: 'var(--text-secondary)' }}>
-            Export functionality will be available in the next update. You can access your journal entries through the main interface.
-          </p>
-          <button
-            onClick={() => setActiveView('list')}
-            className="px-4 py-2 rounded-lg text-sm font-medium"
-            style={{ 
-              backgroundColor: 'var(--soft-blue-dark)',
-              color: 'white'
-            }}
-          >
-            Back to Journal
-          </button>
-        </div>
+      <div className="h-full">
+        <JournalEditor
+          userId={userId}
+          entry={selectedEntry || undefined}
+          onSave={handleSaveEntry}
+          onCancel={handleCancelEdit}
+        />
       </div>
     );
   }
 
-  // Show fresh start message if this is a fresh start
-  if (isFreshStart) {
+  if (activeView === 'analytics') {
     return (
-      <div className="w-full p-6 bg-theme-surface rounded-lg border border-theme-accent/30">
-        <div className="text-center">
-          <div className="text-6xl mb-4">🌟</div>
-          <h2 className="text-2xl font-bold text-theme-text mb-2">Fresh Start!</h2>
-          <p className="text-theme-text-secondary mb-4">
-            Your journal is ready for new entries. All previous data has been cleared. Start writing to begin your wellness journey!
-          </p>
-          <button
-            onClick={() => {
-              localStorage.removeItem('freshStart');
-              setActiveView('editor');
-            }}
-            className="bg-theme-primary text-white px-6 py-2 rounded-lg hover:bg-theme-primary-dark transition-colors"
-          >
-            Write Your First Entry
-          </button>
+      <div className="h-full p-6 overflow-y-auto theme-background">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold theme-text">Journal Analytics</h2>
+            <button
+              onClick={() => setActiveView('list')}
+              className="px-4 py-2 theme-surface border border-[var(--theme-accent)]/30 rounded-lg hover:border-[var(--theme-accent)]/50 transition-all theme-text"
+            >
+              Back to Entries
+            </button>
+          </div>
+          {renderAnalytics()}
         </div>
       </div>
     );
   }
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col theme-background">
       {/* Header */}
-      <div className="p-4 border-b" style={{ borderColor: 'var(--gentle-lavender-dark)' }}>
+      <div className="p-6 border-b border-[var(--theme-accent)]/20">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
-            {activeView === 'analytics' ? 'Journal Analytics' : 'Journal Entries'}
-          </h2>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setActiveView('analytics')}
-              className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                activeView === 'analytics' ? 'shadow-sm' : ''
-              }`}
-              style={{ 
-                backgroundColor: activeView === 'analytics' ? 'var(--soft-blue-dark)' : 'var(--surface-secondary)',
-                color: activeView === 'analytics' ? 'white' : 'var(--text-primary)'
-              }}
-            >
-              <TrendingUp className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => setActiveView('export')}
-              className="px-3 py-2 rounded-lg text-sm font-medium"
-              style={{ 
-                backgroundColor: 'var(--gentle-lavender)',
-                color: 'var(--text-primary)'
-              }}
-            >
-              <Download className="w-4 h-4" />
-            </button>
-            <button
-              onClick={handleNewEntry}
-              className="px-3 py-2 rounded-lg text-sm font-medium shadow-sm"
-              style={{ 
-                backgroundColor: 'var(--soft-blue-dark)',
-                color: 'white'
-              }}
-            >
-              <Plus className="w-4 h-4" />
-            </button>
-          </div>
+          <h2 className="text-2xl font-bold theme-text">My Journal</h2>
+          <button
+            onClick={handleNewEntry}
+            className="flex items-center space-x-2 px-4 py-2 bg-[var(--theme-accent)] text-white rounded-lg hover:shadow-lg transition-all"
+          >
+            <Plus size={20} />
+            <span>New Entry</span>
+          </button>
         </div>
 
-        {/* Navigation Tabs */}
-        <div className="w-full bg-[var(--theme-surface)] rounded-lg p-1 mb-6 shadow-lg border-2 border-[var(--theme-accent)]">
-          <div className="grid grid-cols-4 gap-1">
-            <button
-              onClick={() => setActiveView('list')}
-              className={`shimmer-border w-full px-4 py-3 text-sm font-semibold rounded-lg transition-all duration-200 ${
-                activeView === 'list'
-                  ? 'bg-gradient-to-r from-[var(--theme-primary)] to-[var(--theme-accent)] text-white shadow-lg border-2 border-silver animate-shimmer'
-                  : 'bg-gradient-to-r from-[var(--theme-primary-light)] to-[var(--theme-surface)] text-white hover:from-[var(--theme-primary)] hover:to-[var(--theme-accent)] hover:shadow-md border border-silver hover:border-2 hover:animate-shimmer'
-              }`}
+        {/* Filters and Search */}
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 theme-text-secondary" size={20} />
+            <input
+              type="text"
+              placeholder="Search entries and tags..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 theme-surface border border-[var(--theme-accent)]/30 rounded-lg focus:border-[var(--theme-accent)] theme-text"
+            />
+          </div>
+          <div className="flex gap-2">
+            <select
+              value={moodFilter}
+              onChange={(e) => setMoodFilter(e.target.value)}
+              className="px-3 py-2 theme-surface border border-[var(--theme-accent)]/30 rounded-lg focus:border-[var(--theme-accent)] theme-text"
             >
-              <BookOpen className="w-4 h-4 mx-auto mb-1" />
-              Entries
-            </button>
+              <option value="all">All Moods</option>
+              <option value="very_happy">Very Happy</option>
+              <option value="happy">Happy</option>
+              <option value="neutral">Neutral</option>
+              <option value="sad">Sad</option>
+              <option value="very_sad">Very Sad</option>
+              <option value="anxious">Anxious</option>
+              <option value="excited">Excited</option>
+              <option value="calm">Calm</option>
+            </select>
             <button
               onClick={() => setActiveView('analytics')}
-              className={`shimmer-border w-full px-4 py-3 text-sm font-semibold rounded-lg transition-all duration-200 ${
-                activeView === 'analytics'
-                  ? 'bg-gradient-to-r from-[var(--theme-primary)] to-[var(--theme-accent)] text-white shadow-lg border-2 border-silver animate-shimmer'
-                  : 'bg-gradient-to-r from-[var(--theme-primary-light)] to-[var(--theme-surface)] text-white hover:from-[var(--theme-primary)] hover:to-[var(--theme-accent)] hover:shadow-md border border-silver hover:border-2 hover:animate-shimmer'
-              }`}
+              className="flex items-center space-x-2 px-4 py-2 theme-surface border border-[var(--theme-accent)]/30 rounded-lg hover:border-[var(--theme-accent)]/50 transition-all theme-text"
             >
-              <TrendingUp className="w-4 h-4 mx-auto mb-1" />
-              Analytics
-            </button>
-            <button
-              onClick={handleNewEntry}
-              className={`shimmer-border w-full px-4 py-3 text-sm font-semibold rounded-lg transition-all duration-200 ${
-                activeView === 'editor'
-                  ? 'bg-gradient-to-r from-[var(--theme-primary)] to-[var(--theme-accent)] text-white shadow-lg border-2 border-silver animate-shimmer'
-                  : 'bg-gradient-to-r from-[var(--theme-primary-light)] to-[var(--theme-surface)] text-white hover:from-[var(--theme-primary)] hover:to-[var(--theme-accent)] hover:shadow-md border border-silver hover:border-2 hover:animate-shimmer'
-              }`}
-            >
-              <Plus className="w-4 h-4 mx-auto mb-1" />
-              New Entry
-            </button>
-            <button
-              onClick={() => setActiveView('export')}
-              className={`shimmer-border w-full px-4 py-3 text-sm font-semibold rounded-lg transition-all duration-200 ${
-                activeView === 'export'
-                  ? 'bg-gradient-to-r from-[var(--theme-primary)] to-[var(--theme-accent)] text-white shadow-lg border-2 border-silver animate-shimmer'
-                  : 'bg-gradient-to-r from-[var(--theme-primary-light)] to-[var(--theme-surface)] text-white hover:from-[var(--theme-primary)] hover:to-[var(--theme-accent)] hover:shadow-md border border-silver hover:border-2 hover:animate-shimmer'
-              }`}
-            >
-              <Download className="w-4 h-4 mx-auto mb-1" />
-              Export
+              <TrendingUp size={20} />
+              <span>Analytics</span>
             </button>
           </div>
         </div>
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto p-4">
-        {activeView === 'list' && (
-          <div className="space-y-4">
-            {/* Search and Filters */}
-            <div className="rounded-2xl p-4 shadow-sm space-y-3" style={{ backgroundColor: 'var(--surface-secondary)' }}>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4" style={{ color: 'var(--text-secondary)' }} />
-                <input
-                  type="text"
-                  placeholder="Search your entries..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 rounded-lg border text-sm"
-                  style={{ 
-                    borderColor: 'var(--gentle-lavender-dark)',
-                    backgroundColor: 'white',
-                    color: 'var(--text-primary)'
-                  }}
-                />
-              </div>
-              
-              <select
-                value={moodFilter}
-                onChange={(e) => setMoodFilter(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border text-sm"
-                style={{ 
-                  borderColor: 'var(--gentle-lavender-dark)',
-                  backgroundColor: 'white',
-                  color: 'var(--text-primary)'
-                }}
+      <div className="flex-1 p-6 overflow-y-auto">
+        {entriesLoading ? (
+          <LoadingSpinner message="Loading your journal entries..." />
+        ) : entriesError ? (
+          <ErrorMessage 
+            error="Failed to load journal entries" 
+            onRetry={refetchEntries}
+          />
+        ) : filteredEntries.length === 0 ? (
+          <EmptyState
+            icon={<BookOpen className="theme-text-secondary" size={48} />}
+            title={searchQuery || moodFilter !== 'all' ? "No matching entries" : "No journal entries yet"}
+            description={searchQuery || moodFilter !== 'all' ? "Try adjusting your search or filters" : "Start your journaling journey with your first entry"}
+            action={
+              <button
+                onClick={handleNewEntry}
+                className="px-6 py-2 bg-[var(--theme-accent)] text-white rounded-lg hover:shadow-lg transition-all"
               >
-                <option value="all">All Moods</option>
-                <option value="very_positive">Very Positive</option>
-                <option value="positive">Positive</option>
-                <option value="neutral">Neutral</option>
-                <option value="negative">Negative</option>
-                <option value="very_negative">Very Negative</option>
-              </select>
+                Write Your First Entry
+              </button>
+            }
+          />
+        ) : (
+          <>
+            <div className="grid gap-4 mb-6">
+              {paginatedEntries.map(renderEntryCard)}
             </div>
 
-            {/* Entries List */}
-            {isFreshStart ? (
-              <div className="text-center py-8">
-                <BookOpen className="w-12 h-12 mx-auto mb-3" style={{ color: 'var(--text-secondary)' }} />
-                <p className="mb-4 text-lg font-medium" style={{ color: 'var(--text-primary)' }}>
-                  Fresh Start! 🌟
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between">
+                <p className="text-sm theme-text-secondary">
+                  Showing {startIndex + 1}-{Math.min(startIndex + entriesPerPage, filteredEntries.length)} of {filteredEntries.length} entries
                 </p>
-                <p className="mb-6 text-sm" style={{ color: 'var(--text-secondary)' }}>
-                  Your data has been cleared. Start your therapeutic journey by writing your first entry.
-                </p>
-                <button
-                  onClick={() => {
-                    localStorage.removeItem('freshStart');
-                    handleNewEntry();
-                  }}
-                  className="px-6 py-3 rounded-2xl text-sm font-medium shadow-sm"
-                  style={{ 
-                    backgroundColor: 'var(--soft-blue-dark)',
-                    color: 'white'
-                  }}
-                >
-                  Write First Entry
-                </button>
-              </div>
-            ) : entriesLoading ? (
-              <div className="text-center py-8">
-                <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
-                <p style={{ color: 'var(--text-secondary)' }}>Loading your entries...</p>
-              </div>
-            ) : filteredEntries.length === 0 ? (
-              <div className="text-center py-8">
-                <BookOpen className="w-12 h-12 mx-auto mb-3" style={{ color: 'var(--text-secondary)' }} />
-                <p className="mb-4" style={{ color: 'var(--text-secondary)' }}>
-                  {searchQuery || moodFilter !== 'all' ? 'No entries match your filters' : 'Start your therapeutic journey by writing your first entry'}
-                </p>
-                <button
-                  onClick={handleNewEntry}
-                  className="px-6 py-3 rounded-2xl text-sm font-medium shadow-sm"
-                  style={{ 
-                    backgroundColor: 'var(--soft-blue-dark)',
-                    color: 'white'
-                  }}
-                >
-                  Write First Entry
-                </button>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {recentEntries.map(renderEntryCard)}
-                
-                {filteredEntries.length > 10 && (
-                  <div className="text-center py-4">
-                    <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                      Showing 10 of {filteredEntries.length} entries
-                    </p>
-                  </div>
-                )}
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    className="px-3 py-1 theme-surface border border-[var(--theme-accent)]/30 rounded disabled:opacity-50 disabled:cursor-not-allowed theme-text"
+                  >
+                    Previous
+                  </button>
+                  <span className="px-3 py-1 theme-text">
+                    {currentPage} of {totalPages}
+                  </span>
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-1 theme-surface border border-[var(--theme-accent)]/30 rounded disabled:opacity-50 disabled:cursor-not-allowed theme-text"
+                  >
+                    Next
+                  </button>
+                </div>
               </div>
             )}
-          </div>
+          </>
         )}
-
-        {activeView === 'analytics' && renderAnalyticsSummary()}
       </div>
 
-      {/* Journal Entry Modal */}
-      {selectedEntry && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-          onClick={() => setSelectedEntry(null)}
-        >
-          <div 
-            className="bg-white rounded-2xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
-            style={{ backgroundColor: 'var(--surface-primary)', color: 'var(--text-primary)' }}
-            onClick={(e) => e.stopPropagation()}
-          >
+      {/* Entry View Modal */}
+      {showEntryModal && selectedEntry && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="theme-card rounded-lg max-w-2xl w-full max-h-[80vh] overflow-y-auto">
             <div className="p-6">
-              {/* Header */}
-              <div className="flex items-start justify-between mb-6">
-                <div className="flex-1">
-                  <h2 className="text-2xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <h3 className="text-xl font-bold theme-text mb-2">
                     {selectedEntry.title || 'Untitled Entry'}
-                  </h2>
-                  <div className="flex items-center gap-4 text-sm" style={{ color: 'var(--text-secondary)' }}>
-                    <span>{new Date(selectedEntry.createdAt).toLocaleDateString()}</span>
+                  </h3>
+                  <div className="flex items-center gap-3 text-sm theme-text-secondary">
+                    <span className="flex items-center gap-1">
+                      <Clock size={14} />
+                      {selectedEntry.createdAt ? format(new Date(selectedEntry.createdAt), 'MMMM dd, yyyy • h:mm a') : 'Unknown date'}
+                    </span>
                     {selectedEntry.mood && (
-                      <div className="flex items-center gap-2">
-                        <div 
-                          className="w-3 h-3 rounded-full"
-                          style={{ backgroundColor: getMoodColor(selectedEntry.mood) }}
-                        />
-                        <span>{getMoodLabel(selectedEntry.mood)}</span>
-                      </div>
+                      <span 
+                        className="px-2 py-1 rounded-full text-xs font-medium"
+                        style={{ 
+                          backgroundColor: getMoodColor(selectedEntry.mood) + '20',
+                          color: getMoodColor(selectedEntry.mood)
+                        }}
+                      >
+                        {getMoodEmoji(selectedEntry.mood)} {selectedEntry.mood.replace('_', ' ')}
+                      </span>
                     )}
                   </div>
                 </div>
                 <button
-                  onClick={() => setSelectedEntry(null)}
-                  className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
-                  style={{ color: 'var(--text-secondary)' }}
+                  onClick={handleCloseModal}
+                  className="p-2 rounded theme-text-secondary hover:theme-text transition-colors"
                 >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
+                  ✕
                 </button>
               </div>
-
-              {/* Content */}
-              <div className="prose max-w-none mb-6">
-                <div 
-                  className="text-base leading-relaxed whitespace-pre-wrap"
-                  style={{ color: 'var(--text-primary)' }}
-                >
+              
+              <div className="prose max-w-none theme-text">
+                <p className="whitespace-pre-wrap leading-relaxed">
                   {selectedEntry.content}
-                </div>
+                </p>
               </div>
 
-              {/* Tags */}
               {selectedEntry.tags && selectedEntry.tags.length > 0 && (
-                <div className="mb-6">
-                  <h3 className="text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>Tags</h3>
+                <div className="mt-6 pt-4 border-t border-[var(--theme-accent)]/20">
                   <div className="flex flex-wrap gap-2">
-                    {selectedEntry.tags.map((tag, index) => (
+                    {selectedEntry.tags.map((tag: string) => (
                       <span
-                        key={index}
-                        className="px-3 py-1 rounded-full text-xs font-medium"
-                        style={{ 
-                          backgroundColor: 'var(--accent)',
-                          color: 'white'
-                        }}
+                        key={`modal-tag-${selectedEntry.id}-${tag}`}
+                        className="px-3 py-1 text-sm rounded-full theme-surface theme-text-secondary border border-[var(--theme-accent)]/20"
                       >
-                        {tag}
+                        #{tag}
                       </span>
                     ))}
                   </div>
                 </div>
               )}
 
-              {/* Footer */}
-              <div className="flex items-center justify-between pt-4 border-t" style={{ borderColor: 'var(--border-color)' }}>
-                <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>
-                  Created on {new Date(selectedEntry.createdAt).toLocaleString()}
-                </span>
+              <div className="mt-6 flex justify-end gap-3">
                 <button
-                  onClick={() => setSelectedEntry(null)}
-                  className="px-4 py-2 rounded-lg text-sm font-medium"
-                  style={{ 
-                    backgroundColor: 'var(--accent)',
-                    color: 'white'
-                  }}
+                  onClick={handleCloseModal}
+                  className="px-4 py-2 theme-surface border border-[var(--theme-accent)]/30 rounded-lg hover:border-[var(--theme-accent)]/50 transition-all theme-text"
                 >
                   Close
+                </button>
+                <button
+                  onClick={() => {
+                    handleCloseModal();
+                    handleEditEntry(selectedEntry);
+                  }}
+                  className="flex items-center space-x-2 px-4 py-2 bg-[var(--theme-accent)] text-white rounded-lg hover:shadow-lg transition-all"
+                >
+                  <Edit3 size={16} />
+                  <span>Edit Entry</span>
                 </button>
               </div>
             </div>
@@ -577,37 +609,4 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
       )}
     </div>
   );
-}
-
-function getMoodColor(mood: string): string {
-  const colors: Record<string, string> = {
-    very_positive: '#10B981',
-    positive: '#84CC16',
-    neutral: '#6B7280',
-    negative: '#F59E0B',
-    very_negative: '#EF4444'
-  };
-  return colors[mood] || '#6B7280';
-}
-
-function getMoodLabel(mood: string): string {
-  const labels: Record<string, string> = {
-    very_positive: 'Very Positive',
-    positive: 'Positive',
-    neutral: 'Neutral',
-    negative: 'Negative',
-    very_negative: 'Very Negative'
-  };
-  return labels[mood] || 'Unknown';
-}
-
-function getMoodLabel(mood: string): string {
-  const labels: Record<string, string> = {
-    very_positive: '😊',
-    positive: '🙂',
-    neutral: '😐',
-    negative: '🙁',
-    very_negative: '😢'
-  };
-  return labels[mood] || '😐';
 }
