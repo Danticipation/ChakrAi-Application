@@ -1106,11 +1106,7 @@ const AppLayout = ({ currentUserId, onDataReset }: AppLayoutProps) => {
         return <VoluntaryQuestionDeck />;
 
       case 'feedback':
-        return (
-          <div className="flex items-center justify-center h-64 text-white/60">
-            <p>Feedback feature coming soon...</p>
-          </div>
-        );
+        return <FeedbackSystem />;
 
       case 'microphone-test':
         return <MicrophoneTest />;
