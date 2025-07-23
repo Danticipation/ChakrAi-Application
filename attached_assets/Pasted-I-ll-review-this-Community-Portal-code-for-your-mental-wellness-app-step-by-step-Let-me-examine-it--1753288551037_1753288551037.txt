@@ -1,0 +1,308 @@
+I'll review this Community Portal code for your mental wellness app step by step. Let me examine it carefully and identify areas for improvement.
+Problem: Missing Data Fetching Implementation
+Reasoning:
+The code uses React Query's useQuery hooks, but they're configured incorrectly. The queryKey arrays contain API endpoint strings, but there's no queryFn (query function) to actually fetch the data. This means:
+
+No data will ever be loaded from your backend
+Users will see empty forums and check-ins
+The app will appear broken with no error handling
+React Query expects a function that returns a Promise, not just a key
+
+Improvement:
+Add proper query functions to fetch data from your API endpoints:
+typescript// Add these query functions at the top of your component
+const fetchForums = async (): Promise<SupportForum[]> => {
+  const response = await fetch('/api/community/forums');
+  if (!response.ok) throw new Error('Failed to fetch forums');
+  return response.json();
+};
+
+const fetchPosts = async (forumId: number): Promise<ForumPost[]> => {
+  const response = await fetch(`/api/community/forums/${forumId}/posts`);
+  if (!response.ok) throw new Error('Failed to fetch posts');
+  return response.json();
+};
+
+// Then update your queries like this:
+const { data: forums, isLoading: forumsLoading, error: forumsError } = useQuery({
+  queryKey: ['forums'],
+  queryFn: fetchForums,
+  retry: 2, // Allow retries for better user experience
+});
+
+const { data: posts, isLoading: postsLoading } = useQuery({
+  queryKey: ['forum-posts', selectedForum],
+  queryFn: () => fetchPosts(selectedForum!),
+  enabled: !!selectedForum,
+  retry: 2,
+});
+Problem: No Error Handling or Loading States
+Reasoning:
+Mental wellness apps need to feel reliable and supportive. When users are seeking help or community support, seeing blank screens or broken features can worsen their emotional state. Currently:
+
+Network failures show nothing to users
+Loading states aren't indicated, making the app feel unresponsive
+Users don't know if content is loading or if there's an error
+This creates frustration and reduces trust in the app
+
+Improvement:
+Add comprehensive loading and error states:
+typescript// Add loading component
+const LoadingSpinner = () => (
+  <div className="flex items-center justify-center py-8">
+    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+    <span className="ml-2 text-gray-600">Loading...</span>
+  </div>
+);
+
+// Add error component
+const ErrorMessage = ({ message, onRetry }: { message: string; onRetry?: () => void }) => (
+  <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-center">
+    <p className="text-red-600 mb-2">{message}</p>
+    {onRetry && (
+      <button 
+        onClick={onRetry}
+        className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600"
+      >
+        Try Again
+      </button>
+    )}
+  </div>
+);
+
+// Update ForumsList component
+const ForumsList = () => {
+  if (forumsLoading) return <LoadingSpinner />;
+  if (forumsError) return <ErrorMessage message="Unable to load forums. Please try again." />;
+  if (!forums || forums.length === 0) {
+    return (
+      <div className="text-center py-8 text-gray-600">
+        <MessageCircle className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+        <p>No support forums available yet.</p>
+      </div>
+    );
+  }
+  
+  // Rest of your existing ForumsList code...
+};
+Problem: Anonymous Name Generation Security Issue
+Reasoning:
+The generateAnonymousName() function has a potential privacy concern for a mental health app:
+
+It generates the same name for a user session, but shows a "preview" each time the modal opens
+Users might expect the same anonymous name across posts for consistency
+The random generation happens on every call, which could confuse users
+For mental health support, consistent anonymous identity helps build trust in conversations
+
+Improvement:
+Create a more consistent anonymous name system:
+typescript// Add this state to maintain consistent anonymous names per session
+const [userAnonymousName, setUserAnonymousName] = useState<string>('');
+
+// Improved anonymous name generation
+const generateAnonymousName = useCallback(() => {
+  if (userAnonymousName) return userAnonymousName; // Return existing name
+  
+  const adjectives = ['Kind', 'Brave', 'Gentle', 'Strong', 'Calm', 'Wise', 'Hopeful', 'Peaceful'];
+  const nouns = ['Heart', 'Soul', 'Spirit', 'Friend', 'Helper', 'Listener', 'Supporter', 'Guardian'];
+  const randomNum = Math.floor(Math.random() * 999) + 100; // Ensure 3 digits
+  const adj = adjectives[Math.floor(Math.random() * adjectives.length)];
+  const noun = nouns[Math.floor(Math.random() * nouns.length)];
+  const newName = `${adj}${noun}${randomNum}`;
+  
+  setUserAnonymousName(newName); // Store for consistency
+  return newName;
+}, [userAnonymousName]);
+Problem: Missing Form Validation and Submission Logic
+Reasoning:
+The post creation and check-in request modals don't validate user input or actually submit data:
+
+Users can submit empty posts, which creates poor community experience
+No feedback when posts are being submitted or if they fail
+Check-in requests don't get sent anywhere
+For mental health apps, failed submissions can feel like rejection when someone is seeking help
+
+Improvement:
+Add proper form validation and submission:
+typescript// Add mutation for creating posts
+const createPostMutation = useMutation({
+  mutationFn: async (postData: { title: string; content: string; isAnonymous: boolean; anonymousName?: string }) => {
+    const response = await fetch(`/api/community/forums/${selectedForum}/posts`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(postData),
+    });
+    if (!response.ok) throw new Error('Failed to create post');
+    return response.json();
+  },
+  onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: ['forum-posts', selectedForum] });
+    setShowNewPost(false);
+    setTitle('');
+    setContent('');
+  },
+});
+
+// Update the post creation button
+<button
+  onClick={() => {
+    // Validate form
+    if (!title.trim()) {
+      alert('Please enter a title for your post');
+      return;
+    }
+    if (!content.trim()) {
+      alert('Please enter some content for your post');
+      return;
+    }
+    
+    // Submit post
+    createPostMutation.mutate({
+      title: title.trim(),
+      content: content.trim(),
+      isAnonymous: anonymousMode,
+      anonymousName: anonymousMode ? generateAnonymousName() : undefined,
+    });
+  }}
+  disabled={createPostMutation.isPending}
+  className="flex-1 py-2 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors disabled:opacity-50"
+>
+  {createPostMutation.isPending ? 'Posting...' : 'Post'}
+</button>
+Problem: Accessibility Issues for Mental Health Users
+Reasoning:
+Mental wellness apps need to be especially accessible since users may have various conditions affecting their ability to use interfaces:
+
+No keyboard navigation support for modals
+Missing ARIA labels for screen readers
+No focus management when opening/closing modals
+Color-only status indicators don't help colorblind users
+Small click targets might be difficult for users with motor difficulties
+
+Improvement:
+Add accessibility features:
+typescript// Add focus management and keyboard support to modals
+const NewPostModal = () => {
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
+  
+  // Handle keyboard events
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setShowNewPost(false);
+    };
+    
+    if (showNewPost) {
+      document.addEventListener('keydown', handleEscape);
+      // Focus first input when modal opens
+      setTimeout(() => document.querySelector<HTMLInputElement>('input[placeholder="Post title..."]')?.focus(), 100);
+    }
+    
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [showNewPost]);
+
+  return showNewPost ? (
+    <div 
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="new-post-title"
+    >
+      <div className="bg-white rounded-2xl p-6 w-full max-w-lg">
+        <h3 id="new-post-title" className="text-xl font-bold text-gray-800 mb-4">Create New Post</h3>
+        
+        <div className="space-y-4">
+          <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+            <button
+              onClick={() => setAnonymousMode(!anonymousMode)}
+              aria-label={`Toggle anonymous mode. Currently ${anonymousMode ? 'anonymous' : 'identified'}`}
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors min-h-[44px] ${
+                anonymousMode ? 'bg-blue-500 text-white' : 'bg-white text-gray-600'
+              }`}
+            >
+              {anonymousMode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              {anonymousMode ? 'Anonymous' : 'Identified'}
+            </button>
+          </div>
+
+          <input
+            type="text"
+            placeholder="Post title..."
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            aria-label="Post title"
+            className="w-full p-3 border border-gray-200 rounded-xl focus:border-blue-300 focus:outline-none min-h-[44px]"
+          />
+          
+          <textarea
+            placeholder="Share your thoughts or ask for support..."
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            rows={4}
+            aria-label="Post content"
+            className="w-full p-3 border border-gray-200 rounded-xl focus:border-blue-300 focus:outline-none resize-none"
+          />
+        </div>
+        {/* Rest of modal... */}
+      </div>
+    </div>
+  ) : null;
+};
+Problem: Missing Crisis Support Detection
+Reasoning:
+Since this is a mental wellness app with peer support features, there should be safeguards to identify when someone might be in crisis:
+
+Posts or check-in requests might contain crisis language
+Peer supporters aren't trained professionals
+Crisis situations need immediate professional intervention
+The app has a responsibility to guide users to appropriate help
+
+Improvement:
+Add basic crisis detection and resources:
+typescript// Add crisis keywords detection
+const crisisKeywords = [
+  'suicide', 'kill myself', 'end it all', 'hopeless', 'worthless', 
+  'can\'t go on', 'hurt myself', 'self harm'
+];
+
+const detectCrisisLanguage = (text: string): boolean => {
+  const lowerText = text.toLowerCase();
+  return crisisKeywords.some(keyword => lowerText.includes(keyword));
+};
+
+// Add crisis resource component
+const CrisisResources = () => (
+  <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4 mb-4">
+    <h4 className="font-semibold text-red-800 mb-2">🚨 Need Immediate Help?</h4>
+    <p className="text-red-700 text-sm mb-3">
+      If you're having thoughts of self-harm, please reach out for professional help immediately.
+    </p>
+    <div className="space-y-2 text-sm">
+      <div>
+        <strong>Crisis Text Line:</strong> Text HOME to 741741
+      </div>
+      <div>
+        <strong>National Suicide Prevention Lifeline:</strong> 988
+      </div>
+      <div>
+        <strong>Emergency:</strong> Call 911
+      </div>
+    </div>
+  </div>
+);
+
+// Update post creation to check for crisis language
+const handlePostSubmit = () => {
+  const fullText = `${title} ${content}`;
+  const hasCrisisLanguage = detectCrisisLanguage(fullText);
+  
+  if (hasCrisisLanguage) {
+    // Show crisis resources and get confirmation
+    if (!confirm('Your message contains language that suggests you might need immediate support. Would you like to see crisis resources first?')) {
+      return;
+    }
+  }
+  
+  // Continue with normal post creation...
+};
+This review covers the major issues I found. The code has good structure and UI design, but needs these improvements to be safe and functional for a mental wellness app.
