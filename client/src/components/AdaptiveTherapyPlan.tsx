@@ -216,7 +216,12 @@ function AdaptiveTherapyPlan({ userId, onPlanUpdate }: AdaptiveTherapyPlanProps)
       
       // Sync with server-side completed activities if available
       if (data.completedActivities && Array.isArray(data.completedActivities)) {
-        const serverCompleted = new Set(data.completedActivities);
+        // Ensure all elements are strings and filter out any invalid entries
+        const validActivityIds = data.completedActivities
+          .filter((id: unknown): id is string => typeof id === 'string' && id.trim() !== '')
+          .map((id: string) => id.trim());
+        
+        const serverCompleted = new Set<string>(validActivityIds);
         setCompletedActivities(serverCompleted);
         persistCompletedActivities(serverCompleted);
       }
