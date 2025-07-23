@@ -299,7 +299,7 @@ export function AdaptiveRecommendations({
 
   // Memoized sorted and uniquely keyed tags
   const getSortedUniqueTags = useMemo(() => (tags: string[]) => {
-    return [...new Set(tags)].sort();
+    return Array.from(new Set(tags)).sort();
   }, []);
 
   // Retry function for error handling
