@@ -368,8 +368,8 @@ export function InteractiveDashboard({ userId }: InteractiveDashboardProps) {
                       from: dateRange.start,
                       to: dateRange.end,
                     }}
-                    onSelect={(range) => {
-                      if (range?.from && range?.to) {
+                    onSelect={(range: { from?: Date; to?: Date } | undefined) => {
+                      if (range && typeof range === 'object' && 'from' in range && range.from && range.to) {
                         handleDateRangeChange({ start: range.from, end: range.to });
                       }
                     }}
@@ -404,7 +404,7 @@ export function InteractiveDashboard({ userId }: InteractiveDashboardProps) {
             <PopoverContent className="w-48" align="end">
               <div className="space-y-2">
                 <Button
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
                   onClick={() => exportDashboard('csv')}
                   disabled={isExporting}
@@ -414,7 +414,7 @@ export function InteractiveDashboard({ userId }: InteractiveDashboardProps) {
                   Export as CSV
                 </Button>
                 <Button
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
                   onClick={() => exportDashboard('pdf')}
                   disabled={isExporting}
