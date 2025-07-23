@@ -1,6 +1,6 @@
 import { getCurrentUserId } from "../utils/userSession";
 import React, { useState } from 'react';
-import { Trophy, Star, Target, Calendar, ShoppingCart, Users, Zap, Gift, TrendingUp, Award, Clock, CheckCircle, Loader2, AlertCircle } from 'lucide-react';
+import { Trophy, Gift, Loader2, AlertCircle } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios, { AxiosResponse } from 'axios';
 
@@ -223,8 +223,7 @@ const ChallengeCard: React.FC<{
 
 const EnhancedGamificationDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'overview' | 'rewards' | 'challenges' | 'achievements'>('overview');
-  const [selectedChallenge, setSelectedChallenge] = useState<CommunityChallenge | null>(null);
-  const [selectedReward, setSelectedReward] = useState<TherapeuticReward | null>(null);
+  // Removed unused selectedChallenge and selectedReward state variables
   const [processingRewards, setProcessingRewards] = useState<Set<number>>(new Set());
   const [processingChallenges, setProcessingChallenges] = useState<Set<number>>(new Set());
   
@@ -247,8 +246,7 @@ const EnhancedGamificationDashboard: React.FC = () => {
   const { 
     data: dashboardData, 
     isLoading: dashboardLoading, 
-    error: dashboardError,
-    refetch: refetchDashboard 
+    error: dashboardError
   } = useQuery({
     queryKey: ['gamification', 'dashboard', userId],
     queryFn: async (): Promise<ApiResponse<{
@@ -309,7 +307,6 @@ const EnhancedGamificationDashboard: React.FC = () => {
     onSuccess: (data, rewardId) => {
       queryClient.invalidateQueries({ queryKey: ['gamification', 'dashboard', userId] });
       queryClient.invalidateQueries({ queryKey: ['gamification', 'rewards-shop', userId] });
-      setSelectedReward(null);
       setProcessingRewards(prev => {
         const newSet = new Set(prev);
         newSet.delete(rewardId);
@@ -336,7 +333,6 @@ const EnhancedGamificationDashboard: React.FC = () => {
     onSuccess: (data, challengeId) => {
       queryClient.invalidateQueries({ queryKey: ['gamification', 'dashboard', userId] });
       queryClient.invalidateQueries({ queryKey: ['gamification', 'community-challenges'] });
-      setSelectedChallenge(null);
       setProcessingChallenges(prev => {
         const newSet = new Set(prev);
         newSet.delete(challengeId);
