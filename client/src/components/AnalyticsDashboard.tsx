@@ -1,7 +1,10 @@
-import React, { useState, useCallback, useMemo } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { BarChart3, TrendingUp, Brain, Target, Activity, Download, RefreshCw, AlertCircle, Loader2 } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import React, { useState, useEffect } from 'react';
+import { 
+  Heart, Brain, TrendingUp, Target, Award, Calendar, 
+  Activity, RefreshCw, BarChart3, Users, BookOpen, 
+  Zap, Moon, Settings, AlertCircle, CheckCircle,
+  ArrowUpRight, ArrowDownRight, Minus, Sparkles
+} from 'lucide-react';
 
 interface WellnessMetrics {
   currentWellnessScore: number;
