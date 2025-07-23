@@ -688,10 +688,10 @@ function AdaptiveTherapyPlan({ userId, onPlanUpdate }: AdaptiveTherapyPlanProps)
                           </Badge>
                           <Button 
                             size="sm" 
-                            variant="ghost"
+                            variant="outline"
                             onClick={() => uncompleteActivity(activity.id)}
                             disabled={processingActivities.has(activity.id)}
-                            className="text-xs text-gray-500 hover:text-gray-700 p-1 h-6"
+                            className="text-xs text-gray-500 hover:text-gray-700 p-1 h-6 bg-transparent border-gray-300 hover:bg-gray-50"
                             aria-label={`Undo completion of ${activity.title}`}
                           >
                             {processingActivities.has(activity.id) ? (
