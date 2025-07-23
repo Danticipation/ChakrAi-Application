@@ -1,0 +1,551 @@
+Problem: Hardcoded Voice Selection Without User Preference
+Reasoning:
+The component hardcodes the voice as 'carla' without considering user preferences:
+
+Different users may prefer different voice types (male, female, accent, language)
+Some users might have hearing impairments requiring specific voice characteristics
+Mental health apps should be personalized for comfort and accessibility
+The hardcoded voice might not be available, causing failures
+No fallback if the specified voice isn't supported
+
+Improvement:
+Add user voice preferences with fallbacks:
+typescript// Add voice preference interface
+interface VoicePreferences {
+  selectedVoice: string;
+  speechRate: number;
+  pitch: number;
+  language: string;
+}
+
+// Add state for voice preferences
+const [voicePreferences, setVoicePreferences] = useState<VoicePreferences>({
+  selectedVoice: 'carla',
+  speechRate: 1.0,
+  pitch: 1.0,
+  language: 'en-US'
+});
+
+// Fetch user preferences
+useEffect(() => {
+  const fetchVoicePreferences = async () => {
+    try {
+      const response = await fetch('/api/user/voice-preferences');
+      if (response.ok) {
+        const prefs = await response.json();
+        setVoicePreferences(prefs);
+      }
+    } catch (error) {
+      console.error('Failed to fetch voice preferences:', error);
+      // Use defaults
+    }
+  };
+  
+  fetchVoicePreferences();
+}, []);
+
+// Update audio request with preferences and fallback
+const playAffirmationAudio = async () => {
+  if (!affirmationData || isPlaying || isLoadingAudio) return;
+  
+  setIsLoadingAudio(true);
+  setError(null);
+  
+  try {
+    // Try with user's preferred voice first
+    let response = await fetch('/api/text-to-speech', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        text: affirmationData.affirmation,
+        voice: voicePreferences.selectedVoice,
+        speechRate: voicePreferences.speechRate,
+        pitch: voicePreferences.pitch
+      })
+    });
+
+    // Fallback to browser's built-in speech synthesis if API fails
+    if (!response.ok) {
+      console.warn('API TTS failed, using browser speech synthesis');
+      return useBrowserTTS();
+    }
+
+    // Rest of existing audio logic...
+  } catch (error) {
+    console.warn('TTS API failed, trying browser fallback:', error);
+    useBrowserTTS();
+  }
+};
+
+// Add browser TTS fallback
+const useBrowserTTS = () => {
+  if ('speechSynthesis' in window) {
+    const utterance = new SpeechSynthesisUtterance(affirmationData!.affirmation);
+    utterance.rate = voicePreferences.speechRate;
+    utterance.pitch = voicePreferences.pitch;
+    utterance.lang = voicePreferences.language;
+    
+    utterance.onstart = () => setIsPlaying(true);
+    utterance.onend = () => setIsPlaying(false);
+    utterance.onerror = () => {
+      setIsPlaying(false);
+      setError('Speech synthesis not available');
+    };
+    
+    setIsLoadingAudio(false);
+    speechSynthesis.speak(utterance);
+  } else {
+    setIsLoadingAudio(false);
+    setError('Audio playback not supported on this device');
+  }
+};
+Problem: Unsafe Base64 Audio Decoding
+Reasoning:
+The base64 audio decoding has potential security and reliability issues:
+
+atob() can throw exceptions on malformed base64 data
+No validation that the decoded data is actually audio
+Large audio files could cause memory issues
+The hardcoded check data.audio.length > 10000 is arbitrary and unreliable
+Could crash the app if the server returns unexpected data
+
+Improvement:
+Add robust audio handling with validation:
+typescript// Add audio validation and safe decoding
+const decodeAndPlayAudio = async (audioData: string) => {
+  try {
+    // Validate base64 format
+    if (!audioData || typeof audioData !== 'string') {
+      throw new Error('Invalid audio data format');
+    }
+    
+    // Remove data URL prefix if present
+    const base64Data = audioData.replace(/^data:audio\/[^;]+;base64,/, '');
+    
+    // Validate base64
+    if (!/^[A-Za-z0-9+/]*={0,2}$/.test(base64Data)) {
+      throw new Error('Invalid base64 audio data');
+    }
+    
+    // Decode safely
+    let binaryData;
+    try {
+      binaryData = atob(base64Data);
+    } catch (decodeError) {
+      throw new Error('Failed to decode audio data');
+    }
+    
+    // Convert to Uint8Array
+    const audioBuffer = new Uint8Array(binaryData.length);
+    for (let i = 0; i < binaryData.length; i++) {
+      audioBuffer[i] = binaryData.charCodeAt(i);
+    }
+    
+    // Validate audio size (reasonable limits)
+    if (audioBuffer.length < 1000) {
+      throw new Error('Audio file too small - may be corrupted');
+    }
+    
+    if (audioBuffer.length > 10 * 1024 * 1024) { // 10MB limit
+      throw new Error('Audio file too large');
+    }
+    
+    // Create and play audio
+    const audioBlob = new Blob([audioBuffer], { type: 'audio/mpeg' });
+    const audioUrl = URL.createObjectURL(audioBlob);
+    const audio = new Audio(audioUrl);
+    
+    // Set up event handlers
+    audio.addEventListener('loadeddata', () => {
+      setIsLoadingAudio(false);
+      setIsPlaying(true);
+    });
+    
+    audio.addEventListener('ended', () => {
+      setIsPlaying(false);
+      URL.revokeObjectURL(audioUrl);
+    });
+    
+    audio.addEventListener('error', (e) => {
+      setIsPlaying(false);
+      setIsLoadingAudio(false);
+      URL.revokeObjectURL(audioUrl);
+      setError('Audio playback failed - file may be corrupted');
+    });
+    
+    // Start loading audio
+    await audio.load();
+    await audio.play();
+    
+  } catch (error) {
+    setIsLoadingAudio(false);
+    setIsPlaying(false);
+    setError(`Audio error: ${error.message}`);
+  }
+};
+
+// Update the main audio function
+const playAffirmationAudio = async () => {
+  if (!affirmationData || isPlaying || isLoadingAudio) return;
+  
+  setIsLoadingAudio(true);
+  setError(null);
+  
+  try {
+    const response = await fetch('/api/text-to-speech', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        text: affirmationData.affirmation,
+        voice: voicePreferences.selectedVoice
+      })
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      
+      if (data.audio) {
+        await decodeAndPlayAudio(data.audio);
+      } else {
+        throw new Error('No audio data received from server');
+      }
+    } else {
+      throw new Error(`Server error: ${response.status}`);
+    }
+  } catch (error) {
+    console.error('TTS failed:', error);
+    // Try browser fallback
+    useBrowserTTS();
+  }
+};
+Problem: No Caching for Daily Affirmations
+Reasoning:
+The component fetches a new affirmation every time it loads, which causes issues:
+
+Users expect the same "daily" affirmation throughout the day
+Multiple refreshes give different affirmations, breaking the "daily" concept
+Network requests every time the component mounts is inefficient
+Users in poor connectivity areas may not get affirmations
+No offline support for previously loaded affirmations
+
+Improvement:
+Add proper daily caching with date-based storage:
+typescript// Add caching state and logic
+const [cachedAffirmations, setCachedAffirmations] = useState<Map<string, AffirmationData>>(new Map());
+
+// Get today's date as cache key
+const getTodayKey = () => {
+  return new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+};
+
+// Load cached affirmations on mount
+useEffect(() => {
+  const loadCachedAffirmations = () => {
+    try {
+      const cached = localStorage.getItem('daily-affirmations');
+      if (cached) {
+        const affirmationsMap = new Map(JSON.parse(cached));
+        setCachedAffirmations(affirmationsMap);
+        
+        // Check if we have today's affirmation
+        const todayKey = getTodayKey();
+        const todaysAffirmation = affirmationsMap.get(todayKey);
+        
+        if (todaysAffirmation) {
+          setAffirmationData(todaysAffirmation);
+          return; // Don't fetch if we have today's cached
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load cached affirmations:', error);
+    }
+    
+    // Fetch if no cached affirmation for today
+    fetchDailyAffirmation();
+  };
+  
+  loadCachedAffirmations();
+}, []);
+
+// Update fetch function to use caching
+const fetchDailyAffirmation = async (forceRefresh = false) => {
+  const todayKey = getTodayKey();
+  
+  // Check cache first unless forcing refresh
+  if (!forceRefresh && cachedAffirmations.has(todayKey)) {
+    const cached = cachedAffirmations.get(todayKey)!;
+    setAffirmationData(cached);
+    return;
+  }
+  
+  setLoading(true);
+  setError(null);
+  
+  try {
+    const response = await fetch('/api/daily-affirmation');
+    
+    if (response.ok) {
+      const data = await response.json();
+      const newAffirmation: AffirmationData = {
+        affirmation: data.affirmation,
+        category: data.category || 'Daily Inspiration',
+        date: new Date().toLocaleDateString()
+      };
+      
+      // Update state
+      setAffirmationData(newAffirmation);
+      
+      // Cache the affirmation
+      const newCache = new Map(cachedAffirmations);
+      newCache.set(todayKey, newAffirmation);
+      
+      // Clean old entries (keep last 7 days)
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      const cleanupDate = sevenDaysAgo.toISOString().split('T')[0];
+      
+      for (const [key] of newCache) {
+        if (key < cleanupDate) {
+          newCache.delete(key);
+        }
+      }
+      
+      setCachedAffirmations(newCache);
+      
+      // Save to localStorage
+      try {
+        localStorage.setItem('daily-affirmations', JSON.stringify(Array.from(newCache.entries())));
+      } catch (storageError) {
+        console.warn('Failed to cache affirmation:', storageError);
+      }
+      
+    } else {
+      throw new Error('Failed to fetch affirmation');
+    }
+  } catch (fetchError) {
+    console.error('Failed to fetch daily affirmation:', fetchError);
+    
+    // Try to use yesterday's affirmation as fallback
+    const yesterdayKey = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    const fallback = cachedAffirmations.get(yesterdayKey);
+    
+    if (fallback) {
+      setAffirmationData({
+        ...fallback,
+        category: fallback.category + ' (Yesterday)'
+      });
+      setError('Using previous affirmation - check your connection');
+    } else {
+      setError('Unable to fetch daily affirmation. Please try again later.');
+    }
+  } finally {
+    setLoading(false);
+  }
+};
+
+// Update refresh handler
+const handleRefresh = () => {
+  fetchDailyAffirmation(true); // Force refresh
+};
+Problem: Missing Accessibility Features for Screen Readers
+Reasoning:
+Mental wellness apps should be accessible to users with visual impairments:
+
+No ARIA labels for dynamic content changes
+Screen readers won't announce when new affirmations load
+Loading states aren't properly communicated to assistive technology
+Audio controls don't have descriptive labels
+No focus management for keyboard users
+
+Improvement:
+Add comprehensive accessibility features:
+typescript// Add ARIA live region for announcements
+const [announcement, setAnnouncement] = useState('');
+
+// Announce affirmation changes to screen readers
+useEffect(() => {
+  if (affirmationData && !loading) {
+    setAnnouncement(`New daily affirmation loaded: ${affirmationData.affirmation}`);
+    
+    // Clear announcement after screen reader has time to read it
+    const timer = setTimeout(() => setAnnouncement(''), 3000);
+    return () => clearTimeout(timer);
+  }
+}, [affirmationData, loading]);
+
+// Add keyboard navigation
+useEffect(() => {
+  const handleKeyPress = (e: KeyboardEvent) => {
+    if (e.altKey) {
+      switch (e.key) {
+        case 'r':
+          e.preventDefault();
+          handleRefresh();
+          break;
+        case 'p':
+          e.preventDefault();
+          if (affirmationData) playAffirmationAudio();
+          break;
+      }
+    }
+  };
+
+  document.addEventListener('keydown', handleKeyPress);
+  return () => document.removeEventListener('keydown', handleKeyPress);
+}, [affirmationData]);
+
+// Update JSX with accessibility features
+return (
+  <div className="h-full bg-gradient-to-br from-[#1a237e] to-[#3949ab] p-6 overflow-y-auto">
+    {/* Screen reader announcements */}
+    <div 
+      aria-live="polite" 
+      aria-atomic="true" 
+      className="sr-only"
+    >
+      {announcement}
+    </div>
+    
+    <div className="max-w-2xl mx-auto">
+      <div className="theme-primary/30 backdrop-blur-sm rounded-2xl p-6 border border-[#7986cb]/30 shadow-lg">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center space-x-3">
+            <Heart className="text-green-300" size={32} aria-hidden="true" />
+            <h1 className="text-2xl font-bold text-white">Daily Affirmation</h1>
+          </div>
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={handleRefresh}
+              disabled={loading}
+              className="p-2 rounded-lg theme-primary/50 hover:theme-primary/70 transition-colors disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-white/50"
+              aria-label={loading ? "Loading new affirmation..." : "Get new affirmation (Alt+R)"}
+            >
+              <RefreshCw 
+                className={`text-white ${loading ? 'animate-spin' : ''}`} 
+                size={20} 
+                aria-hidden="true"
+              />
+            </button>
+          </div>
+        </div>
+
+        {/* Main content with proper ARIA labels */}
+        <div 
+          className="bg-[var(--theme-secondary)] rounded-xl p-6 border border-[#3949ab]/30"
+          role="main"
+          aria-label="Daily affirmation content"
+        >
+          {loading ? (
+            <div className="flex items-center justify-center py-8" role="status" aria-label="Loading affirmation">
+              <div className="flex items-center space-x-3">
+                <Heart className="text-green-300 animate-pulse" size={24} aria-hidden="true" />
+                <span className="text-white">Loading your daily inspiration...</span>
+              </div>
+            </div>
+          ) : affirmationData ? (
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center space-x-2">
+                  <Heart className="text-green-300" size={20} aria-hidden="true" />
+                  <h2 className="text-lg font-semibold text-white">
+                    {affirmationData.category} - {affirmationData.date}
+                  </h2>
+                </div>
+                <button
+                  onClick={playAffirmationAudio}
+                  disabled={isPlaying || isLoadingAudio}
+                  className="p-2 rounded-lg theme-primary/50 hover:theme-primary/70 transition-colors disabled:opacity-50 flex items-center space-x-2 focus:outline-none focus:ring-2 focus:ring-white/50"
+                  aria-label={
+                    isLoadingAudio ? "Loading audio..." : 
+                    isPlaying ? "Stop audio playback" : 
+                    `Listen to affirmation. Keyboard shortcut: Alt+P`
+                  }
+                >
+                  {/* Audio button content */}
+                </button>
+              </div>
+              
+              <div className="text-center">
+                <blockquote 
+                  className="text-white/90 leading-relaxed text-xl font-medium italic"
+                  role="text"
+                  aria-label="Today's affirmation"
+                >
+                  "{affirmationData.affirmation}"
+                </blockquote>
+              </div>
+            </div>
+          ) : null}
+        </div>
+
+        {/* Keyboard shortcuts help */}
+        <div className="mt-4 text-center">
+          <p className="text-xs text-white/40">
+            Keyboard shortcuts: Alt+R (refresh), Alt+P (play audio)
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+Problem: No User Engagement Tracking
+Reasoning:
+For a mental wellness app, understanding how users interact with affirmations is important:
+
+No data on which affirmations resonate with users
+Can't track if audio features are helpful
+No feedback mechanism for improving affirmation quality
+Therapists can't see patient engagement with positive content
+Missing opportunities to personalize affirmation delivery
+
+Improvement:
+Add engagement tracking with privacy consideration:
+typescript// Add engagement tracking
+const trackEngagement = async (action: string, data?: any) => {
+  try {
+    await fetch('/api/affirmation-engagement', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action,
+        affirmationId: affirmationData?.date, // Use date as ID
+        category: affirmationData?.category,
+        timestamp: new Date().toISOString(),
+        ...data
+      })
+    });
+  } catch (error) {
+    console.error('Failed to track engagement:', error);
+    // Don't show error to user - this is analytics
+  }
+};
+
+// Track when affirmation is viewed
+useEffect(() => {
+  if (affirmationData && !loading) {
+    trackEngagement('viewed', {
+      timeSpent: Date.now() // Track start time
+    });
+  }
+}, [affirmationData, loading]);
+
+// Track audio usage
+const playAffirmationAudio = async () => {
+  trackEngagement('audio_requested');
+  // ... existing audio logic
+};
+
+// Track time spent (on unmount)
+useEffect(() => {
+  const startTime = Date.now();
+  
+  return () => {
+    if (affirmationData) {
+      const timeSpent = Date.now() - startTime;
+      trackEngagement('session_ended', { 
+        duration: Math.floor(timeSpent / 1000) // seconds
+      });
+    }
+  };
+}, [affirmationData]);
+This Daily Affirmation component has good core functionality but needs these improvements for reliability, accessibility, and user experience in a mental wellness context. The most critical issues are the unsafe audio handling and missing daily caching functionality.
