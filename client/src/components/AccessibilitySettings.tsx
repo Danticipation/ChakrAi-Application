@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/hooks/use-toast';
 import { 
   Eye, 
   Ear, 
@@ -35,7 +36,6 @@ interface AccessibilitySettings {
     enabled: boolean;
     closedCaptions: boolean;
     visualAlerts: boolean;
-    signLanguageSupport: boolean;
     transcriptionEnabled: boolean;
     vibrationAlerts: boolean;
   };
@@ -68,6 +68,7 @@ interface AccessibilitySettingsProps {
 }
 
 export function AccessibilitySettings({ userId, onSettingsChange }: AccessibilitySettingsProps) {
+  const { toast } = useToast();
   const [settings, setSettings] = useState<AccessibilitySettings>({
     visualImpairment: {
       enabled: false,
@@ -82,7 +83,6 @@ export function AccessibilitySettings({ userId, onSettingsChange }: Accessibilit
       enabled: false,
       closedCaptions: false,
       visualAlerts: false,
-      signLanguageSupport: false,
       transcriptionEnabled: false,
       vibrationAlerts: false,
     },
@@ -112,6 +112,8 @@ export function AccessibilitySettings({ userId, onSettingsChange }: Accessibilit
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [testingVoice, setTestingVoice] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [originalSettings, setOriginalSettings] = useState<AccessibilitySettings | null>(null);
 
   const languages = [
     { code: 'en', name: 'English', nativeName: 'English' },
@@ -135,9 +137,26 @@ export function AccessibilitySettings({ userId, onSettingsChange }: Accessibilit
       if (response.ok) {
         const data = await response.json();
         setSettings(data.settings);
+        setOriginalSettings(data.settings);
+        // Apply settings after loading
+        applyAccessibilitySettings(data.settings);
+        toast({
+          title: "Settings Loaded",
+          description: "Your accessibility preferences have been loaded successfully.",
+        });
+      } else {
+        toast({
+          title: "Error Loading Settings",
+          description: "Failed to load your accessibility preferences. Using default settings.",
+          variant: "destructive",
+        });
       }
     } catch (error) {
-      console.error('Failed to fetch accessibility settings:', error);
+      toast({
+        title: "Connection Error",
+        description: "Unable to connect to the server. Please check your internet connection.",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -154,12 +173,29 @@ export function AccessibilitySettings({ userId, onSettingsChange }: Accessibilit
 
       if (response.ok) {
         onSettingsChange?.(settings);
+        setOriginalSettings(settings);
+        setHasUnsavedChanges(false);
         
         // Apply settings immediately
         applyAccessibilitySettings(settings);
+        
+        toast({
+          title: "Settings Saved",
+          description: "Your accessibility preferences have been saved successfully.",
+        });
+      } else {
+        toast({
+          title: "Save Failed",
+          description: "Failed to save your accessibility settings. Please try again.",
+          variant: "destructive",
+        });
       }
     } catch (error) {
-      console.error('Failed to save accessibility settings:', error);
+      toast({
+        title: "Connection Error",
+        description: "Unable to save settings. Please check your internet connection and try again.",
+        variant: "destructive",
+      });
     } finally {
       setSaving(false);
     }
@@ -208,6 +244,15 @@ export function AccessibilitySettings({ userId, onSettingsChange }: Accessibilit
   };
 
   const testVoiceSettings = async () => {
+    if (!settings.language) {
+      toast({
+        title: "Language Required",
+        description: "Please select a language before testing voice settings.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       setTestingVoice(true);
       const testMessage = "This is a test of your voice settings for accessibility.";
@@ -227,36 +272,80 @@ export function AccessibilitySettings({ userId, onSettingsChange }: Accessibilit
         const audioUrl = URL.createObjectURL(audioBlob);
         const audio = new Audio(audioUrl);
         audio.play();
+        
+        toast({
+          title: "Voice Test Playing",
+          description: "Voice test audio is now playing. Check your speakers or headphones.",
+        });
+      } else {
+        toast({
+          title: "Voice Test Failed",
+          description: "Unable to generate voice test. Please try again later.",
+          variant: "destructive",
+        });
       }
     } catch (error) {
-      console.error('Failed to test voice settings:', error);
+      toast({
+        title: "Voice Test Error",
+        description: "Failed to test voice settings. Please check your connection.",
+        variant: "destructive",
+      });
     } finally {
       setTestingVoice(false);
     }
   };
 
-  const updateSetting = (category: keyof AccessibilitySettings, key: string, value: any) => {
+  const updateSetting = useCallback((category: keyof AccessibilitySettings, key: string, value: any) => {
     setSettings(prev => {
       const currentValue = prev[category];
       
+      let newSettings;
       // Handle primitive values (language, speechRate, preferredInteractionMode)
       if (typeof currentValue !== 'object' || currentValue === null) {
-        return {
+        newSettings = {
           ...prev,
           [category]: value
         };
+      } else {
+        // Handle object values (visualImpairment, hearingImpairment, etc.)
+        newSettings = {
+          ...prev,
+          [category]: {
+            ...currentValue,
+            [key]: value
+          }
+        };
       }
       
-      // Handle object values (visualImpairment, hearingImpairment, etc.)
-      return {
-        ...prev,
-        [category]: {
-          ...currentValue,
-          [key]: value
-        }
-      };
+      // Apply settings immediately when changed
+      applyAccessibilitySettings(newSettings);
+      
+      // Track unsaved changes
+      setHasUnsavedChanges(true);
+      
+      return newSettings;
     });
-  };
+  }, []);
+
+  const resetSettings = useCallback(() => {
+    if (hasUnsavedChanges) {
+      const confirmed = window.confirm(
+        "You have unsaved changes. Are you sure you want to reset to your previously saved settings? All current changes will be lost."
+      );
+      if (!confirmed) return;
+    }
+
+    if (originalSettings) {
+      setSettings(originalSettings);
+      applyAccessibilitySettings(originalSettings);
+      setHasUnsavedChanges(false);
+      
+      toast({
+        title: "Settings Reset",
+        description: "Your settings have been reset to the last saved configuration.",
+      });
+    }
+  }, [hasUnsavedChanges, originalSettings]);
 
   if (loading) {
     return (
@@ -292,13 +381,13 @@ export function AccessibilitySettings({ userId, onSettingsChange }: Accessibilit
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="text-sm font-medium mb-2 block">Language</label>
+              <label htmlFor="language-select" className="text-sm font-medium mb-2 block">Language</label>
               <Select
                 value={settings.language}
-                onValueChange={(value) => setSettings(prev => ({ ...prev, language: value }))}
+                onValueChange={(value) => updateSetting('language', '', value)}
               >
-                <SelectTrigger>
-                  <SelectValue />
+                <SelectTrigger id="language-select" aria-label="Select your preferred language">
+                  <SelectValue placeholder="Choose language" />
                 </SelectTrigger>
                 <SelectContent>
                   {languages.map(lang => (
@@ -311,16 +400,21 @@ export function AccessibilitySettings({ userId, onSettingsChange }: Accessibilit
             </div>
             
             <div>
-              <label className="text-sm font-medium mb-2 block">
+              <label htmlFor="speech-rate-slider" className="text-sm font-medium mb-2 block">
                 Speech Rate: {settings.speechRate.toFixed(1)}x
               </label>
               <Slider
+                id="speech-rate-slider"
                 value={[settings.speechRate]}
-                onValueChange={([value]) => setSettings(prev => ({ ...prev, speechRate: value }))}
+                onValueChange={([value]) => updateSetting('speechRate', '', value)}
                 min={0.5}
                 max={2.0}
                 step={0.1}
                 className="mt-2"
+                aria-label={`Speech rate: ${settings.speechRate.toFixed(1)} times normal speed`}
+                aria-valuemin={0.5}
+                aria-valuemax={2.0}
+                aria-valuenow={settings.speechRate}
               />
             </div>
           </div>
@@ -328,12 +422,19 @@ export function AccessibilitySettings({ userId, onSettingsChange }: Accessibilit
           <Button 
             variant="outline" 
             onClick={testVoiceSettings}
-            disabled={testingVoice}
+            disabled={testingVoice || !settings.language}
             className="w-full"
+            aria-label={testingVoice ? 'Testing voice settings in progress' : 'Test your current voice settings'}
           >
             <Volume2 className="w-4 h-4 mr-2" />
             {testingVoice ? 'Testing...' : 'Test Voice Settings'}
           </Button>
+          {!settings.language && (
+            <p className="text-sm text-amber-600 mt-2 flex items-center">
+              <HelpCircle className="w-4 h-4 mr-1" />
+              Please select a language to enable voice testing
+            </p>
+          )}
         </CardContent>
       </Card>
 
@@ -350,12 +451,18 @@ export function AccessibilitySettings({ userId, onSettingsChange }: Accessibilit
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">Enable Visual Accessibility</span>
+            <label htmlFor="visual-accessibility-toggle" className="text-sm font-medium">Enable Visual Accessibility</label>
             <Switch
+              id="visual-accessibility-toggle"
               checked={settings.visualImpairment.enabled}
               onCheckedChange={(checked) => updateSetting('visualImpairment', 'enabled', checked)}
+              aria-label="Toggle visual accessibility features"
+              aria-describedby="visual-accessibility-desc"
             />
           </div>
+          <p id="visual-accessibility-desc" className="text-xs text-gray-600 mt-1">
+            Enable features for users with visual impairments including screen reader support, high contrast, and voice descriptions
+          </p>
           
           {settings.visualImpairment.enabled && (
             <div className="space-y-4 pl-4 border-l-2 border-purple-200">
@@ -445,12 +552,18 @@ export function AccessibilitySettings({ userId, onSettingsChange }: Accessibilit
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">Enable Hearing Accessibility</span>
+            <label htmlFor="hearing-accessibility-toggle" className="text-sm font-medium">Enable Hearing Accessibility</label>
             <Switch
+              id="hearing-accessibility-toggle"
               checked={settings.hearingImpairment.enabled}
               onCheckedChange={(checked) => updateSetting('hearingImpairment', 'enabled', checked)}
+              aria-label="Toggle hearing accessibility features"
+              aria-describedby="hearing-accessibility-desc"
             />
           </div>
+          <p id="hearing-accessibility-desc" className="text-xs text-gray-600 mt-1">
+            Enable features for users with hearing impairments including captions, visual alerts, and speech transcription
+          </p>
           
           {settings.hearingImpairment.enabled && (
             <div className="space-y-4 pl-4 border-l-2 border-green-200">
@@ -638,13 +751,13 @@ export function AccessibilitySettings({ userId, onSettingsChange }: Accessibilit
         </CardHeader>
         <CardContent>
           <div>
-            <label className="text-sm font-medium mb-2 block">Preferred Interaction Mode</label>
+            <label htmlFor="interaction-mode-select" className="text-sm font-medium mb-2 block">Preferred Interaction Mode</label>
             <Select
               value={settings.preferredInteractionMode}
-              onValueChange={(value) => setSettings(prev => ({ ...prev, preferredInteractionMode: value as any }))}
+              onValueChange={(value) => updateSetting('preferredInteractionMode', '', value)}
             >
-              <SelectTrigger>
-                <SelectValue />
+              <SelectTrigger id="interaction-mode-select" aria-label="Select your preferred way to interact with the app">
+                <SelectValue placeholder="Choose interaction mode" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="voice">Voice Only</SelectItem>
@@ -653,18 +766,44 @@ export function AccessibilitySettings({ userId, onSettingsChange }: Accessibilit
                 <SelectItem value="mixed">Mixed (Adaptive)</SelectItem>
               </SelectContent>
             </Select>
+            <p className="text-xs text-gray-600 mt-1">
+              Choose how you prefer to interact with Chakrai. Mixed mode adapts to your needs automatically.
+            </p>
           </div>
         </CardContent>
       </Card>
 
       {/* Action Buttons */}
-      <div className="flex space-x-4">
-        <Button onClick={saveSettings} disabled={saving} className="flex-1">
-          {saving ? 'Saving...' : 'Save Settings'}
-        </Button>
-        <Button variant="outline" onClick={fetchAccessibilitySettings} className="flex-1">
-          Reset
-        </Button>
+      <div className="space-y-4">
+        {hasUnsavedChanges && (
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+            <div className="flex items-center">
+              <AlertTriangle className="w-5 h-5 text-amber-600 mr-2" />
+              <p className="text-sm text-amber-800">You have unsaved changes</p>
+            </div>
+          </div>
+        )}
+        
+        <div className="flex space-x-4">
+          <Button 
+            onClick={saveSettings} 
+            disabled={saving || !hasUnsavedChanges} 
+            className="flex-1"
+            aria-label={saving ? 'Saving accessibility settings' : 'Save your accessibility settings'}
+          >
+            <CheckCircle className="w-4 h-4 mr-2" />
+            {saving ? 'Saving...' : 'Save Settings'}
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={resetSettings} 
+            className="flex-1"
+            aria-label="Reset settings to last saved version"
+          >
+            <Settings className="w-4 h-4 mr-2" />
+            Reset
+          </Button>
+        </div>
       </div>
 
       {/* Accessibility Information */}
