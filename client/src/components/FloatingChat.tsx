@@ -1,12 +1,33 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { MessageCircle, X, Send, Mic, Square, Volume2, VolumeX } from 'lucide-react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { MessageCircle, X, Send, Mic, Square, Volume2, VolumeX, Move, Maximize2 } from 'lucide-react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import axios, { AxiosResponse } from 'axios';
 
+// Utility Functions
+const generateDeviceFingerprint = (): string => {
+  return `browser_${navigator.userAgent.slice(0, 50)}_${screen.width}x${screen.height}_${new Date().getTimezoneOffset()}_${navigator.language}`;
+};
+
+const generateSessionId = (): string => {
+  const existingSessionId = sessionStorage.getItem('chakrai_session_id');
+  if (existingSessionId) return existingSessionId;
+
+  const newSessionId = `session_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
+  sessionStorage.setItem('chakrai_session_id', newSessionId);
+  return newSessionId;
+};
+
+const generateUniqueId = (): string => {
+  return `${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
+};
+
+// Types and Interfaces
 interface Message {
+  id: string;
   sender: 'user' | 'bot';
   text: string;
   time: string;
+  timestamp: number;
 }
 
 interface FloatingChatProps {
@@ -15,253 +36,246 @@ interface FloatingChatProps {
   selectedVoice: string;
 }
 
+interface ChatApiResponse {
+  success: boolean;
+  message?: string;
+  response?: string;
+  audio?: string;
+  error?: string;
+}
+
+interface TranscriptionResponse {
+  success: boolean;
+  transcription?: string;
+  error?: string;
+}
+
+interface ChatHistoryResponse {
+  success: boolean;
+  messages?: Message[];
+  error?: string;
+}
+
+// Main Component
 const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedVoice }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isPlayingVoice, setIsPlayingVoice] = useState(false);
-  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
-  const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
-
+  
+  // Dragging and resizing state
+  const [position, setPosition] = useState({ x: 24, y: 24 });
+  const [size, setSize] = useState({ width: 384, height: 500 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [isResizing, setIsResizing] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, width: 0, height: 0 });
+  
+  // Refs for persistent values and DOM elements
+  const sessionIdRef = useRef<string>(generateSessionId());
+  const deviceFingerprintRef = useRef<string>(generateDeviceFingerprint());
+  const audioChunksRef = useRef<Blob[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const chatRef = useRef<HTMLDivElement>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  
   const queryClient = useQueryClient();
 
-  // Generate consistent device fingerprint and session ID
-  const getConsistentDeviceInfo = () => {
-    // Create a stable device fingerprint
-    const deviceFingerprint = `browser_${navigator.userAgent.slice(0, 50)}_${screen.width}x${screen.height}_${new Date().getTimezoneOffset()}`;
-    
-    // Get or create consistent session ID from localStorage
-    let sessionId = localStorage.getItem('chakrai_session_id');
-    if (!sessionId) {
-      sessionId = `session_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
-      localStorage.setItem('chakrai_session_id', sessionId);
-    }
-    
-    return { deviceFingerprint, sessionId };
-  };
+  // Utility functions
+  const scrollToBottom = useCallback(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, []);
 
-  const scrollToBottom = () => {
-    if (messagesEndRef.current) {
-      // Multiple approaches to ensure scrolling works
-      
-      // Method 1: Direct scrollIntoView
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
-      
-      // Method 2: Find scrollable parent and scroll to bottom
-      let scrollContainer = messagesEndRef.current.parentElement;
-      while (scrollContainer && !scrollContainer.classList.contains('overflow-y-auto')) {
-        scrollContainer = scrollContainer.parentElement;
-      }
-      
-      if (scrollContainer) {
-        scrollContainer.scrollTop = scrollContainer.scrollHeight;
-      }
-      
-      // Method 3: Force scroll after a delay for DOM updates
-      setTimeout(() => {
-        if (messagesEndRef.current) {
-          messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
-          
-          // Also try to find and scroll the container
-          let container = messagesEndRef.current.parentElement;
-          while (container && !container.classList.contains('overflow-y-auto')) {
-            container = container.parentElement;
-          }
-          if (container) {
-            container.scrollTop = container.scrollHeight;
-          }
-        }
-      }, 150);
-      
-      // Method 4: Use requestAnimationFrame for better timing
-      requestAnimationFrame(() => {
-        if (messagesEndRef.current) {
-          messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
-        }
-      });
-    }
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  // Additional scroll triggers with multiple timing approaches
-  useEffect(() => {
-    // Immediate scroll
-    scrollToBottom();
-    
-    // Short delay for DOM update
-    const timer1 = setTimeout(() => {
-      scrollToBottom();
-    }, 100);
-    
-    // Longer delay for complex updates
-    const timer2 = setTimeout(() => {
-      scrollToBottom();
-    }, 300);
-    
-    // Final scroll after all animations
-    const timer3 = setTimeout(() => {
-      scrollToBottom();
-    }, 500);
-    
-    return () => {
-      clearTimeout(timer1);
-      clearTimeout(timer2); 
-      clearTimeout(timer3);
-    };
-  }, [messages.length]);
-
-  // Scroll when loading state changes
-  useEffect(() => {
-    if (isLoading) {
-      setTimeout(() => scrollToBottom(), 100);
-    } else {
-      // When loading finishes, scroll to show new bot response
-      setTimeout(() => scrollToBottom(), 200);
-    }
-  }, [isLoading]);
-
-  // Load chat history when component opens and clear when closes
-  useEffect(() => {
-    if (isOpen) {
-      console.log('🔄 Chat opening - loading fresh history from database');
-      loadChatHistory();
-    } else {
-      console.log('🔄 Chat closing - clearing message state for next session');
-      setMessages([]);
-    }
-  }, [isOpen]);
-
-  // Cleanup recording when component closes
-  useEffect(() => {
-    if (!isOpen && isRecording) {
-      console.log('🔄 Chat closing - stopping any active recording');
-      stopRecording();
-    }
-  }, [isOpen, isRecording]);
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop());
-      }
-      if (mediaRecorder && mediaRecorder.state === 'recording') {
-        mediaRecorder.stop();
-      }
+  const constrainToViewport = useCallback((pos: { x: number; y: number }, dimensions: { width: number; height: number }) => {
+    const maxX = window.innerWidth - dimensions.width;
+    const maxY = window.innerHeight - dimensions.height;
+    return {
+      x: Math.max(0, Math.min(maxX, pos.x)),
+      y: Math.max(0, Math.min(maxY, pos.y))
     };
   }, []);
 
-  const loadChatHistory = async () => {
-    try {
-      // Get consistent device info for persistent user identification
-      const { deviceFingerprint, sessionId } = getConsistentDeviceInfo();
+  // Window resize handler to keep chat in bounds
+  const handleWindowResize = useCallback(() => {
+    setPosition(prev => constrainToViewport(prev, size));
+  }, [size, constrainToViewport]);
+
+  useEffect(() => {
+    window.addEventListener('resize', handleWindowResize);
+    return () => window.removeEventListener('resize', handleWindowResize);
+  }, [handleWindowResize]);
+
+  // Auto-scroll when messages change
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, scrollToBottom]);
+
+  // Mouse event handlers for dragging with proper bounds checking
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    if (e.target === e.currentTarget || (e.target as HTMLElement).classList.contains('drag-handle')) {
+      setIsDragging(true);
+      setDragStart({
+        x: e.clientX - position.x,
+        y: e.clientY - position.y
+      });
+      e.preventDefault();
+    }
+  }, [position]);
+
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (isDragging) {
+      const newPos = constrainToViewport({
+        x: e.clientX - dragStart.x,
+        y: e.clientY - dragStart.y
+      }, size);
+      setPosition(newPos);
+    }
+    if (isResizing) {
+      const newWidth = Math.max(300, Math.min(800, resizeStart.width + (e.clientX - resizeStart.x)));
+      const newHeight = Math.max(400, Math.min(700, resizeStart.height + (e.clientY - resizeStart.y)));
+      setSize({ width: newWidth, height: newHeight });
+    }
+  }, [isDragging, isResizing, dragStart, resizeStart, size, constrainToViewport]);
+
+  const handleMouseUp = useCallback(() => {
+    setIsDragging(false);
+    setIsResizing(false);
+  }, []);
+
+  const handleResizeStart = useCallback((e: React.MouseEvent) => {
+    setIsResizing(true);
+    setResizeStart({
+      x: e.clientX,
+      y: e.clientY,
+      width: size.width,
+      height: size.height
+    });
+    e.preventDefault();
+    e.stopPropagation();
+  }, [size]);
+
+  // Add global mouse event listeners
+  useEffect(() => {
+    if (isDragging || isResizing) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      document.body.style.userSelect = 'none';
+      document.body.style.cursor = isDragging ? 'grabbing' : 'nw-resize';
       
-      const response = await axios.get('/api/chat/history/1?limit=50', {
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+        document.body.style.userSelect = '';
+        document.body.style.cursor = '';
+      };
+    }
+  }, [isDragging, isResizing, handleMouseMove, handleMouseUp]);
+
+  // API functions with proper error handling
+  const loadChatHistory = useCallback(async (): Promise<void> => {
+    try {
+      const response: AxiosResponse<ChatHistoryResponse> = await axios.get('/api/chat/history/1?limit=50', {
         headers: {
-          'X-Device-Fingerprint': deviceFingerprint,
-          'X-Session-Id': sessionId
+          'X-Device-Fingerprint': deviceFingerprintRef.current,
+          'X-Session-Id': sessionIdRef.current
         }
       });
-      const chatHistory = response.data.messages || [];
-      
-      console.log('Chat history loaded:', chatHistory.length, 'messages');
-      
-      if (chatHistory.length > 0) {
-        setMessages(chatHistory);
+
+      if (response.data.success && response.data.messages) {
+        const messagesWithIds = response.data.messages.map(msg => ({
+          ...msg,
+          id: msg.id || generateUniqueId()
+        }));
+        setMessages(messagesWithIds);
       } else {
         // Only show greeting if no chat history exists
         setMessages([{
+          id: generateUniqueId(),
           sender: 'bot',
           text: 'Hello! I\'m Chakrai, How are you feeling today?',
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          timestamp: Date.now()
         }]);
       }
     } catch (error) {
       console.error('Error loading chat history:', error);
       // Fallback to greeting message
       setMessages([{
+        id: generateUniqueId(),
         sender: 'bot',
         text: 'Hello! I\'m Chakrai, How are you feeling today?',
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        timestamp: Date.now()
       }]);
     }
-  };
+  }, []);
 
-  const sendMessage = async (text: string) => {
+  const sendMessage = useCallback(async (text: string): Promise<void> => {
     if (!text.trim()) return;
 
+    const timestamp = Date.now();
     const userMessage: Message = {
+      id: generateUniqueId(),
       sender: 'user',
       text: text.trim(),
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      time: new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      timestamp
     };
 
-    setMessages(prev => {
-      const newMessages = [...prev, userMessage];
-      // Trigger scroll after state update
-      setTimeout(() => scrollToBottom(), 50);
-      return newMessages;
-    });
+    setMessages(prev => [...prev, userMessage]);
     setInputMessage('');
     setIsLoading(true);
 
     try {
-      // Get consistent device info for persistent user identification
-      const { deviceFingerprint, sessionId } = getConsistentDeviceInfo();
-      
-      const response = await axios.post('/api/chat', {
+      const response: AxiosResponse<ChatApiResponse> = await axios.post('/api/chat', {
         message: text.trim(),
         context: 'floating_chat'
       }, {
         headers: {
-          'X-Device-Fingerprint': deviceFingerprint,
-          'X-Session-Id': sessionId
+          'X-Device-Fingerprint': deviceFingerprintRef.current,
+          'X-Session-Id': sessionIdRef.current
         }
       });
 
-      const botMessage: Message = {
-        sender: 'bot',
-        text: response.data.message,
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      };
+      if (response.data.success) {
+        const botTimestamp = Date.now();
+        const botMessage: Message = {
+          id: generateUniqueId(),
+          sender: 'bot',
+          text: response.data.message || response.data.response || 'Sorry, I couldn\'t process that.',
+          time: new Date(botTimestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          timestamp: botTimestamp
+        };
 
-      setMessages(prev => {
-        const newMessages = [...prev, botMessage];
-        // Trigger scroll after bot response
-        setTimeout(() => scrollToBottom(), 50);
-        return newMessages;
-      });
+        setMessages(prev => [...prev, botMessage]);
 
-      // Auto-play voice response if voice is enabled
-      if (selectedVoice && response.data.message) {
-        playVoiceResponse(response.data.message);
+        // Auto-play voice response if voice is enabled
+        if (selectedVoice && (response.data.message || response.data.response)) {
+          playVoiceResponse(response.data.message || response.data.response || '');
+        }
+      } else {
+        throw new Error(response.data.error || 'Failed to send message');
       }
     } catch (error) {
       console.error('Error sending message:', error);
+      const errorTimestamp = Date.now();
       const errorMessage: Message = {
+        id: generateUniqueId(),
         sender: 'bot',
         text: 'I apologize, but I\'m having trouble responding right now. Please try again.',
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        time: new Date(errorTimestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        timestamp: errorTimestamp
       };
-      setMessages(prev => {
-        const newMessages = [...prev, errorMessage];
-        // Trigger scroll after error message
-        setTimeout(() => scrollToBottom(), 50);
-        return newMessages;
-      });
+      setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [selectedVoice]);
 
-  const playVoiceResponse = async (text: string) => {
+  const playVoiceResponse = useCallback(async (text: string): Promise<void> => {
     if (!selectedVoice || isPlayingVoice) return;
 
     setIsPlayingVoice(true);
@@ -280,23 +294,21 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
       }
 
       audioRef.current = new Audio(audioUrl);
-      audioRef.current.volume = 0.8; // Set reasonable volume
+      audioRef.current.volume = 0.8;
       audioRef.current.onended = () => {
         setIsPlayingVoice(false);
         URL.revokeObjectURL(audioUrl);
       };
-      audioRef.current.onerror = (error) => {
-        console.error('Audio playback error:', error);
+      audioRef.current.onerror = () => {
+        console.error('Audio playback error');
         setIsPlayingVoice(false);
         URL.revokeObjectURL(audioUrl);
       };
       
-      // Try to play with better error handling
       try {
         await audioRef.current.play();
       } catch (playError) {
         console.error('Autoplay prevented:', playError);
-        // If autoplay fails, we could show a play button or try again later
         setIsPlayingVoice(false);
         URL.revokeObjectURL(audioUrl);
       }
@@ -304,37 +316,18 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
       console.error('Error playing voice:', error);
       setIsPlayingVoice(false);
     }
-  };
+  }, [selectedVoice, isPlayingVoice]);
 
-  const stopVoice = () => {
+  const stopVoice = useCallback(() => {
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
       setIsPlayingVoice(false);
     }
-  };
+  }, []);
 
-  const startRecording = async () => {
+  const startRecording = useCallback(async (): Promise<void> => {
     try {
-      console.log('🔧 MOBILE MICROPHONE DEBUG: Starting recording...');
-      console.log('📱 User Agent:', navigator.userAgent);
-      console.log('🎧 MediaDevices available:', !!navigator.mediaDevices);
-      console.log('🎤 getUserMedia available:', !!navigator.mediaDevices?.getUserMedia);
-      
-      // Test basic audio access first
-      console.log('🔍 Testing basic audio constraints...');
-      const basicConstraints = { audio: true };
-      
-      try {
-        const testStream = await navigator.mediaDevices.getUserMedia(basicConstraints);
-        console.log('✅ Basic audio access works');
-        testStream.getTracks().forEach(track => track.stop());
-      } catch (basicError) {
-        console.error('❌ Basic audio access failed:', basicError);
-        throw basicError;
-      }
-      
-      // Enhanced mobile-specific audio constraints
       const constraints = {
         audio: {
           echoCancellation: true,
@@ -345,345 +338,236 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
         }
       };
 
-      console.log('🎯 Requesting microphone with enhanced constraints...');
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
-      console.log('✅ Enhanced microphone access granted');
+      streamRef.current = stream;
 
-      // Mobile-friendly MIME type detection with expanded fallbacks
-      console.log('🧪 Testing MediaRecorder support...');
-      console.log('📊 MediaRecorder available:', !!window.MediaRecorder);
-      
+      // Test MIME type support
       const mimeTypes = [
         'audio/webm;codecs=opus',
         'audio/webm',
-        'audio/mp4;codecs=mp4a.40.2', 
         'audio/mp4',
-        'audio/aac',
-        'audio/mpeg',
-        'audio/wav',
-        '' // Default fallback
+        'audio/wav'
       ];
-      
-      let mimeType = '';
-      for (const type of mimeTypes) {
-        const supported = MediaRecorder.isTypeSupported(type);
-        console.log(`🎵 ${type || 'default'}: ${supported ? '✅' : '❌'}`);
-        if (supported && !mimeType) {
-          mimeType = type;
+
+      let selectedMimeType = '';
+      for (const mimeType of mimeTypes) {
+        if (MediaRecorder.isTypeSupported(mimeType)) {
+          selectedMimeType = mimeType;
+          break;
         }
       }
 
-      console.log('🎯 Selected MIME type:', mimeType || 'default');
-
-      console.log('🎬 Creating MediaRecorder...');
-      const recorderOptions = mimeType ? { mimeType } : {};
-      console.log('⚙️ Recorder options:', recorderOptions);
+      const recorder = new MediaRecorder(stream, selectedMimeType ? { mimeType: selectedMimeType } : {});
+      mediaRecorderRef.current = recorder;
+      audioChunksRef.current = [];
       
-      const recorder = new MediaRecorder(stream, recorderOptions);
-      const chunks: Blob[] = [];
-      
-      console.log('📡 MediaRecorder state:', recorder.state);
-      console.log('🎛️ MediaRecorder mimeType:', recorder.mimeType);
-
       recorder.ondataavailable = (event) => {
-        console.log('📦 Audio data chunk received:', event.data.size, 'bytes, type:', event.data.type);
         if (event.data.size > 0) {
-          chunks.push(event.data);
-          console.log('📊 Total chunks collected so far:', chunks.length);
-        } else {
-          console.warn('⚠️ Received empty audio chunk - this is unusual');
+          audioChunksRef.current.push(event.data);
         }
       };
-
+      
       recorder.onstop = async () => {
-        console.log('🔴 CRITICAL: MediaRecorder onstop event fired!');
-        console.log('📊 Final chunks array length:', chunks.length);
-        
-        // Stop all audio tracks immediately
+        // Stop all audio tracks
         if (streamRef.current) {
-          streamRef.current.getTracks().forEach(track => {
-            track.stop();
-            console.log('🛑 Audio track stopped:', track.label);
-          });
+          streamRef.current.getTracks().forEach(track => track.stop());
           streamRef.current = null;
         }
         
         setIsRecording(false);
         
-        // Force a small delay to ensure all chunks are collected
-        await new Promise(resolve => setTimeout(resolve, 200));
-        
-        console.log('📊 After delay - chunks array length:', chunks.length);
-        
-        if (chunks.length === 0) {
-          console.error('❌ CRITICAL ERROR: No audio chunks collected at all!');
-          alert('Recording failed - no audio data captured. This suggests a MediaRecorder compatibility issue on your device.');
-          return;
+        if (audioChunksRef.current.length > 0) {
+          const audioBlob = new Blob(audioChunksRef.current, { 
+            type: selectedMimeType || 'audio/webm' 
+          });
+          await sendAudioToWhisper(audioBlob);
+          audioChunksRef.current = [];
         }
-
-        // Log each chunk and calculate total size
-        let totalSize = 0;
-        chunks.forEach((chunk, index) => {
-          console.log(`📦 Processing chunk ${index + 1}: ${chunk.size} bytes, type: ${chunk.type}`);
-          totalSize += chunk.size;
-        });
-        
-        console.log('📏 Total audio data size:', totalSize, 'bytes');
-
-        const audioBlob = new Blob(chunks, { type: recorder.mimeType || mimeType || 'audio/webm' });
-        console.log('🎵 Final audio blob:', audioBlob.size, 'bytes, type:', audioBlob.type);
-        
-        if (audioBlob.size < 100) {
-          console.error('❌ Audio blob extremely small:', audioBlob.size, 'bytes - recording likely failed');
-          alert('Recording too short or failed. Please try speaking louder and longer.');
-          return;
-        }
-
-        console.log('🚀 SENDING TO TRANSCRIPTION...');
-        console.log('🔍 About to call sendAudioToWhisper function');
-        try {
-          const result = await sendAudioToWhisper(audioBlob);
-          console.log('✅ Transcription process completed successfully');
-          console.log('📝 Transcription result:', result);
-        } catch (error) {
-          console.error('❌ TRANSCRIPTION FAILED:', error);
-          console.error('🔍 Error type:', typeof error);
-          console.error('🔍 Error message:', (error as Error)?.message);
-          console.error('🔍 Full error object:', error);
-          alert(`Transcription failed: ${(error as Error).message}`);
-        }
-        
-        // Cleanup
-        stream.getTracks().forEach(track => track.stop());
-        setIsRecording(false);
-        setMediaRecorder(null);
-        setAudioChunks([]);
       };
-
+      
       recorder.onerror = (event) => {
-        console.error('🔥 MediaRecorder error:', event);
-        alert('Recording error occurred. Please try again.');
-        stream.getTracks().forEach(track => track.stop());
+        console.error('MediaRecorder error:', event);
+        setIsRecording(false);
+        if (streamRef.current) {
+          streamRef.current.getTracks().forEach(track => track.stop());
+          streamRef.current = null;
+        }
       };
 
-      // Start recording with frequent data collection for mobile
-      console.log('🚀 Starting MediaRecorder...');
-      recorder.start(500); // 500ms intervals for better mobile compatibility
-      
-      console.log('📝 Setting component state...');
-      setMediaRecorder(recorder);
-      streamRef.current = stream;
-      setAudioChunks(chunks);
       setIsRecording(true);
-      
-      console.log('✅ Recording started - state:', recorder.state);
-      console.log('🎤 Component recording state updated');
-
-      // Auto-stop after 3 minutes for safety
-      setTimeout(() => {
-        if (recorder.state === 'recording') {
-          console.log('⏰ Auto-stopping recording after 3 minutes');
-          stopRecording();
-        }
-      }, 180000);
-
+      recorder.start(1000);
     } catch (error) {
-      console.error('🚨 Mobile microphone error:', error);
-      const err = error as any;
-      
-      let errorMessage = 'Microphone access failed. ';
-      if (err?.name === 'NotAllowedError') {
-        errorMessage += 'Please allow microphone permission in your browser settings and try again.';
-      } else if (err?.name === 'NotFoundError') {
-        errorMessage += 'No microphone detected. Please check your device.';
-      } else if (err?.name === 'NotReadableError') {
-        errorMessage += 'Microphone is being used by another app. Please close other apps and try again.';
-      } else if (err?.name === 'OverconstrainedError') {
-        errorMessage += 'Your device microphone doesn\'t support the required settings.';
-      } else {
-        errorMessage += `Error: ${err?.message || 'Unknown error'}`;
-      }
-      
-      alert(errorMessage);
-    }
-  };
-
-  const stopRecording = () => {
-    console.log('🛑 STOP BUTTON CLICKED - User wants to stop recording');
-    console.log('📱 Current mediaRecorder exists:', !!mediaRecorder);
-    console.log('📊 MediaRecorder state:', mediaRecorder?.state);
-    console.log('🎤 Current recording state:', isRecording);
-    
-    // Force stop all audio tracks immediately
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => {
-        track.stop();
-        console.log('🛑 Force stopping audio track:', track.label);
-      });
-      streamRef.current = null;
-    }
-    
-    if (mediaRecorder && mediaRecorder.state === 'recording') {
-      console.log('✅ MediaRecorder is recording - calling stop()...');
-      console.log('📊 Audio chunks collected so far:', audioChunks.length);
-      mediaRecorder.stop();
-      console.log('🔄 MediaRecorder.stop() called - waiting for onstop event...');
-    } else if (mediaRecorder && mediaRecorder.state === 'paused') {
-      console.log('⏸️ MediaRecorder is paused - stopping anyway...');
-      mediaRecorder.stop();
-    } else {
-      console.warn('⚠️ MediaRecorder not available or not recording');
+      console.error('Error starting recording:', error);
       setIsRecording(false);
-      setMediaRecorder(null);
-      alert('Recording session not active. Please start recording first.');
     }
-  };
+  }, []);
 
-  const sendAudioToWhisper = async (audioBlob: Blob) => {
+  const stopRecording = useCallback(() => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+    }
+  }, [isRecording]);
+
+  const sendAudioToWhisper = useCallback(async (audioBlob: Blob): Promise<void> => {
     try {
-      console.log('🎯 Sending audio to Whisper for transcription...');
-      console.log('📊 Audio size:', audioBlob.size, 'bytes, type:', audioBlob.type);
-      
-      if (audioBlob.size < 500) {
-        console.error('❌ Audio file too small:', audioBlob.size, 'bytes');
-        alert('Recording too short. Please speak for at least 1-2 seconds.');
-        return;
-      } else if (audioBlob.size < 1000) {
-        console.warn('⚠️ Small audio file:', audioBlob.size, 'bytes - proceeding anyway');
-      }
-
       const formData = new FormData();
       formData.append('audio', audioBlob, 'recording.webm');
-
-      console.log('🚀 Uploading audio for transcription...');
-      console.log('📡 Request URL: /api/transcribe');
-      console.log('📋 FormData details:');
-      console.log('  - Audio blob size:', audioBlob.size);
-      console.log('  - Audio blob type:', audioBlob.type);
+      formData.append('userId', '1');
       
-      const response = await axios.post('/api/transcribe', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-        timeout: 30000 // 30 second timeout
+      const response: AxiosResponse<TranscriptionResponse> = await axios.post('/api/transcribe', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          'X-Device-Fingerprint': deviceFingerprintRef.current,
+          'X-Session-Id': sessionIdRef.current
+        }
       });
-
-      console.log('✅ Transcription response received');
-      console.log('📊 Response status:', response.status);
-      console.log('📋 Response headers:', response.headers);
-      console.log('📝 Response data:', response.data);
-
-      if (response.data.text && response.data.text.trim()) {
-        console.log('🎉 Transcribed text:', response.data.text);
-        console.log('💬 Sending transcribed text to chat...');
-        await sendMessage(response.data.text);
-      } else {
-        console.error('❌ No text transcribed in response');
-        console.log('🔍 Full response object:', JSON.stringify(response.data, null, 2));
-        alert('Could not understand the audio. Please try speaking more clearly.');
+      
+      if (response.data.success && response.data.transcription) {
+        await sendMessage(response.data.transcription);
       }
     } catch (error) {
-      console.error('🚨 Transcription error:', error);
-      console.error('🔍 Error type:', typeof error);
-      console.error('🔍 Error constructor:', error.constructor.name);
-      
-      const err = error as any;
-      console.error('🔍 Error response:', err?.response);
-      console.error('🔍 Error status:', err?.response?.status);
-      console.error('🔍 Error data:', err?.response?.data);
-      
-      let errorMessage = 'Voice transcription failed. ';
-      if (err?.code === 'ECONNABORTED' || err?.message?.includes('timeout')) {
-        errorMessage += 'Request timed out. Please try a shorter recording.';
-      } else if (err?.response?.status === 413) {
-        errorMessage += 'Recording file too large. Please record for less time.';
-      } else if (err?.response?.status === 401) {
-        errorMessage += 'API key issue. Please check voice settings.';
-      } else if (err?.response?.status === 500) {
-        errorMessage += `Server error: ${err?.response?.data?.error || 'Unknown server error'}`;
-      } else {
-        errorMessage += `${err?.message || 'Please check your internet connection and try again.'}`;
-      }
-      
-      console.error('🚨 Final error message:', errorMessage);
-      alert(errorMessage);
+      console.error('Error transcribing audio:', error);
     }
-  };
+  }, [sendMessage]);
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  // Event handlers
+  const handleKeyPress = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       sendMessage(inputMessage);
     }
-  };
+  }, [inputMessage, sendMessage]);
 
-  // Chat bubble when closed
+  const handleMicrophoneToggle = useCallback(() => {
+    if (isRecording) {
+      stopRecording();
+    } else {
+      startRecording();
+    }
+  }, [isRecording, startRecording, stopRecording]);
+
+  // Load chat history when component opens
+  useEffect(() => {
+    if (isOpen && messages.length === 0) {
+      loadChatHistory();
+    }
+  }, [isOpen, messages.length, loadChatHistory]);
+
+  // Cleanup when component closes or unmounts
+  useEffect(() => {
+    if (!isOpen && isRecording) {
+      stopRecording();
+    }
+  }, [isOpen, isRecording, stopRecording]);
+
+  useEffect(() => {
+    return () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+      }
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+        mediaRecorderRef.current.stop();
+      }
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+    };
+  }, []);
+
+  // Render collapsed button when closed
   if (!isOpen) {
     return (
-      <div className="fixed bottom-6 right-6 z-50">
-        <button
-          onClick={onToggle}
-          className="theme-primary hover:theme-primary-dark theme-text p-4 rounded-full shadow-2xl transition-all duration-300 hover:scale-110 animate-pulse"
-          style={{ 
-            backdropFilter: 'blur(10px)',
-            background: `linear-gradient(135deg, var(--theme-primary), var(--theme-accent))`
-          }}
-        >
-          <MessageCircle size={24} />
-        </button>
-      </div>
+      <button
+        onClick={onToggle}
+        className="fixed p-4 rounded-full shadow-lg transition-all duration-300 hover:scale-110 border-2 border-silver"
+        style={{
+          backgroundColor: `var(--theme-primary)`,
+          color: 'white',
+          zIndex: 1000,
+          right: `${position.x}px`,
+          bottom: `${window.innerHeight - position.y - 60}px`
+        }}
+        aria-label="Open chat assistant"
+      >
+        <MessageCircle size={24} />
+      </button>
     );
   }
 
-  // Floating chat box when open - mobile full screen, desktop floating
+  // Main chat interface
   return (
-    <div 
-      className="fixed inset-0 md:bottom-6 md:right-6 md:w-96 md:h-[500px] md:inset-auto w-full h-full backdrop-blur-xl border-2 border-silver md:rounded-2xl shadow-2xl z-50 flex flex-col overflow-hidden"
+    <div
+      ref={chatRef}
+      className="fixed rounded-2xl shadow-2xl flex flex-col border-2 border-silver"
       style={{
-        background: `linear-gradient(135deg, var(--theme-background), var(--theme-surface))`
+        backgroundColor: `var(--theme-background)`,
+        zIndex: 1000,
+        left: `${position.x}px`,
+        top: `${position.y}px`,
+        width: `${size.width}px`,
+        height: `${size.height}px`,
+        cursor: isDragging ? 'grabbing' : 'default'
       }}
+      onMouseDown={handleMouseDown}
+      role="dialog"
+      aria-label="Chakrai Chat Assistant"
+      aria-modal="true"
     >
       {/* Header */}
       <div 
-        className="p-4 flex items-center justify-between"
-        style={{
-          background: `linear-gradient(135deg, var(--theme-primary), var(--theme-accent))`
+        className="p-4 rounded-t-2xl flex items-center justify-between border-b drag-handle cursor-grab"
+        style={{ 
+          backgroundColor: `var(--theme-surface)`,
+          borderColor: `var(--theme-accent)`
         }}
+        role="banner"
       >
-        <div className="flex items-center space-x-3">
-          <div 
-            className="w-10 h-10 rounded-full flex items-center justify-center"
-            style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }}
-          >
-            <MessageCircle size={20} className="theme-text" />
-          </div>
-          <div>
-            <h3 className="theme-text font-semibold">Chakrai Companion</h3>
-            <p className="theme-text-secondary text-xs">Always here to help</p>
-          </div>
+        <div className="flex items-center space-x-2 drag-handle">
+          <Move size={16} className="theme-text drag-handle opacity-50" aria-hidden="true" />
+          <MessageCircle size={20} className="theme-text drag-handle" aria-hidden="true" />
+          <h3 className="font-semibold theme-text drag-handle">Chakrai Assistant</h3>
         </div>
-        <button
-          onClick={onToggle}
-          className="bg-red-500 hover:bg-red-600 text-white transition-colors p-3 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 min-w-[50px] min-h-[50px] flex items-center justify-center border-2 border-white"
-          title="Close Chat"
-        >
-          <X size={28} />
-        </button>
+        <div className="flex items-center space-x-2">
+          <span className="text-xs theme-text-secondary" aria-label={`Chat window size: ${size.width} by ${size.height} pixels`}>
+            {size.width}x{size.height}
+          </span>
+          <button
+            onClick={onToggle}
+            className="p-1 hover:bg-white/10 rounded theme-text"
+            aria-label="Close chat"
+          >
+            <X size={18} />
+          </button>
+        </div>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.map((message, index) => (
+      <div 
+        className="flex-1 overflow-y-auto p-4 space-y-3" 
+        style={{ userSelect: 'text' }}
+        role="log"
+        aria-label="Chat messages"
+        aria-live="polite"
+      >
+        {messages.map((message) => (
           <div
-            key={index}
+            key={message.id}
             className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
           >
             <div
-              className="max-w-[80%] p-3 rounded-2xl theme-text"
+              className={`max-w-[85%] p-3 rounded-2xl ${
+                message.sender === 'user' 
+                  ? 'rounded-br-md' 
+                  : 'rounded-bl-md'
+              }`}
               style={{
-                background: message.sender === 'user'
-                  ? `linear-gradient(135deg, var(--theme-primary), var(--theme-accent))`
+                backgroundColor: message.sender === 'user' 
+                  ? `var(--theme-primary)` 
                   : `var(--theme-surface)`,
                 border: message.sender === 'user' ? 'none' : `1px solid var(--theme-accent)`
               }}
+              role={message.sender === 'user' ? 'article' : 'article'}
+              aria-label={`${message.sender === 'user' ? 'Your' : 'Assistant'} message at ${message.time}`}
             >
               <p className="text-sm">{message.text}</p>
               <span className="text-xs theme-text-secondary mt-1 block">{message.time}</span>
@@ -699,11 +583,14 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
                 backgroundColor: `var(--theme-surface)`,
                 border: `1px solid var(--theme-accent)`
               }}
+              role="status"
+              aria-label="Assistant is typing"
             >
               <div className="flex space-x-1">
                 <div 
                   className="w-2 h-2 rounded-full animate-bounce"
                   style={{ backgroundColor: `var(--theme-accent)` }}
+                  aria-hidden="true"
                 ></div>
                 <div 
                   className="w-2 h-2 rounded-full animate-bounce"
@@ -711,6 +598,7 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
                     backgroundColor: `var(--theme-accent)`,
                     animationDelay: '0.1s'
                   }}
+                  aria-hidden="true"
                 ></div>
                 <div 
                   className="w-2 h-2 rounded-full animate-bounce"
@@ -718,6 +606,7 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
                     backgroundColor: `var(--theme-accent)`,
                     animationDelay: '0.2s'
                   }}
+                  aria-hidden="true"
                 ></div>
               </div>
             </div>
@@ -730,6 +619,8 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
       <div 
         className="p-4 border-t"
         style={{ borderColor: `var(--theme-accent)` }}
+        role="form"
+        aria-label="Message input area"
       >
         <div className="flex items-center space-x-2">
           <div className="flex-1 relative">
@@ -739,17 +630,18 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyPress={handleKeyPress}
               placeholder="Type your message..."
-              className="w-full rounded-xl px-4 py-2 theme-text theme-text-secondary focus:outline-none focus:ring-1"
+              className="w-full rounded-xl px-4 py-2 theme-text focus:outline-none focus:ring-2 focus:ring-[var(--theme-accent)]"
               style={{
                 backgroundColor: `var(--theme-surface)`,
-                border: `1px solid var(--theme-accent)`,
-                '&:focus': {
-                  borderColor: `var(--theme-primary)`,
-                  boxShadow: `0 0 0 1px var(--theme-primary)`
-                }
+                border: `1px solid var(--theme-accent)`
               }}
               disabled={isLoading || isRecording}
+              aria-label="Type your message"
+              aria-describedby="input-help"
             />
+            <span id="input-help" className="sr-only">
+              Press Enter to send message, Shift+Enter for new line
+            </span>
           </div>
           
           {/* Voice controls */}
@@ -764,30 +656,32 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
                 border: `1px solid var(--theme-accent)`
               }}
               disabled={!isPlayingVoice}
+              aria-label={isPlayingVoice ? "Stop voice playback" : "Voice playback"}
             >
-              {isPlayingVoice ? <VolumeX size={18} /> : <Volume2 size={24} />}
+              {isPlayingVoice ? <VolumeX size={18} /> : <Volume2 size={18} />}
             </button>
           )}
 
-          {/* Enhanced Mobile Microphone button */}
+          {/* Microphone button */}
           <button
-            onClick={isRecording ? stopRecording : startRecording}
-            className={`p-3 rounded-xl transition-all duration-300 theme-text border-2 border-silver min-w-[48px] min-h-[48px] flex items-center justify-center shadow-lg hover:shadow-xl transform hover:scale-105 ${
-              isRecording ? 'animate-pulse scale-110' : 'hover:scale-110'
+            onClick={handleMicrophoneToggle}
+            className={`p-2 rounded-xl transition-colors ${
+              isRecording ? 'animate-pulse' : ''
             }`}
             style={{
               backgroundColor: isRecording 
-                ? '#ef4444'
+                ? '#ef4444' 
                 : `var(--theme-primary)`,
-              touchAction: 'manipulation'
+              border: `1px solid var(--theme-accent)`,
+              color: 'white'
             }}
             disabled={isLoading}
-            title={isRecording ? "Tap to stop recording and send" : "Tap to start voice recording"}
+            aria-label={isRecording ? "Stop voice recording" : "Start voice recording"}
           >
             {isRecording ? (
-              <Square size={20} className="text-white" />
+              <Square size={18} />
             ) : (
-              <Mic size={24} className="text-white" />
+              <Mic size={18} />
             )}
           </button>
 
@@ -796,20 +690,46 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
             onClick={() => sendMessage(inputMessage)}
             className="p-2 rounded-xl transition-colors disabled:opacity-50 theme-text border-2 border-silver"
             style={{
-              backgroundColor: `var(--theme-primary)`
+              backgroundColor: `var(--theme-primary)`,
+              color: 'white'
             }}
             disabled={isLoading || !inputMessage.trim()}
+            aria-label="Send message"
           >
-            <Send size={24} />
+            <Send size={18} />
           </button>
         </div>
         
         {isRecording && (
-          <p className="text-xs mt-2 text-center animate-pulse" style={{ color: '#ef4444' }}>
-            🎤 Recording... Tap the square to stop & send
-          </p>
+          <div 
+            className="mt-2 text-center"
+            role="status"
+            aria-live="polite"
+          >
+            <span className="text-sm theme-text-secondary">
+              🎤 Recording... Click microphone to stop
+            </span>
+          </div>
         )}
       </div>
+
+      {/* Resize handle */}
+      <div
+        className="absolute bottom-0 right-0 w-4 h-4 cursor-nw-resize opacity-50 hover:opacity-100 transition-opacity"
+        style={{
+          background: `linear-gradient(-45deg, transparent 0%, transparent 30%, var(--theme-accent) 30%, var(--theme-accent) 35%, transparent 35%, transparent 65%, var(--theme-accent) 65%, var(--theme-accent) 70%, transparent 70%)`
+        }}
+        onMouseDown={handleResizeStart}
+        aria-label="Resize chat window"
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleResizeStart(e as any);
+          }
+        }}
+      />
     </div>
   );
 };
