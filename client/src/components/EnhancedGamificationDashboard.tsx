@@ -403,18 +403,31 @@ const EnhancedGamificationDashboard: React.FC = () => {
     }
   };
 
-  const getCategoryIcon = (category: string) => {
-    switch (category) {
-      case 'resilience': return '🛡️';
-      case 'emotional_breakthrough': return '💡';
-      case 'self_awareness': return '🔍';
-      case 'mindfulness': return '🧘';
-      case 'social_connection': return '🤝';
-      case 'coping_skills': return '💪';
-      case 'progress_milestone': return '🎯';
-      default: return '⭐';
-    }
+  // Type-safe icon mapping for achievement categories
+  const categoryIconMap = new Map([
+    ['resilience', '🛡️'],
+    ['emotional_breakthrough', '💡'], 
+    ['self_awareness', '🔍'],
+    ['mindfulness', '🧘'],
+    ['social_connection', '🤝'],
+    ['coping_skills', '💪'],
+    ['progress_milestone', '🎯']
+  ]);
+
+  const getCategoryIcon = (category: string): string => {
+    return categoryIconMap.get(category) || '⭐';
   };
+
+  // Optimized badge lookup using Map for O(1) performance
+  const achievementMap = new Map(userAchievements.map(achievement => [achievement.id, achievement]));
+  
+  // Enhanced rarity color mapping with better contrast
+  const rarityColorMap = new Map([
+    ['legendary', 'text-yellow-700 bg-yellow-50 border-yellow-200'],
+    ['epic', 'text-purple-700 bg-purple-50 border-purple-200'],
+    ['rare', 'text-blue-700 bg-blue-50 border-blue-200'],
+    ['common', 'text-gray-700 bg-gray-50 border-gray-200']
+  ]);
 
   // Show loading states based on active tab
   if (activeTab === 'overview' && dashboardLoading) {
