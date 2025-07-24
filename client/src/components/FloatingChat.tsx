@@ -37,11 +37,15 @@ interface FloatingChatProps {
 }
 
 interface ChatApiResponse {
-  success: boolean;
+  success?: boolean;
   message?: string;
   response?: string;
   audio?: string;
+  audioUrl?: string;
   error?: string;
+  voiceUsed?: string;
+  crisisDetected?: boolean;
+  personalityMode?: string;
 }
 
 interface TranscriptionResponse {
@@ -230,6 +234,7 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
     setIsLoading(true);
 
     try {
+      console.log('🚀 Sending chat message:', text.trim());
       const response: AxiosResponse<ChatApiResponse> = await axios.post('/api/chat', {
         message: text.trim(),
         context: 'floating_chat'
@@ -239,8 +244,11 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
           'X-Session-Id': sessionIdRef.current
         }
       });
+      
+      console.log('📥 Chat API response:', response.data);
 
-      if (response.data.success) {
+      // Check if we have a valid response (success field or message/response field)
+      if (response.data.success !== false && (response.data.message || response.data.response)) {
         const botTimestamp = Date.now();
         const botMessage: Message = {
           id: generateUniqueId(),
@@ -251,12 +259,14 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
         };
 
         setMessages(prev => [...prev, botMessage]);
+        console.log('✅ Bot message added:', botMessage.text);
 
         // Auto-play voice response if voice is enabled
         if (selectedVoice && (response.data.message || response.data.response)) {
           playVoiceResponse(response.data.message || response.data.response || '');
         }
       } else {
+        console.warn('❌ Invalid response data:', response.data);
         throw new Error(response.data.error || 'Failed to send message');
       }
     } catch (error) {
