@@ -76,6 +76,39 @@ const NavItem: React.FC<{ to: string; icon: React.FC<any>; label: string; collap
   </NavLink>
 );
 
+// Sidebar component
+const Sidebar: React.FC<{ collapsed: boolean }> = ({ collapsed }) => (
+  <aside
+    className={`bg-gray-800 text-white transition-width duration-200 ${
+      collapsed ? 'w-16' : 'w-64'
+    } hidden md:flex flex-col`}
+  >
+    <div className="flex items-center justify-center h-16">
+      {!collapsed && <span className="text-2xl font-bold">Chakrai</span>}
+    </div>
+    <SidebarGroup title="🟦 Core Companion" collapsed={collapsed}>
+      <NavItem to="/chat" icon={MessageCircle} label="Chat" collapsed={collapsed} />
+      <NavItem to="/dashboard" icon={Brain} label="Dashboard" collapsed={collapsed} />
+      <NavItem to="/rewards" icon={Gift} label="Rewards" collapsed={collapsed} />
+    </SidebarGroup>
+    <SidebarGroup title="💠 Mirrors of You" collapsed={collapsed}>
+      <NavItem to="/journal" icon={BookOpen} label="Journal" collapsed={collapsed} />
+      <NavItem to="/reflection" icon={Square} label="Reflection" collapsed={collapsed} />
+      <NavItem to="/analytics" icon={PieChart} label="Analytics" collapsed={collapsed} />
+    </SidebarGroup>
+    <SidebarGroup title="🧘 Guided Support" collapsed={collapsed}>
+      <NavItem to="/quiz" icon={Brain} label="Quiz" collapsed={collapsed} />
+      <NavItem to="/adaptive" icon={SettingsIcon} label="Adaptive" collapsed={collapsed} />
+      <NavItem to="/therapy" icon={Heart} label="Therapy Plan" collapsed={collapsed} />
+    </SidebarGroup>
+    <SidebarGroup title="⚙️ Settings" collapsed={collapsed}>
+      <NavItem to="/settings/theme" icon={Palette} label="Theme" collapsed={collapsed} />
+      <NavItem to="/settings/voice" icon={Mic} label="Voice" collapsed={collapsed} />
+      <NavItem to="/settings/privacy" icon={Shield} label="Privacy" collapsed={collapsed} />
+    </SidebarGroup>
+  </aside>
+);
+
 // Dynamic header title based on route
 const Header: React.FC<{ collapsed: boolean; setCollapsed: (c: boolean) => void }> = ({ collapsed, setCollapsed }) => {
   const location = useLocation();
@@ -134,74 +167,52 @@ export default function App() {
           <QueryClientProvider client={queryClient}>
             <Router>
               <div className="flex h-screen overflow-hidden">
-                {/* Sidebar (desktop) */}
-                <aside
-                  className={`bg-gray-800 text-white transition-width duration-200 ${
-                    collapsed ? 'w-16' : 'w-64'
-                  } hidden md:flex flex-col`}
-                >
-                  <div className="flex items-center justify-center h-16">
-                    {!collapsed && <span className="text-2xl font-bold">Chakrai</span>}
-                  </div>
-                  <SidebarGroup title="🟦 Core Companion" collapsed={collapsed}>
-                    <NavItem to="/chat" icon={MessageCircle} label="Chat" collapsed={collapsed} />
-                    <NavItem to="/dashboard" icon={Brain} label="Dashboard" collapsed={collapsed} />
-                    <NavItem to="/rewards" icon={Gift} label="Rewards" collapsed={collapsed} />
-                  </SidebarGroup>
-                  <SidebarGroup title="💠 Mirrors of You" collapsed={collapsed}>
-                    <NavItem to="/journal" icon={BookOpen} label="Journal" collapsed={collapsed} />
-                    <NavItem to="/reflection" icon={Square} label="Reflection" collapsed={collapsed} />
-                    <NavItem to="/analytics" icon={PieChart} label="Analytics" collapsed={collapsed} />
-                  </SidebarGroup>
-                  <SidebarGroup title="🧘 Guided Support" collapsed={collapsed}>
-                    <NavItem to="/quiz" icon={Brain} label="Quiz" collapsed={collapsed} />
-                    <NavItem to="/adaptive" icon={SettingsIcon} label="Adaptive" collapsed={collapsed} />
-                    <NavItem to="/therapy" icon={Heart} label="Therapy Plan" collapsed={collapsed} />
-                  </SidebarGroup>
-                  <SidebarGroup title="⚙️ Settings" collapsed={collapsed}>
-                    <NavItem to="/settings/theme" icon={Palette} label="Theme" collapsed={collapsed} />
-                    <NavItem to="/settings/voice" icon={Mic} label="Voice" collapsed={collapsed} />
-                    <NavItem to="/settings/privacy" icon={Shield} label="Privacy" collapsed={collapsed} />
-                  </SidebarGroup>
-                </aside>
+                <Sidebar collapsed={collapsed} />
 
-                {/* Main area */}
                 <div className="flex-1 flex flex-col">
                   <Header collapsed={collapsed} setCollapsed={setCollapsed} />
 
                   <main className="flex-1 overflow-auto bg-gray-100">
-                    <Suspense fallback={<div className="p-6">Loading...</div>}>
-                      <Routes>
-                        <Route path="/" element={<MemoryDashboard />} />
-                        <Route path="/chat" element={<Chat />} />
-                        <Route path="/dashboard" element={<MemoryDashboard />} />
-                        <Route path="/journal" element={<TherapeuticJournal />} />
-                        <Route path="/analytics" element={<AnalyticsDashboard />} />
-                        <Route path="/rewards" element={<WellnessRewards />} />
-                        <Route path="/community" element={<CommunitySupport />} />
-                        <Route path="/quiz" element={<PersonalityQuiz />} />
-                        <Route path="/reflection" element={<PersonalityReflection />} />
-                        <Route path="/adaptive" element={<AdaptiveLearning />} />
-                        <Route path="/therapy" element={<AdaptiveTherapyPlan />} />
-                        <Route path="/agent" element={<AgentSystem />} />
-                        <Route path="/vr" element={<VRTherapy />} />
-                        <Route path="/health" element={<HealthIntegration />} />
-                        <Route path="/privacy" element={<PrivacyCompliance />} />
-                        <Route path="/therapist" element={<TherapistPortal />} />
-                        <Route path="/settings/theme" element={<ThemeSelector />} />
-                        <Route path="/settings/voice" element={<VoiceSelector />} />
-                        <Route path="*" element={<MemoryDashboard />} />
-                      </Routes>
-                    </Suspense>
-                  </main>
+                    <div className="max-w-4xl mx-auto">
+                      {/* Feature Header */}
+                      <div className="theme-card backdrop-blur-sm rounded-xl p-6 border border-[var(--theme-accent)]/30 shadow-lg">
+                        <h2 className="text-2xl font-bold theme-text text-center">
+                          Chakrai Mental Wellness Platform
+                        </h2>
+                      </div>
+                      <Suspense fallback={<div className="p-6">Loading...</div>}>
+                        <Routes>
+                          <Route path="/" element={<MemoryDashboard />} />
+                          <Route path="/chat" element={<Chat />} />
+                          <Route path="/dashboard" element={<MemoryDashboard />} />
+                          <Route path="/journal" element={<TherapeuticJournal />} />
+                          <Route path="/analytics" element={<AnalyticsDashboard />} />
+                          <Route path="/rewards" element={<WellnessRewards />} />
+                          <Route path="/community" element={<CommunitySupport />} />
+                          <Route path="/quiz" element={<PersonalityQuiz />} />
+                          <Route path="/reflection" element={<PersonalityReflection />} />
+                          <Route path="/adaptive" element={<AdaptiveLearning />} />
+                          <Route path="/therapy" element={<AdaptiveTherapyPlan />} />
+                          <Route path="/agent" element={<AgentSystem />} />
+                          <Route path="/vr" element={<VRTherapy />} />
+                          <Route path="/health" element={<HealthIntegration />} />
+                          <Route path="/privacy" element={<PrivacyCompliance />} />
+                          <Route path="/therapist" element={<TherapistPortal />} />
+                          <Route path="/settings/theme" element={<ThemeSelector />} />
+                          <Route path="/settings/voice" element={<VoiceSelector />} />
+                          <Route path="*" element={<MemoryDashboard />} />
+                        </Routes>
+                      </Suspense>
+                    </div>
 
-                  {/* Global modals & cursor */}
-                  <SubscriptionModal />
-                  <UsageLimitModal />
-                  <AuthModal />
-                  <NeonCursor />
+                    {/* Global modals & cursor */}
+                    <SubscriptionModal />
+                    <UsageLimitModal />
+                    <AuthModal />
+                    <NeonCursor />
+                  </main>
                 </div>
-              </div>
+              </div>    
             </Router>
           </QueryClientProvider>
         </SubscriptionProvider>
