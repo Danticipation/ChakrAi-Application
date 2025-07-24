@@ -1,6 +1,6 @@
 // App.tsx
 import React, { useState, Suspense, lazy } from 'react';
-import { BrowserRouter as Router, Routes, Route, NavLink, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import NeonCursor from '@/components/neon-cursor';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
@@ -157,35 +157,42 @@ const Header: React.FC<{ collapsed: boolean; setCollapsed: (c: boolean) => void 
   );
 };
 
-export default function App() {
+// Main App Content Component
+const AppContent = () => {
   const [collapsed, setCollapsed] = useState(false);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
   const [showUsageLimitModal, setShowUsageLimitModal] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [selectedVoice, setSelectedVoice] = useState('james');
+  const navigate = useNavigate();
+
+  const handleQuizComplete = (profile: any) => {
+    console.log('Quiz completed with profile:', profile);
+    // Navigate to dashboard after quiz completion
+    navigate('/');
+  };
 
   return (
     <ThemeProvider>
       <AuthProvider>
         <SubscriptionProvider>
           <QueryClientProvider client={queryClient}>
-            <Router>
-              <div className="flex h-screen overflow-hidden">
-                <Sidebar collapsed={collapsed} />
+            <div className="flex h-screen overflow-hidden">
+              <Sidebar collapsed={collapsed} />
 
-                <div className="flex-1 flex flex-col">
-                  <Header collapsed={collapsed} setCollapsed={setCollapsed} />
+              <div className="flex-1 flex flex-col">
+                <Header collapsed={collapsed} setCollapsed={setCollapsed} />
 
-                  <main className="flex-1 overflow-auto bg-gray-100">
-                    <div className="max-w-4xl mx-auto">
-                      {/* Feature Header */}
-                      <div className="theme-card backdrop-blur-sm rounded-xl p-6 border border-[var(--theme-accent)]/30 shadow-lg">
-                        <h2 className="text-2xl font-bold theme-text text-center">
-                          Chakrai Mental Wellness Platform
-                        </h2>
-                      </div>
-                      <Suspense fallback={<div className="p-6">Loading...</div>}>
-                        <Routes>
+                <main className="flex-1 overflow-auto bg-gray-100">
+                  <div className="max-w-4xl mx-auto">
+                    {/* Feature Header */}
+                    <div className="theme-card backdrop-blur-sm rounded-xl p-6 border border-[var(--theme-accent)]/30 shadow-lg">
+                      <h2 className="text-2xl font-bold theme-text text-center">
+                        Chakrai Mental Wellness Platform
+                      </h2>
+                    </div>
+                    <Suspense fallback={<div className="p-6">Loading...</div>}>
+                      <Routes>
                           <Route path="/" element={<MemoryDashboard />} />
                           <Route path="/chat" element={<Chat isOpen={true} onToggle={() => {}} selectedVoice={selectedVoice} />} />
                           <Route path="/dashboard" element={<MemoryDashboard />} />
@@ -193,7 +200,7 @@ export default function App() {
                           <Route path="/analytics" element={<AnalyticsDashboard userId={1} />} />
                           <Route path="/rewards" element={<WellnessRewards />} />
                           <Route path="/community" element={<CommunitySupport />} />
-                          <Route path="/quiz" element={<PersonalityQuiz onComplete={() => {}} />} />
+                          <Route path="/quiz" element={<PersonalityQuiz onComplete={handleQuizComplete} />} />
                           <Route path="/reflection" element={<PersonalityReflection userId={1} />} />
                           <Route path="/adaptive" element={<AdaptiveLearning />} />
                           <Route path="/therapy" element={<AdaptiveTherapyPlan userId={1} onPlanUpdate={() => {}} />} />
@@ -205,22 +212,29 @@ export default function App() {
                           <Route path="/settings/theme" element={<ThemeSelector onClose={() => {}} />} />
                           <Route path="/settings/voice" element={<VoiceSelector selectedVoice={selectedVoice} onVoiceChange={setSelectedVoice} />} />
                           <Route path="*" element={<MemoryDashboard />} />
-                        </Routes>
-                      </Suspense>
-                    </div>
+                      </Routes>
+                    </Suspense>
+                  </div>
 
-                    {/* Global modals & cursor */}
-                    <SubscriptionModal isOpen={showSubscriptionModal} onClose={() => setShowSubscriptionModal(false)} />
-                    <UsageLimitModal isOpen={showUsageLimitModal} onClose={() => setShowUsageLimitModal(false)} onUpgrade={() => setShowSubscriptionModal(true)} />
-                    <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} onAuthSuccess={() => setShowAuthModal(false)} />
-                    <NeonCursor />
-                  </main>
-                </div>
-              </div>    
-            </Router>
+                  {/* Global modals & cursor */}
+                  <SubscriptionModal isOpen={showSubscriptionModal} onClose={() => setShowSubscriptionModal(false)} />
+                  <UsageLimitModal isOpen={showUsageLimitModal} onClose={() => setShowUsageLimitModal(false)} onUpgrade={() => setShowSubscriptionModal(true)} />
+                  <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} onAuthSuccess={() => setShowAuthModal(false)} />
+                  <NeonCursor />
+                </main>
+              </div>
+            </div>    
           </QueryClientProvider>
         </SubscriptionProvider>
       </AuthProvider>
     </ThemeProvider>
+  );
+};
+
+export default function App() {
+  return (
+    <Router>
+      <AppContent />
+    </Router>
   );
 }
