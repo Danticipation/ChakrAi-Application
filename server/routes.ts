@@ -1595,6 +1595,78 @@ router.get('/api/analytics/effective-affirmations/:userId', async (req, res) => 
   }
 });
 
+// Simple analytics endpoint for dashboard
+router.get('/api/analytics/simple/:userId', async (req, res) => {
+  try {
+    const userId = parseInt(req.params.userId);
+    
+    // Get real user data from database  
+    const moodEntries = await storage.getMoodEntries(userId, 30);
+    const journalEntries = await storage.getJournalEntries(userId, 30);
+
+    // Calculate wellness metrics
+    const totalJournalEntries = journalEntries.length;
+    const totalMoodEntries = moodEntries.length;
+    const averageMood = moodEntries.length > 0 ? 
+      moodEntries.reduce((acc, curr) => acc + (curr.intensity || 5), 0) / moodEntries.length : 7.0;
+    
+    // Calculate wellness score based on engagement and mood
+    const currentWellnessScore = Math.round(
+      (averageMood / 10) * 40 + 
+      (Math.min(totalJournalEntries, 20) / 20) * 30 + 
+      (Math.min(totalMoodEntries, 20) / 20) * 30
+    );
+
+    // Create emotion distribution
+    const emotionDistribution: Record<string, number> = {};
+    moodEntries.forEach(mood => {
+      const emotion = mood.mood || 'neutral';
+      emotionDistribution[emotion] = (emotionDistribution[emotion] || 0) + 1;
+    });
+
+    // Create mood trend data for charts
+    const moodTrend = moodEntries.slice(0, 14).map(mood => ({
+      date: mood.createdAt ? new Date(mood.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+      value: mood.intensity || 5,
+      emotion: mood.mood || 'neutral'
+    }));
+
+    // Calculate emotional volatility from mood variance
+    const moodValues = moodEntries.map(m => m.intensity || 5);
+    const moodVariance = moodValues.length > 1 ? 
+      moodValues.reduce((acc, val) => acc + Math.pow(val - averageMood, 2), 0) / moodValues.length : 0;
+    const emotionalVolatility = Math.round(Math.sqrt(moodVariance) * 10);
+
+    // Generate insights
+    const insights = totalJournalEntries === 0 && totalMoodEntries === 0
+      ? "Welcome to your wellness analytics! Start by tracking your mood or writing a journal entry to see personalized insights about your mental health journey."
+      : `Based on your ${totalJournalEntries} journal entries and ${totalMoodEntries} mood check-ins, your average mood of ${averageMood.toFixed(1)} shows ${averageMood >= 7 ? 'positive' : averageMood >= 5 ? 'stable' : 'concerning'} mental health patterns. Your ${currentWellnessScore}% wellness score reflects ${currentWellnessScore >= 75 ? 'excellent' : currentWellnessScore >= 60 ? 'good' : 'developing'} engagement with your wellness journey.`;
+
+    const dashboard = {
+      overview: {
+        currentWellnessScore,
+        emotionalVolatility,
+        therapeuticEngagement: Math.min(100, (totalJournalEntries + totalMoodEntries) * 3),
+        totalJournalEntries,
+        totalMoodEntries,
+        averageMood: Math.round(averageMood * 10) / 10
+      },
+      charts: {
+        moodTrend,
+        wellnessTrend: [],
+        emotionDistribution,
+        progressTracking: []
+      },
+      insights
+    };
+    
+    res.json(dashboard);
+  } catch (error) {
+    console.error('Simple analytics error:', error);
+    res.status(500).json({ error: 'Failed to get analytics data' });
+  }
+});
+
 // Get analytics dashboard overview
 router.get('/api/analytics/dashboard/:userId', async (req, res) => {
   try {
