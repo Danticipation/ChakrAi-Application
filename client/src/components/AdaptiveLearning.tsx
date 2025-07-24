@@ -16,40 +16,47 @@ import {
   ArrowRight 
 } from 'lucide-react';
 
-// Types for adaptive learning data
+// Types for adaptive learning data matching backend response
 interface LearningPreferences {
-  preferredTopics: string[];
-  exercisePreferences: string[];
-  adaptationLevel: number;
-  personalityTraits: string[];
+  learningStyle: string;
+  communicationPreference: string;
+  supportLevel: string;
+  adaptationSpeed: string;
+  personalityFocus: string[];
+  therapeuticGoals: string[];
+  lastUpdated: string;
 }
 
 interface ConversationPattern {
-  id: string;
+  id: number;
+  type: string;
   pattern: string;
+  confidence: number;
   frequency: number;
-  effectiveness: number;
-  category: string;
-  lastUsed: string;
+  lastObserved: string;
 }
 
 interface WellnessRecommendation {
-  id: string;
-  name: string;
+  id: number;
+  type: string;
+  title: string;
   description: string;
-  personalizedReason: string;
-  difficulty: 'beginner' | 'intermediate' | 'advanced';
-  duration: number;
   confidence: number;
+  priority: string;
+  category: string;
+  estimatedDuration: string;
+  adaptationReason: string;
 }
 
 interface LearningInsights {
-  learningProgress: number;
-  confidenceScore: number;
-  conversationThemes: string[];
-  behavioralPatterns: string[];
-  effectiveApproaches: string[];
-  wellnessNeeds: string[];
+  id: number;
+  category: string;
+  insight: string;
+  type: string;
+  strength: number;
+  actionable: boolean;
+  suggestion: string;
+  discoveredAt: string;
 }
 
 // Utility Components
@@ -95,13 +102,13 @@ const AdaptiveLearningCard: React.FC<{
 export default function AdaptiveLearning() {
   const [activeTab, setActiveTab] = useState('preferences');
 
-  // Fetch data with React Query
+  // Fetch data with React Query (properly typed)
   const {
     data: preferences,
     isLoading: preferencesLoading,
     error: preferencesError,
     refetch: refetchPreferences
-  } = useQuery({
+  } = useQuery<LearningPreferences>({
     queryKey: ['/api/adaptive-learning/preferences'],
     enabled: true
   });
@@ -111,7 +118,7 @@ export default function AdaptiveLearning() {
     isLoading: patternsLoading,
     error: patternsError,
     refetch: refetchPatterns
-  } = useQuery({
+  } = useQuery<ConversationPattern[]>({
     queryKey: ['/api/adaptive-learning/patterns'],
     enabled: true
   });
@@ -121,17 +128,17 @@ export default function AdaptiveLearning() {
     isLoading: recommendationsLoading,
     error: recommendationsError,
     refetch: refetchRecommendations
-  } = useQuery({
+  } = useQuery<WellnessRecommendation[]>({
     queryKey: ['/api/adaptive-learning/recommendations'],
     enabled: true
   });
 
   const {
-    data: insights,
+    data: insights = [],
     isLoading: insightsLoading,
     error: insightsError,
     refetch: refetchInsights
-  } = useQuery({
+  } = useQuery<LearningInsights[]>({
     queryKey: ['/api/adaptive-learning/insights'],
     enabled: true
   });
@@ -170,6 +177,8 @@ export default function AdaptiveLearning() {
   }, []);
 
   const renderPreferencesTab = useCallback(() => {
+    if (preferencesLoading) return <LoadingSpinner message="Loading your learning preferences..." />;
+    if (preferencesError) return <ErrorMessage error="Failed to load preferences" onRetry={refetchPreferences} />;
     if (!preferences) {
       return (
         <div className="text-center py-8">
@@ -181,58 +190,59 @@ export default function AdaptiveLearning() {
     }
 
     return (
-      <div className="space-y-6">
-        {/* Adaptation Level */}
-        <AdaptiveLearningCard 
-          title="Adaptation Level" 
-          icon={<Settings className="w-5 h-5" />}
-        >
-          <div className="space-y-4">
-            <div className="bg-gray-200 h-3 rounded-full overflow-hidden">
-              <div 
-                className="bg-white h-3 rounded-full transition-all duration-300"
-                style={{ width: `${(preferences?.adaptationLevel || 0) * 100}%` }}
-              ></div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <AdaptiveLearningCard title="Learning Style" icon={<Brain className="w-5 h-5" />}>
+          <div className="mb-4">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-sm font-medium theme-text">Preferred Style</span>
+              <span className="text-lg font-bold text-blue-600 capitalize">{preferences.learningStyle}</span>
             </div>
-            <p className="theme-text-secondary text-sm">
-              Higher levels mean more personalized responses based on your interaction patterns
+            <p className="text-sm text-gray-600">
+              Your identified learning style based on interaction patterns.
             </p>
           </div>
         </AdaptiveLearningCard>
 
-        {/* Topics */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <AdaptiveLearningCard 
-            title="Preferred Topics" 
-            icon={<Target className="w-5 h-5" />}
-          >
-            <div className="flex flex-wrap gap-2">
-              {preferences?.preferredTopics?.map((topic, index) => (
-                <span key={index} className="px-2 py-1 bg-white/20 rounded theme-text text-sm">
-                  {topic}
-                </span>
-              )) || <span className="theme-text-secondary">No preferences set</span>}
+        <AdaptiveLearningCard title="Communication Preference" icon={<MessageSquare className="w-5 h-5" />}>
+          <div className="mb-4">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-sm font-medium theme-text">Style</span>
+              <span className="text-lg font-bold text-green-600 capitalize">{preferences.communicationPreference}</span>
             </div>
-          </AdaptiveLearningCard>
-          
-          <AdaptiveLearningCard 
-            title="Exercise Preferences" 
-            icon={<Award className="w-5 h-5" />}
-          >
-            <div className="flex flex-wrap gap-2">
-              {preferences?.exercisePreferences?.map((exercise, index) => (
-                <span key={index} className="px-2 py-1 bg-white/20 rounded theme-text text-sm">
-                  {exercise}
-                </span>
-              )) || <span className="theme-text-secondary">No preferences set</span>}
-            </div>
-          </AdaptiveLearningCard>
-        </div>
+            <p className="text-sm text-gray-600">
+              How you prefer to receive information and feedback.
+            </p>
+          </div>
+        </AdaptiveLearningCard>
+
+        <AdaptiveLearningCard title="Personality Focus" icon={<User className="w-5 h-5" />}>
+          <div className="space-y-2">
+            {preferences.personalityFocus?.map((focus: string, index: number) => (
+              <div key={index} className="flex items-center justify-between p-2 bg-blue-50 rounded-lg">
+                <span className="text-sm font-medium theme-text capitalize">{focus.replace('-', ' ')}</span>
+                <CheckCircle className="w-4 h-4 text-green-500" />
+              </div>
+            ))}
+          </div>
+        </AdaptiveLearningCard>
+
+        <AdaptiveLearningCard title="Therapeutic Goals" icon={<Target className="w-5 h-5" />}>
+          <div className="space-y-2">
+            {preferences.therapeuticGoals?.map((goal: string, index: number) => (
+              <div key={index} className="flex items-center justify-between p-2 bg-green-50 rounded-lg">
+                <span className="text-sm font-medium theme-text capitalize">{goal.replace('-', ' ')}</span>
+                <Award className="w-4 h-4 text-blue-500" />
+              </div>
+            ))}
+          </div>
+        </AdaptiveLearningCard>
       </div>
     );
-  }, [preferences]);
+  }, [preferences, preferencesLoading, preferencesError, refetchPreferences]);
 
   const renderPatternsTab = useCallback(() => {
+    if (patternsLoading) return <LoadingSpinner message="Loading conversation patterns..." />;
+    if (patternsError) return <ErrorMessage error="Failed to load patterns" onRetry={refetchPatterns} />;
     if (patterns.length === 0) {
       return (
         <div className="text-center py-8">
@@ -250,19 +260,19 @@ export default function AdaptiveLearning() {
           icon={<MessageSquare className="w-5 h-5" />}
         >
           <div className="space-y-4">
-            {patterns.map((pattern) => (
+            {patterns.map((pattern: ConversationPattern) => (
               <div key={pattern.id} className="p-4 bg-white/10 rounded-lg border border-gray-200">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="theme-text font-medium capitalize">{pattern.category}</span>
+                  <span className="theme-text font-medium capitalize">{pattern.type}</span>
                   <div className="flex items-center space-x-2">
-                    <span className="theme-text-secondary text-sm">Effectiveness:</span>
-                    <span className="theme-text font-bold">{Math.round(pattern.effectiveness * 100)}%</span>
+                    <span className="theme-text-secondary text-sm">Confidence:</span>
+                    <span className="theme-text font-bold">{pattern.confidence}%</span>
                   </div>
                 </div>
                 <p className="theme-text-secondary text-sm mb-2">{pattern.pattern}</p>
                 <div className="flex items-center justify-between text-xs theme-text-secondary">
                   <span>Used {pattern.frequency} times</span>
-                  <span>Last used: {new Date(pattern.lastUsed).toLocaleDateString()}</span>
+                  <span>Last observed: {new Date(pattern.lastObserved).toLocaleDateString()}</span>
                 </div>
               </div>
             ))}
@@ -270,9 +280,11 @@ export default function AdaptiveLearning() {
         </AdaptiveLearningCard>
       </div>
     );
-  }, [patterns]);
+  }, [patterns, patternsLoading, patternsError, refetchPatterns]);
 
   const renderRecommendationsTab = useCallback(() => {
+    if (recommendationsLoading) return <LoadingSpinner message="Loading recommendations..." />;
+    if (recommendationsError) return <ErrorMessage error="Failed to load recommendations" onRetry={refetchRecommendations} />;
     if (recommendations.length === 0) {
       return (
         <div className="text-center py-8">
@@ -290,24 +302,24 @@ export default function AdaptiveLearning() {
           icon={<Lightbulb className="w-5 h-5" />}
         >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {recommendations.map((rec) => (
+            {recommendations.map((rec: WellnessRecommendation) => (
               <div key={rec.id} className="p-4 bg-white/10 rounded-lg border border-gray-200 hover:border-blue-300 transition-colors">
                 <div className="flex items-center justify-between mb-2">
-                  <h4 className="theme-text font-medium">{rec.name}</h4>
+                  <h4 className="theme-text font-medium">{rec.title}</h4>
                   <span className="text-xs theme-text-secondary px-2 py-1 bg-blue-100 text-blue-700 rounded capitalize">
-                    {rec.difficulty}
+                    {rec.priority}
                   </span>
                 </div>
                 <p className="theme-text-secondary text-sm mb-2">{rec.description}</p>
-                <p className="theme-text-secondary text-xs mb-2 italic">Why for you: {rec.personalizedReason}</p>
+                <p className="theme-text-secondary text-xs mb-2 italic">Why for you: {rec.adaptationReason}</p>
                 <div className="flex items-center justify-between">
                   <span className="theme-text-secondary text-xs flex items-center">
                     <span className="mr-1">⏱️</span>
-                    {rec.duration} min
+                    {rec.estimatedDuration}
                   </span>
                   <div className="flex items-center space-x-1">
                     <span className="theme-text-secondary text-xs">Confidence:</span>
-                    <span className="theme-text font-bold text-xs">{Math.round(rec.confidence * 100)}%</span>
+                    <span className="theme-text font-bold text-xs">{rec.confidence}%</span>
                   </div>
                 </div>
               </div>
@@ -316,10 +328,12 @@ export default function AdaptiveLearning() {
         </AdaptiveLearningCard>
       </div>
     );
-  }, [recommendations]);
+  }, [recommendations, recommendationsLoading, recommendationsError, refetchRecommendations]);
 
   const renderInsightsTab = useCallback(() => {
-    if (!insights) {
+    if (insightsLoading) return <LoadingSpinner message="Loading insights..." />;
+    if (insightsError) return <ErrorMessage error="Failed to load insights" onRetry={refetchInsights} />;
+    if (insights.length === 0) {
       return (
         <div className="text-center py-8">
           <Brain className="w-12 h-12 mx-auto mb-3 text-gray-400" />
@@ -331,97 +345,36 @@ export default function AdaptiveLearning() {
 
     return (
       <div className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <AdaptiveLearningCard 
-            title="Learning Progress" 
-            icon={<Brain className="w-5 h-5" />}
-          >
-            <div className="text-center">
-              <div className="text-3xl font-bold theme-text mb-2">
-                {Math.round((insights.learningProgress || 0) * 100)}%
-              </div>
-              <p className="text-sm theme-text-secondary">AI adaptation level</p>
-            </div>
-          </AdaptiveLearningCard>
-
-          <AdaptiveLearningCard 
-            title="Confidence Score" 
-            icon={<Award className="w-5 h-5" />}
-          >
-            <div className="text-center">
-              <div className="text-3xl font-bold theme-text mb-2">
-                {Math.round((insights.confidenceScore || 0) * 100)}%
-              </div>
-              <p className="text-sm theme-text-secondary">Response accuracy</p>
-            </div>
-          </AdaptiveLearningCard>
-        </div>
-
         <AdaptiveLearningCard 
           title="AI Learning Insights" 
-          icon={<TrendingUp className="w-5 h-5" />}
+          icon={<Brain className="w-5 h-5" />}
         >
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <h4 className="font-medium theme-text mb-3 flex items-center">
-                <span className="mr-2">💬</span>
-                Conversation Themes
-              </h4>
-              <div className="space-y-1">
-                {insights.conversationThemes?.map((theme, index) => (
-                  <span key={index} className="inline-block px-2 py-1 bg-blue-100 text-blue-700 rounded text-sm mr-1 mb-1">
-                    {theme}
-                  </span>
-                )) || <span className="theme-text-secondary">No themes identified</span>}
+          <div className="space-y-4">
+            {insights.map((insight: LearningInsights) => (
+              <div key={insight.id} className="p-4 bg-white/10 rounded-lg border border-gray-200">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="theme-text font-medium capitalize">{insight.category}</span>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-xs theme-text-secondary px-2 py-1 bg-green-100 text-green-700 rounded">
+                      {insight.actionable ? 'Actionable' : 'Insight'}
+                    </span>
+                    <span className="theme-text-secondary text-sm">Strength:</span>
+                    <span className="theme-text font-bold">{Math.round(insight.strength * 100)}%</span>
+                  </div>
+                </div>
+                <p className="theme-text-secondary text-sm mb-2">{insight.insight}</p>
+                <p className="theme-text-secondary text-xs italic mb-2">{insight.suggestion}</p>
+                <div className="flex items-center justify-between text-xs theme-text-secondary">
+                  <span>Type: {insight.type.replace('-', ' ')}</span>
+                  <span>Discovered: {new Date(insight.discoveredAt).toLocaleDateString()}</span>
+                </div>
               </div>
-            </div>
-            
-            <div>
-              <h4 className="font-medium theme-text mb-3 flex items-center">
-                <span className="mr-2">🔍</span>
-                Behavioral Patterns
-              </h4>
-              <div className="space-y-1">
-                {insights.behavioralPatterns?.map((pattern, index) => (
-                  <span key={index} className="inline-block px-2 py-1 bg-green-100 text-green-700 rounded text-sm mr-1 mb-1">
-                    {pattern}
-                  </span>
-                )) || <span className="theme-text-secondary">No patterns identified</span>}
-              </div>
-            </div>
-            
-            <div>
-              <h4 className="font-medium theme-text mb-3 flex items-center">
-                <span className="mr-2">✅</span>
-                Effective Approaches
-              </h4>
-              <div className="space-y-1">
-                {insights.effectiveApproaches?.map((approach, index) => (
-                  <span key={index} className="inline-block px-2 py-1 bg-purple-100 text-purple-700 rounded text-sm mr-1 mb-1">
-                    {approach}
-                  </span>
-                )) || <span className="theme-text-secondary">No approaches identified</span>}
-              </div>
-            </div>
-            
-            <div>
-              <h4 className="font-medium theme-text mb-3 flex items-center">
-                <span className="mr-2">🎯</span>
-                Wellness Needs
-              </h4>
-              <div className="space-y-1">
-                {insights.wellnessNeeds?.map((need, index) => (
-                  <span key={index} className="inline-block px-2 py-1 bg-amber-100 text-amber-700 rounded text-sm mr-1 mb-1">
-                    {need}
-                  </span>
-                )) || <span className="theme-text-secondary">No needs identified</span>}
-              </div>
-            </div>
+            ))}
           </div>
         </AdaptiveLearningCard>
       </div>
     );
-  }, [insights]);
+  }, [insights, insightsLoading, insightsError, refetchInsights]);
 
   // Global loading and error states (after ALL hooks are declared)
   const isLoading = preferencesLoading || patternsLoading || recommendationsLoading || insightsLoading;
