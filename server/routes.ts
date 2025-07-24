@@ -321,6 +321,7 @@ Adapt your response to mirror the user's communication patterns while providing 
     console.log('Final response - selectedVoice:', selectedVoice);
     
     res.json({
+      success: true,
       message: aiResponse,
       response: aiResponse,
       audioUrl: audioUrl,
@@ -337,6 +338,7 @@ Adapt your response to mirror the user's communication patterns while providing 
     console.error('Chat error:', error);
     const fallbackResponse = "I'm here to support you. Sometimes I have trouble connecting to my full capabilities, but I'm still listening. How are you feeling right now?";
     res.json({
+      success: true,
       message: fallbackResponse,
       response: fallbackResponse,
       wordsLearned: 1000,
