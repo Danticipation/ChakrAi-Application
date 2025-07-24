@@ -187,7 +187,7 @@ export default function App() {
                       <Suspense fallback={<div className="p-6">Loading...</div>}>
                         <Routes>
                           <Route path="/" element={<MemoryDashboard />} />
-                          <Route path="/chat" element={<Chat />} />
+                          <Route path="/chat" element={<Chat isOpen={true} onToggle={() => {}} selectedVoice={selectedVoice} />} />
                           <Route path="/dashboard" element={<MemoryDashboard />} />
                           <Route path="/journal" element={<TherapeuticJournal userId={1} onEntryCreated={() => {}} />} />
                           <Route path="/analytics" element={<AnalyticsDashboard userId={1} />} />
