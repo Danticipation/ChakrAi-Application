@@ -1,223 +1,174 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Brain, MessageSquare, Target, TrendingUp, User, Settings, Lightbulb, Award, CheckCircle, AlertCircle, Loader2, RefreshCw, ArrowRight } from 'lucide-react';
-import axios from 'axios';
+import { 
+  Brain, 
+  MessageSquare, 
+  Target, 
+  TrendingUp, 
+  User, 
+  Settings, 
+  Lightbulb, 
+  Award, 
+  CheckCircle, 
+  AlertCircle, 
+  Loader2, 
+  RefreshCw, 
+  ArrowRight 
+} from 'lucide-react';
 
-interface UserPreferences {
-  id: number;
-  communicationStyle: string;
+// Types for adaptive learning data
+interface LearningPreferences {
   preferredTopics: string[];
-  avoidedTopics: string[];
-  responseLength: string;
-  emotionalSupport: string;
-  sessionTiming: string;
   exercisePreferences: string[];
   adaptationLevel: number;
+  personalityTraits: string[];
 }
 
 interface ConversationPattern {
-  id: number;
+  id: string;
   pattern: string;
   frequency: number;
   effectiveness: number;
   category: string;
-  context: string;
   lastUsed: string;
 }
 
 interface WellnessRecommendation {
   id: string;
-  type: string;
   name: string;
   description: string;
-  duration: number;
-  difficulty: string;
-  tags: string[];
   personalizedReason: string;
+  difficulty: 'beginner' | 'intermediate' | 'advanced';
+  duration: number;
   confidence: number;
 }
 
-interface AdaptationInsight {
-  id: number;
-  conversationThemes: string[];
-  emotionalPatterns: string[];
-  effectiveApproaches: string[];
-  preferredTimes: string[];
-  wellnessNeeds: string[];
+interface LearningInsights {
   learningProgress: number;
   confidenceScore: number;
+  conversationThemes: string[];
+  behavioralPatterns: string[];
+  effectiveApproaches: string[];
+  wellnessNeeds: string[];
 }
 
-interface ApiResponse<T> {
-  data: T;
-  success: boolean;
-  message?: string;
-}
-
-// Reusable Loading Component
+// Utility Components
 const LoadingSpinner: React.FC<{ message?: string }> = ({ message = "Loading..." }) => (
-  <div className="flex items-center justify-center py-8" role="status" aria-label={message}>
-    <Loader2 className="w-6 h-6 animate-spin mr-2 text-blue-500" />
-    <span className="text-sm text-gray-600">{message}</span>
+  <div className="flex flex-col items-center justify-center min-h-[400px]">
+    <Loader2 className="w-8 h-8 animate-spin text-blue-500 mb-3" />
+    <p className="text-gray-600 text-center">{message}</p>
   </div>
 );
 
-// Reusable Error Component
 const ErrorMessage: React.FC<{ error: string; onRetry?: () => void }> = ({ error, onRetry }) => (
-  <div className="flex flex-col items-center justify-center py-8 px-4 bg-red-50 border border-red-200 rounded-lg" role="alert">
-    <AlertCircle className="w-8 h-8 text-red-500 mb-2" />
-    <h3 className="text-sm font-medium text-red-800 mb-1">Error Loading Data</h3>
-    <p className="text-xs text-red-600 text-center mb-3">{error}</p>
+  <div className="flex flex-col items-center justify-center min-h-[400px] text-center">
+    <AlertCircle className="w-12 h-12 text-red-500 mb-3" />
+    <h3 className="text-lg font-medium text-gray-800 mb-2">Unable to Load Data</h3>
+    <p className="text-gray-600 mb-4 max-w-md">{error}</p>
     {onRetry && (
       <button
         onClick={onRetry}
-        className="px-3 py-1 bg-red-100 hover:bg-red-200 text-red-700 text-xs rounded transition-colors"
-        aria-label="Retry loading data"
+        className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2"
       >
-        <RefreshCw className="w-3 h-3 mr-1 inline" />
+        <RefreshCw className="w-4 h-4" />
         Try Again
       </button>
     )}
   </div>
 );
 
-// Reusable Card Component
-const AdaptiveLearningCard: React.FC<{ title: string; icon: React.ReactNode; children: React.ReactNode; className?: string }> = ({ 
-  title, 
-  icon, 
-  children, 
-  className = "" 
-}) => (
-  <div className={`theme-card rounded-xl p-6 border-2 border-silver hover:border-blue-300 transition-all duration-200 ${className}`}>
-    <div className="flex items-center mb-4">
-      <div className="p-2 rounded-lg bg-blue-100 text-blue-600 mr-3">
-        {icon}
-      </div>
+// Adaptive Learning Card Component
+const AdaptiveLearningCard: React.FC<{
+  title: string;
+  icon: React.ReactNode;
+  children: React.ReactNode;
+}> = ({ title, icon, children }) => (
+  <div className="theme-surface rounded-lg p-6 shadow-lg border-2 border-silver">
+    <div className="flex items-center gap-3 mb-4">
+      <div className="text-blue-500">{icon}</div>
       <h3 className="text-lg font-semibold theme-text">{title}</h3>
     </div>
     {children}
   </div>
 );
 
-const AdaptiveLearning: React.FC = () => {
+export default function AdaptiveLearning() {
   const [activeTab, setActiveTab] = useState('preferences');
 
-  // Enhanced React Query with proper fetcher functions and error handling
-  const { 
-    data: preferencesData, 
-    isLoading: preferencesLoading, 
+  // Fetch data with React Query
+  const {
+    data: preferences,
+    isLoading: preferencesLoading,
     error: preferencesError,
-    refetch: refetchPreferences 
-  } = useQuery<ApiResponse<UserPreferences>>({
-    queryKey: ['user-preferences', 1],
-    queryFn: async () => {
-      const response = await axios.get('/api/user-preferences/1');
-      return response.data;
-    },
+    refetch: refetchPreferences
+  } = useQuery({
+    queryKey: ['/api/adaptive-learning/preferences'],
+    enabled: true
   });
 
-  const { 
-    data: patternsData, 
-    isLoading: patternsLoading, 
+  const {
+    data: patterns = [],
+    isLoading: patternsLoading,
     error: patternsError,
-    refetch: refetchPatterns 
-  } = useQuery<ApiResponse<ConversationPattern[]>>({
-    queryKey: ['conversation-patterns', 1],
-    queryFn: async () => {
-      const response = await axios.get('/api/conversation-patterns/1');
-      return response.data;
-    },
+    refetch: refetchPatterns
+  } = useQuery({
+    queryKey: ['/api/adaptive-learning/patterns'],
+    enabled: true
   });
 
-  const { 
-    data: recommendationsData, 
-    isLoading: recommendationsLoading, 
+  const {
+    data: recommendations = [],
+    isLoading: recommendationsLoading,
     error: recommendationsError,
-    refetch: refetchRecommendations 
-  } = useQuery<ApiResponse<WellnessRecommendation[]>>({
-    queryKey: ['wellness-recommendations', 1],
-    queryFn: async () => {
-      const response = await axios.get('/api/wellness-recommendations/1');
-      return response.data;
-    },
+    refetch: refetchRecommendations
+  } = useQuery({
+    queryKey: ['/api/adaptive-learning/recommendations'],
+    enabled: true
   });
 
-  const { 
-    data: insightsData, 
-    isLoading: insightsLoading, 
+  const {
+    data: insights,
+    isLoading: insightsLoading,
     error: insightsError,
-    refetch: refetchInsights 
-  } = useQuery<ApiResponse<AdaptationInsight>>({
-    queryKey: ['adaptation-insights', 1],
-    queryFn: async () => {
-      const response = await axios.get('/api/adaptation-insights/1');
-      return response.data;
-    },
+    refetch: refetchInsights
+  } = useQuery({
+    queryKey: ['/api/adaptive-learning/insights'],
+    enabled: true
   });
 
-  // Extract data with proper fallbacks
-  const preferences: UserPreferences | undefined = preferencesData?.data;
-  const patterns: ConversationPattern[] = Array.isArray(patternsData?.data) ? patternsData.data : [];
-  const recommendations: WellnessRecommendation[] = Array.isArray(recommendationsData?.data) ? recommendationsData.data : [];
-  const insights: AdaptationInsight | undefined = insightsData?.data;
-
-  // Memoized tab configuration for performance
+  // Tab configuration (memoized)
   const tabs = useMemo(() => [
-    { 
-      id: 'preferences', 
-      label: 'User Preferences', 
-      icon: <User className="w-4 h-4" aria-hidden="true" />,
-      'aria-label': 'View and manage user preferences'
+    {
+      id: 'preferences',
+      label: 'Preferences',
+      icon: <User className="w-5 h-5" />,
+      'aria-label': 'View your personalized AI preferences and settings'
     },
-    { 
-      id: 'patterns', 
-      label: 'Conversation Patterns', 
-      icon: <MessageSquare className="w-4 h-4" aria-hidden="true" />,
-      'aria-label': 'View conversation analysis patterns'
+    {
+      id: 'patterns',
+      label: 'Patterns',
+      icon: <MessageSquare className="w-5 h-5" />,
+      'aria-label': 'View conversation patterns and communication insights'
     },
-    { 
-      id: 'recommendations', 
-      label: 'Wellness Recommendations', 
-      icon: <Lightbulb className="w-4 h-4" aria-hidden="true" />,
+    {
+      id: 'recommendations',
+      label: 'Recommendations',
+      icon: <Lightbulb className="w-5 h-5" />,
       'aria-label': 'View personalized wellness recommendations'
     },
-    { 
-      id: 'insights', 
-      label: 'Adaptation Insights', 
-      icon: <Brain className="w-4 h-4" aria-hidden="true" />,
+    {
+      id: 'insights',
+      label: 'Insights',
+      icon: <Brain className="w-5 h-5" />,
       'aria-label': 'View AI adaptation insights and learning progress'
     }
   ], []);
 
-  // Memoized tab change handler
+  // ALL useCallback hooks declared here (before any early returns)
   const handleTabChange = useCallback((tabId: string) => {
     setActiveTab(tabId);
   }, []);
 
-  // Global loading and error states
-  const isLoading = preferencesLoading || patternsLoading || recommendationsLoading || insightsLoading;
-  const hasError = preferencesError || patternsError || recommendationsError || insightsError;
-
-  if (isLoading) {
-    return <LoadingSpinner message="Loading adaptive learning dashboard..." />;
-  }
-
-  if (hasError) {
-    const error = preferencesError || patternsError || recommendationsError || insightsError;
-    return (
-      <ErrorMessage 
-        error={error?.message || 'Failed to load adaptive learning data'} 
-        onRetry={() => {
-          refetchPreferences();
-          refetchPatterns();
-          refetchRecommendations();
-          refetchInsights();
-        }}
-      />
-    );
-  }
-
-  // Memoized tab renderers for performance optimization
   const renderPreferencesTab = useCallback(() => {
     if (!preferences) {
       return (
@@ -231,50 +182,13 @@ const AdaptiveLearning: React.FC = () => {
 
     return (
       <div className="space-y-6">
-        {/* Communication Preferences */}
-        <AdaptiveLearningCard 
-          title="Communication Preferences" 
-          icon={<MessageSquare className="w-5 h-5" />}
-        >
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm theme-text-secondary">Communication Style</label>
-              <div className="p-3 bg-white/10 rounded-lg">
-                <span className="theme-text capitalize">{preferences?.communicationStyle || 'Not set'}</span>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm theme-text-secondary">Response Length</label>
-              <div className="p-3 bg-white/10 rounded-lg">
-                <span className="theme-text capitalize">{preferences?.responseLength || 'Not set'}</span>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm theme-text-secondary">Emotional Support</label>
-              <div className="p-3 bg-white/10 rounded-lg">
-                <span className="theme-text capitalize">{preferences?.emotionalSupport || 'Not set'}</span>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm theme-text-secondary">Session Timing</label>
-              <div className="p-3 bg-white/10 rounded-lg">
-                <span className="theme-text capitalize">{preferences?.sessionTiming || 'Not set'}</span>
-              </div>
-            </div>
-          </div>
-        </AdaptiveLearningCard>
-
         {/* Adaptation Level */}
         <AdaptiveLearningCard 
-          title="Learning Adaptation" 
-          icon={<Brain className="w-5 h-5" />}
+          title="Adaptation Level" 
+          icon={<Settings className="w-5 h-5" />}
         >
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="theme-text-secondary">Adaptation Level</span>
-              <span className="theme-text font-bold">{Math.round((preferences?.adaptationLevel || 0) * 100)}%</span>
-            </div>
-            <div className="w-full bg-white/20 rounded-full h-3">
+            <div className="bg-gray-200 h-3 rounded-full overflow-hidden">
               <div 
                 className="bg-white h-3 rounded-full transition-all duration-300"
                 style={{ width: `${(preferences?.adaptationLevel || 0) * 100}%` }}
@@ -331,7 +245,6 @@ const AdaptiveLearning: React.FC = () => {
 
     return (
       <div className="space-y-6">
-        {/* Conversation Patterns */}
         <AdaptiveLearningCard 
           title="Conversation Patterns" 
           icon={<MessageSquare className="w-5 h-5" />}
@@ -372,9 +285,8 @@ const AdaptiveLearning: React.FC = () => {
 
     return (
       <div className="space-y-6">
-        {/* Personalized Recommendations */}
         <AdaptiveLearningCard 
-          title="Personalized Recommendations" 
+          title="Wellness Recommendations" 
           icon={<Lightbulb className="w-5 h-5" />}
         >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -419,7 +331,6 @@ const AdaptiveLearning: React.FC = () => {
 
     return (
       <div className="space-y-6">
-        {/* Learning Progress Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <AdaptiveLearningCard 
             title="Learning Progress" 
@@ -446,7 +357,6 @@ const AdaptiveLearning: React.FC = () => {
           </AdaptiveLearningCard>
         </div>
 
-        {/* Detailed Insights */}
         <AdaptiveLearningCard 
           title="AI Learning Insights" 
           icon={<TrendingUp className="w-5 h-5" />}
@@ -468,11 +378,11 @@ const AdaptiveLearning: React.FC = () => {
             
             <div>
               <h4 className="font-medium theme-text mb-3 flex items-center">
-                <span className="mr-2">😊</span>
-                Emotional Patterns
+                <span className="mr-2">🔍</span>
+                Behavioral Patterns
               </h4>
               <div className="space-y-1">
-                {insights.emotionalPatterns?.map((pattern, index) => (
+                {insights.behavioralPatterns?.map((pattern, index) => (
                   <span key={index} className="inline-block px-2 py-1 bg-green-100 text-green-700 rounded text-sm mr-1 mb-1">
                     {pattern}
                   </span>
@@ -512,6 +422,29 @@ const AdaptiveLearning: React.FC = () => {
       </div>
     );
   }, [insights]);
+
+  // Global loading and error states (after ALL hooks are declared)
+  const isLoading = preferencesLoading || patternsLoading || recommendationsLoading || insightsLoading;
+  const hasError = preferencesError || patternsError || recommendationsError || insightsError;
+
+  if (isLoading) {
+    return <LoadingSpinner message="Loading adaptive learning dashboard..." />;
+  }
+
+  if (hasError) {
+    const error = preferencesError || patternsError || recommendationsError || insightsError;
+    return (
+      <ErrorMessage 
+        error={error?.message || 'Failed to load adaptive learning data'} 
+        onRetry={() => {
+          refetchPreferences();
+          refetchPatterns();
+          refetchRecommendations();
+          refetchInsights();
+        }}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen theme-background p-4">
@@ -578,6 +511,4 @@ const AdaptiveLearning: React.FC = () => {
       </div>
     </div>
   );
-};
-
-export default AdaptiveLearning;
+}

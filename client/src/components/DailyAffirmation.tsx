@@ -102,105 +102,115 @@ export default function DailyAffirmation({ onBack, currentUser }: DailyAffirmati
     const todayKey = getTodayKey();
     
     // Check cache first unless forcing refresh
-    if (!forceRefresh && cachedAffirmations.has(todayKey)) {
-      const cached = cachedAffirmations.get(todayKey)!;
-      setAffirmationData(cached);
-      return;
-    }
-    
-    setLoading(true);
-    setError(null);
-    
-    try {
-      console.log('Fetching daily affirmation from:', '/api/daily-affirmation');
-      const response = await fetch('/api/daily-affirmation');
-      console.log('Response status:', response.status, response.statusText);
+    setCachedAffirmations(currentCache => {
+      if (!forceRefresh && currentCache.has(todayKey)) {
+        const cached = currentCache.get(todayKey)!;
+        setAffirmationData(cached);
+        return currentCache; // Return unchanged cache
+      }
       
-      if (response.ok) {
-        const data = await response.json();
-        console.log('API response data:', data);
-        
-        // Clean up the affirmation text (remove extra quotes if present)
-        let cleanAffirmation = data.affirmation;
-        if (typeof cleanAffirmation === 'string') {
-          cleanAffirmation = cleanAffirmation.replace(/^["']|["']$/g, '');
-        }
-        
-        const newAffirmation: AffirmationData = {
-          affirmation: cleanAffirmation,
-          category: data.category || 'Daily Inspiration',
-          date: new Date().toLocaleDateString()
-        };
-        
-        console.log('Processed affirmation:', newAffirmation);
-        
-        // Update state
-        setAffirmationData(newAffirmation);
-        
-        // Cache the affirmation
-        const newCache = new Map(cachedAffirmations);
-        newCache.set(todayKey, newAffirmation);
-        
-        // Clean old entries (keep last 7 days)
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-        const cleanupDate = sevenDaysAgo.toISOString().split('T')[0];
-        
-        const keysToDelete = Array.from(newCache.keys()).filter(key => key < cleanupDate);
-        keysToDelete.forEach(key => newCache.delete(key));
-        
-        setCachedAffirmations(newCache);
-        
-        // Save to localStorage
+      // Start fetch process
+      setLoading(true);
+      setError(null);
+      
+      // Use async function within effect
+      (async () => {
         try {
-          localStorage.setItem('daily-affirmations', JSON.stringify(Array.from(newCache.entries())));
-        } catch (storageError) {
-          console.warn('Failed to cache affirmation:', storageError);
+          console.log('Fetching daily affirmation from:', '/api/daily-affirmation');
+          const response = await fetch('/api/daily-affirmation');
+          console.log('Response status:', response.status, response.statusText);
+          
+          if (response.ok) {
+            const data = await response.json();
+            console.log('API response data:', data);
+            
+            // Clean up the affirmation text (remove extra quotes if present)
+            let cleanAffirmation = data.affirmation;
+            if (typeof cleanAffirmation === 'string') {
+              cleanAffirmation = cleanAffirmation.replace(/^["']|["']$/g, '');
+            }
+            
+            const newAffirmation: AffirmationData = {
+              affirmation: cleanAffirmation,
+              category: data.category || 'Daily Inspiration',
+              date: new Date().toLocaleDateString()
+            };
+            
+            console.log('Processed affirmation:', newAffirmation);
+            
+            // Update state
+            setAffirmationData(newAffirmation);
+            
+            // Update cache
+            setCachedAffirmations(prevCache => {
+              const newCache = new Map(prevCache);
+              newCache.set(todayKey, newAffirmation);
+              
+              // Clean old entries (keep last 7 days)
+              const sevenDaysAgo = new Date();
+              sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+              const cleanupDate = sevenDaysAgo.toISOString().split('T')[0];
+              
+              const keysToDelete = Array.from(newCache.keys()).filter(key => key < cleanupDate);
+              keysToDelete.forEach(key => newCache.delete(key));
+              
+              // Save to localStorage
+              try {
+                localStorage.setItem('daily-affirmations', JSON.stringify(Array.from(newCache.entries())));
+              } catch (storageError) {
+                console.warn('Failed to cache affirmation:', storageError);
+              }
+              
+              return newCache;
+            });
+            
+            toast({
+              title: "Fresh Affirmation",
+              description: "Your daily inspiration has been updated.",
+              duration: 2000,
+            });
+            
+          } else {
+            throw new Error('Failed to fetch affirmation');
+          }
+        } catch (fetchError) {
+          console.error('Failed to fetch daily affirmation:', fetchError);
+          
+          // Try to use yesterday's affirmation as fallback
+          const yesterdayKey = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+          const fallback = currentCache.get(yesterdayKey);
+          
+          if (fallback) {
+            setAffirmationData({
+              ...fallback,
+              category: fallback.category + ' (Yesterday)'
+            });
+            setError('Using previous affirmation - check your connection');
+            
+            toast({
+              title: "Connection Issue",
+              description: "Using previous affirmation. Check your internet connection.",
+              variant: "destructive",
+              duration: 4000,
+            });
+          } else {
+            setError('Unable to fetch daily affirmation. Please try again later.');
+            
+            toast({
+              title: "Connection Failed",
+              description: "Unable to load affirmation. Please check your connection and try again.",
+              variant: "destructive",
+              duration: 5000,
+            });
+          }
+        } finally {
+          setLoading(false);
         }
-        
-        toast({
-          title: "Fresh Affirmation",
-          description: "Your daily inspiration has been updated.",
-          duration: 2000,
-        });
-        
-      } else {
-        throw new Error('Failed to fetch affirmation');
-      }
-    } catch (fetchError) {
-      console.error('Failed to fetch daily affirmation:', fetchError);
+      })();
       
-      // Try to use yesterday's affirmation as fallback
-      const yesterdayKey = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-      const fallback = cachedAffirmations.get(yesterdayKey);
-      
-      if (fallback) {
-        setAffirmationData({
-          ...fallback,
-          category: fallback.category + ' (Yesterday)'
-        });
-        setError('Using previous affirmation - check your connection');
-        
-        toast({
-          title: "Connection Issue",
-          description: "Using previous affirmation. Check your internet connection.",
-          variant: "destructive",
-          duration: 4000,
-        });
-      } else {
-        setError('Unable to fetch daily affirmation. Please try again later.');
-        
-        toast({
-          title: "Connection Failed",
-          description: "Unable to load affirmation. Please check your connection and try again.",
-          variant: "destructive",
-          duration: 5000,
-        });
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, [getTodayKey, cachedAffirmations, toast]);
+      return currentCache; // Return unchanged cache for now
+    });
+  }, [getTodayKey, toast]);
 
   // Safe audio decoding with comprehensive validation
   const decodeAndPlayAudio = useCallback(async (audioData: string) => {
