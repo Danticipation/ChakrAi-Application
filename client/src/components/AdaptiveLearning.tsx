@@ -110,6 +110,13 @@ export default function AdaptiveLearning() {
     refetch: refetchPreferences
   } = useQuery<LearningPreferences>({
     queryKey: ['/api/adaptive-learning/preferences'],
+    queryFn: async () => {
+      const response = await fetch('/api/adaptive-learning/preferences');
+      if (!response.ok) {
+        throw new Error('Failed to fetch preferences');
+      }
+      return response.json();
+    },
     enabled: true
   });
 
@@ -120,6 +127,13 @@ export default function AdaptiveLearning() {
     refetch: refetchPatterns
   } = useQuery<ConversationPattern[]>({
     queryKey: ['/api/adaptive-learning/patterns'],
+    queryFn: async () => {
+      const response = await fetch('/api/adaptive-learning/patterns');
+      if (!response.ok) {
+        throw new Error('Failed to fetch patterns');
+      }
+      return response.json();
+    },
     enabled: true
   });
 
@@ -130,6 +144,13 @@ export default function AdaptiveLearning() {
     refetch: refetchRecommendations
   } = useQuery<WellnessRecommendation[]>({
     queryKey: ['/api/adaptive-learning/recommendations'],
+    queryFn: async () => {
+      const response = await fetch('/api/adaptive-learning/recommendations');
+      if (!response.ok) {
+        throw new Error('Failed to fetch recommendations');
+      }
+      return response.json();
+    },
     enabled: true
   });
 
@@ -140,6 +161,13 @@ export default function AdaptiveLearning() {
     refetch: refetchInsights
   } = useQuery<LearningInsights[]>({
     queryKey: ['/api/adaptive-learning/insights'],
+    queryFn: async () => {
+      const response = await fetch('/api/adaptive-learning/insights');
+      if (!response.ok) {
+        throw new Error('Failed to fetch insights');
+      }
+      return response.json();
+    },
     enabled: true
   });
 

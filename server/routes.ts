@@ -1904,7 +1904,7 @@ router.get('/api/analytics/simple/:userId', async (req, res) => {
 // Get user's current mood data for ambient sound recommendations
 router.get('/user-mood-current', async (req, res) => {
   try {
-    const userId = userSessionManager.getAnonymousUserId(req);
+    const userId = 1; // Using default user ID for now
     const recentMoodEntries = await storage.getMoodEntries(userId);
     
     if (!recentMoodEntries || recentMoodEntries.length === 0) {
@@ -2240,7 +2240,7 @@ router.get('/ambient-audio/:soundId', async (req, res) => {
 // Save user's ambient sound preferences
 router.post('/ambient-sound/preferences', async (req, res) => {
   try {
-    const userId = userSessionManager.getAnonymousUserId(req);
+    const userId = 1; // Using default user ID for now
     const { 
       favoriteCategories, 
       preferredVolume, 
@@ -2267,7 +2267,7 @@ router.post('/ambient-sound/preferences', async (req, res) => {
 // Get user's ambient sound preferences
 router.get('/ambient-sound/preferences/:userId', async (req, res) => {
   try {
-    const userId = parseInt(req.params.userId) || userSessionManager.getAnonymousUserId(req);
+    const userId = parseInt(req.params.userId) || 1;
     const preferences = await storage.getAmbientSoundPreferences(userId);
     
     if (!preferences) {
@@ -2294,7 +2294,7 @@ router.get('/ambient-sound/preferences/:userId', async (req, res) => {
 // Log ambient sound usage for analytics
 router.post('/ambient-sound/usage', async (req, res) => {
   try {
-    const userId = userSessionManager.getAnonymousUserId(req);
+    const userId = 1; // Using default user ID for now
     const { soundId, duration, mood, category } = req.body;
 
     const usage = await storage.logAmbientSoundUsage({
