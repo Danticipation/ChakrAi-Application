@@ -29,7 +29,7 @@ import { UsageLimitModal } from './components/UsageLimitModal';
 import AuthModal from './components/AuthModal';
 
 // Lazy‑loaded feature components
-const Chat = lazy(() => import('./components/Chat'));
+const Chat = lazy(() => import('./components/FloatingChat'));
 const MemoryDashboard = lazy(() => import('./components/MemoryDashboard'));
 const TherapeuticJournal = lazy(() => import('./components/TherapeuticJournal'));
 const AnalyticsDashboard = lazy(() => import('./components/AnalyticsDashboard'));
@@ -51,7 +51,7 @@ const FeedbackSystem = lazy(() => import('./components/FeedbackSystem'));
 const queryClient = new QueryClient();
 
 // Sidebar group + item helpers
-const SidebarGroup: React.FC<{ title: string; collapsed: boolean }> = ({ title, children, collapsed }) => (
+const SidebarGroup: React.FC<{ title: string; collapsed: boolean; children: React.ReactNode }> = ({ title, children, collapsed }) => (
   <div className="mt-4">
     {!collapsed && <h2 className="px-4 text-xs uppercase text-gray-400">{title}</h2>}
     <nav className="mt-2">{children}</nav>
@@ -159,6 +159,10 @@ const Header: React.FC<{ collapsed: boolean; setCollapsed: (c: boolean) => void 
 
 export default function App() {
   const [collapsed, setCollapsed] = useState(false);
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
+  const [showUsageLimitModal, setShowUsageLimitModal] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [selectedVoice, setSelectedVoice] = useState('james');
 
   return (
     <ThemeProvider>
@@ -185,30 +189,30 @@ export default function App() {
                           <Route path="/" element={<MemoryDashboard />} />
                           <Route path="/chat" element={<Chat />} />
                           <Route path="/dashboard" element={<MemoryDashboard />} />
-                          <Route path="/journal" element={<TherapeuticJournal />} />
-                          <Route path="/analytics" element={<AnalyticsDashboard />} />
+                          <Route path="/journal" element={<TherapeuticJournal userId={1} onEntryCreated={() => {}} />} />
+                          <Route path="/analytics" element={<AnalyticsDashboard userId={1} />} />
                           <Route path="/rewards" element={<WellnessRewards />} />
                           <Route path="/community" element={<CommunitySupport />} />
-                          <Route path="/quiz" element={<PersonalityQuiz />} />
-                          <Route path="/reflection" element={<PersonalityReflection />} />
+                          <Route path="/quiz" element={<PersonalityQuiz onComplete={() => {}} />} />
+                          <Route path="/reflection" element={<PersonalityReflection userId={1} />} />
                           <Route path="/adaptive" element={<AdaptiveLearning />} />
-                          <Route path="/therapy" element={<AdaptiveTherapyPlan />} />
-                          <Route path="/agent" element={<AgentSystem />} />
+                          <Route path="/therapy" element={<AdaptiveTherapyPlan userId={1} onPlanUpdate={() => {}} />} />
+                          <Route path="/agent" element={<AgentSystem userId={1} />} />
                           <Route path="/vr" element={<VRTherapy />} />
                           <Route path="/health" element={<HealthIntegration />} />
                           <Route path="/privacy" element={<PrivacyCompliance />} />
                           <Route path="/therapist" element={<TherapistPortal />} />
-                          <Route path="/settings/theme" element={<ThemeSelector />} />
-                          <Route path="/settings/voice" element={<VoiceSelector />} />
+                          <Route path="/settings/theme" element={<ThemeSelector onClose={() => {}} />} />
+                          <Route path="/settings/voice" element={<VoiceSelector selectedVoice={selectedVoice} onVoiceChange={setSelectedVoice} />} />
                           <Route path="*" element={<MemoryDashboard />} />
                         </Routes>
                       </Suspense>
                     </div>
 
                     {/* Global modals & cursor */}
-                    <SubscriptionModal />
-                    <UsageLimitModal />
-                    <AuthModal />
+                    <SubscriptionModal isOpen={showSubscriptionModal} onClose={() => setShowSubscriptionModal(false)} />
+                    <UsageLimitModal isOpen={showUsageLimitModal} onClose={() => setShowUsageLimitModal(false)} onUpgrade={() => setShowSubscriptionModal(true)} />
+                    <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} onAuthSuccess={() => setShowAuthModal(false)} />
                     <NeonCursor />
                   </main>
                 </div>
