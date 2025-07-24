@@ -387,11 +387,17 @@ router.post('/transcribe', upload.single('audio'), async (req, res) => {
     }
 
     const result = await response.json();
-    res.json({ text: result.text });
+    console.log('✅ Transcription successful:', result.text);
+    res.json({ 
+      success: true, 
+      transcription: result.text,
+      text: result.text // Keep for compatibility
+    });
 
   } catch (error) {
-    console.error('Transcription error:', error);
+    console.error('❌ Transcription error:', error);
     res.status(500).json({ 
+      success: false,
       error: 'Voice transcription failed. Please try again.',
       errorType: 'transcription_error'
     });
