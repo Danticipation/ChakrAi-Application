@@ -328,6 +328,17 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
 
   const startRecording = useCallback(async (): Promise<void> => {
     try {
+      console.log('🎤 Starting microphone recording...');
+      
+      // Check browser support
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('Microphone not supported in this browser');
+      }
+
+      if (!MediaRecorder.isTypeSupported('audio/webm')) {
+        console.warn('⚠️ WebM audio not supported, falling back to default');
+      }
+
       const constraints = {
         audio: {
           echoCancellation: true,
@@ -338,7 +349,9 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
         }
       };
 
+      console.log('🔍 Requesting microphone permission...');
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      console.log('✅ Microphone permission granted');
       streamRef.current = stream;
 
       // Test MIME type support
@@ -361,13 +374,18 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
       mediaRecorderRef.current = recorder;
       audioChunksRef.current = [];
       
+      console.log('📊 MediaRecorder created with type:', selectedMimeType || 'default');
+      
       recorder.ondataavailable = (event) => {
+        console.log('📦 Audio data chunk received:', event.data.size, 'bytes');
         if (event.data.size > 0) {
           audioChunksRef.current.push(event.data);
         }
       };
       
       recorder.onstop = async () => {
+        console.log('🛑 Recording stopped');
+        
         // Stop all audio tracks
         if (streamRef.current) {
           streamRef.current.getTracks().forEach(track => track.stop());
@@ -376,12 +394,16 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
         
         setIsRecording(false);
         
+        console.log('📈 Audio chunks collected:', audioChunksRef.current.length);
         if (audioChunksRef.current.length > 0) {
           const audioBlob = new Blob(audioChunksRef.current, { 
             type: selectedMimeType || 'audio/webm' 
           });
+          console.log('🎵 Audio blob created:', audioBlob.size, 'bytes, type:', audioBlob.type);
           await sendAudioToWhisper(audioBlob);
           audioChunksRef.current = [];
+        } else {
+          console.warn('⚠️ No audio data recorded');
         }
       };
       
@@ -396,8 +418,24 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
 
       setIsRecording(true);
       recorder.start(1000);
+      console.log('🎙️ Recording started successfully');
     } catch (error) {
-      console.error('Error starting recording:', error);
+      console.error('❌ Error starting recording:', error);
+      
+      // Provide user-friendly error messages
+      let errorMessage = 'Could not access microphone. ';
+      const err = error as any;
+      if (err?.name === 'NotAllowedError') {
+        errorMessage += 'Please allow microphone access and try again.';
+      } else if (err?.name === 'NotFoundError') {
+        errorMessage += 'No microphone found. Please check your device.';
+      } else if (err?.name === 'NotReadableError') {
+        errorMessage += 'Microphone is being used by another application.';
+      } else {
+        errorMessage += err?.message || 'Unknown error occurred.';
+      }
+      
+      alert(errorMessage);
       setIsRecording(false);
     }
   }, []);
@@ -410,6 +448,9 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
 
   const sendAudioToWhisper = useCallback(async (audioBlob: Blob): Promise<void> => {
     try {
+      console.log('🚀 Sending audio to Whisper API...');
+      console.log('📊 Audio blob size:', audioBlob.size, 'bytes');
+      
       const formData = new FormData();
       formData.append('audio', audioBlob, 'recording.webm');
       formData.append('userId', '1');
@@ -422,11 +463,29 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
         }
       });
       
+      console.log('📥 Transcription response:', response.data);
+      
       if (response.data.success && response.data.transcription) {
+        console.log('✅ Transcription successful:', response.data.transcription);
         await sendMessage(response.data.transcription);
+      } else {
+        console.warn('⚠️ Transcription failed or empty:', response.data);
+        alert('No speech detected. Please try speaking louder or closer to the microphone.');
       }
     } catch (error) {
-      console.error('Error transcribing audio:', error);
+      console.error('❌ Error transcribing audio:', error);
+      
+      let errorMessage = 'Voice transcription failed. ';
+      const err = error as any;
+      if (err?.response?.status === 503) {
+        errorMessage += 'Service temporarily unavailable. Please try again later.';
+      } else if (err?.response?.status === 429) {
+        errorMessage += 'Too many requests. Please wait a moment and try again.';
+      } else {
+        errorMessage += 'Please check your connection and try again.';
+      }
+      
+      alert(errorMessage);
     }
   }, [sendMessage]);
 
