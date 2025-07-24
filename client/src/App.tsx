@@ -1,315 +1,211 @@
-import React, { useState, useEffect, useRef } from 'react';
+// App.tsx
+import React, { useState, Suspense, lazy } from 'react';
+import { BrowserRouter as Router, Routes, Route, NavLink, useLocation } from 'react-router-dom';
 import NeonCursor from '@/components/neon-cursor';
-import { QueryClient, QueryClientProvider, useQuery, useQueryClient } from '@tanstack/react-query';
-import { MessageCircle, Brain, BookOpen, Mic, User, Square, Send, Target, RotateCcw, Sun, Star, Heart, BarChart3, Gift, Headphones, Shield, X, Palette, Settings } from 'lucide-react';
-import axios from 'axios';
-import { ThemeProvider, useTheme } from './contexts/ThemeContext';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { SubscriptionProvider, useSubscription } from './contexts/SubscriptionContext';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import {
+  MessageCircle,
+  Brain,
+  BookOpen,
+  Square,
+  Gift,
+  PieChart,
+  Heart,
+  Menu,
+  X as XIcon,
+  Search,
+  Bell,
+  User as UserIcon,
+  Palette,
+  Mic,
+  Shield,
+  Settings as SettingsIcon,
+} from 'lucide-react';
+import { ThemeProvider } from './contexts/ThemeContext';
+import { AuthProvider } from './contexts/AuthContext';
+import { SubscriptionProvider } from './contexts/SubscriptionContext';
 import { SubscriptionModal } from './components/SubscriptionModal';
 import { UsageLimitModal } from './components/UsageLimitModal';
-import MemoryDashboard from './components/MemoryDashboard';
-import VoiceSelector from './components/VoiceSelector';
-import ThemeSelector from './components/ThemeSelector';
 import AuthModal from './components/AuthModal';
 
-import PersonalityQuiz from './components/PersonalityQuiz';
-import VoluntaryQuestionDeck from './components/VoluntaryQuestionDeck';
-import FeedbackSystem from './components/FeedbackSystem';
-import TherapeuticJournal from './components/TherapeuticJournal';
-import PersonalityReflection from './components/PersonalityReflection';
-import MicrophoneTest from './components/MicrophoneTest';
-import AnalyticsDashboard from './components/AnalyticsDashboard';
-import WellnessRewards from './components/WellnessRewards';
-import CommunitySupport from './components/CommunitySupport';
-import AdaptiveLearning from './components/AdaptiveLearning';
-import AdaptiveTherapyPlan from './components/AdaptiveTherapyPlan';
-import AgentSystem from './components/AgentSystem';
-import VRTherapy from './components/VRTherapy';
-import HealthIntegration from './components/HealthIntegration';
-import PrivacyCompliance from './components/PrivacyCompliance';
-import TherapistPortal from './components/TherapistPortal';
-import AiPerformanceMonitoringDashboard from './components/AiPerformanceMonitoringDashboard';
-import Horoscope from './components/Horoscope';
-import DailyAffirmation from './components/DailyAffirmation';
-import PWAManager from './components/PWAManager';
-import MicroSession from './components/MicroSession';
-import TherapeuticAnalytics from './components/TherapeuticAnalytics';
-import { EHRIntegration } from './components/EHRIntegration';
-import PrivacyPolicy from './components/PrivacyPolicy';
-import FloatingChat from './components/FloatingChat';
-import MovableChat from './components/MovableChat';
-import ChallengeSystem from './components/ChallengeSystem';
-import SettingsPanel from './components/SettingsPanel';
-// import DynamicAmbientSound from './components/DynamicAmbientSound'; // DISABLED due to audio issues
-import { getCurrentUserId } from './utils/userSession';
+// Lazy‑loaded feature components
+const Chat = lazy(() => import('./components/Chat'));
+const MemoryDashboard = lazy(() => import('./components/MemoryDashboard'));
+const TherapeuticJournal = lazy(() => import('./components/TherapeuticJournal'));
+const AnalyticsDashboard = lazy(() => import('./components/AnalyticsDashboard'));
+const WellnessRewards = lazy(() => import('./components/WellnessRewards'));
+const CommunitySupport = lazy(() => import('./components/CommunitySupport'));
+const PersonalityQuiz = lazy(() => import('./components/PersonalityQuiz'));
+const PersonalityReflection = lazy(() => import('./components/PersonalityReflection'));
+const AdaptiveLearning = lazy(() => import('./components/AdaptiveLearning'));
+const AdaptiveTherapyPlan = lazy(() => import('./components/AdaptiveTherapyPlan'));
+const AgentSystem = lazy(() => import('./components/AgentSystem'));
+const VRTherapy = lazy(() => import('./components/VRTherapy'));
+const HealthIntegration = lazy(() => import('./components/HealthIntegration'));
+const PrivacyCompliance = lazy(() => import('./components/PrivacyCompliance'));
+const TherapistPortal = lazy(() => import('./components/TherapistPortal'));
+const VoiceSelector = lazy(() => import('./components/VoiceSelector'));
+const ThemeSelector = lazy(() => import('./components/ThemeSelector'));
+const FeedbackSystem = lazy(() => import('./components/FeedbackSystem'));
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      refetchOnWindowFocus: false,
-    },
-  },
-});
+const queryClient = new QueryClient();
 
-const chakraiLogo = './TrAI-Logo.png';
-
-interface BotStats {
-  level: number;
-  stage: string;
-}
-
-interface Message {
-  sender: 'user' | 'bot';
-  text: string;
-  time: string;
-}
-
-interface Goal {
-  id: number;
-  name: string;
-  current: number;
-  target: number;
-  color: string;
-}
-
-interface AppLayoutProps {
-  currentUserId: number | null;
-  onDataReset: () => void;
-}
-
-const AppLayout = ({ currentUserId, onDataReset }: AppLayoutProps) => {
-  const { currentTheme, changeTheme } = useTheme();
-  const { user, isAuthenticated } = useAuth();
-  const { subscription, canUseFeature, updateUsage } = useSubscription();
-  const [activeSection, setActiveSection] = useState('welcome');
-  const [showAuthModal, setShowAuthModal] = useState(false);
-  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
-  const [showUsageLimitModal, setShowUsageLimitModal] = useState(false);
-  const queryClient = useQueryClient();
-  
-  // Debug logging for activeSection changes
-  useEffect(() => {
-    console.log('Active section changed to:', activeSection);
-  }, [activeSection]);
-
-  const [isRecording, setIsRecording] = useState(false);
-  const [showMovableChat, setShowMovableChat] = useState(false);
-
-  const [input, setInput] = useState('');
-  const [botStats, setBotStats] = useState<BotStats | null>(null);
-  // Check for fresh start and initialize empty messages
-  const isFreshStart = localStorage.getItem('freshStart') === 'true';
-  const [messages, setMessages] = useState<Message[]>(isFreshStart ? [] : []);
-  const [loading, setLoading] = useState(false);
-  const [contentLoading, setContentLoading] = useState(false);
-  const [weeklySummary, setWeeklySummary] = useState<string>('');
-  const [showReflection, setShowReflection] = useState(false);
-  const [streakStats, setStreakStats] = useState<{
-    consecutiveDaysActive: number;
-    consecutiveDaysJournaling: number;
-    totalActiveDays: number;
-  } | null>(null);
-
-  const renderActiveSection = () => {
-    switch (activeSection) {
-      case 'chat':
-        // Chat is handled separately in the main layout now
-        return null;
-
-      case 'daily':
-        return <PersonalityReflection userId={getCurrentUserId()} />;
-
-      case 'journal':
-        return (
-          <TherapeuticJournal 
-            userId={getCurrentUserId()} 
-            onEntryCreated={(entry) => {
-              console.log('New journal entry created:', entry);
-            }}
-          />
-        );
-
-      case 'memory':
-        return <MemoryDashboard />;
-
-      case 'analytics':
-        return <AnalyticsDashboard userId={getCurrentUserId()} />;
-
-      case 'challenges':
-        return <ChallengeSystem onNavigate={setActiveSection} />;
-
-      case 'rewards':
-        return <WellnessRewards />;
-
-      case 'community':
-        return <CommunitySupport />;
-
-      case 'adaptive':
-        return <AdaptiveLearning />;
-
-      case 'therapy-plans':
-        return <AdaptiveTherapyPlan userId={getCurrentUserId()} onPlanUpdate={(plan) => console.log('Plan updated:', plan)} />;
-
-      case 'agents':
-        return <AgentSystem userId={getCurrentUserId()} />;
-
-      case 'vr':
-        return <VRTherapy />;
-
-      case 'health':
-        return <HealthIntegration />;
-
-      case 'privacy':
-        return <PrivacyCompliance />;
-
-      case 'therapist':
-        return <TherapistPortal />;
-
-      case 'outcomes':
-        return <TherapeuticAnalytics userId={getCurrentUserId()} />;
-
-      case 'ehr':
-        return <EHRIntegration />;
-
-      case 'privacy-policy':
-        return <PrivacyPolicy />;
-
-      case 'themes':
-        return (
-          <div className="h-full theme-background p-6 overflow-y-auto">
-            <div className="max-w-2xl mx-auto">
-              <ThemeSelector onClose={() => setActiveSection('chat')} />
-            </div>
-          </div>
-        );
-
-      case 'voice':
-        return (
-          <div className="h-full theme-background p-6 overflow-y-auto">
-            <div className="max-w-2xl mx-auto">
-              <div className="theme-card backdrop-blur-sm rounded-2xl p-8 border border-[var(--theme-accent)]/30 shadow-lg">
-                <h2 className="text-3xl font-bold text-white mb-6 text-center">Voice Settings</h2>
-                <VoiceSelector 
-                  selectedVoice="james" 
-                  onVoiceChange={(voice) => console.log('Voice changed:', voice)} 
-                />
-              </div>
-            </div>
-          </div>
-        );
-
-      case 'feedback':
-        return <FeedbackSystem userId={getCurrentUserId()} />;
-
-      case 'microphone-test':
-        return <MicrophoneTest />;
-
-      case 'welcome':
-      default:
-        return (
-          <div className="flex items-center justify-center h-full text-white/60">
-            <div className="text-center">
-              <img src={chakraiLogo} alt="Chakrai" className="h-32 w-auto mx-auto mb-4" />
-              <h1 className="text-4xl font-bold mb-4">Welcome to Chakrai</h1>
-              <p className="text-lg">Your AI-powered mental wellness companion</p>
-            </div>
-          </div>
-        );
+// Sidebar group + item helpers
+const SidebarGroup: React.FC<{ title: string; collapsed: boolean }> = ({ title, children, collapsed }) => (
+  <div className="mt-4">
+    {!collapsed && <h2 className="px-4 text-xs uppercase text-gray-400">{title}</h2>}
+    <nav className="mt-2">{children}</nav>
+  </div>
+);
+const NavItem: React.FC<{ to: string; icon: React.FC<any>; label: string; collapsed: boolean }> = ({
+  to,
+  icon: Icon,
+  label,
+  collapsed,
+}) => (
+  <NavLink
+    to={to}
+    className={({ isActive }) =>
+      `flex items-center px-4 py-2 mt-1 rounded-lg transition-colors ${
+        isActive ? 'bg-gray-700 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+      }`
     }
+  >
+    <Icon className="h-5 w-5" />
+    {!collapsed && <span className="ml-3">{label}</span>}
+  </NavLink>
+);
+
+// Dynamic header title based on route
+const Header: React.FC<{ collapsed: boolean; setCollapsed: (c: boolean) => void }> = ({ collapsed, setCollapsed }) => {
+  const location = useLocation();
+  const titles: Record<string, string> = {
+    '/chat': 'Chat',
+    '/dashboard': 'Dashboard',
+    '/journal': 'Journal',
+    '/analytics': 'Analytics',
+    '/rewards': 'Rewards',
+    '/community': 'Community',
+    '/quiz': 'Personality Quiz',
+    '/reflection': 'Reflection',
+    '/adaptive': 'Adaptive Learning',
+    '/therapy': 'Therapy Plan',
+    '/agent': 'Agent System',
+    '/vr': 'VR Therapy',
+    '/health': 'Health',
+    '/privacy': 'Privacy',
+    '/therapist': 'Therapist Portal',
+    '/settings/theme': 'Theme Settings',
+    '/settings/voice': 'Voice Settings',
   };
+  const title = titles[location.pathname] || 'Home';
 
   return (
-    <div className="h-screen flex bg-gray-900">
-      <NeonCursor />
-      
-      {/* Sidebar Navigation */}
-      <div className="w-64 bg-gray-800 p-4">
-        <div className="mb-8">
-          <img src={chakraiLogo} alt="Chakrai" className="h-10 w-auto" />
-        </div>
-        
-        <nav className="space-y-2">
-          <button
-            onClick={() => setActiveSection('welcome')}
-            className={`w-full text-left p-3 rounded-lg transition-colors ${
-              activeSection === 'welcome' ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700'
-            }`}
-          >
-            Home
-          </button>
-          
-          <button
-            onClick={() => setActiveSection('analytics')}
-            className={`w-full text-left p-3 rounded-lg transition-colors ${
-              activeSection === 'analytics' ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700'
-            }`}
-          >
-            Analytics
-          </button>
-          
-          <button
-            onClick={() => setActiveSection('journal')}
-            className={`w-full text-left p-3 rounded-lg transition-colors ${
-              activeSection === 'journal' ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700'
-            }`}
-          >
-            Journal
-          </button>
-          
-          <button
-            onClick={() => setActiveSection('adaptive')}
-            className={`w-full text-left p-3 rounded-lg transition-colors ${
-              activeSection === 'adaptive' ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700'
-            }`}
-          >
-            Adaptive Learning
-          </button>
-
-          <button
-            onClick={() => setActiveSection('challenges')}
-            className={`w-full text-left p-3 rounded-lg transition-colors ${
-              activeSection === 'challenges' ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700'
-            }`}
-          >
-            Challenges
-          </button>
-        </nav>
+    <header className="flex items-center justify-between p-4 bg-white shadow">
+      <div className="flex items-center">
+        <button onClick={() => setCollapsed(!collapsed)} className="md:hidden mr-2 focus:outline-none">
+          {collapsed ? <Menu /> : <XIcon />}
+        </button>
+        <h1 className="text-xl font-semibold">{title}</h1>
       </div>
-
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col">
-        {/* Header */}
-        <div className="bg-gray-800 p-4 border-b border-gray-700">
-          <h1 className="text-xl font-semibold text-white">Chakrai Mental Wellness</h1>
+      <div className="flex items-center space-x-4">
+        <div className="relative">
+          <input
+            type="text"
+            placeholder="Search..."
+            className="pl-8 pr-4 py-2 border rounded-lg focus:outline-none"
+          />
+          <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
         </div>
-
-        {/* Content Area */}
-        <div className="flex-1 p-6 overflow-auto">
-          {renderActiveSection()}
-        </div>
+        <Bell className="h-6 w-6 text-gray-600 cursor-pointer" />
+        <UserIcon className="h-6 w-6 text-gray-600 cursor-pointer" />
       </div>
-
-      {/* Modals */}
-      {showMovableChat && (
-        <MovableChat onClose={() => setShowMovableChat(false)} />
-      )}
-    </div>
+    </header>
   );
 };
 
-function App() {
+export default function App() {
+  const [collapsed, setCollapsed] = useState(false);
+
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <AuthProvider>
-          <SubscriptionProvider>
-            <AppLayout currentUserId={getCurrentUserId()} onDataReset={() => {}} />
-          </SubscriptionProvider>
-        </AuthProvider>
-      </ThemeProvider>
-    </QueryClientProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <SubscriptionProvider>
+          <QueryClientProvider client={queryClient}>
+            <Router>
+              <div className="flex h-screen overflow-hidden">
+                {/* Sidebar (desktop) */}
+                <aside
+                  className={`bg-gray-800 text-white transition-width duration-200 ${
+                    collapsed ? 'w-16' : 'w-64'
+                  } hidden md:flex flex-col`}
+                >
+                  <div className="flex items-center justify-center h-16">
+                    {!collapsed && <span className="text-2xl font-bold">Chakrai</span>}
+                  </div>
+                  <SidebarGroup title="🟦 Core Companion" collapsed={collapsed}>
+                    <NavItem to="/chat" icon={MessageCircle} label="Chat" collapsed={collapsed} />
+                    <NavItem to="/dashboard" icon={Brain} label="Dashboard" collapsed={collapsed} />
+                    <NavItem to="/rewards" icon={Gift} label="Rewards" collapsed={collapsed} />
+                  </SidebarGroup>
+                  <SidebarGroup title="💠 Mirrors of You" collapsed={collapsed}>
+                    <NavItem to="/journal" icon={BookOpen} label="Journal" collapsed={collapsed} />
+                    <NavItem to="/reflection" icon={Square} label="Reflection" collapsed={collapsed} />
+                    <NavItem to="/analytics" icon={PieChart} label="Analytics" collapsed={collapsed} />
+                  </SidebarGroup>
+                  <SidebarGroup title="🧘 Guided Support" collapsed={collapsed}>
+                    <NavItem to="/quiz" icon={Brain} label="Quiz" collapsed={collapsed} />
+                    <NavItem to="/adaptive" icon={SettingsIcon} label="Adaptive" collapsed={collapsed} />
+                    <NavItem to="/therapy" icon={Heart} label="Therapy Plan" collapsed={collapsed} />
+                  </SidebarGroup>
+                  <SidebarGroup title="⚙️ Settings" collapsed={collapsed}>
+                    <NavItem to="/settings/theme" icon={Palette} label="Theme" collapsed={collapsed} />
+                    <NavItem to="/settings/voice" icon={Mic} label="Voice" collapsed={collapsed} />
+                    <NavItem to="/settings/privacy" icon={Shield} label="Privacy" collapsed={collapsed} />
+                  </SidebarGroup>
+                </aside>
+
+                {/* Main area */}
+                <div className="flex-1 flex flex-col">
+                  <Header collapsed={collapsed} setCollapsed={setCollapsed} />
+
+                  <main className="flex-1 overflow-auto bg-gray-100">
+                    <Suspense fallback={<div className="p-6">Loading...</div>}>
+                      <Routes>
+                        <Route path="/" element={<MemoryDashboard />} />
+                        <Route path="/chat" element={<Chat />} />
+                        <Route path="/dashboard" element={<MemoryDashboard />} />
+                        <Route path="/journal" element={<TherapeuticJournal />} />
+                        <Route path="/analytics" element={<AnalyticsDashboard />} />
+                        <Route path="/rewards" element={<WellnessRewards />} />
+                        <Route path="/community" element={<CommunitySupport />} />
+                        <Route path="/quiz" element={<PersonalityQuiz />} />
+                        <Route path="/reflection" element={<PersonalityReflection />} />
+                        <Route path="/adaptive" element={<AdaptiveLearning />} />
+                        <Route path="/therapy" element={<AdaptiveTherapyPlan />} />
+                        <Route path="/agent" element={<AgentSystem />} />
+                        <Route path="/vr" element={<VRTherapy />} />
+                        <Route path="/health" element={<HealthIntegration />} />
+                        <Route path="/privacy" element={<PrivacyCompliance />} />
+                        <Route path="/therapist" element={<TherapistPortal />} />
+                        <Route path="/settings/theme" element={<ThemeSelector />} />
+                        <Route path="/settings/voice" element={<VoiceSelector />} />
+                        <Route path="*" element={<MemoryDashboard />} />
+                      </Routes>
+                    </Suspense>
+                  </main>
+
+                  {/* Global modals & cursor */}
+                  <SubscriptionModal />
+                  <UsageLimitModal />
+                  <AuthModal />
+                  <NeonCursor />
+                </div>
+              </div>
+            </Router>
+          </QueryClientProvider>
+        </SubscriptionProvider>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
-
-export default App;
