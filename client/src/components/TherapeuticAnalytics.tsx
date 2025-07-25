@@ -1,4 +1,4 @@
-import { getCurrentUserId } from "../utils/userSession";
+import { generateDeviceFingerprint } from "../utils/userSession";
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -61,7 +61,7 @@ interface TherapeuticAnalyticsProps {
   userId?: number;
 }
 
-export default function TherapeuticAnalytics({ userId = getCurrentUserId() }: TherapeuticAnalyticsProps) {
+export default function TherapeuticAnalytics({ userId }: TherapeuticAnalyticsProps) {
   const [dashboard, setDashboard] = useState<AnalyticsDashboard | null>(null);
   const [efficacyReport, setEfficacyReport] = useState<EfficacyReport | null>(null);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'reports' | 'trends' | 'optimization'>('dashboard');
@@ -75,7 +75,21 @@ export default function TherapeuticAnalytics({ userId = getCurrentUserId() }: Th
   const loadDashboard = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/analytics/dashboard/${userId}`);
+      // Get device fingerprint for consistent user session
+      const deviceFingerprint = localStorage.getItem('deviceFingerprint') || 
+                               `device_${Math.random().toString(36).substring(2, 15)}`;
+      const sessionId = localStorage.getItem('sessionId') || 
+                       `session_${Math.random().toString(36).substring(2, 15)}`;
+      
+      localStorage.setItem('deviceFingerprint', deviceFingerprint);
+      localStorage.setItem('sessionId', sessionId);
+      
+      const response = await fetch(`/api/journal/analytics/device`, {
+        headers: {
+          'X-Device-Fingerprint': deviceFingerprint,
+          'X-Session-ID': sessionId
+        }
+      });
       if (response.ok) {
         const data = await response.json();
         setDashboard(data);
@@ -124,10 +138,23 @@ export default function TherapeuticAnalytics({ userId = getCurrentUserId() }: Th
 
   const trackAnalytics = async (type: string, data: any) => {
     try {
+      // Get device fingerprint for consistent user session
+      const deviceFingerprint = localStorage.getItem('deviceFingerprint') || 
+                               `device_${Math.random().toString(36).substring(2, 15)}`;
+      const sessionId = localStorage.getItem('sessionId') || 
+                       `session_${Math.random().toString(36).substring(2, 15)}`;
+      
+      localStorage.setItem('deviceFingerprint', deviceFingerprint);
+      localStorage.setItem('sessionId', sessionId);
+      
       await fetch(`/api/analytics/${type}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, ...data })
+        headers: { 
+          'Content-Type': 'application/json',
+          'X-Device-Fingerprint': deviceFingerprint,
+          'X-Session-ID': sessionId
+        },
+        body: JSON.stringify(data)
       });
     } catch (error) {
       console.error(`Failed to track ${type}:`, error);
