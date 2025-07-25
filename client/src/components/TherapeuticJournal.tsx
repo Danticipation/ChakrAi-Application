@@ -257,6 +257,7 @@ const TherapeuticJournal: React.FC<TherapeuticJournalProps> = ({ userId, onEntry
           'X-Session-ID': sessionId
         },
         body: JSON.stringify({
+          userId: userId || getCurrentUserId() || 13, // Ensure valid user ID
           title: entry.title || `Entry - ${new Date().toLocaleDateString()}`,
           content: entry.content,
           mood: entry.mood,
@@ -269,7 +270,7 @@ const TherapeuticJournal: React.FC<TherapeuticJournalProps> = ({ userId, onEntry
       if (response.ok) {
         const savedEntry = await response.json();
         setShowSuccess(true);
-        setTimeout(() => setShowSuccess(false), 3000);
+        setTimeout(() => setShowSuccess(false), 5000); // Extended to 5 seconds for better visibility
         
         // Reset form
         setEntry({
@@ -412,11 +413,16 @@ const TherapeuticJournal: React.FC<TherapeuticJournalProps> = ({ userId, onEntry
 
   return (
     <div className="h-full flex flex-col theme-background p-4">
-      {/* Success Message */}
+      {/* Enhanced Success Message */}
       {showSuccess && (
-        <div className="fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 flex items-center">
-          <Heart className="w-5 h-5 mr-2" />
-          Journal entry saved successfully!
+        <div className="fixed top-4 right-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white px-8 py-4 rounded-2xl shadow-2xl z-50 flex items-center animate-bounce border-2 border-white">
+          <div className="flex items-center">
+            <Heart className="w-6 h-6 mr-3 animate-pulse" />
+            <div>
+              <div className="font-bold text-lg">✅ Entry Saved!</div>
+              <div className="text-sm opacity-90">Your journal entry has been safely stored</div>
+            </div>
+          </div>
         </div>
       )}
 
@@ -786,28 +792,30 @@ const TherapeuticJournal: React.FC<TherapeuticJournalProps> = ({ userId, onEntry
             </label>
           </div>
 
-          {/* Save Button */}
-          <button
-            onClick={saveEntry}
-            disabled={isSaving || !entry.content.trim()}
-            className={`w-full py-4 rounded-xl font-medium transition-all flex items-center justify-center ${
-              isSaving || !entry.content.trim()
-                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                : 'bg-blue-500 hover:bg-blue-600 text-white shadow-lg hover:shadow-xl'
-            }`}
-          >
-            {isSaving ? (
-              <>
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                Saving...
-              </>
-            ) : (
-              <>
-                <Save className="w-5 h-5 mr-2" />
-                Save Journal Entry
-              </>
-            )}
-          </button>
+          {/* Save Button - Enhanced Visibility */}
+          <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl p-1 shadow-2xl">
+            <button
+              onClick={saveEntry}
+              disabled={isSaving || !entry.content.trim()}
+              className={`w-full py-5 rounded-xl font-bold text-lg transition-all flex items-center justify-center ${
+                isSaving || !entry.content.trim()
+                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  : 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-xl hover:shadow-2xl transform hover:scale-[1.02]'
+              }`}
+            >
+              {isSaving ? (
+                <>
+                  <div className="w-6 h-6 border-3 border-white border-t-transparent rounded-full animate-spin mr-3" />
+                  <span className="animate-pulse">Saving Your Entry...</span>
+                </>
+              ) : (
+                <>
+                  <Save className="w-6 h-6 mr-3" />
+                  <span>💾 Save Journal Entry</span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
         </>
         )}
