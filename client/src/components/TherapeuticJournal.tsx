@@ -3,6 +3,7 @@ import { Mic, MicOff, Save, Plus, Calendar, Tag, Heart, Smile, Meh, Frown, Alert
 
 interface JournalEntry {
   id?: number;
+  userId?: number;
   title: string;
   content: string;
   mood: string;
@@ -808,6 +809,7 @@ const TherapeuticJournal: React.FC<TherapeuticJournalProps> = ({ userId, onEntry
             )}
           </button>
         </div>
+        </>
         )}
 
         {/* Recent Entries (shown only on write tab) */}
