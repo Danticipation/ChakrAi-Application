@@ -20,6 +20,20 @@ import {
   Mic,
   Shield,
   Settings as SettingsIcon,
+  Target,
+  Users,
+  AlertTriangle,
+  Sparkles,
+  Zap,
+  BarChart2,
+  Calendar,
+  Activity,
+  Award,
+  Globe,
+  Headphones,
+  FileText,
+  Monitor,
+  Eye,
 } from 'lucide-react';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider } from './contexts/AuthContext';
@@ -47,6 +61,18 @@ const TherapistPortal = lazy(() => import('./components/TherapistPortal'));
 const VoiceSelector = lazy(() => import('./components/VoiceSelector'));
 const ThemeSelector = lazy(() => import('./components/ThemeSelector'));
 const FeedbackSystem = lazy(() => import('./components/FeedbackSystem'));
+
+// Additional missing components
+const MicrophoneTest = lazy(() => import('./components/MicrophoneTest'));
+const DailyAffirmation = lazy(() => import('./components/DailyAffirmation'));
+const EmotionalIntelligenceDashboard = lazy(() => import('./components/EmotionalIntelligenceDashboard'));
+const EnhancedGamificationDashboard = lazy(() => import('./components/EnhancedGamificationDashboard'));
+const JournalDashboard = lazy(() => import('./components/JournalDashboard'));
+const AiPerformanceMonitoringDashboard = lazy(() => import('./components/AiPerformanceMonitoringDashboard'));
+const TherapeuticAnalytics = lazy(() => import('./components/TherapeuticAnalytics'));
+const ChallengeSystem = lazy(() => import('./components/ChallengeSystem'));
+const MoodTracker = lazy(() => import('./components/MoodTracker'));
+const AchievementDashboard = lazy(() => import('./components/AchievementDashboard'));
 
 const queryClient = new QueryClient();
 
@@ -90,21 +116,46 @@ const Sidebar: React.FC<{ collapsed: boolean }> = ({ collapsed }) => (
       <NavItem to="/chat" icon={MessageCircle} label="Chat" collapsed={collapsed} />
       <NavItem to="/dashboard" icon={Brain} label="Dashboard" collapsed={collapsed} />
       <NavItem to="/rewards" icon={Gift} label="Rewards" collapsed={collapsed} />
+      <NavItem to="/affirmation" icon={Sparkles} label="Daily Affirmation" collapsed={collapsed} />
+
     </SidebarGroup>
     <SidebarGroup title="💠 Mirrors of You" collapsed={collapsed}>
       <NavItem to="/journal" icon={BookOpen} label="Journal" collapsed={collapsed} />
+      <NavItem to="/journal-dashboard" icon={BarChart2} label="Journal Analytics" collapsed={collapsed} />
       <NavItem to="/reflection" icon={Square} label="Reflection" collapsed={collapsed} />
       <NavItem to="/analytics" icon={PieChart} label="Analytics" collapsed={collapsed} />
+      <NavItem to="/emotional-intelligence" icon={Brain} label="Emotional Intelligence" collapsed={collapsed} />
+      <NavItem to="/mood-tracker" icon={Activity} label="Mood Tracker" collapsed={collapsed} />
     </SidebarGroup>
     <SidebarGroup title="🧘 Guided Support" collapsed={collapsed}>
       <NavItem to="/quiz" icon={Brain} label="Quiz" collapsed={collapsed} />
       <NavItem to="/adaptive" icon={SettingsIcon} label="Adaptive" collapsed={collapsed} />
       <NavItem to="/therapy" icon={Heart} label="Therapy Plan" collapsed={collapsed} />
+      <NavItem to="/agent" icon={Users} label="AI Agents" collapsed={collapsed} />
+      <NavItem to="/vr" icon={Eye} label="VR Therapy" collapsed={collapsed} />
+      <NavItem to="/challenges" icon={Award} label="Challenges" collapsed={collapsed} />
+      <NavItem to="/achievements" icon={Gift} label="Achievements" collapsed={collapsed} />
     </SidebarGroup>
-    <SidebarGroup title="⚙️ Settings" collapsed={collapsed}>
+    <SidebarGroup title="🏥 Healthcare" collapsed={collapsed}>
+      <NavItem to="/health" icon={Heart} label="Health Integration" collapsed={collapsed} />
+
+      <NavItem to="/analytics-therapeutic" icon={BarChart2} label="Therapeutic Analytics" collapsed={collapsed} />
+      <NavItem to="/reports" icon={Calendar} label="Monthly Reports" collapsed={collapsed} />
+      <NavItem to="/therapist" icon={Users} label="Therapist Portal" collapsed={collapsed} />
+    </SidebarGroup>
+    <SidebarGroup title="🏘️ Community" collapsed={collapsed}>
+      <NavItem to="/community" icon={Users} label="Community Support" collapsed={collapsed} />
+      <NavItem to="/community-portal" icon={MessageCircle} label="Community Portal" collapsed={collapsed} />
+      <NavItem to="/crisis" icon={AlertTriangle} label="Crisis Support" collapsed={collapsed} />
+    </SidebarGroup>
+    <SidebarGroup title="⚙️ Settings & Tools" collapsed={collapsed}>
       <NavItem to="/settings/theme" icon={Palette} label="Theme" collapsed={collapsed} />
       <NavItem to="/settings/voice" icon={Mic} label="Voice" collapsed={collapsed} />
+
       <NavItem to="/settings/privacy" icon={Shield} label="Privacy" collapsed={collapsed} />
+      <NavItem to="/mic-test" icon={Headphones} label="Mic Test" collapsed={collapsed} />
+      <NavItem to="/feedback" icon={MessageCircle} label="Feedback" collapsed={collapsed} />
+      <NavItem to="/ai-monitoring" icon={Monitor} label="AI Monitoring" collapsed={collapsed} />
     </SidebarGroup>
   </aside>
 );
@@ -130,6 +181,17 @@ const Header: React.FC<{ collapsed: boolean; setCollapsed: (c: boolean) => void 
     '/therapist': 'Therapist Portal',
     '/settings/theme': 'Theme Settings',
     '/settings/voice': 'Voice Settings',
+    '/affirmation': 'Daily Affirmation',
+    '/journal-dashboard': 'Journal Analytics',
+    '/emotional-intelligence': 'Emotional Intelligence',
+    '/mood-tracker': 'Mood Tracker',
+    '/challenges': 'Challenges',
+    '/achievements': 'Achievements',
+    '/analytics-therapeutic': 'Therapeutic Analytics',
+
+    '/mic-test': 'Microphone Test',
+    '/feedback': 'Feedback',
+    '/ai-monitoring': 'AI Monitoring',
   };
   const title = titles[location.pathname] || 'Home';
 
@@ -196,21 +258,44 @@ const AppContent = () => {
                           <Route path="/" element={<MemoryDashboard />} />
                           <Route path="/chat" element={<Chat isOpen={true} onToggle={() => {}} selectedVoice={selectedVoice} />} />
                           <Route path="/dashboard" element={<MemoryDashboard />} />
+                          
+                          {/* Core Features */}
                           <Route path="/journal" element={<TherapeuticJournal userId={1} onEntryCreated={() => {}} />} />
+                          <Route path="/journal-dashboard" element={<JournalDashboard userId={1} />} />
                           <Route path="/analytics" element={<AnalyticsDashboard userId={1} />} />
                           <Route path="/rewards" element={<WellnessRewards />} />
-                          <Route path="/community" element={<CommunitySupport />} />
-                          <Route path="/quiz" element={<PersonalityQuiz onComplete={handleQuizComplete} />} />
+                          <Route path="/affirmation" element={<DailyAffirmation />} />
+                          
+                          {/* Mirrors of You */}
                           <Route path="/reflection" element={<PersonalityReflection userId={1} />} />
+                          <Route path="/emotional-intelligence" element={<EmotionalIntelligenceDashboard userId={1} />} />
+                          <Route path="/mood-tracker" element={<MoodTracker userId={1} />} />
+                          
+                          {/* Guided Support */}
+                          <Route path="/quiz" element={<PersonalityQuiz onComplete={handleQuizComplete} />} />
                           <Route path="/adaptive" element={<AdaptiveLearning />} />
                           <Route path="/therapy" element={<AdaptiveTherapyPlan userId={1} onPlanUpdate={() => {}} />} />
                           <Route path="/agent" element={<AgentSystem userId={1} />} />
                           <Route path="/vr" element={<VRTherapy />} />
+                          <Route path="/challenges" element={<ChallengeSystem />} />
+                          <Route path="/achievements" element={<AchievementDashboard />} />
+                          
+                          {/* Healthcare */}
                           <Route path="/health" element={<HealthIntegration />} />
-                          <Route path="/privacy" element={<PrivacyCompliance />} />
+                          <Route path="/analytics-therapeutic" element={<TherapeuticAnalytics userId={1} />} />
                           <Route path="/therapist" element={<TherapistPortal />} />
+                          
+                          {/* Community */}
+                          <Route path="/community" element={<CommunitySupport />} />
+                          
+                          {/* Settings & Tools */}
                           <Route path="/settings/theme" element={<ThemeSelector onClose={() => {}} />} />
                           <Route path="/settings/voice" element={<VoiceSelector selectedVoice={selectedVoice} onVoiceChange={setSelectedVoice} />} />
+                          <Route path="/settings/privacy" element={<PrivacyCompliance />} />
+                          <Route path="/mic-test" element={<MicrophoneTest />} />
+                          <Route path="/feedback" element={<FeedbackSystem userId={1} />} />
+                          <Route path="/ai-monitoring" element={<AiPerformanceMonitoringDashboard userId={1} />} />
+                          
                           <Route path="*" element={<MemoryDashboard />} />
                       </Routes>
                     </Suspense>
