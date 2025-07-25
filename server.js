@@ -12,7 +12,7 @@ const PORT = process.env.PORT || 3001;
 
 app.use(cors());
 app.use(express.json());
-app.use(express.static('public'));
+app.use(express.static('client/dist'));
 
 // Chat endpoint with therapeutic responses
 app.post('/api/chat', (req, res) => {
@@ -53,9 +53,10 @@ app.get('/api/health', (req, res) => {
 // Serve the application
 app.get('*', (req, res) => {
   try {
-    const html = readFileSync(join(__dirname, 'public', 'index.html'), 'utf8');
+    const html = readFileSync(join(__dirname, 'client/dist', 'index.html'), 'utf8');
     res.send(html);
   } catch (error) {
+    console.log('Falling back to generated HTML due to:', error.message);
     res.send(generateHTML());
   }
 });
