@@ -12,14 +12,9 @@ const PORT = process.env.PORT || 5000;
 
 app.use(cors());
 app.use(express.json());
-// Serve static assets with proper headers
-app.use('/assets', express.static('client/dist/assets', {
-  maxAge: '1y',
-  etag: false
-}));
-app.use(express.static('client/dist', {
-  maxAge: '1h'
-}));
+
+// Serve the React application
+app.use(express.static('client/dist'));
 
 // Chat endpoint with therapeutic responses
 app.post('/api/chat', (req, res) => {
