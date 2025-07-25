@@ -77,23 +77,33 @@ const TherapeuticJournal: React.FC<TherapeuticJournalProps> = ({ userId, onEntry
   ];
 
   useEffect(() => {
-    if (!userId) return;
-    
-    // Always fetch recent entries when userId is available
+    // Always fetch recent entries on component mount
     fetchRecentEntries();
-  }, [userId]);
+  }, []);
 
   const fetchRecentEntries = async () => {
     console.log('fetchRecentEntries called with userId:', userId);
-    if (!userId) {
-      console.log('No userId provided, skipping fetch');
-      return;
-    }
     
     try {
-      const url = `/api/journal/${userId}`;
+      // Use the same user session approach as the chat system
+      const deviceFingerprint = localStorage.getItem('deviceFingerprint') || 
+                               `device_${Math.random().toString(36).substring(2, 15)}`;
+      const sessionId = localStorage.getItem('sessionId') || 
+                       `session_${Math.random().toString(36).substring(2, 15)}`;
+      
+      // Store for future use
+      localStorage.setItem('deviceFingerprint', deviceFingerprint);
+      localStorage.setItem('sessionId', sessionId);
+      
+      // Fetch entries using device fingerprint to get correct user
+      const url = `/api/journal/user-entries`;
       console.log('Fetching from URL:', url);
-      const response = await fetch(url);
+      const response = await fetch(url, {
+        headers: {
+          'X-Device-Fingerprint': deviceFingerprint,
+          'X-Session-ID': sessionId
+        }
+      });
       console.log('Response status:', response.status, response.ok);
       
       if (response.ok) {
@@ -222,11 +232,6 @@ const TherapeuticJournal: React.FC<TherapeuticJournalProps> = ({ userId, onEntry
   };
 
   const saveEntry = async () => {
-    if (!userId) {
-      alert('User session not available. Please refresh the page and try again.');
-      return;
-    }
-    
     if (!entry.content.trim()) {
       alert('Please write something before saving your journal entry.');
       return;
@@ -234,13 +239,23 @@ const TherapeuticJournal: React.FC<TherapeuticJournalProps> = ({ userId, onEntry
 
     setIsSaving(true);
     try {
-      const response = await fetch('/api/journal/entries', {
+      // Get device fingerprint for user session consistency
+      const deviceFingerprint = localStorage.getItem('deviceFingerprint') || 
+                               `device_${Math.random().toString(36).substring(2, 15)}`;
+      const sessionId = localStorage.getItem('sessionId') || 
+                       `session_${Math.random().toString(36).substring(2, 15)}`;
+      
+      localStorage.setItem('deviceFingerprint', deviceFingerprint);
+      localStorage.setItem('sessionId', sessionId);
+      
+      const response = await fetch('/api/journal/create', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'X-Device-Fingerprint': deviceFingerprint,
+          'X-Session-ID': sessionId
         },
         body: JSON.stringify({
-          userId,
           title: entry.title || `Entry - ${new Date().toLocaleDateString()}`,
           content: entry.content,
           mood: entry.mood,
@@ -294,7 +309,7 @@ const TherapeuticJournal: React.FC<TherapeuticJournalProps> = ({ userId, onEntry
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          userId,
+          userId: savedEntry.userId,
           entryId: savedEntry.id,
           content: savedEntry.content,
           mood: savedEntry.mood,
@@ -460,6 +475,119 @@ const TherapeuticJournal: React.FC<TherapeuticJournalProps> = ({ userId, onEntry
 
         {/* Tab Content */}
         {activeTab === 'write' && (
+          <>
+          {/* Recent Entries Section */}
+          {recentEntries.length > 0 && (
+            <div className="theme-card/30 backdrop-blur-sm rounded-2xl shadow-lg p-6 mb-6">
+              <h3 className="text-xl font-bold text-white mb-4 flex items-center">
+                <Calendar className="w-5 h-5 mr-2" />
+                Recent Journal Entries
+              </h3>
+              <div className="space-y-3">
+                {recentEntries.map((recentEntry) => (
+                  <div 
+                    key={recentEntry.id} 
+                    className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20 hover:bg-white/20 transition-all cursor-pointer"
+                    onClick={() => {
+                      setSelectedEntry(recentEntry);
+                      setViewMode('view');
+                    }}
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <h4 className="font-semibold text-white truncate">
+                        {recentEntry.title || `Entry from ${new Date(recentEntry.createdAt || '').toLocaleDateString()}`}
+                      </h4>
+                      <span className={`px-2 py-1 rounded-full text-xs ${
+                        moodOptions.find(m => m.value === recentEntry.mood)?.color || 'bg-gray-100 text-gray-700'
+                      }`}>
+                        {moodOptions.find(m => m.value === recentEntry.mood)?.icon || '😐'} {moodOptions.find(m => m.value === recentEntry.mood)?.label || 'Neutral'}
+                      </span>
+                    </div>
+                    <p className="text-white/80 text-sm line-clamp-2">
+                      {recentEntry.content.substring(0, 120)}...
+                    </p>
+                    <div className="flex justify-between items-center mt-2">
+                      <div className="flex gap-1">
+                        {recentEntry.tags?.slice(0, 3).map(tag => (
+                          <span key={tag} className="bg-blue-500/30 text-blue-100 px-2 py-1 rounded text-xs">
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                      <span className="text-white/60 text-xs">
+                        {new Date(recentEntry.createdAt || '').toLocaleDateString()}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Entry Viewer Modal */}
+          {selectedEntry && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-2xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                <div className="p-6">
+                  {/* Header */}
+                  <div className="flex items-start justify-between mb-6">
+                    <div className="flex-1">
+                      <h2 className="text-2xl font-bold mb-2 text-gray-800">
+                        {selectedEntry.title || 'Untitled Entry'}
+                      </h2>
+                      <div className="flex items-center gap-4 text-sm text-gray-600">
+                        <span>{new Date(selectedEntry.createdAt || '').toLocaleDateString()}</span>
+                        {selectedEntry.mood && (
+                          <span className={`px-2 py-1 rounded-full text-xs ${
+                            moodOptions.find(m => m.value === selectedEntry.mood)?.color || 'bg-gray-100 text-gray-700'
+                          }`}>
+                            {moodOptions.find(m => m.value === selectedEntry.mood)?.icon} {moodOptions.find(m => m.value === selectedEntry.mood)?.label}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setSelectedEntry(null)}
+                      className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
+                    >
+                      ✕
+                    </button>
+                  </div>
+
+                  {/* Content */}
+                  <div className="prose max-w-none mb-6">
+                    <div className="bg-gray-50 rounded-lg p-4 text-gray-800 leading-relaxed">
+                      {selectedEntry.content}
+                    </div>
+                  </div>
+
+                  {/* Tags */}
+                  {selectedEntry.tags && selectedEntry.tags.length > 0 && (
+                    <div className="mb-4">
+                      <h4 className="text-sm font-medium text-gray-700 mb-2">Tags</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedEntry.tags.map(tag => (
+                          <span key={tag} className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* AI Analysis */}
+                  {selectedEntry.aiAnalysis && (
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <h4 className="text-sm font-medium text-blue-800 mb-2">AI Therapeutic Analysis</h4>
+                      <p className="text-blue-700 text-sm">{selectedEntry.aiAnalysis.insights}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Write New Entry Form */}
           <div className="theme-card/30 backdrop-blur-sm rounded-2xl shadow-lg p-6 mb-6">
           {/* Title Input */}
           <div className="mb-4">

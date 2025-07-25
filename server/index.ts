@@ -272,6 +272,32 @@ app.get('/api/journal/:userId', async (req, res) => {
   }
 });
 
+// Journal entries endpoint using device fingerprint - NEW
+app.get('/api/journal/user-entries', async (req, res) => {
+  try {
+    const { UserSessionManager } = await import('./userSession.js');
+    const userSessionManager = UserSessionManager.getInstance();
+    
+    // Get user from device fingerprint
+    const deviceFingerprint = req.headers['x-device-fingerprint'] || 
+                              userSessionManager.generateDeviceFingerprint(req);
+    const sessionId = req.headers['x-session-id'] || undefined;
+    
+    const anonymousUser = await userSessionManager.getOrCreateAnonymousUser(
+      (Array.isArray(deviceFingerprint) ? deviceFingerprint[0] : deviceFingerprint) || 'unknown', 
+      Array.isArray(sessionId) ? sessionId[0] : sessionId
+    );
+    
+    console.log('Journal user-entries endpoint hit for user:', anonymousUser.id);
+    const entries = await storage.getJournalEntries(anonymousUser.id);
+    console.log('Retrieved entries:', entries ? entries.length : 0);
+    res.json(entries || []);
+  } catch (error) {
+    console.error('Failed to fetch journal entries:', error);
+    res.status(500).json({ error: 'Failed to fetch journal entries' });
+  }
+});
+
 // Create journal entry endpoint - MUST BE BEFORE VITE
 app.post('/api/journal', async (req, res) => {
   try {
@@ -288,6 +314,40 @@ app.post('/api/journal', async (req, res) => {
     });
     console.log('Created entry:', newEntry);
     res.json(newEntry);
+  } catch (error) {
+    console.error('Failed to create journal entry:', error);
+    res.status(500).json({ error: 'Failed to create journal entry' });
+  }
+});
+
+// Create journal entry using device fingerprint - NEW
+app.post('/api/journal/create', async (req, res) => {
+  try {
+    const { UserSessionManager } = await import('./userSession.js');
+    const userSessionManager = UserSessionManager.getInstance();
+    
+    // Get user from device fingerprint
+    const deviceFingerprint = req.headers['x-device-fingerprint'] || 
+                              userSessionManager.generateDeviceFingerprint(req);
+    const sessionId = req.headers['x-session-id'] || undefined;
+    
+    const anonymousUser = await userSessionManager.getOrCreateAnonymousUser(
+      (Array.isArray(deviceFingerprint) ? deviceFingerprint[0] : deviceFingerprint) || 'unknown', 
+      Array.isArray(sessionId) ? sessionId[0] : sessionId
+    );
+    
+    console.log('Create journal entry for user:', anonymousUser.id, req.body);
+    const newEntry = await storage.createJournalEntry({
+      userId: anonymousUser.id,
+      title: req.body.title || null,
+      content: req.body.content,
+      mood: req.body.mood,
+      moodIntensity: req.body.moodIntensity || 5,
+      tags: req.body.tags || [],
+      isPrivate: req.body.isPrivate || false
+    });
+    console.log('Created entry:', newEntry);
+    res.json({ ...newEntry, userId: anonymousUser.id });
   } catch (error) {
     console.error('Failed to create journal entry:', error);
     res.status(500).json({ error: 'Failed to create journal entry' });

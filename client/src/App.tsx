@@ -260,16 +260,16 @@ const AppContent = () => {
                           <Route path="/dashboard" element={<MemoryDashboard />} />
                           
                           {/* Core Features */}
-                          <Route path="/journal" element={<TherapeuticJournal userId={1} onEntryCreated={() => {}} />} />
-                          <Route path="/journal-dashboard" element={<JournalDashboard userId={1} />} />
-                          <Route path="/analytics" element={<AnalyticsDashboard userId={1} />} />
+                          <Route path="/journal" element={<TherapeuticJournal userId={null} onEntryCreated={() => {}} />} />
+                          <Route path="/journal-dashboard" element={<JournalDashboard userId={null} />} />
+                          <Route path="/analytics" element={<AnalyticsDashboard userId={null} />} />
                           <Route path="/rewards" element={<WellnessRewards />} />
                           <Route path="/affirmation" element={<DailyAffirmation />} />
                           
                           {/* Mirrors of You */}
-                          <Route path="/reflection" element={<PersonalityReflection userId={1} />} />
-                          <Route path="/emotional-intelligence" element={<EmotionalIntelligenceDashboard userId={1} />} />
-                          <Route path="/mood-tracker" element={<MoodTracker userId={1} />} />
+                          <Route path="/reflection" element={<PersonalityReflection userId={null} />} />
+                          <Route path="/emotional-intelligence" element={<EmotionalIntelligenceDashboard userId={null} />} />
+                          <Route path="/mood-tracker" element={<MoodTracker userId={null} />} />
                           
                           {/* Guided Support */}
                           <Route path="/quiz" element={<PersonalityQuiz onComplete={handleQuizComplete} />} />
