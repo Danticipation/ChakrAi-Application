@@ -262,7 +262,7 @@ const AppContent = () => {
                           
                           {/* Core Features */}
                           <Route path="/journal" element={<TherapeuticJournal userId={getCurrentUserId()} onEntryCreated={() => {}} />} />
-                          <Route path="/journal-dashboard" element={<JournalDashboard />} />
+                          <Route path="/journal-dashboard" element={<JournalDashboard userId={getCurrentUserId()} />} />
                           <Route path="/analytics" element={<AnalyticsDashboard />} />
                           <Route path="/rewards" element={<WellnessRewards />} />
                           <Route path="/affirmation" element={<DailyAffirmation />} />
