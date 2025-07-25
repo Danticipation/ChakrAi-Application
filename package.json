@@ -23,6 +23,8 @@
     "@types/react-router-dom": "^5.3.3",
     "@vitejs/plugin-react": "^4.7.0",
     "axios": "^1.11.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
     "cors": "^2.8.5",
     "date-fns": "^4.1.0",
     "express": "^4.21.2",
@@ -35,6 +37,7 @@
     "react-lazy-with-preload": "^2.2.1",
     "react-router-dom": "^7.7.1",
     "react-router-typesafe": "^1.5.0",
+    "tailwind-merge": "^3.3.1",
     "tailwindcss": "^4.1.11",
     "vite": "^7.0.6",
     "zod": "^4.0.10"
