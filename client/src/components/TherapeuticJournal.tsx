@@ -257,13 +257,15 @@ const TherapeuticJournal: React.FC<TherapeuticJournalProps> = ({ userId, onEntry
           'X-Session-ID': sessionId
         },
         body: JSON.stringify({
-          userId: userId || getCurrentUserId() || 13, // Ensure valid user ID
           title: entry.title || `Entry - ${new Date().toLocaleDateString()}`,
           content: entry.content,
           mood: entry.mood,
           moodIntensity: entry.moodIntensity,
           tags: entry.tags,
-          isPrivate: entry.isPrivate
+          isPrivate: entry.isPrivate,
+          // Let the backend handle user ID via device fingerprint
+          deviceFingerprint,
+          sessionId
         })
       });
 
