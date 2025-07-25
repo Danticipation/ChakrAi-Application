@@ -48,7 +48,7 @@ export function MindfulnessExercise({
   const [audioEnabled, setAudioEnabled] = useState(voiceEnabled);
   
   const audioRef = useRef<HTMLAudioElement>(null);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const intervalRef = useRef<number | null>(null);
 
   // Calculate total exercise time
   useEffect(() => {
