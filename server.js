@@ -13,8 +13,18 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
+// Emergency fallback route first  
+app.get('/emergency', (req, res) => {
+  res.sendFile(join(__dirname, 'emergency-simple.html'));
+});
+
 // Serve the React application
 app.use(express.static('client/dist'));
+
+// SPA fallback - serve index.html for all routes
+app.get('*', (req, res) => {
+  res.sendFile(join(__dirname, 'client/dist/index.html'));
+});
 
 // Chat endpoint with therapeutic responses
 app.post('/api/chat', (req, res) => {

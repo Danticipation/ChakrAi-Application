@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chakrai Test</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f0f8ff; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .header { text-align: center; margin-bottom: 30px; }
+        .logo { font-size: 3rem; color: #1e88e5; font-weight: bold; }
+        .subtitle { color: #666; margin-top: 10px; }
+        .status { background: #e8f5e8; padding: 15px; border-radius: 8px; margin: 20px 0; }
+        .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 20px 0; }
+        .feature { background: #f8f9fa; padding: 15px; border-radius: 8px; text-align: center; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    
+    <script type="text/babel">
+        const { useState } = React;
+        
+        function ChakraiStatus() {
+            const [status, setStatus] = useState('loading');
+            
+            React.useEffect(() => {
+                // Test API connectivity
+                fetch('/api/health')
+                    .then(res => res.json())
+                    .then(data => {
+                        console.log('API Health:', data);
+                        setStatus('connected');
+                    })
+                    .catch(err => {
+                        console.error('API Error:', err);
+                        setStatus('disconnected');
+                    });
+            }, []);
+            
+            return (
+                <div className="container">
+                    <div className="header">
+                        <div className="logo">🧠 Chakrai</div>
+                        <div className="subtitle">Mental Wellness Application Status</div>
+                    </div>
+                    
+                    <div className="status">
+                        <strong>System Status:</strong> {status === 'loading' ? 'Checking...' : status === 'connected' ? '✅ All systems operational' : '❌ Connection issues detected'}
+                    </div>
+                    
+                    <div className="features">
+                        <div className="feature">
+                            <h3>💬 Chat Interface</h3>
+                            <p>AI-powered therapeutic conversations</p>
+                        </div>
+                        <div className="feature">
+                            <h3>📔 Journal</h3>
+                            <p>Personal reflection and mood tracking</p>
+                        </div>
+                        <div className="feature">
+                            <h3>📊 Analytics</h3>
+                            <p>Wellness insights and progress tracking</p>
+                        </div>
+                        <div className="feature">
+                            <h3>🎯 Goals</h3>
+                            <p>Personalized therapy plans</p>
+                        </div>
+                    </div>
+                    
+                    <div style={{textAlign: 'center', marginTop: '30px'}}>
+                        <button 
+                            onClick={() => window.location.reload()}
+                            style={{
+                                background: '#1e88e5',
+                                color: 'white',
+                                border: 'none',
+                                padding: '12px 24px',
+                                borderRadius: '6px',
+                                fontSize: '16px',
+                                cursor: 'pointer'
+                            }}
+                        >
+                            Refresh Application
+                        </button>
+                    </div>
+                </div>
+            );
+        }
+        
+        ReactDOM.render(<ChakraiStatus />, document.getElementById('root'));
+    </script>
+</body>
+</html>
