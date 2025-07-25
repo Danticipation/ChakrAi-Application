@@ -263,7 +263,7 @@ const AppContent = () => {
                           {/* Core Features */}
                           <Route path="/journal" element={<TherapeuticJournal userId={getCurrentUserId()} onEntryCreated={() => {}} />} />
                           <Route path="/journal-dashboard" element={<JournalDashboard userId={getCurrentUserId()} />} />
-                          <Route path="/analytics" element={<AnalyticsDashboard />} />
+                          <Route path="/analytics" element={<AnalyticsDashboard userId={getCurrentUserId()} />} />
                           <Route path="/rewards" element={<WellnessRewards />} />
                           <Route path="/affirmation" element={<DailyAffirmation />} />
                           
@@ -275,11 +275,11 @@ const AppContent = () => {
                           {/* Guided Support */}
                           <Route path="/quiz" element={<PersonalityQuiz onComplete={handleQuizComplete} />} />
                           <Route path="/adaptive" element={<AdaptiveLearning />} />
-                          <Route path="/therapy" element={<AdaptiveTherapyPlan onPlanUpdate={() => {}} />} />
-                          <Route path="/agent" element={<AgentSystem />} />
+                          <Route path="/therapy" element={<AdaptiveTherapyPlan userId={getCurrentUserId()} onPlanUpdate={() => {}} />} />
+                          <Route path="/agent" element={<AgentSystem userId={getCurrentUserId()} />} />
                           <Route path="/vr" element={<VRTherapy />} />
                           <Route path="/challenges" element={<ChallengeSystem />} />
-                          <Route path="/achievements" element={<AchievementDashboard />} />
+                          <Route path="/achievements" element={<AchievementDashboard userId={getCurrentUserId()} />} />
                           
                           {/* Healthcare */}
                           <Route path="/health" element={<HealthIntegration />} />
