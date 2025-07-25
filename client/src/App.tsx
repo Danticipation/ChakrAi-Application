@@ -41,9 +41,10 @@ import { SubscriptionProvider } from './contexts/SubscriptionContext';
 import { SubscriptionModal } from './components/SubscriptionModal';
 import { UsageLimitModal } from './components/UsageLimitModal';
 import AuthModal from './components/AuthModal';
+import { getCurrentUserId } from './utils/userSession';
 
 // Lazy‑loaded feature components
-const Chat = lazy(() => import('./components/FloatingChat'));
+const Chat = lazy(() => import('./components/EnhancedMovableChat'));
 const MemoryDashboard = lazy(() => import('./components/MemoryDashboard'));
 const TherapeuticJournal = lazy(() => import('./components/TherapeuticJournal'));
 const AnalyticsDashboard = lazy(() => import('./components/AnalyticsDashboard'));
@@ -260,7 +261,7 @@ const AppContent = () => {
                           <Route path="/dashboard" element={<MemoryDashboard />} />
                           
                           {/* Core Features */}
-                          <Route path="/journal" element={<TherapeuticJournal onEntryCreated={() => {}} />} />
+                          <Route path="/journal" element={<TherapeuticJournal userId={getCurrentUserId()} onEntryCreated={() => {}} />} />
                           <Route path="/journal-dashboard" element={<JournalDashboard />} />
                           <Route path="/analytics" element={<AnalyticsDashboard />} />
                           <Route path="/rewards" element={<WellnessRewards />} />

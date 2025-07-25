@@ -54,7 +54,7 @@ interface Message {
 interface EnhancedMovableChatProps {
   isOpen: boolean;
   onToggle: () => void;
-  selectedVoice: string;
+  selectedVoice?: string;
 }
 
 interface ChatApiResponse {
@@ -82,7 +82,7 @@ interface ChatHistoryResponse {
 }
 
 // Main Component
-const EnhancedMovableChat: React.FC<EnhancedMovableChatProps> = ({ isOpen, onToggle, selectedVoice }) => {
+const EnhancedMovableChat: React.FC<EnhancedMovableChatProps> = ({ isOpen, onToggle, selectedVoice = 'carla' }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isRecording, setIsRecording] = useState(false);
