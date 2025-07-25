@@ -9,7 +9,7 @@ interface SubscriptionModalProps {
   onClose: () => void;
 }
 
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
+const stripePromise = loadStripe((import.meta.env as any).VITE_STRIPE_PUBLIC_KEY);
 
 export function SubscriptionModal({ isOpen, onClose }: SubscriptionModalProps) {
   const { createCheckout, subscription } = useSubscription();
