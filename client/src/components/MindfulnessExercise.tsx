@@ -281,7 +281,7 @@ export function MindfulnessExercise({
           <div className="flex justify-center">
             <Button
               onClick={onClose}
-              variant="ghost"
+              variant="outline"
               className="text-gray-500 hover:text-gray-700"
             >
               Close Exercise
