@@ -147,8 +147,8 @@ export default function TherapeuticAnalytics({ userId = getCurrentUserId() }: Th
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-white">
-              {dashboard?.summary.weeklyEmotionalImprovement > 0 ? '+' : ''}
-              {((dashboard?.summary.weeklyEmotionalImprovement || 0) * 100).toFixed(1)}%
+              {(dashboard?.summary?.weeklyEmotionalImprovement || 0) > 0 ? '+' : ''}
+              {((dashboard?.summary?.weeklyEmotionalImprovement || 0) * 100).toFixed(1)}%
             </div>
             <p className="text-xs text-white/70 mt-1">Last 7 days</p>
           </CardContent>
