@@ -3,8 +3,7 @@ import NeonCursor from '@/components/neon-cursor';
 import { QueryClient, QueryClientProvider, useQuery, useQueryClient } from '@tanstack/react-query';
 import { MessageCircle, Brain, BookOpen, Mic, User, Square, Send, Target, RotateCcw, Sun, Star, Heart, BarChart3, Gift, Headphones, Shield, X, Palette, Settings } from 'lucide-react';
 import axios from 'axios';
-// Note: Sidebar and Header components are defined inline in App.tsx
-// If needed, they should be imported from there or defined locally
+import { Sidebar, Header } from '@/components/Layout" ThemeContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { SubscriptionProvider, useSubscription } from './contexts/SubscriptionContext';
 import { SubscriptionModal } from './components/SubscriptionModal';
@@ -1441,7 +1440,7 @@ const AppLayout = ({ currentUserId, onDataReset }: AppLayoutProps) => {
         </div>
 
         {/* Desktop Left Sidebar Navigation - 4-Tier Hierarchy */}
-          {/* Sidebar component moved to App.tsx - this component appears to be unused/legacy */}
+          <Sidebar collapsed={collapsed} />
           {/* Core Companion Section */}
           <div className="mb-6">
             <div className="theme-text-secondary text-sm font-medium px-6 pb-2">🟦 Core Companion</div>

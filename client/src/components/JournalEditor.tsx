@@ -2,16 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { Save, Trash2, Eye, EyeOff, Brain, TrendingUp, FileText, Mic, Square, AlertCircle } from 'lucide-react';
-import type { JournalEntry } from '@shared/schema';
-
-interface JournalAnalytics {
-  totalEntries: number;
-  averageMoodIntensity: number;
-  themes: Array<{ theme: string; count: number }>;
-  sentimentTrend: 'positive' | 'neutral' | 'negative';
-  writingStreak: number;
-  averageWordsPerEntry: number;
-}
+import type { JournalEntry, JournalAnalytics } from '@shared/schema';
 
 interface JournalEditorProps {
   entry?: JournalEntry;
@@ -116,7 +107,7 @@ export default function JournalEditor({ entry, onSave, onCancel, userId }: Journ
         const newContent = content ? content + ' ' + response.data.text : response.data.text;
         setContent(newContent);
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error transcribing audio:', error);
       
       // Show user-friendly error message based on error type
@@ -221,7 +212,7 @@ export default function JournalEditor({ entry, onSave, onCancel, userId }: Journ
       return;
     }
 
-    const wordCount = content.split(/\s+/).filter((word: string) => word.length > 0).length;
+    const wordCount = content.split(/\s+/).filter(word => word.length > 0).length;
     const readingTime = Math.ceil(wordCount / 200);
 
     const journalData = {
@@ -412,11 +403,11 @@ export default function JournalEditor({ entry, onSave, onCancel, userId }: Journ
             </button>
           </div>
           <div className="flex justify-between items-center mt-2 text-xs" style={{ color: 'var(--text-secondary)' }}>
-            <span>{content.split(/\s+/).filter((word: string) => word.length > 0).length} words</span>
+            <span>{content.split(/\s+/).filter(word => word.length > 0).length} words</span>
             <div className="flex items-center gap-2">
               {isTranscribing && <span className="text-blue-500">Transcribing...</span>}
               {isRecording && <span className="text-red-500">Recording...</span>}
-              <span>~{Math.ceil(content.split(/\s+/).filter((word: string) => word.length > 0).length / 200)} min read</span>
+              <span>~{Math.ceil(content.split(/\s+/).filter(word => word.length > 0).length / 200)} min read</span>
             </div>
           </div>
         </div>
@@ -486,7 +477,7 @@ export default function JournalEditor({ entry, onSave, onCancel, userId }: Journ
                 <div>
                   <h4 className="font-medium mb-2" style={{ color: 'var(--text-primary)' }}>Key Insights</h4>
                   <ul className="space-y-1">
-                    {analytics.keyInsights.slice(0, 3).map((insight: string, index: number) => (
+                    {analytics.keyInsights.slice(0, 3).map((insight, index) => (
                       <li key={index} className="text-xs flex items-start gap-2" style={{ color: 'var(--text-secondary)' }}>
                         <TrendingUp className="w-3 h-3 mt-0.5 flex-shrink-0" />
                         {insight}
@@ -501,7 +492,7 @@ export default function JournalEditor({ entry, onSave, onCancel, userId }: Journ
                 <div>
                   <h4 className="font-medium mb-2" style={{ color: 'var(--text-primary)' }}>Suggestions</h4>
                   <ul className="space-y-1">
-                    {analytics.recommendedActions.slice(0, 2).map((action: string, index: number) => (
+                    {analytics.recommendedActions.slice(0, 2).map((action, index) => (
                       <li key={index} className="text-xs flex items-start gap-2" style={{ color: 'var(--text-secondary)' }}>
                         <FileText className="w-3 h-3 mt-0.5 flex-shrink-0" />
                         {action}

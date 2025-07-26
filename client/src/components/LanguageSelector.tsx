@@ -204,7 +204,7 @@ export function LanguageSelector({
                   )}
                   {language.voiceSupport && (
                     <Button
-                      variant="outline"
+                      variant="ghost"
                       size="sm"
                       onClick={(e) => {
                         e.stopPropagation();

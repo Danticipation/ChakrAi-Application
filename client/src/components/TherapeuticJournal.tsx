@@ -3,7 +3,6 @@ import { Mic, MicOff, Save, Plus, Calendar, Tag, Heart, Smile, Meh, Frown, Alert
 
 interface JournalEntry {
   id?: number;
-  userId?: number;
   title: string;
   content: string;
   mood: string;
@@ -262,17 +261,14 @@ const TherapeuticJournal: React.FC<TherapeuticJournalProps> = ({ userId, onEntry
           mood: entry.mood,
           moodIntensity: entry.moodIntensity,
           tags: entry.tags,
-          isPrivate: entry.isPrivate,
-          // Let the backend handle user ID via device fingerprint
-          deviceFingerprint,
-          sessionId
+          isPrivate: entry.isPrivate
         })
       });
 
       if (response.ok) {
         const savedEntry = await response.json();
         setShowSuccess(true);
-        setTimeout(() => setShowSuccess(false), 5000); // Extended to 5 seconds for better visibility
+        setTimeout(() => setShowSuccess(false), 3000);
         
         // Reset form
         setEntry({
@@ -339,21 +335,7 @@ const TherapeuticJournal: React.FC<TherapeuticJournalProps> = ({ userId, onEntry
 
   const fetchAnalytics = async () => {
     try {
-      // Get device fingerprint for consistent user session
-      const deviceFingerprint = localStorage.getItem('deviceFingerprint') || 
-                               `device_${Math.random().toString(36).substring(2, 15)}`;
-      const sessionId = localStorage.getItem('sessionId') || 
-                       `session_${Math.random().toString(36).substring(2, 15)}`;
-      
-      localStorage.setItem('deviceFingerprint', deviceFingerprint);
-      localStorage.setItem('sessionId', sessionId);
-      
-      const response = await fetch(`/api/journal/analytics/device`, {
-        headers: {
-          'X-Device-Fingerprint': deviceFingerprint,
-          'X-Session-ID': sessionId
-        }
-      });
+      const response = await fetch(`/api/journal/analytics/13`);
       if (response.ok) {
         const data = await response.json();
         // Convert the real analytics data to match the expected structure
@@ -380,21 +362,7 @@ const TherapeuticJournal: React.FC<TherapeuticJournalProps> = ({ userId, onEntry
 
   const exportTherapistReport = async () => {
     try {
-      // Get device fingerprint for consistent user session
-      const deviceFingerprint = localStorage.getItem('deviceFingerprint') || 
-                               `device_${Math.random().toString(36).substring(2, 15)}`;
-      const sessionId = localStorage.getItem('sessionId') || 
-                       `session_${Math.random().toString(36).substring(2, 15)}`;
-      
-      localStorage.setItem('deviceFingerprint', deviceFingerprint);
-      localStorage.setItem('sessionId', sessionId);
-      
-      const response = await fetch(`/api/journal/export/therapist/device`, {
-        headers: {
-          'X-Device-Fingerprint': deviceFingerprint,
-          'X-Session-ID': sessionId
-        }
-      });
+      const response = await fetch(`/api/journal/export/therapist/13`);
       if (response.ok) {
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
@@ -443,16 +411,11 @@ const TherapeuticJournal: React.FC<TherapeuticJournalProps> = ({ userId, onEntry
 
   return (
     <div className="h-full flex flex-col theme-background p-4">
-      {/* Enhanced Success Message */}
+      {/* Success Message */}
       {showSuccess && (
-        <div className="fixed top-4 right-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white px-8 py-4 rounded-2xl shadow-2xl z-50 flex items-center animate-bounce border-2 border-white">
-          <div className="flex items-center">
-            <Heart className="w-6 h-6 mr-3 animate-pulse" />
-            <div>
-              <div className="font-bold text-lg">✅ Entry Saved!</div>
-              <div className="text-sm opacity-90">Your journal entry has been safely stored</div>
-            </div>
-          </div>
+        <div className="fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 flex items-center">
+          <Heart className="w-5 h-5 mr-2" />
+          Journal entry saved successfully!
         </div>
       )}
 
@@ -822,32 +785,29 @@ const TherapeuticJournal: React.FC<TherapeuticJournalProps> = ({ userId, onEntry
             </label>
           </div>
 
-          {/* Save Button - Enhanced Visibility */}
-          <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl p-1 shadow-2xl">
-            <button
-              onClick={saveEntry}
-              disabled={isSaving || !entry.content.trim()}
-              className={`w-full py-5 rounded-xl font-bold text-lg transition-all flex items-center justify-center ${
-                isSaving || !entry.content.trim()
-                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  : 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-xl hover:shadow-2xl transform hover:scale-[1.02]'
-              }`}
-            >
-              {isSaving ? (
-                <>
-                  <div className="w-6 h-6 border-3 border-white border-t-transparent rounded-full animate-spin mr-3" />
-                  <span className="animate-pulse">Saving Your Entry...</span>
-                </>
-              ) : (
-                <>
-                  <Save className="w-6 h-6 mr-3" />
-                  <span>💾 Save Journal Entry</span>
-                </>
-              )}
-            </button>
-          </div>
+          {/* Save Button */}
+          <button
+            onClick={saveEntry}
+            disabled={isSaving || !entry.content.trim()}
+            className={`w-full py-4 rounded-xl font-medium transition-all flex items-center justify-center ${
+              isSaving || !entry.content.trim()
+                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                : 'bg-blue-500 hover:bg-blue-600 text-white shadow-lg hover:shadow-xl'
+            }`}
+          >
+            {isSaving ? (
+              <>
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <Save className="w-5 h-5 mr-2" />
+                Save Journal Entry
+              </>
+            )}
+          </button>
         </div>
-        </>
         )}
 
         {/* Recent Entries (shown only on write tab) */}
