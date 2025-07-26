@@ -111,7 +111,6 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
     };
     
     setMessages(prev => [...prev, userMessage]);
-    setChatInput('');
     
     // Send to AI API
     try {
@@ -129,12 +128,20 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
       if (response.ok) {
         const data = await response.json();
         console.log('Chat API response:', data);
+        
+        // Clear input and add user message immediately
+        setChatInput('');
+        
         const botMessage = {
           sender: 'bot' as const,
           text: data.message || data.response || data.text || 'I received your message.',
           time: new Date().toLocaleTimeString()
         };
         setMessages(prev => [...prev, botMessage]);
+      } else {
+        console.error('Chat API error:', response.status, response.statusText);
+        const errorText = await response.text();
+        console.error('Error details:', errorText);
       }
     } catch (error) {
       console.error('Error sending message:', error);
