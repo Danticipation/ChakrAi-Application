@@ -1870,16 +1870,24 @@ const AppLayout = ({ currentUserId, onDataReset }: AppLayoutProps) => {
               </div>
             </div>
           ) : (
-            /* Separate Full Panels for Other Sections */
-            <div className="w-full h-full theme-background p-6 overflow-y-auto">
+            /* Default Feature Content */
+            <div className="w-full h-full p-6 overflow-y-auto">
               <div className="max-w-4xl mx-auto">
-                {/* Feature Header */}
-                <div className="theme-card backdrop-blur-sm rounded-xl p-6 border border-[var(--theme-accent)]/30 shadow-lg mb-6">
-                  <h2 className="text-2xl font-bold theme-text text-center">
-                    {activeSection === 'daily' && 'Personality Reflection'}
+                {/* Enhanced Feature Header */}
+                <div className="mb-8 text-center">
+                  <h2 className="text-3xl font-bold theme-text mb-4 bg-gradient-to-r from-[var(--theme-primary)] to-[var(--theme-secondary)] bg-clip-text text-transparent">
+                    {activeSection === 'home' && 'Wellness Dashboard'}
                     {activeSection === 'journal' && 'Therapeutic Journal'}
+                    {activeSection === 'analytics' && 'Analytics & Insights'}
                     {activeSection === 'memory' && 'Insight Vault'}
-                    {activeSection === 'analytics' && 'Analytics & Reporting'}
+                    {activeSection === 'mood' && 'Mood Tracking'}
+                    {activeSection === 'daily-affirmation' && 'Daily Affirmations'}
+                    {activeSection === 'settings' && 'Voice & Settings'}
+                    {activeSection === 'ai-monitoring' && 'AI Performance Monitoring'}
+                    {activeSection === 'accessibility' && 'Accessibility Settings'}
+                    {activeSection === 'mic-test' && 'Microphone Test'}
+                    {activeSection === 'voice-settings' && 'Voice Settings'}
+                    {activeSection === 'themes' && 'Theme Selection'}
                     {activeSection === 'challenges' && 'Wellness Challenges'}
                     {activeSection === 'rewards' && 'Wellness Rewards'}
                     {activeSection === 'community' && 'Community & Professional Support'}
@@ -1909,7 +1917,6 @@ const AppLayout = ({ currentUserId, onDataReset }: AppLayoutProps) => {
             </div>
           )}
         </div>
-        }
 
         {/* Right Stats Sidebar - Enhanced with Rounded Cards and Gradients */}
         <div className="hidden lg:block w-96 py-8 px-8">
