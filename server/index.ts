@@ -415,6 +415,86 @@ app.get('/api/journal/analytics/:userId', async (req, res) => {
   }
 });
 
+// Journal analytics endpoint with device fingerprint - MUST BE BEFORE VITE
+app.get('/api/journal/analytics', async (req, res) => {
+  try {
+    const { UserSessionManager } = await import('./userSession.js');
+    const userSessionManager = UserSessionManager.getInstance();
+    
+    // Get user from device fingerprint
+    const deviceFingerprint = req.headers['x-device-fingerprint'] || 
+                              userSessionManager.generateDeviceFingerprint(req);
+    const sessionId = req.headers['x-session-id'] || undefined;
+    
+    const anonymousUser = await userSessionManager.getOrCreateAnonymousUser(
+      (Array.isArray(deviceFingerprint) ? deviceFingerprint[0] : deviceFingerprint) || 'unknown', 
+      Array.isArray(sessionId) ? sessionId[0] : sessionId
+    );
+    
+    console.log('Journal analytics endpoint hit for user:', anonymousUser.id);
+    
+    // Get all journal entries for the user
+    const entries = await storage.getJournalEntries(anonymousUser.id);
+    
+    if (!entries || entries.length === 0) {
+      return res.json({
+        moodDistribution: {},
+        moodTrends: [],
+        themes: {},
+        totalEntries: 0,
+        averageMoodIntensity: 5,
+        entriesThisMonth: 0
+      });
+    }
+    
+    // Generate analytics from entries
+    const moodCounts: Record<string, number> = {};
+    const moodTrends: any[] = [];
+    const themes: Record<string, number> = {};
+    
+    entries.forEach((entry, index) => {
+      // Count moods
+      if (entry.mood) {
+        moodCounts[entry.mood] = (moodCounts[entry.mood] || 0) + 1;
+      }
+      
+      // Create mood trends
+      moodTrends.push({
+        date: entry.createdAt || new Date(),
+        mood: entry.mood || 'neutral',
+        intensity: entry.moodIntensity || 5,
+        index: index
+      });
+      
+      // Extract themes from tags
+      if (entry.tags && entry.tags.length > 0) {
+        entry.tags.forEach(tag => {
+          themes[tag] = (themes[tag] || 0) + 1;
+        });
+      }
+    });
+    
+    const analytics = {
+      moodDistribution: moodCounts,
+      moodTrends: moodTrends,
+      themes: themes,
+      totalEntries: entries.length,
+      averageMoodIntensity: moodTrends.reduce((sum, trend) => sum + trend.intensity, 0) / moodTrends.length,
+      entriesThisMonth: entries.filter(entry => {
+        if (!entry.createdAt) return false;
+        const entryDate = new Date(entry.createdAt);
+        const now = new Date();
+        return entryDate.getMonth() === now.getMonth() && entryDate.getFullYear() === now.getFullYear();
+      }).length
+    };
+    
+    res.json(analytics);
+  } catch (error) {
+    console.error('Failed to get journal analytics:', error);
+    res.status(500).json({ error: 'Failed to get journal analytics' });
+  }
+});
+
 // Journal AI analysis endpoint - MUST BE BEFORE VITE
 app.post('/api/journal/analyze', async (req, res) => {
   try {
