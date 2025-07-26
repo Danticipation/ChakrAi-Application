@@ -26,6 +26,7 @@ interface JournalAnalytics {
   writingStreak: number;
   averageWordsPerEntry: number;
   moodDistribution?: { [mood: string]: number };
+  moodTrends?: Array<{ date: string; mood: string; intensity: number }>;
 }
 
 interface JournalDashboardProps {
