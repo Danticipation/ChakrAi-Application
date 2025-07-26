@@ -19,6 +19,7 @@ import {
   Settings,
   CheckCircle,
   AlertCircle,
+  AlertTriangle,
   HelpCircle
 } from 'lucide-react';
 

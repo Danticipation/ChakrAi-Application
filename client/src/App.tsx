@@ -41,9 +41,10 @@ import { SubscriptionProvider } from './contexts/SubscriptionContext';
 import { SubscriptionModal } from './components/SubscriptionModal';
 import { UsageLimitModal } from './components/UsageLimitModal';
 import AuthModal from './components/AuthModal';
+import { getCurrentUserId } from './utils/userSession';
 
 // Lazy‑loaded feature components
-const Chat = lazy(() => import('./components/FloatingChat'));
+const Chat = lazy(() => import('./components/EnhancedMovableChat'));
 const MemoryDashboard = lazy(() => import('./components/MemoryDashboard'));
 const TherapeuticJournal = lazy(() => import('./components/TherapeuticJournal'));
 const AnalyticsDashboard = lazy(() => import('./components/AnalyticsDashboard'));
@@ -260,29 +261,29 @@ const AppContent = () => {
                           <Route path="/dashboard" element={<MemoryDashboard />} />
                           
                           {/* Core Features */}
-                          <Route path="/journal" element={<TherapeuticJournal userId={1} onEntryCreated={() => {}} />} />
-                          <Route path="/journal-dashboard" element={<JournalDashboard userId={1} />} />
-                          <Route path="/analytics" element={<AnalyticsDashboard userId={1} />} />
+                          <Route path="/journal" element={<TherapeuticJournal userId={getCurrentUserId()} onEntryCreated={() => {}} />} />
+                          <Route path="/journal-dashboard" element={<JournalDashboard userId={getCurrentUserId()} />} />
+                          <Route path="/analytics" element={<AnalyticsDashboard userId={getCurrentUserId()} />} />
                           <Route path="/rewards" element={<WellnessRewards />} />
                           <Route path="/affirmation" element={<DailyAffirmation />} />
                           
                           {/* Mirrors of You */}
-                          <Route path="/reflection" element={<PersonalityReflection userId={1} />} />
-                          <Route path="/emotional-intelligence" element={<EmotionalIntelligenceDashboard userId={1} />} />
-                          <Route path="/mood-tracker" element={<MoodTracker userId={1} />} />
+                          <Route path="/reflection" element={<PersonalityReflection />} />
+                          <Route path="/emotional-intelligence" element={<EmotionalIntelligenceDashboard />} />
+                          <Route path="/mood-tracker" element={<MoodTracker />} />
                           
                           {/* Guided Support */}
                           <Route path="/quiz" element={<PersonalityQuiz onComplete={handleQuizComplete} />} />
                           <Route path="/adaptive" element={<AdaptiveLearning />} />
-                          <Route path="/therapy" element={<AdaptiveTherapyPlan userId={1} onPlanUpdate={() => {}} />} />
-                          <Route path="/agent" element={<AgentSystem userId={1} />} />
+                          <Route path="/therapy" element={<AdaptiveTherapyPlan userId={getCurrentUserId()} onPlanUpdate={() => {}} />} />
+                          <Route path="/agent" element={<AgentSystem userId={getCurrentUserId()} />} />
                           <Route path="/vr" element={<VRTherapy />} />
                           <Route path="/challenges" element={<ChallengeSystem />} />
-                          <Route path="/achievements" element={<AchievementDashboard />} />
+                          <Route path="/achievements" element={<AchievementDashboard userId={getCurrentUserId()} />} />
                           
                           {/* Healthcare */}
                           <Route path="/health" element={<HealthIntegration />} />
-                          <Route path="/analytics-therapeutic" element={<TherapeuticAnalytics userId={1} />} />
+                          <Route path="/analytics-therapeutic" element={<TherapeuticAnalytics />} />
                           <Route path="/therapist" element={<TherapistPortal />} />
                           
                           {/* Community */}
@@ -293,8 +294,8 @@ const AppContent = () => {
                           <Route path="/settings/voice" element={<VoiceSelector selectedVoice={selectedVoice} onVoiceChange={setSelectedVoice} />} />
                           <Route path="/settings/privacy" element={<PrivacyCompliance />} />
                           <Route path="/mic-test" element={<MicrophoneTest />} />
-                          <Route path="/feedback" element={<FeedbackSystem userId={1} />} />
-                          <Route path="/ai-monitoring" element={<AiPerformanceMonitoringDashboard userId={1} />} />
+                          <Route path="/feedback" element={<FeedbackSystem />} />
+                          <Route path="/ai-monitoring" element={<AiPerformanceMonitoringDashboard />} />
                           
                           <Route path="*" element={<MemoryDashboard />} />
                       </Routes>

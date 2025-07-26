@@ -9,7 +9,7 @@ interface SubscriptionModalProps {
   onClose: () => void;
 }
 
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
+const stripePromise = loadStripe((import.meta.env as any).VITE_STRIPE_PUBLIC_KEY);
 
 export function SubscriptionModal({ isOpen, onClose }: SubscriptionModalProps) {
   const { createCheckout, subscription } = useSubscription();
@@ -68,7 +68,7 @@ export function SubscriptionModal({ isOpen, onClose }: SubscriptionModalProps) {
             </h2>
           </div>
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700"

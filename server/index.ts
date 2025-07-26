@@ -2,8 +2,13 @@ import express from "express";
 import { createServer } from "http";
 import path from "path";
 import { fileURLToPath } from 'url';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
+import cors from 'cors';
+import { body, validationResult } from 'express-validator';
 import { setupVite, serveStatic, log } from "./vite.js";
 import routes from './routes.js';
+import { logger } from './logger.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -12,8 +17,52 @@ const app = express();
 const server = createServer(app);
 const PORT = parseInt(process.env.PORT || '5000', 10);
 
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+// SECURITY: Essential security middleware
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https:"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", "data:", "https:"],
+      connectSrc: ["'self'", "https://api.openai.com", "https://api.elevenlabs.io"],
+    },
+  },
+  hsts: {
+    maxAge: 31536000,
+    includeSubDomains: true,
+    preload: true
+  }
+}));
+
+// SECURITY: CORS configuration 
+app.use(cors({
+  origin: process.env.NODE_ENV === 'production' 
+    ? ['https://your-domain.com'] 
+    : ['http://localhost:5000', 'http://0.0.0.0:5000'],
+  credentials: true
+}));
+
+// SECURITY: Rate limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: 'Too many requests from this IP, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use('/api/', limiter);
+
+// SECURITY: Stricter rate limit for auth endpoints
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5, // limit each IP to 5 auth requests per 15 minutes
+  message: 'Too many authentication attempts, please try again later.',
+  skipSuccessfulRequests: true,
+});
+
+app.use(express.json({ limit: '10mb' })); // Reduced from 50mb
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // CRITICAL: Priority API endpoints MUST come before ANY other middleware to prevent Vite interception
 
@@ -23,8 +72,30 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 
-// JWT secret for authentication
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+// SECURITY: JWT secret validation
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET || JWT_SECRET === 'your-secret-key-change-in-production') {
+  logger.error('CRITICAL SECURITY ERROR: JWT_SECRET environment variable must be set to a secure random value');
+  process.exit(1);
+}
+
+// SECURITY: Request logging middleware
+app.use((req, res, next) => {
+  const start = Date.now();
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    logger.info(`${req.method} ${req.url}`, {
+      endpoint: req.url,
+      ip: req.ip || req.connection.remoteAddress,
+      userAgent: req.get('User-Agent'),
+      extra: {
+        statusCode: res.statusCode,
+        duration: `${duration}ms`
+      }
+    });
+  });
+  next();
+});
 
 // Middleware for authentication
 const authenticateToken = (req: any, res: any, next: any) => {
@@ -44,8 +115,31 @@ const authenticateToken = (req: any, res: any, next: any) => {
   });
 };
 
-// Authentication endpoints
-app.post('/api/auth/register', async (req, res) => {
+// SECURITY: Input validation middleware
+const validateRegistration = [
+  body('email').isEmail().normalizeEmail().escape(),
+  body('password').isLength({ min: 8 }).matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/),
+  body('name').isLength({ min: 1, max: 100 }).trim().escape(),
+];
+
+const validateLogin = [
+  body('email').isEmail().normalizeEmail().escape(),
+  body('password').isLength({ min: 1 }).escape(),
+];
+
+const handleValidationErrors = (req: any, res: any, next: any) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ 
+      error: 'Invalid input data',
+      details: errors.array()
+    });
+  }
+  next();
+};
+
+// Authentication endpoints with security
+app.post('/api/auth/register', authLimiter, validateRegistration, handleValidationErrors, async (req: any, res: any) => {
   try {
     const { email, password, name } = req.body;
 
@@ -93,12 +187,15 @@ app.post('/api/auth/register', async (req, res) => {
       token
     });
   } catch (error) {
-    console.error('Registration error:', error);
+    logger.error('Registration failed', error as Error, {
+      endpoint: '/api/auth/register',
+      ip: req.ip
+    });
     res.status(500).json({ error: 'Registration failed' });
   }
 });
 
-app.post('/api/auth/login', async (req, res) => {
+app.post('/api/auth/login', authLimiter, validateLogin, handleValidationErrors, async (req: any, res: any) => {
   try {
     const { email, password } = req.body;
 
@@ -139,7 +236,10 @@ app.post('/api/auth/login', async (req, res) => {
       token
     });
   } catch (error) {
-    console.error('Login error:', error);
+    logger.error('Login failed', error as Error, {
+      endpoint: '/api/auth/login',
+      ip: req.ip
+    });
     res.status(500).json({ error: 'Login failed' });
   }
 });
@@ -258,12 +358,51 @@ app.get('/api/users/:userId/streak-stats', (req, res) => {
   });
 });
 
-// Journal entries endpoint - MUST BE BEFORE VITE to prevent HTML interception
+// Journal entries endpoint - REDIRECT TO DEVICE FINGERPRINT VERSION
 app.get('/api/journal/:userId', async (req, res) => {
   try {
-    const userId = parseInt(req.params.userId);
-    console.log('Journal API endpoint hit for user:', userId);
-    const entries = await storage.getJournalEntries(userId);
+    // Always redirect to device fingerprint approach
+    const { UserSessionManager } = await import('./userSession.js');
+    const userSessionManager = UserSessionManager.getInstance();
+    
+    // Get user from device fingerprint
+    const deviceFingerprint = req.headers['x-device-fingerprint'] || 
+                              userSessionManager.generateDeviceFingerprint(req);
+    const sessionId = req.headers['x-session-id'] || undefined;
+    
+    const anonymousUser = await userSessionManager.getOrCreateAnonymousUser(
+      (Array.isArray(deviceFingerprint) ? deviceFingerprint[0] : deviceFingerprint) || 'unknown', 
+      Array.isArray(sessionId) ? sessionId[0] : sessionId
+    );
+    
+    console.log('Journal API endpoint (legacy) hit, using device fingerprint user:', anonymousUser.id);
+    const entries = await storage.getJournalEntries(anonymousUser.id);
+    console.log('Retrieved entries:', entries ? entries.length : 0);
+    res.json(entries || []);
+  } catch (error) {
+    console.error('Failed to fetch journal entries:', error);
+    res.status(500).json({ error: 'Failed to fetch journal entries' });
+  }
+});
+
+// Journal entries endpoint using device fingerprint - NEW
+app.get('/api/journal/user-entries', async (req, res) => {
+  try {
+    const { UserSessionManager } = await import('./userSession.js');
+    const userSessionManager = UserSessionManager.getInstance();
+    
+    // Get user from device fingerprint
+    const deviceFingerprint = req.headers['x-device-fingerprint'] || 
+                              userSessionManager.generateDeviceFingerprint(req);
+    const sessionId = req.headers['x-session-id'] || undefined;
+    
+    const anonymousUser = await userSessionManager.getOrCreateAnonymousUser(
+      (Array.isArray(deviceFingerprint) ? deviceFingerprint[0] : deviceFingerprint) || 'unknown', 
+      Array.isArray(sessionId) ? sessionId[0] : sessionId
+    );
+    
+    console.log('Journal user-entries endpoint hit for user:', anonymousUser.id);
+    const entries = await storage.getJournalEntries(anonymousUser.id);
     console.log('Retrieved entries:', entries ? entries.length : 0);
     res.json(entries || []);
   } catch (error) {
@@ -294,14 +433,61 @@ app.post('/api/journal', async (req, res) => {
   }
 });
 
-// Journal analytics endpoint - MUST BE BEFORE VITE
+// Create journal entry using device fingerprint - NEW
+app.post('/api/journal/create', async (req, res) => {
+  try {
+    const { UserSessionManager } = await import('./userSession.js');
+    const userSessionManager = UserSessionManager.getInstance();
+    
+    // Get user from device fingerprint
+    const deviceFingerprint = req.headers['x-device-fingerprint'] || 
+                              userSessionManager.generateDeviceFingerprint(req);
+    const sessionId = req.headers['x-session-id'] || undefined;
+    
+    const anonymousUser = await userSessionManager.getOrCreateAnonymousUser(
+      (Array.isArray(deviceFingerprint) ? deviceFingerprint[0] : deviceFingerprint) || 'unknown', 
+      Array.isArray(sessionId) ? sessionId[0] : sessionId
+    );
+    
+    console.log('Create journal entry for user:', anonymousUser.id, req.body);
+    const newEntry = await storage.createJournalEntry({
+      userId: anonymousUser.id,
+      title: req.body.title || null,
+      content: req.body.content,
+      mood: req.body.mood,
+      moodIntensity: req.body.moodIntensity || 5,
+      tags: req.body.tags || [],
+      isPrivate: req.body.isPrivate || false
+    });
+    console.log('Created entry:', newEntry);
+    res.json({ ...newEntry, userId: anonymousUser.id });
+  } catch (error) {
+    console.error('Failed to create journal entry:', error);
+    res.status(500).json({ error: 'Failed to create journal entry' });
+  }
+});
+
+// Journal analytics endpoint - REDIRECT TO DEVICE FINGERPRINT VERSION  
 app.get('/api/journal/analytics/:userId', async (req, res) => {
   try {
-    const userId = parseInt(req.params.userId);
-    console.log('Journal analytics endpoint hit for user:', userId);
+    // Always redirect to device fingerprint approach
+    const { UserSessionManager } = await import('./userSession.js');
+    const userSessionManager = UserSessionManager.getInstance();
+    
+    // Get user from device fingerprint
+    const deviceFingerprint = req.headers['x-device-fingerprint'] || 
+                              userSessionManager.generateDeviceFingerprint(req);
+    const sessionId = req.headers['x-session-id'] || undefined;
+    
+    const anonymousUser = await userSessionManager.getOrCreateAnonymousUser(
+      (Array.isArray(deviceFingerprint) ? deviceFingerprint[0] : deviceFingerprint) || 'unknown', 
+      Array.isArray(sessionId) ? sessionId[0] : sessionId
+    );
+    
+    console.log('Journal analytics endpoint (legacy) hit, using device fingerprint user:', anonymousUser.id);
     
     // Get all journal entries for the user
-    const entries = await storage.getJournalEntries(userId);
+    const entries = await storage.getJournalEntries(anonymousUser.id);
     
     if (!entries || entries.length === 0) {
       return res.json([]);
@@ -348,6 +534,87 @@ app.get('/api/journal/analytics/:userId', async (req, res) => {
       }).length
     };
     
+    res.json(analytics);
+  } catch (error) {
+    console.error('Failed to get journal analytics:', error);
+    res.status(500).json({ error: 'Failed to get journal analytics' });
+  }
+});
+
+// Journal analytics endpoint using device fingerprint - NEW  
+app.get('/api/journal/analytics/device', async (req, res) => {
+  try {
+    const { UserSessionManager } = await import('./userSession.js');
+    const userSessionManager = UserSessionManager.getInstance();
+    
+    // Get user from device fingerprint
+    const deviceFingerprint = req.headers['x-device-fingerprint'] || 
+                              userSessionManager.generateDeviceFingerprint(req);
+    const sessionId = req.headers['x-session-id'] || undefined;
+    
+    const anonymousUser = await userSessionManager.getOrCreateAnonymousUser(
+      (Array.isArray(deviceFingerprint) ? deviceFingerprint[0] : deviceFingerprint) || 'unknown', 
+      Array.isArray(sessionId) ? sessionId[0] : sessionId
+    );
+    
+    console.log('Journal analytics endpoint hit for user:', anonymousUser.id);
+    
+    // Get all journal entries for the user
+    const entries = await storage.getJournalEntries(anonymousUser.id);
+    
+    if (!entries || entries.length === 0) {
+      return res.json({
+        moodDistribution: {},
+        moodTrends: [],
+        themes: {},
+        totalEntries: 0,
+        averageMoodIntensity: 0,
+        entriesThisMonth: 0
+      });
+    }
+    
+    // Generate analytics from entries
+    const moodCounts: Record<string, number> = {};
+    const moodTrends: any[] = [];
+    const themes: Record<string, number> = {};
+    
+    entries.forEach((entry, index) => {
+      // Count moods
+      if (entry.mood) {
+        moodCounts[entry.mood] = (moodCounts[entry.mood] || 0) + 1;
+      }
+      
+      // Create mood trends
+      moodTrends.push({
+        date: entry.createdAt || new Date(),
+        mood: entry.mood || 'neutral',
+        intensity: entry.moodIntensity || 5,
+        index: index
+      });
+      
+      // Extract themes from tags
+      if (entry.tags && entry.tags.length > 0) {
+        entry.tags.forEach(tag => {
+          themes[tag] = (themes[tag] || 0) + 1;
+        });
+      }
+    });
+    
+    const analytics = {
+      moodDistribution: moodCounts,
+      moodTrends: moodTrends,
+      themes: themes,
+      totalEntries: entries.length,
+      averageMoodIntensity: moodTrends.reduce((sum, trend) => sum + trend.intensity, 0) / moodTrends.length,
+      entriesThisMonth: entries.filter(entry => {
+        if (!entry.createdAt) return false;
+        const entryDate = new Date(entry.createdAt);
+        const now = new Date();
+        return entryDate.getMonth() === now.getMonth() && entryDate.getFullYear() === now.getFullYear();
+      }).length
+    };
+    
+    console.log('Generated analytics for', entries.length, 'entries:', analytics);
     res.json(analytics);
   } catch (error) {
     console.error('Failed to get journal analytics:', error);
