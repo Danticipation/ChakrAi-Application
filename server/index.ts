@@ -574,72 +574,20 @@ app.get('/api/personality-reflection', async (req, res) => {
       moodEntries: moodEntries.length
     };
     
-    // Generate AI reflection if we have enough data
+    // Simple reflection without AI analysis
+    let reflection = "";
+    
     if (journalEntries.length > 0) {
-      const recentEntries = journalEntries.slice(-5);
-      const entryTexts = recentEntries.map(entry => entry.content).join('\n\n');
-      
-      try {
-        // Use OpenAI to generate specific personality reflection
-        const OpenAI = (await import('openai')).default;
-        const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-        
-        const reflectionPrompt = `Based on these journal entries, provide an honest personality analysis:
-
-${entryTexts}
-
-Analyze this person's:
-1. Communication style and how they express frustration
-2. Problem-solving approach and technical challenges they face
-3. Emotional patterns and stress responses
-4. Core personality traits shown through their writing
-5. Areas where they show resilience or determination
-
-Be specific about what you observe from their actual writing, not generic wellness advice.`;
-
-        const completion = await openai.chat.completions.create({
-          model: "gpt-3.5-turbo",
-          messages: [
-            {
-              role: "system",
-              content: "You are an honest personality analyst. Analyze the actual content of what this person wrote to understand their personality, communication style, and challenges. Be specific and direct about what you observe from their writing."
-            },
-            {
-              role: "user",
-              content: reflectionPrompt
-            }
-          ],
-          temperature: 0.3,
-          max_tokens: 500
-        });
-        
-        const reflection = completion.choices[0].message.content || 
-          `Based on your ${journalEntries.length} journal entries, you show direct communication and aren't afraid to express frustration when things don't work. Continue documenting your experiences.`;
-        
-        res.json({
-          reflection,
-          lastUpdated: new Date().toISOString(),
-          dataPoints
-        });
-      } catch (error) {
-        console.error('OpenAI reflection error:', error);
-        // Fallback that's still better than generic
-        const reflection = `Based on your ${journalEntries.length} journal entries, you show direct communication about technical challenges and system failures. Your writing demonstrates persistence in dealing with recurring problems.`;
-        
-        res.json({
-          reflection,
-          lastUpdated: new Date().toISOString(),
-          dataPoints
-        });
-      }
+      reflection = `You have recorded ${journalEntries.length} journal entries. Your reflective practice shows commitment to self-awareness and personal growth.`;
     } else {
-      // Fallback response when no data available
-      res.json({
-        reflection: "Continue your therapeutic journey by engaging in conversations and journaling to develop deeper self-awareness and emotional insights.",
-        lastUpdated: new Date().toISOString(),
-        dataPoints
-      });
+      reflection = "Start journaling to track your thoughts and experiences. Each entry contributes to your journey of self-discovery.";
     }
+    
+    res.json({
+      reflection,
+      lastUpdated: new Date().toISOString(),
+      dataPoints
+    });
   } catch (error) {
     console.error('Failed to get personality reflection:', error);
     res.status(500).json({ error: 'Failed to get personality reflection' });
