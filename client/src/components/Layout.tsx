@@ -470,6 +470,7 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
                     {[
                       { id: 'questions', label: 'Get to Know Me' },
                       { id: 'journal', label: 'Journal' },
+                      { id: 'daily', label: 'Reflection' },
                       { id: 'memory', label: 'Insight Vault' },
                       { id: 'adaptive', label: 'Mind Mirror' },
                       { id: 'analytics', label: 'State of Self' },
@@ -600,7 +601,6 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
                     {[
                       { id: 'voice', label: 'Voice Settings' },
                       { id: 'themes', label: 'Themes' },
-                      { id: 'daily', label: 'Reflection' },
                       { id: 'feedback', label: 'Feedback' },
                       { id: 'microphone-test', label: 'Mic Test' },
                       { id: 'privacy', label: 'Privacy' }
