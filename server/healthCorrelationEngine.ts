@@ -62,7 +62,7 @@ export async function analyzeHealthCorrelations(
 }
 
 function groupDataByTimeframe(
-  healthMetrics: HealthMetric[],
+  healthMetrics: any[], // Health metrics would be defined when integrating with health data sources
   moodEntries: MoodEntry[],
   timeframe: 'daily' | 'weekly' | 'monthly'
 ): CorrelationData {
