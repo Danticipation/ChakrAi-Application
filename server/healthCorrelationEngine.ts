@@ -1,5 +1,5 @@
 import { storage } from './storage';
-import { openaiRequest } from './openaiRetry';
+import { openai, retryOpenAIRequest } from './openaiRetry';
 import { HealthMetric, MoodEntry, HealthCorrelation } from '@shared/schema';
 
 interface CorrelationData {
@@ -152,16 +152,22 @@ Limit to 5 most significant correlations.
 `;
 
   try {
-    const response = await openaiRequest([
-      {
-        role: "system",
-        content: "You are a health analytics AI specializing in mind-body correlation analysis for therapeutic applications. Provide precise, evidence-based insights."
-      },
-      {
-        role: "user",
-        content: prompt
-      }
-    ]);
+    const response = await retryOpenAIRequest(() => 
+      openai.chat.completions.create({
+        model: "gpt-3.5-turbo",
+        messages: [
+          {
+            role: "system",
+            content: "You are a health analytics AI specializing in mind-body correlation analysis for therapeutic applications. Provide precise, evidence-based insights."
+          },
+          {
+            role: "user",
+            content: prompt
+          }
+        ],
+        temperature: 0.3
+      })
+    );
 
     const correlations = JSON.parse(response.choices[0]?.message?.content || '[]');
     
