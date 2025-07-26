@@ -206,7 +206,7 @@ export async function getAvailableRewards(userId: number, storage: any): Promise
       .sort((a: any, b: any) => {
         // Sort by affordability, then by rarity, then by cost
         if (a.canAfford !== b.canAfford) return b.canAfford ? 1 : -1;
-        const rarityOrder = { legendary: 4, epic: 3, rare: 2, common: 1 };
+        const rarityOrder: { [key: string]: number } = { legendary: 4, epic: 3, rare: 2, common: 1 };
         if (rarityOrder[a.rarity] !== rarityOrder[b.rarity]) {
           return rarityOrder[b.rarity] - rarityOrder[a.rarity];
         }
