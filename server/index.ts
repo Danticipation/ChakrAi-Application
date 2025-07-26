@@ -697,8 +697,7 @@ Provide specific, relevant analysis in JSON format:
       
       console.log('Storing analysis data:', analysisData);
       
-      // Insert analysis into database (you'll need to add this to storage interface)
-      // For now, we'll use direct database access
+      // Insert analysis into database using Drizzle ORM
       const { journalAnalytics } = await import('../shared/schema');
       const { db } = storage;
       
@@ -728,7 +727,18 @@ app.get('/api/journal/ai-insights/:userId', async (req, res) => {
     const { db } = storage;
     
     const insights = await db
-      .select()
+      .select({
+        id: journalAnalytics.id,
+        userId: journalAnalytics.userId,
+        entryId: journalAnalytics.entryId,
+        insights: journalAnalytics.therapistNotes,
+        themes: journalAnalytics.emotionalThemes,
+        riskLevel: journalAnalytics.concernAreas,
+        recommendations: journalAnalytics.recommendedActions,
+        sentimentScore: journalAnalytics.sentimentScore,
+        emotionalIntensity: journalAnalytics.emotionalIntensity,
+        createdAt: journalAnalytics.createdAt
+      })
       .from(journalAnalytics)
       .where(eq(journalAnalytics.userId, userId))
       .orderBy(desc(journalAnalytics.createdAt))
