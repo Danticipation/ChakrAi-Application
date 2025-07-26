@@ -699,7 +699,7 @@ Provide specific, relevant analysis in JSON format:
       
       // Insert analysis into database using Drizzle ORM
       const { journalAnalytics } = await import('../shared/schema');
-      const { db } = storage;
+      const { db } = await import('./db');
       
       await db.insert(journalAnalytics).values(analysisData);
       console.log('Analysis stored successfully');
@@ -724,7 +724,7 @@ app.get('/api/journal/ai-insights/:userId', async (req, res) => {
     
     const { journalAnalytics } = await import('../shared/schema');
     const { eq, desc } = await import('drizzle-orm');
-    const { db } = storage;
+    const { db } = await import('./db');
     
     const insights = await db
       .select({
