@@ -1,4 +1,4 @@
-import { ElevenLabs } from 'elevenlabs';
+import ElevenLabs from 'elevenlabs';
 
 // Advanced emotional voice system for contextual voice modulation
 export interface EmotionalVoiceProfile {
