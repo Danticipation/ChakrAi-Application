@@ -124,7 +124,7 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
       case 'adaptive':
         return <AdaptiveLearning />;
       case 'analytics':
-        return <AnalyticsDashboard userId={currentUserId} />;
+        return <AnalyticsDashboard userId={currentUserId} onNavigate={setActiveSection} />;
       case 'health':
         return <HealthIntegration />;
       case 'challenges':

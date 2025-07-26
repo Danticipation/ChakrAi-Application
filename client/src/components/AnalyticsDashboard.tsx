@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { 
   Heart, Brain, TrendingUp, Target, Award, Calendar, 
   Activity, RefreshCw, BarChart3, Users, BookOpen, 
@@ -35,7 +34,6 @@ interface AnalyticsDashboardProps {
 }
 
 export default function AnalyticsDashboard({ userId, onNavigate }: AnalyticsDashboardProps) {
-  const navigate = useNavigate();
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -250,19 +248,7 @@ export default function AnalyticsDashboard({ userId, onNavigate }: AnalyticsDash
   };
 
   const handleNavigation = (section: string) => {
-    // Map sections to proper routes
-    const routeMap: Record<string, string> = {
-      'journal': '/journal',
-      'mood': '/analytics', // Since mood tracking is part of analytics
-      'daily': '/reflection',
-      'reflection': '/reflection', 
-      'community': '/community'
-    };
-
-    const route = routeMap[section];
-    if (route) {
-      navigate(route);
-    } else if (onNavigate) {
+    if (onNavigate) {
       onNavigate(section);
     }
   };
