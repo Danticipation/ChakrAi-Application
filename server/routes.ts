@@ -869,13 +869,13 @@ router.post('/emotional-intelligence/detect', async (req, res) => {
 
     const emotionalState = await analyzeEmotionalState(message);
     
-    // Store emotional context - fix property name mismatches
+    // Store emotional context with correct property mapping
     await storage.createEmotionalContext({
       userId: parseInt(userId),
       intensity: emotionalState.intensity || 5,
-      currentMood: emotionalState.mood || 'neutral',
-      volatility: emotionalState.volatility || 'stable',
-      urgency: emotionalState.urgency || 'low',
+      currentMood: emotionalState.dominantEmotion || 'neutral',
+      volatility: emotionalState.emotionalStability || 'stable',
+      urgency: emotionalState.urgencyLevel || 'low',
       contextData: emotionalState
     });
 
@@ -940,7 +940,6 @@ router.post('/emotional-intelligence/adapt-response', async (req, res) => {
       responseLength: adaptedResponse.responseLength || 'moderate',
       communicationStyle: adaptedResponse.communicationStyle,
       priorityFocus: adaptedResponse.priorityFocus,
-      emotionalContext: emotionalState || {},
       adaptationReason: adaptedResponse.priorityFocus?.join(', ') || 'emotional support'
     });
 
@@ -973,7 +972,7 @@ router.post('/emotional-intelligence/crisis-detection', async (req, res) => {
         userId: parseInt(userId),
         riskLevel: crisisData.riskLevel,
         confidenceScore: crisisData.confidence,
-        indicators: crisisData.indicators,
+        messageContent: message,
         supportResources: crisisData.supportResources,
         detectedAt: new Date()
       });

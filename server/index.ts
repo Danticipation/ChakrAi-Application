@@ -584,33 +584,46 @@ app.get('/api/personality-reflection', async (req, res) => {
         const OpenAI = (await import('openai')).default;
         const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
         
-        const reflectionPrompt = `Based on these journal entries, provide an honest personality analysis:
+        const reflectionPrompt = `Based on these journal entries, provide a comprehensive personality analysis:
 
 ${entryTexts}
 
-Analyze this person's:
-1. Communication style and how they express frustration
-2. Problem-solving approach and technical challenges they face
-3. Emotional patterns and stress responses
-4. Core personality traits shown through their writing
-5. Areas where they show resilience or determination
+Provide an in-depth analysis covering:
 
-Be specific about what you observe from their actual writing, not generic wellness advice.`;
+**1. Communication Style and Frustration Expression:** 
+Analyze how this person communicates - their directness, emotional vocabulary, tendency toward technical language, patterns in expressing frustration or dissatisfaction, and preferred modes of articulation.
+
+**2. Problem-Solving Approach and Technical Challenges:**
+Examine their approach to technical problems, debugging methodology, persistence patterns, learning style, adaptation to setbacks, and how they process complex technical information.
+
+**3. Emotional Patterns and Stress Responses:**
+Identify emotional regulation strategies, stress indicators, coping mechanisms, triggers, resilience factors, and emotional intelligence markers evident in their writing.
+
+**4. Cognitive Style and Mental Frameworks:**
+Assess their thinking patterns, information processing style, attention to detail, systemic thinking abilities, analytical vs intuitive tendencies, and conceptual organization.
+
+**5. Personality Traits and Character Strengths:**
+Identify core personality dimensions, character strengths, interpersonal tendencies, motivation patterns, values systems, and distinctive psychological characteristics.
+
+**6. Growth Areas and Developmental Insights:**
+Highlight areas for potential growth, emerging patterns of change, adaptive strategies, and therapeutic opportunities for enhanced well-being and personal development.
+
+Provide specific, detailed insights based on their actual writing patterns, word choices, topic selection, emotional expressions, and problem descriptions. Include relevant psychological observations and therapeutic insights.`;
 
         const completion = await openai.chat.completions.create({
-          model: "gpt-3.5-turbo",
+          model: "gpt-4o",
           messages: [
             {
               role: "system",
-              content: "You are an honest personality analyst. Analyze the actual content of what this person wrote to understand their personality, communication style, and challenges. Be specific and direct about what you observe from their writing."
+              content: "You are a sophisticated personality analyst and therapeutic insights specialist. Provide comprehensive, nuanced analysis of the user's personality, communication patterns, cognitive styles, emotional intelligence, problem-solving approaches, and growth areas based on their authentic writing. Be thorough, specific, and deeply insightful while maintaining professional therapeutic standards."
             },
             {
               role: "user",
               content: reflectionPrompt
             }
           ],
-          temperature: 0.3,
-          max_tokens: 500
+          temperature: 0.4,
+          max_tokens: 1000
         });
         
         const reflection = completion.choices[0].message.content || 
@@ -694,20 +707,28 @@ app.post('/api/journal/analyze', async (req, res) => {
     const OpenAI = (await import('openai')).default;
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
     
-    const analysisPrompt = `Analyze this journal entry with honest, specific insights based on the actual content:
+    const analysisPrompt = `Conduct a comprehensive therapeutic analysis of this journal entry based on the actual content:
 
 "${content}"
 
 Mood: ${mood} (${moodIntensity}/10 intensity)
 
-Focus on what this person is ACTUALLY dealing with - not generic wellness advice. If they're writing about technical problems, work frustration, relationship issues, or specific situations, address THOSE specific things.
+Provide an in-depth psychological analysis focusing on the person's ACTUAL experiences, challenges, and emotional state. Analyze their specific situation, communication patterns, emotional processing, cognitive frameworks, and psychological needs.
 
-Provide specific, relevant analysis in JSON format:
+For technical challenges: Examine problem-solving approach, frustration tolerance, persistence patterns, and stress management.
+For relationship issues: Assess interpersonal dynamics, communication style, emotional intelligence, and attachment patterns.
+For work/life situations: Analyze stress responses, coping mechanisms, motivation patterns, and adaptive strategies.
+
+Provide comprehensive analysis in JSON format:
 {
-  "insights": "Honest analysis of what they're actually going through based on their specific situation",
-  "themes": ["specific themes from their actual content"],
+  "insights": "Detailed psychological analysis of their actual situation including cognitive patterns, emotional processing, behavioral tendencies, and underlying psychological dynamics",
+  "themes": ["specific psychological and situational themes identified from their actual content"],
   "riskLevel": "low/moderate/high/critical",
-  "recommendations": ["practical suggestions for their specific situation, not generic wellness advice"]
+  "recommendations": ["sophisticated therapeutic recommendations tailored to their specific psychological profile and circumstances"],
+  "cognitiveStyle": "Analysis of their thinking patterns and information processing approach",
+  "emotionalIntelligence": "Assessment of emotional awareness, regulation, and interpersonal skills",
+  "resilienceFactors": ["Identified strengths and adaptive capabilities"],
+  "growthOpportunities": ["Areas for therapeutic development and personal growth"]
 }`;
 
     const completion = await openai.chat.completions.create({
@@ -733,7 +754,7 @@ Provide specific, relevant analysis in JSON format:
     try {
       const analysisData = {
         userId: userId,
-        entryId: entryId,
+        entryId: entryId ? parseInt(entryId.toString()) : null,
         insights: analysis.insights || 'Analysis completed',
         themes: analysis.themes || [],
         riskLevel: analysis.riskLevel || 'low',
