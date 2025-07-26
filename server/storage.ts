@@ -149,7 +149,7 @@ export interface IStorage {
   getUserAchievements(userId: number): Promise<UserAchievement[]>;
   getWellnessStreaks(userId: number): Promise<WellnessStreak[]>;
   createUserAchievement(data: InsertUserAchievement): Promise<UserAchievement>;
-  updateWellnessStreak(userId: number, streakType: string): Promise<WellnessStreak>;
+  updateWellnessStreak(streakId: number, updates: any): Promise<void>;
   
   // Advanced Emotional Intelligence
   createEmotionalContext(data: InsertEmotionalContext): Promise<EmotionalContext>;
@@ -642,32 +642,11 @@ export class DbStorage implements IStorage {
     return achievement;
   }
 
-  async updateWellnessStreak(userId: number, streakType: string): Promise<WellnessStreak> {
-    const [existing] = await this.db.select().from(wellnessStreaks)
-      .where(and(eq(wellnessStreaks.userId, userId), eq(wellnessStreaks.streakType, streakType)));
-    
-    if (existing) {
-      const currentStreak = existing.currentStreak || 0;
-      const longestStreak = existing.longestStreak || 0;
-      const [updated] = await this.db.update(wellnessStreaks)
-        .set({ 
-          currentStreak: currentStreak + 1,
-          longestStreak: Math.max(longestStreak, currentStreak + 1),
-          lastActivityDate: new Date()
-        })
-        .where(eq(wellnessStreaks.id, existing.id))
-        .returning();
-      return updated;
-    } else {
-      const [created] = await this.db.insert(wellnessStreaks).values({
-        userId,
-        streakType,
-        currentStreak: 1,
-        longestStreak: 1,
-        lastActivityDate: new Date()
-      }).returning();
-      return created;
-    }
+  async updateWellnessStreak(streakId: number, updates: any): Promise<void> {
+    await this.db
+      .update(wellnessStreaks)
+      .set(updates)
+      .where(eq(wellnessStreaks.id, streakId));
   }
 
   // Advanced Emotional Intelligence Storage Methods
