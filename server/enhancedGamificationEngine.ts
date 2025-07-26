@@ -500,7 +500,7 @@ Analyze this user's therapeutic conversation and emotional data for potential em
 
 Conversation Context: ${JSON.stringify(conversationData)}
 Emotional State: ${JSON.stringify(emotionalData)}
-Recent Achievements: ${recentAchievements.map(a => a.achievementId).join(', ')}
+Recent Achievements: ${recentAchievements.map((a: any) => a.achievementId).join(', ')}
 
 Available Achievement Categories:
 - resilience: Bouncing back from difficult emotions
