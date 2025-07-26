@@ -1,9 +1,9 @@
 import { storage } from './storage';
 import { openai, retryOpenAIRequest } from './openaiRetry';
-import { HealthMetric, MoodEntry, HealthCorrelation } from '@shared/schema';
+import { MoodEntry } from '@shared/schema';
 
 interface CorrelationData {
-  healthMetrics: HealthMetric[];
+  healthMetrics: any[]; // Health metrics would be defined when integrating with health data sources
   moodEntries: MoodEntry[];
   timeframe: 'daily' | 'weekly' | 'monthly';
 }
