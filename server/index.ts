@@ -877,7 +877,7 @@ app.post('/api/chat', async (req, res) => {
       const semanticContext = await getSemanticContext(userId, message);
       
       if (semanticContext.relevantMemories && semanticContext.relevantMemories.length > 0) {
-        const memoryDetails = semanticContext.relevantMemories.slice(0, 5).map(mem => 
+        const memoryDetails = semanticContext.relevantMemories.slice(0, 5).map((mem: any) => 
           `"${mem.content}" (${mem.temporalContext || 'recently'}) [${mem.emotionalContext || 'neutral'}]`
         ).join('\n- ');
         
