@@ -53,6 +53,8 @@ import {
   type UserStreak, type InsertUserStreak,
   type DailyActivity, type InsertDailyActivity,
   type UserFeedback, type InsertUserFeedback,
+  type Alarm, type InsertAlarm,
+  alarms,
 } from "@shared/schema";
 import { eq, desc, and, lt, ne, sql } from "drizzle-orm";
 
@@ -308,6 +310,14 @@ export interface IStorage {
   getUserVrAccessibilityProfile(userId: number): Promise<VrAccessibilityProfile | null>;
   createVrAccessibilityProfile(profile: InsertVrAccessibilityProfile): Promise<VrAccessibilityProfile>;
   updateVrAccessibilityProfile(userId: number, updates: Partial<InsertVrAccessibilityProfile>): Promise<VrAccessibilityProfile>;
+
+  // Alarms/Reminders
+  createAlarm(data: InsertAlarm): Promise<Alarm>;
+  getUserAlarms(userId: number): Promise<Alarm[]>;
+  getActiveAlarms(): Promise<Alarm[]>;
+  updateAlarm(id: number, data: Partial<InsertAlarm>): Promise<Alarm>;
+  deleteAlarm(id: number): Promise<void>;
+  markAlarmNotificationSent(id: number): Promise<void>;
 }
 
 export class DbStorage implements IStorage {
@@ -2063,6 +2073,52 @@ export class DbStorage implements IStorage {
       .where(eq(vrAccessibilityProfiles.userId, userId))
       .returning();
     return updatedProfile;
+  }
+  // Alarms/Reminders implementation
+  async createAlarm(data: InsertAlarm): Promise<Alarm> {
+    const [alarm] = await this.db.insert(alarms).values(data).returning();
+    return alarm;
+  }
+
+  async getUserAlarms(userId: number): Promise<Alarm[]> {
+    return await this.db
+      .select()
+      .from(alarms)
+      .where(and(eq(alarms.userId, userId), eq(alarms.isActive, true)))
+      .orderBy(alarms.triggerAt);
+  }
+
+  async getActiveAlarms(): Promise<Alarm[]> {
+    const now = new Date();
+    return await this.db
+      .select()
+      .from(alarms)
+      .where(and(
+        eq(alarms.isActive, true),
+        lt(alarms.triggerAt, now),
+        eq(alarms.notificationSent, false)
+      ))
+      .orderBy(alarms.triggerAt);
+  }
+
+  async updateAlarm(id: number, data: Partial<InsertAlarm>): Promise<Alarm> {
+    const [alarm] = await this.db
+      .update(alarms)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(alarms.id, id))
+      .returning();
+    return alarm;
+  }
+
+  async deleteAlarm(id: number): Promise<void> {
+    await this.db.delete(alarms).where(eq(alarms.id, id));
+  }
+
+  async markAlarmNotificationSent(id: number): Promise<void> {
+    await this.db
+      .update(alarms)
+      .set({ notificationSent: true, updatedAt: new Date() })
+      .where(eq(alarms.id, id));
   }
 }
 

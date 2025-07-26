@@ -584,3 +584,5 @@ export function EHRIntegration() {
     </div>
   );
 }
+
+export default EHRIntegration;

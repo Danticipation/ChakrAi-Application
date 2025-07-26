@@ -945,6 +945,31 @@ export type DailyActivity = typeof dailyActivities.$inferSelect;
 export type UserFeedback = typeof userFeedback.$inferSelect;
 export type InsertUserStreak = z.infer<typeof insertUserStreakSchema>;
 export type InsertDailyActivity = z.infer<typeof insertDailyActivitySchema>;
+
+// Alarms/Reminders table for wellness notifications
+export const alarms = pgTable("alarms", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  label: text("label").default("Wellness Reminder"),
+  triggerAt: timestamp("trigger_at").notNull(),
+  isActive: boolean("is_active").default(true),
+  isRecurring: boolean("is_recurring").default(false),
+  recurringPattern: text("recurring_pattern"), // daily, weekly, monthly
+  notificationSent: boolean("notification_sent").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Create Zod schemas for alarms
+export const insertAlarmSchema = createInsertSchema(alarms).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type Alarm = typeof alarms.$inferSelect;
+export type NewAlarm = typeof alarms.$inferInsert;
+export type InsertAlarm = z.infer<typeof insertAlarmSchema>;
 export type InsertUserFeedback = z.infer<typeof insertUserFeedbackSchema>;
 
 // VR/AR Therapeutic Experiences System

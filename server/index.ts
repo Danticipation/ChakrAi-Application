@@ -1618,6 +1618,27 @@ app.get('/api/ollama/models', async (req, res) => {
   }
 });
 
+// Alarm/Reminder endpoints for wellness notifications
+app.get('/api/alarms', async (req, res) => {
+  const { GET } = await import('./alarmsApi');
+  return GET(req, res);
+});
+
+app.post('/api/alarms', async (req, res) => {
+  const { POST } = await import('./alarmsApi');
+  return POST(req, res);
+});
+
+app.delete('/api/alarms', async (req, res) => {
+  const { DELETE } = await import('./alarmsApi');
+  return DELETE(req, res);
+});
+
+app.put('/api/alarms/:id', async (req, res) => {
+  const { PUT } = await import('./alarmsApi');
+  return PUT(req, res);
+});
+
 // Setup Vite in development or serve static files in production
 async function setupServer() {
   if (process.env.NODE_ENV === 'development') {

@@ -48,7 +48,7 @@ export default function AppLayout() {
     <div className="min-h-screen bg-black">
       <ErrorBoundary>
         <Suspense fallback={fallback}>
-          {sectionMap[activeSection] || <div className="text-white p-6">Feature not available</div>}
+          {sectionMap[activeSection as keyof typeof sectionMap] || <div className="text-white p-6">Feature not available</div>}
         </Suspense>
       </ErrorBoundary>
     </div>

@@ -24,6 +24,7 @@ const MicrophoneTest = lazy(() => import('@/components/MicrophoneTest'));
 const Horoscope = lazy(() => import('@/components/Horoscope'));
 const DailyAffirmation = lazy(() => import('@/components/DailyAffirmation'));
 const ThemeSelector = lazy(() => import('@/components/ThemeSelector'));
+const AlarmListPanel = lazy(() => import('@/components/AlarmListPanel'));
 
 interface SectionComponentMapParams {
   fetchStreakStats: () => void;
@@ -64,6 +65,7 @@ export const getSectionComponentMap = ({ fetchStreakStats, setActiveSection, han
           <ThemeSelector onClose={() => setActiveSection('chat')} />
         </div>
       </div>
-    )
+    ),
+    'alarms': <AlarmListPanel />
   };
 };
