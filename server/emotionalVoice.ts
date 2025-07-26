@@ -1,4 +1,4 @@
-import { ElevenLabs } from 'elevenlabs';
+import * as ElevenLabs from 'elevenlabs';
 
 // Advanced emotional voice system for contextual voice modulation
 export interface EmotionalVoiceProfile {
@@ -165,11 +165,8 @@ export async function generateEmotionalVoice(options: VoiceGenerationOptions): P
   const finalStyle = Math.max(0, Math.min(1, adjustedStyle));
   
   try {
-    const elevenlabs = new ElevenLabs({
-      apiKey: process.env.ELEVENLABS_API_KEY!
-    });
-    
-    const audioStream = await elevenlabs.generate({
+    const audioStream = await ElevenLabs.generate({
+      apiKey: process.env.ELEVENLABS_API_KEY!,
       voice: profile.baseVoiceId,
       text: text,
       model_id: "eleven_multilingual_v2",
