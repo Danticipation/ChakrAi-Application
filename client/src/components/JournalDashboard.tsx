@@ -73,6 +73,102 @@ const EmptyState: React.FC<{
   </div>
 );
 
+// AI Insights Section Component
+const AIInsightsSection: React.FC<{ userId: number | null }> = ({ userId }) => {
+  const { data: aiInsights, isLoading, error } = useQuery({
+    queryKey: ['ai-insights', userId],
+    queryFn: async () => {
+      if (!userId) return [];
+      const response = await fetch(`/api/journal/ai-insights/${userId}`);
+      if (!response.ok) throw new Error('Failed to fetch AI insights');
+      return response.json();
+    },
+    enabled: !!userId
+  });
+
+  if (isLoading) {
+    return <LoadingSpinner message="Loading AI insights..." />;
+  }
+
+  if (error) {
+    return (
+      <div className="text-center p-4">
+        <p className="theme-text-secondary text-sm">
+          No AI insights available yet. Create journal entries to see analysis.
+        </p>
+      </div>
+    );
+  }
+
+  if (!aiInsights || aiInsights.length === 0) {
+    return (
+      <div className="text-center p-4">
+        <p className="theme-text-secondary text-sm">
+          No AI insights available yet. Create journal entries to see analysis.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {aiInsights.slice(0, 3).map((insight: any, index: number) => (
+        <div key={insight.id} className="p-4 theme-surface rounded-lg border-l-4" 
+             style={{ borderLeftColor: insight.riskLevel === 'high' ? '#ef4444' : insight.riskLevel === 'moderate' ? '#f59e0b' : '#10b981' }}>
+          <div className="mb-2">
+            <span className="text-xs font-medium px-2 py-1 rounded-full"
+                  style={{ 
+                    backgroundColor: insight.riskLevel === 'high' ? '#fef2f2' : insight.riskLevel === 'moderate' ? '#fffbeb' : '#f0fdf4',
+                    color: insight.riskLevel === 'high' ? '#dc2626' : insight.riskLevel === 'moderate' ? '#d97706' : '#059669'
+                  }}>
+              {insight.riskLevel} priority
+            </span>
+          </div>
+          <p className="theme-text text-sm mb-3">{insight.insights}</p>
+          
+          {insight.themes && insight.themes.length > 0 && (
+            <div className="mb-2">
+              <div className="flex flex-wrap gap-1">
+                {insight.themes.map((theme: string, i: number) => (
+                  <span key={i} className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded">
+                    {theme}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          {insight.recommendations && insight.recommendations.length > 0 && (
+            <div className="mt-2">
+              <h5 className="text-xs font-medium theme-text mb-1">Recommendations:</h5>
+              <ul className="text-xs theme-text-secondary space-y-1">
+                {insight.recommendations.slice(0, 2).map((rec: string, i: number) => (
+                  <li key={i} className="flex items-start">
+                    <span className="mr-1">•</span>
+                    <span>{rec}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          
+          <div className="mt-2 text-xs theme-text-secondary">
+            {format(new Date(insight.createdAt), 'MMM dd, yyyy')}
+          </div>
+        </div>
+      ))}
+      
+      {aiInsights.length > 3 && (
+        <div className="text-center mt-4">
+          <p className="text-sm theme-text-secondary">
+            Showing 3 of {aiInsights.length} insights
+          </p>
+        </div>
+      )}
+    </div>
+  );
+};
+
 // Helper function to determine if this is a fresh start
 const useIsFreshStart = () => {
   const [isFreshStart, setIsFreshStart] = useState(false);
@@ -516,9 +612,15 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
           </div>
         )}
 
+        {/* AI Insights Section */}
+        <div className="theme-card rounded-lg p-6 border border-[var(--theme-accent)]/30">
+          <h3 className="font-semibold theme-text mb-4">AI Analysis & Insights</h3>
+          <AIInsightsSection userId={userId} />
+        </div>
+
         {/* Writing Insights */}
         <div className="theme-card rounded-lg p-6 border border-[var(--theme-accent)]/30">
-          <h3 className="font-semibold theme-text mb-4">Writing Insights</h3>
+          <h3 className="font-semibold theme-text mb-4">Writing Statistics</h3>
           <div className="prose max-w-none theme-text-secondary">
             <p className="mb-3">
               Based on your {analytics.totalEntries} journal entries, you've written a total of {totalWords.toLocaleString()} words, 

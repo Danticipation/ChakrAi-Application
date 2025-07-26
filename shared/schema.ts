@@ -200,6 +200,20 @@ export const journalEntries = pgTable("journal_entries", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// AI Analysis results for journal entries
+export const journalAnalytics = pgTable("journal_analytics", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  entryId: integer("entry_id").notNull(),
+  insights: text("insights").notNull(),
+  themes: text("themes").array(),
+  riskLevel: text("risk_level"),
+  recommendations: text("recommendations").array(),
+  sentimentScore: decimal("sentiment_score", { precision: 3, scale: 2 }),
+  emotionalIntensity: integer("emotional_intensity"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Therapeutic features - Mood tracking
 export const moodEntries = pgTable("mood_entries", {
   id: serial("id").primaryKey(),
@@ -388,6 +402,11 @@ export const insertJournalEntrySchema = createInsertSchema(journalEntries).omit(
   createdAt: true,
 });
 
+export const insertJournalAnalyticsSchema = createInsertSchema(journalAnalytics).omit({
+  id: true,
+  createdAt: true,
+});
+
 export const insertMoodEntrySchema = createInsertSchema(moodEntries).omit({
   id: true,
   createdAt: true,
@@ -451,6 +470,7 @@ export type Message = typeof messages.$inferSelect;
 export type UserMemory = typeof userMemories.$inferSelect;
 export type UserFact = typeof userFacts.$inferSelect;
 export type JournalEntry = typeof journalEntries.$inferSelect;
+export type JournalAnalytics = typeof journalAnalytics.$inferSelect;
 export type MoodEntry = typeof moodEntries.$inferSelect;
 export type TherapeuticGoal = typeof therapeuticGoals.$inferSelect;
 export type SupportForum = typeof supportForums.$inferSelect;
@@ -476,6 +496,7 @@ export type InsertMessage = z.infer<typeof insertMessageSchema>;
 export type InsertUserMemory = z.infer<typeof insertUserMemorySchema>;
 export type InsertUserFact = z.infer<typeof insertUserFactSchema>;
 export type InsertJournalEntry = z.infer<typeof insertJournalEntrySchema>;
+export type InsertJournalAnalytics = z.infer<typeof insertJournalAnalyticsSchema>;
 export type InsertMoodEntry = z.infer<typeof insertMoodEntrySchema>;
 export type InsertTherapeuticGoal = z.infer<typeof insertTherapeuticGoalSchema>;
 export type InsertSupportForum = z.infer<typeof insertSupportForumSchema>;

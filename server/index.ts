@@ -682,10 +682,63 @@ Provide specific, relevant analysis in JSON format:
     const analysis = JSON.parse(completion.choices[0].message.content || '{}');
     console.log('AI analysis generated:', analysis);
     
+    // Store the analysis results in the database
+    try {
+      const analysisData = {
+        userId: userId,
+        entryId: entryId,
+        insights: analysis.insights || 'Analysis completed',
+        themes: analysis.themes || [],
+        riskLevel: analysis.riskLevel || 'low',
+        recommendations: analysis.recommendations || [],
+        sentimentScore: analysis.sentimentScore || null,
+        emotionalIntensity: analysis.emotionalIntensity || null
+      };
+      
+      console.log('Storing analysis data:', analysisData);
+      
+      // Insert analysis into database (you'll need to add this to storage interface)
+      // For now, we'll use direct database access
+      const { journalAnalytics } = await import('../shared/schema');
+      const { db } = storage;
+      
+      await db.insert(journalAnalytics).values(analysisData);
+      console.log('Analysis stored successfully');
+      
+    } catch (storageError) {
+      console.error('Failed to store analysis:', storageError);
+      // Continue with response even if storage fails
+    }
+    
     res.json(analysis);
   } catch (error) {
     console.error('Failed to analyze journal entry:', error);
     res.status(500).json({ error: 'Failed to analyze journal entry' });
+  }
+});
+
+// Get AI insights for journal entries
+app.get('/api/journal/ai-insights/:userId', async (req, res) => {
+  try {
+    const userId = parseInt(req.params.userId);
+    console.log('Fetching AI insights for user:', userId);
+    
+    const { journalAnalytics } = await import('../shared/schema');
+    const { eq, desc } = await import('drizzle-orm');
+    const { db } = storage;
+    
+    const insights = await db
+      .select()
+      .from(journalAnalytics)
+      .where(eq(journalAnalytics.userId, userId))
+      .orderBy(desc(journalAnalytics.createdAt))
+      .limit(10);
+    
+    console.log('Found AI insights:', insights.length);
+    res.json(insights);
+  } catch (error) {
+    console.error('Failed to fetch AI insights:', error);
+    res.status(500).json({ error: 'Failed to fetch AI insights' });
   }
 });
 
