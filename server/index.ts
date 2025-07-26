@@ -873,7 +873,7 @@ app.post('/api/chat', async (req, res) => {
     // Get semantic memory context for long-term recall
     let memoryContext = '';
     try {
-      const { getSemanticContext } = await import('./semanticMemory.js');
+      const { getSemanticContext } = await import('./semanticMemory');
       const semanticContext = await getSemanticContext(userId, message);
       
       if (semanticContext.relevantMemories && semanticContext.relevantMemories.length > 0) {
