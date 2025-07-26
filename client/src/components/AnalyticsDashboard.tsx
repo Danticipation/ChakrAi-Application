@@ -88,8 +88,9 @@ export default function AnalyticsDashboard({ userId, onNavigate }: AnalyticsDash
 
   const fetchFallbackData = async (userId: number): Promise<DashboardData> => {
     try {
+      // Temporarily disabled journal fetch to prevent NaN errors - will implement device fingerprint later
       const [journalResponse, moodResponse] = await Promise.allSettled([
-        fetch(`/api/journal/entries/${userId}`),
+        Promise.resolve({ ok: false, status: 'rejected' } as any),
         fetch(`/api/mood/${userId}`)
       ]);
 
