@@ -128,9 +128,10 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
       
       if (response.ok) {
         const data = await response.json();
+        console.log('Chat API response:', data);
         const botMessage = {
           sender: 'bot' as const,
-          text: data.response || 'I received your message.',
+          text: data.message || data.response || data.text || 'I received your message.',
           time: new Date().toLocaleTimeString()
         };
         setMessages(prev => [...prev, botMessage]);
