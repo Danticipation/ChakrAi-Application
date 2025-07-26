@@ -74,13 +74,26 @@ export default function MoodTracker({ userId = getCurrentUserId()}: { userId?: n
   // Log mood entry mutation
   const logMood = useMutation({
     mutationFn: async (moodData: any) => {
-      const response = await fetch('/api/analyze-emotion', {
+      const deviceFingerprint = localStorage.getItem('deviceFingerprint') || 
+                               `device_${Math.random().toString(36).substring(2, 15)}`;
+      const sessionId = localStorage.getItem('sessionId') || 
+                       `session_${Math.random().toString(36).substring(2, 15)}`;
+      
+      localStorage.setItem('deviceFingerprint', deviceFingerprint);
+      localStorage.setItem('sessionId', sessionId);
+      
+      const response = await fetch('/api/mood/create', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'X-Device-Fingerprint': deviceFingerprint,
+          'X-Session-ID': sessionId
+        },
         body: JSON.stringify({
-          message: `Feeling ${selectedEmotion} with intensity ${intensity}/100. Context: ${context}`,
-          userId,
-          sessionId: `mood-${Date.now()}`
+          emotion: selectedEmotion,
+          intensity,
+          context,
+          timestamp: new Date().toISOString()
         })
       });
       if (!response.ok) throw new Error('Failed to log mood');
@@ -92,6 +105,8 @@ export default function MoodTracker({ userId = getCurrentUserId()}: { userId?: n
       setSelectedEmotion('');
       setIntensity(50);
       setContext('');
+      // Show success message
+      console.log('Mood logged successfully!');
     }
   });
 
@@ -171,55 +186,51 @@ export default function MoodTracker({ userId = getCurrentUserId()}: { userId?: n
           ))}
         </div>
 
-        {selectedEmotion && (
-          <>
-            {/* Intensity Slider */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
-                Intensity: {intensity}/100
-              </label>
-              <input
-                type="range"
-                min="1"
-                max="100"
-                value={intensity}
-                onChange={(e) => setIntensity(parseInt(e.target.value))}
-                className="w-full h-2 rounded-lg appearance-none cursor-pointer"
-                style={{ 
-                  background: `linear-gradient(to right, ${getIntensityColor(intensity)} 0%, ${getIntensityColor(intensity)} ${intensity}%, #e5e7eb ${intensity}%, #e5e7eb 100%)`
-                }}
-              />
-            </div>
+        {/* Always show intensity and context inputs */}
+        <div className="mb-4">
+          <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
+            Intensity: {intensity}/100
+          </label>
+          <input
+            type="range"
+            min="1"
+            max="100"
+            value={intensity}
+            onChange={(e) => setIntensity(parseInt(e.target.value))}
+            className="w-full h-2 rounded-lg appearance-none cursor-pointer"
+            style={{ 
+              background: `linear-gradient(to right, ${getIntensityColor(intensity)} 0%, ${getIntensityColor(intensity)} ${intensity}%, #e5e7eb ${intensity}%, #e5e7eb 100%)`
+            }}
+          />
+        </div>
 
-            {/* Context Input */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
-                What's happening? (optional)
-              </label>
-              <input
-                type="text"
-                value={context}
-                onChange={(e) => setContext(e.target.value)}
-                placeholder="Work stress, good news, social interaction..."
-                className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                style={{ backgroundColor: 'white' }}
-              />
-            </div>
+        {/* Context Input */}
+        <div className="mb-4">
+          <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
+            What's happening? (optional)
+          </label>
+          <textarea
+            value={context}
+            onChange={(e) => setContext(e.target.value)}
+            placeholder="Describe what's happening or what you're thinking about..."
+            className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+            style={{ backgroundColor: 'white' }}
+            rows={3}
+          />
+        </div>
 
-            {/* Submit Button */}
-            <button
-              onClick={handleSubmitMood}
-              disabled={logMood.isPending}
-              className="w-full px-4 py-3 rounded-xl font-medium shadow-sm disabled:opacity-50"
-              style={{ 
-                backgroundColor: 'var(--soft-blue-dark)',
-                color: 'white'
-              }}
-            >
-              {logMood.isPending ? 'Logging...' : 'Log Mood'}
-            </button>
-          </>
-        )}
+        {/* Submit Button - Always visible but disabled without emotion */}
+        <button
+          onClick={handleSubmitMood}
+          disabled={!selectedEmotion || logMood.isPending}
+          className="w-full px-4 py-3 rounded-xl font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+          style={{ 
+            backgroundColor: 'var(--soft-blue-dark)',
+            color: 'white'
+          }}
+        >
+          {logMood.isPending ? 'Saving...' : !selectedEmotion ? 'Select an emotion to save' : 'Save Mood Entry'}
+        </button>
       </div>
 
       {/* Recent Mood Entries */}

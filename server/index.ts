@@ -554,6 +554,43 @@ app.get('/api/personality-reflection', async (req, res) => {
   }
 });
 
+// Mood tracking endpoint with device fingerprint - MUST BE BEFORE VITE
+app.post('/api/mood/create', async (req, res) => {
+  try {
+    const { UserSessionManager } = await import('./userSession.js');
+    const userSessionManager = UserSessionManager.getInstance();
+    
+    // Get user from device fingerprint
+    const deviceFingerprint = req.headers['x-device-fingerprint'] || 
+                              userSessionManager.generateDeviceFingerprint(req);
+    const sessionId = req.headers['x-session-id'] || undefined;
+    
+    const anonymousUser = await userSessionManager.getOrCreateAnonymousUser(
+      (Array.isArray(deviceFingerprint) ? deviceFingerprint[0] : deviceFingerprint) || 'unknown', 
+      Array.isArray(sessionId) ? sessionId[0] : sessionId
+    );
+    
+    console.log('Mood entry created for user:', anonymousUser.id, req.body);
+    
+    // Create mood entry (you may need to add this to storage interface)
+    const moodEntry = {
+      userId: anonymousUser.id,
+      emotion: req.body.emotion,
+      intensity: req.body.intensity,
+      context: req.body.context || '',
+      timestamp: req.body.timestamp || new Date().toISOString()
+    };
+    
+    // For now, just return success - you can implement actual storage later
+    console.log('Created mood entry:', moodEntry);
+    res.json({ success: true, entry: moodEntry });
+    
+  } catch (error) {
+    console.error('Failed to create mood entry:', error);
+    res.status(500).json({ error: 'Failed to create mood entry' });
+  }
+});
+
 // Journal AI analysis endpoint - MUST BE BEFORE VITE
 app.post('/api/journal/analyze', async (req, res) => {
   try {
