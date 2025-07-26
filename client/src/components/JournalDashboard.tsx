@@ -373,9 +373,16 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
       );
     }
 
+    // Calculate word count from entries for more accurate stats
+    const totalWords = entries.reduce((sum, entry) => {
+      return sum + entry.content.split(/\s+/).filter(word => word.length > 0).length;
+    }, 0);
+    const avgWordsPerEntry = entries.length > 0 ? Math.round(totalWords / entries.length) : 0;
+
     return (
       <div className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Overview Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="theme-card rounded-lg p-6 border border-[var(--theme-accent)]/30">
             <div className="flex items-center justify-between mb-2">
               <h3 className="font-semibold theme-text">Total Entries</h3>
@@ -383,7 +390,7 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
             </div>
             <p className="text-2xl font-bold theme-text">{analytics.totalEntries || 0}</p>
             <p className="text-sm theme-text-secondary mt-1">
-              {analytics.writingStreak || 0} day writing streak
+              {analytics.entriesThisMonth || 0} this month
             </p>
           </div>
 
@@ -392,7 +399,7 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
               <h3 className="font-semibold theme-text">Avg. Words</h3>
               <MessageCircle className="theme-text-secondary" size={20} />
             </div>
-            <p className="text-2xl font-bold theme-text">{Math.round(analytics.averageWordsPerEntry || 0)}</p>
+            <p className="text-2xl font-bold theme-text">{avgWordsPerEntry}</p>
             <p className="text-sm theme-text-secondary mt-1">per entry</p>
           </div>
 
@@ -401,24 +408,134 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
               <h3 className="font-semibold theme-text">Mood Intensity</h3>
               <Star className="theme-text-secondary" size={20} />
             </div>
-            <p className="text-2xl font-bold theme-text">{Math.round((analytics.averageMoodIntensity || 0) * 10)}%</p>
+            <p className="text-2xl font-bold theme-text">{Math.round((analytics.averageMoodIntensity || 5) * 10)}%</p>
             <p className="text-sm theme-text-secondary mt-1">average intensity</p>
+          </div>
+
+          <div className="theme-card rounded-lg p-6 border border-[var(--theme-accent)]/30">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="font-semibold theme-text">Total Words</h3>
+              <Edit3 className="theme-text-secondary" size={20} />
+            </div>
+            <p className="text-2xl font-bold theme-text">{totalWords.toLocaleString()}</p>
+            <p className="text-sm theme-text-secondary mt-1">words written</p>
           </div>
         </div>
 
-        {analytics.themes && analytics.themes.length > 0 && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Mood Distribution */}
+          {analytics.moodDistribution && Object.keys(analytics.moodDistribution).length > 0 && (
+            <div className="theme-card rounded-lg p-6 border border-[var(--theme-accent)]/30">
+              <h3 className="font-semibold theme-text mb-4">Mood Distribution</h3>
+              <div className="space-y-3">
+                {Object.entries(analytics.moodDistribution).map(([mood, count]) => {
+                  const percentage = Math.round((count as number / analytics.totalEntries) * 100);
+                  return (
+                    <div key={`mood-${mood}`} className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg">{getMoodEmoji(mood)}</span>
+                        <span className="theme-text capitalize">{mood.replace('_', ' ')}</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="w-20 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                          <div 
+                            className="h-2 rounded-full" 
+                            style={{ 
+                              width: `${percentage}%`,
+                              backgroundColor: getMoodColor(mood)
+                            }}
+                          />
+                        </div>
+                        <span className="text-sm theme-text-secondary w-12 text-right">
+                          {count} ({percentage}%)
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Recent Mood Trends */}
+          {analytics.moodTrends && analytics.moodTrends.length > 0 && (
+            <div className="theme-card rounded-lg p-6 border border-[var(--theme-accent)]/30">
+              <h3 className="font-semibold theme-text mb-4">Recent Mood Trends</h3>
+              <div className="space-y-3">
+                {analytics.moodTrends.slice(-5).map((trend, index) => (
+                  <div key={`trend-${index}`} className="flex items-center justify-between p-3 theme-surface rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <span className="text-lg">{getMoodEmoji(trend.mood)}</span>
+                      <div>
+                        <p className="theme-text text-sm font-medium capitalize">
+                          {trend.mood.replace('_', ' ')}
+                        </p>
+                        <p className="theme-text-secondary text-xs">
+                          {format(new Date(trend.date), 'MMM dd, yyyy')}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm font-medium theme-text">
+                        {trend.intensity}/10
+                      </div>
+                      <div className="w-16 bg-gray-200 dark:bg-gray-700 rounded-full h-1 mt-1">
+                        <div 
+                          className="h-1 rounded-full" 
+                          style={{ 
+                            width: `${(trend.intensity / 10) * 100}%`,
+                            backgroundColor: getMoodColor(trend.mood)
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Themes/Tags Analysis */}
+        {analytics.themes && Object.keys(analytics.themes).length > 0 && (
           <div className="theme-card rounded-lg p-6 border border-[var(--theme-accent)]/30">
-            <h3 className="font-semibold theme-text mb-4">Common Themes</h3>
-            <div className="space-y-3">
-              {analytics.themes.slice(0, 5).map((theme, index) => (
-                <div key={`theme-${index}`} className="flex items-center justify-between">
-                  <span className="theme-text">{theme.theme}</span>
-                  <span className="text-sm theme-text-secondary">{theme.count} entries</span>
-                </div>
-              ))}
+            <h3 className="font-semibold theme-text mb-4">Recurring Themes & Tags</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {Object.entries(analytics.themes)
+                .sort(([,a], [,b]) => (b as number) - (a as number))
+                .slice(0, 8)
+                .map(([theme, count]) => (
+                  <div key={`theme-${theme}`} className="flex items-center justify-between p-3 theme-surface rounded-lg">
+                    <span className="theme-text font-medium">#{theme}</span>
+                    <span className="text-sm theme-text-secondary">
+                      {count} {count === 1 ? 'entry' : 'entries'}
+                    </span>
+                  </div>
+                ))}
             </div>
           </div>
         )}
+
+        {/* Writing Insights */}
+        <div className="theme-card rounded-lg p-6 border border-[var(--theme-accent)]/30">
+          <h3 className="font-semibold theme-text mb-4">Writing Insights</h3>
+          <div className="prose max-w-none theme-text-secondary">
+            <p className="mb-3">
+              Based on your {analytics.totalEntries} journal entries, you've written a total of {totalWords.toLocaleString()} words, 
+              averaging {avgWordsPerEntry} words per entry.
+            </p>
+            <p className="mb-3">
+              Your average mood intensity is {(analytics.averageMoodIntensity || 5).toFixed(1)}/10, 
+              {analytics.entriesThisMonth > 0 && ` with ${analytics.entriesThisMonth} entries this month`}.
+            </p>
+            {Object.keys(analytics.themes || {}).length > 0 && (
+              <p>
+                Your most common themes include {Object.keys(analytics.themes).slice(0, 3).join(', ')}, 
+                showing consistent reflection on important life areas.
+              </p>
+            )}
+          </div>
+        </div>
       </div>
     );
   };
