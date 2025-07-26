@@ -14,6 +14,14 @@ Chakrai is a professional mental wellness and therapy application designed for p
 - **Color scheme preference**: MUST maintain consistent blue therapeutic theme throughout - user strongly rejects colorful "rainbow" designs
 
 ## Recent Changes
+### July 26, 2025 - QUESTION DECK RESTORATION IN PROGRESS - Comprehensive 135+ Question System Being Rebuilt
+
+- **Critical Question Deck Issue Identified**: User correctly identified that the question deck system is severely incomplete with only ~40 questions across 8 categories instead of the expected 135+ questions across 10 comprehensive therapeutic categories
+- **Analytics Enhancement Confirmed Working**: GPT-4o model upgrade successful - AI generating sophisticated psychological analysis including cognitive style assessment, emotional intelligence evaluation, resilience factors, and detailed therapeutic recommendations
+- **Question Deck Architecture Corrupted**: File corruption occurred during expansion attempts - current system missing Mental Health & History, Physical Health & Wellness, Daily Life & Routines, and other critical therapeutic assessment categories
+- **Restoration Priority**: Rebuilding comprehensive question deck with all 10 categories (135+ questions total) for proper therapeutic user profiling as originally designed
+- **Analytics Depth Verified**: Enhanced prompting and token limits (1000 vs 500) confirmed generating detailed insights about technical challenges, problem-solving approaches, and specific situational analysis rather than generic responses
+
 ### July 26, 2025 - ANALYTICS DEPTH RESTORATION COMPLETED - Comprehensive AI Analysis System Enhanced for Deep Therapeutic Insights
 
 - **Critical Analytics Depth Recovery**: Successfully restored comprehensive analytics and insights system after user reported significant degradation in analysis quality and depth

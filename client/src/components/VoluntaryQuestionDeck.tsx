@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronRight, ChevronLeft, Heart, Users, Target, Coffee, Settings, Sparkles, Save, RotateCcw, Brain, Activity, Clock, Home } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Heart, Users, Target, Coffee, Settings, Sparkles, Brain, Activity, Clock, Home } from 'lucide-react';
 import axios from 'axios';
 import { getCurrentUserId } from '../utils/userSession';
 
@@ -73,103 +73,103 @@ const questionCategories: QuestionCategory[] = [
       },
       {
         id: 'p8',
-        text: "What's something you'd like to change about yourself?",
-        type: 'text'
+        text: 'How do you typically make big decisions?',
+        type: 'multiple_choice',
+        options: ['Go with my gut feeling', 'Make pros and cons lists', 'Talk it through with others', 'Research extensively', 'Sleep on it']
       },
       {
         id: 'p9',
-        text: 'How do you handle criticism?',
+        text: 'What kind of environment helps you think best?',
         type: 'multiple_choice',
-        options: ['Take it to heart', 'Consider it objectively', 'Get defensive initially', 'Use it for growth', 'Depends on who it comes from']
+        options: ['Quiet and calm', 'Slightly busy/background noise', 'Music playing', 'Outside in nature', 'Organized and clean']
       },
       {
         id: 'p10',
-        text: 'What motivates you most in life?',
+        text: 'Do you prefer routine or spontaneity?',
         type: 'multiple_choice',
-        options: ['Personal achievement', 'Helping others', 'Learning and growth', 'Security and stability', 'Adventure and experiences']
+        options: ['Love routine and structure', 'Prefer some routine with flexibility', 'Like a mix of both', 'Prefer spontaneity', 'Completely spontaneous']
       },
       {
         id: 'p11',
-        text: 'How do you typically make important decisions?',
-        type: 'multiple_choice',
-        options: ['Analyze pros and cons logically', 'Go with my gut feeling', 'Seek advice from others', 'Sleep on it', 'Research extensively first']
-      },
-      {
-        id: 'p12',
-        text: 'What does success mean to you personally?',
+        text: 'How do you celebrate your wins, big or small?',
         type: 'text'
       },
       {
-        id: 'p13',
-        text: 'How do you prefer to spend your free time?',
+        id: 'p12',
+        text: 'What motivates you most in life?',
         type: 'multiple_choice',
-        options: ['Relaxing at home', 'Socializing with friends', 'Pursuing hobbies', 'Learning something new', 'Being active/outdoors']
+        options: ['Personal growth', 'Helping others', 'Achievement/success', 'Connection/relationships', 'Financial security', 'Creative expression']
+      },
+      {
+        id: 'p13',
+        text: 'When learning something new, how do you prefer to approach it?',
+        type: 'multiple_choice',
+        options: ['Jump in and figure it out', 'Study theory first', 'Learn from others/mentorship', 'Practice with guidance', 'Online courses/videos']
       },
       {
         id: 'p14',
-        text: 'What role does spirituality or personal beliefs play in your life?',
-        type: 'multiple_choice',
-        options: ['Very important - guides my decisions', 'Somewhat important', 'Not very important', 'Still exploring/questioning', 'Prefer not to discuss']
+        text: "What's something you've always wanted to try but haven't yet?",
+        type: 'text'
       },
       {
         id: 'p15',
-        text: 'How do you handle uncertainty or unexpected changes?',
-        type: 'multiple_choice',
-        options: ['Adapt quickly', 'Need time to process', 'Get anxious', 'See it as an opportunity', 'Prefer to have backup plans']
+        text: 'How important is it for you to have control over your environment and schedule?',
+        type: 'scale',
+        options: ['1 - Not important', '2', '3', '4', '5 - Very important']
       }
     ]
   },
   {
-    id: 'emotional',
+    id: 'emotional_awareness',
     name: 'Emotional Awareness & Coping',
     icon: Heart,
-    description: 'Share how you process emotions and what helps you feel better',
+    description: 'Share how you understand and manage your emotions',
     questions: [
       {
         id: 'e1',
-        text: 'How do you usually recognize when you\'re not doing well emotionally?',
+        text: 'How do you typically know when you\'re feeling stressed?',
         type: 'multiple_choice',
-        options: ['Physical symptoms (headaches, tiredness)', 'Mood changes', 'Behavior changes', 'Others point it out', 'I struggle to notice']
+        options: ['Physical symptoms (tension, headaches)', 'Emotional changes (irritability, sadness)', 'Behavioral changes (isolation, eating)', 'Cognitive changes (racing thoughts)', 'I don\'t always notice']
       },
       {
         id: 'e2',
-        text: "What's one thing that almost always helps when you're upset?",
-        type: 'text'
+        text: 'What emotion do you feel most comfortable expressing?',
+        type: 'multiple_choice',
+        options: ['Happiness/joy', 'Anger', 'Sadness', 'Fear/anxiety', 'Love/affection', 'I struggle with all emotions']
       },
       {
         id: 'e3',
-        text: 'Do you like when people check in with you, or do you prefer space?',
-        type: 'multiple_choice',
-        options: ['Love check-ins', 'Prefer space initially', 'Depends on the situation', 'Mixed - sometimes yes, sometimes no']
+        text: 'When you\'re overwhelmed, what helps you feel grounded?',
+        type: 'text'
       },
       {
         id: 'e4',
-        text: 'Do you process emotions more by thinking, talking, or feeling them out?',
+        text: 'How do you typically process difficult emotions?',
         type: 'multiple_choice',
-        options: ['Thinking through them analytically', 'Talking them out with others', 'Just feeling and experiencing them', 'Writing or creative expression']
+        options: ['Talk about them with others', 'Write/journal about them', 'Physical activity', 'Creative expression', 'Distraction/avoidance', 'Meditation/mindfulness']
       },
       {
         id: 'e5',
-        text: "What's your relationship with change—exciting, scary, or both?",
+        text: 'What triggers your strongest emotional reactions?',
         type: 'multiple_choice',
-        options: ['Mostly exciting', 'Mostly scary', 'Both exciting and scary', 'Neutral - depends on the change']
+        options: ['Criticism or rejection', 'Feeling misunderstood', 'Injustice or unfairness', 'Loss of control', 'Conflict with others', 'Uncertainty about the future']
       },
       {
         id: 'e6',
-        text: 'When you feel anxious, what physical sensations do you notice?',
-        type: 'multiple_choice',
-        options: ['Rapid heartbeat', 'Tight chest or breathing changes', 'Stomach issues', 'Muscle tension', 'Sweating or trembling', 'None that I notice']
+        text: 'How comfortable are you with crying or showing vulnerability?',
+        type: 'scale',
+        options: ['1 - Very uncomfortable', '2', '3', '4', '5 - Very comfortable']
       },
       {
         id: 'e7',
-        text: 'How do you typically express anger or frustration?',
-        type: 'multiple_choice',
-        options: ['Talk it out immediately', 'Need time to cool down first', 'Write about it', 'Physical activity', 'Tend to bottle it up', 'Depends on the situation']
+        text: 'What does self-compassion mean to you?',
+        type: 'text'
       },
       {
         id: 'e8',
-        text: 'What helps you feel most grounded during difficult times?',
-        type: 'text'
+        text: 'When you make a mistake, what\'s your inner voice like?',
+        type: 'multiple_choice',
+        options: ['Very critical and harsh', 'Somewhat critical', 'Balanced - acknowledges mistakes but supportive', 'Generally understanding', 'Very forgiving and kind']
       },
       {
         id: 'e9',
@@ -185,32 +185,31 @@ const questionCategories: QuestionCategory[] = [
       },
       {
         id: 'e11',
-        text: 'How comfortable are you with crying or showing vulnerability?',
-        type: 'scale',
-        options: ['1 - Very uncomfortable', '2', '3', '4', '5 - Very comfortable']
-      },
-      {
-        id: 'e12',
-        text: 'What triggers your stress most often?',
-        type: 'multiple_choice',
-        options: ['Work/school pressure', 'Relationship conflicts', 'Financial concerns', 'Health issues', 'Social situations', 'Uncertainty about the future']
-      },
-      {
-        id: 'e13',
         text: 'How do you know when you need to take a mental health break?',
         type: 'text'
       },
       {
-        id: 'e14',
+        id: 'e12',
         text: 'What helps you bounce back from setbacks?',
         type: 'multiple_choice',
         options: ['Self-compassion and patience', 'Support from others', 'Focusing on lessons learned', 'Getting back into routine', 'Taking action on solutions']
       },
       {
-        id: 'e15',
+        id: 'e13',
         text: 'How do you handle overwhelming emotions?',
         type: 'multiple_choice',
         options: ['Take deep breaths/meditation', 'Call someone I trust', 'Write in a journal', 'Go for a walk', 'Use grounding techniques', 'Wait for them to pass']
+      },
+      {
+        id: 'e14',
+        text: 'What would help you feel more emotionally balanced?',
+        type: 'text'
+      },
+      {
+        id: 'e15',
+        text: 'How often do you check in with your emotional state?',
+        type: 'multiple_choice',
+        options: ['Multiple times daily', 'Daily', 'Few times a week', 'Weekly', 'Rarely', 'Never - I don\'t think about it']
       }
     ]
   },
@@ -232,7 +231,7 @@ const questionCategories: QuestionCategory[] = [
       },
       {
         id: 'r3',
-        text: "What's your love language for receiving support?",
+        text: 'What\'s your love language for receiving support?',
         type: 'multiple_choice',
         options: ['Words of affirmation', 'Quality time', 'Physical touch', 'Acts of service', 'Thoughtful gifts']
       },
@@ -316,17 +315,17 @@ const questionCategories: QuestionCategory[] = [
     questions: [
       {
         id: 'g1',
-        text: "What's one goal (big or small) you're working toward right now?",
+        text: 'What\'s one goal (big or small) you\'re working toward right now?',
         type: 'text'
       },
       {
         id: 'g2',
-        text: "What's a value or belief that's very important to you?",
+        text: 'What\'s a value or belief that\'s very important to you?',
         type: 'text'
       },
       {
         id: 'g3',
-        text: "If nothing was holding you back, what's a life change you'd make today?",
+        text: 'If nothing was holding you back, what\'s a life change you\'d make today?',
         type: 'text'
       },
       {
@@ -340,12 +339,66 @@ const questionCategories: QuestionCategory[] = [
         text: 'Do you prefer clear plans or going with the flow?',
         type: 'multiple_choice',
         options: ['Clear plans and structure', 'Going with the flow', 'Mix of both', 'Depends on the situation']
+      },
+      {
+        id: 'g6',
+        text: 'What does success mean to you personally?',
+        type: 'text'
+      },
+      {
+        id: 'g7',
+        text: 'What\'s something you\'re proud of accomplishing recently?',
+        type: 'text'
+      },
+      {
+        id: 'g8',
+        text: 'How do you stay motivated when working toward long-term goals?',
+        type: 'multiple_choice',
+        options: ['Break them into smaller steps', 'Visual reminders', 'Accountability partners', 'Reward systems', 'Regular progress reviews', 'I struggle with long-term motivation']
+      },
+      {
+        id: 'g9',
+        text: 'What\'s your biggest fear about pursuing your dreams?',
+        type: 'multiple_choice',
+        options: ['Fear of failure', 'Fear of success', 'Fear of judgment', 'Financial insecurity', 'Disappointing others', 'Not being good enough']
+      },
+      {
+        id: 'g10',
+        text: 'How important is it for your work to align with your values?',
+        type: 'scale',
+        options: ['1 - Not important', '2', '3', '4', '5 - Extremely important']
+      },
+      {
+        id: 'g11',
+        text: 'What legacy do you want to leave behind?',
+        type: 'text'
+      },
+      {
+        id: 'g12',
+        text: 'How do you define a life well-lived?',
+        type: 'text'
+      },
+      {
+        id: 'g13',
+        text: 'What\'s one skill you\'d love to master?',
+        type: 'text'
+      },
+      {
+        id: 'g14',
+        text: 'How do you handle setbacks in pursuing your goals?',
+        type: 'multiple_choice',
+        options: ['Reassess and adjust the plan', 'Take a break then try again', 'Seek support from others', 'Push through with determination', 'Sometimes give up', 'Learn from the experience']
+      },
+      {
+        id: 'g15',
+        text: 'What motivates you to keep growing as a person?',
+        type: 'text'
       }
     ]
   },
   {
     id: 'fun',
-    name: 'Personal Preferences',
+    name: 'Personal Preferences & Fun',
     icon: Coffee,
     description: 'Fun questions to help me understand your style and preferences',
     questions: [
@@ -375,6 +428,60 @@ const questionCategories: QuestionCategory[] = [
       {
         id: 'f5',
         text: 'What song or artist do you play when you need to get in a good mood?',
+        type: 'text'
+      },
+      {
+        id: 'f6',
+        text: 'Are you more of a dog person, cat person, or neither?',
+        type: 'multiple_choice',
+        options: ['Definitely a dog person', 'Definitely a cat person', 'I love both equally', 'Neither - prefer other pets', 'Not really an animal person']
+      },
+      {
+        id: 'f7',
+        text: 'What\'s your ideal way to spend a free evening?',
+        type: 'multiple_choice',
+        options: ['Quiet night at home', 'Out with friends', 'Trying something new', 'Being creative', 'Learning something', 'Physical activity']
+      },
+      {
+        id: 'f8',
+        text: 'What type of weather makes you happiest?',
+        type: 'multiple_choice',
+        options: ['Sunny and warm', 'Cool and crisp', 'Rainy and cozy', 'Snowy and peaceful', 'Stormy and dramatic']
+      },
+      {
+        id: 'f9',
+        text: 'If you could have dinner with anyone (living or dead), who would it be?',
+        type: 'text'
+      },
+      {
+        id: 'f10',
+        text: 'What\'s your favorite way to treat yourself?',
+        type: 'text'
+      },
+      {
+        id: 'f11',
+        text: 'Are you more of a planner or a spontaneous person when it comes to travel?',
+        type: 'multiple_choice',
+        options: ['Detailed planner', 'Some planning, some spontaneity', 'Mostly spontaneous', 'Completely wing it', 'I don\'t travel much']
+      },
+      {
+        id: 'f12',
+        text: 'What\'s something that always makes you laugh?',
+        type: 'text'
+      },
+      {
+        id: 'f13',
+        text: 'If you had unlimited resources, what would you do for fun?',
+        type: 'text'
+      },
+      {
+        id: 'f14',
+        text: 'What\'s your favorite season and why?',
+        type: 'text'
+      },
+      {
+        id: 'f15',
+        text: 'What small thing brings you disproportionate joy?',
         type: 'text'
       }
     ]
@@ -414,6 +521,65 @@ const questionCategories: QuestionCategory[] = [
         text: 'Do you want me to ask follow-up questions about your answers, or keep it light?',
         type: 'multiple_choice',
         options: ['Deep dive with follow-ups', 'Keep conversations light', 'Depends on the topic', 'Let me guide the depth']
+      },
+      {
+        id: 'ai6',
+        text: 'How should I respond when you\'re having a really difficult day?',
+        type: 'multiple_choice',
+        options: ['Provide comfort and validation', 'Offer practical coping strategies', 'Ask what you need in the moment', 'Share gentle perspective', 'Just listen without trying to fix']
+      },
+      {
+        id: 'ai7',
+        text: 'What tone works best for you when receiving feedback?',
+        type: 'multiple_choice',
+        options: ['Warm and encouraging', 'Direct but kind', 'Casual and friendly', 'Professional but caring', 'Depends on the situation']
+      },
+      {
+        id: 'ai8',
+        text: 'How much do you want me to remember from our previous conversations?',
+        type: 'multiple_choice',
+        options: ['Everything - build on our history', 'Key themes and patterns', 'Recent conversations only', 'Let me bring up what\'s relevant', 'Start fresh each time']
+      },
+      {
+        id: 'ai9',
+        text: 'When you share something vulnerable, how should I respond?',
+        type: 'multiple_choice',
+        options: ['Acknowledge the courage it took', 'Normalize the experience', 'Ask gentle follow-up questions', 'Offer validation and support', 'Let me choose the response']
+      },
+      {
+        id: 'ai10',
+        text: 'What\'s most important to you in our therapeutic relationship?',
+        type: 'multiple_choice',
+        options: ['Feeling understood', 'Getting practical advice', 'Having a judgment-free space', 'Gaining new perspectives', 'Feeling supported and validated']
+      },
+      {
+        id: 'ai11',
+        text: 'How direct should I be if I notice concerning patterns?',
+        type: 'multiple_choice',
+        options: ['Very direct - call it out clearly', 'Gentle but clear', 'Ask questions to help me see it', 'Subtle hints and suggestions', 'Let me discover it naturally']
+      },
+      {
+        id: 'ai12',
+        text: 'What type of language resonates most with you?',
+        type: 'multiple_choice',
+        options: ['Warm and nurturing', 'Clear and straightforward', 'Thoughtful and reflective', 'Casual and conversational', 'Professional but personable']
+      },
+      {
+        id: 'ai13',
+        text: 'How should I handle it if you seem stuck or resistant?',
+        type: 'multiple_choice',
+        options: ['Gently explore the resistance', 'Respect the boundary and change topics', 'Offer different approaches', 'Ask what you need', 'Point out the pattern directly']
+      },
+      {
+        id: 'ai14',
+        text: 'What\'s your preferred pace for our conversations?',
+        type: 'multiple_choice',
+        options: ['Slow and reflective', 'Steady and consistent', 'Dynamic - varies by topic', 'Quick and efficient', 'Let the conversation flow naturally']
+      },
+      {
+        id: 'ai15',
+        text: 'What would make you feel most supported by me as your AI companion?',
+        type: 'text'
       }
     ]
   },
@@ -421,95 +587,94 @@ const questionCategories: QuestionCategory[] = [
     id: 'mental_health',
     name: 'Mental Health & History',
     icon: Brain,
-    description: 'Help me understand your mental health background and current state',
+    description: 'Help me understand your mental health background and needs',
     questions: [
       {
         id: 'mh1',
-        text: 'Have you ever worked with a therapist, counselor, or mental health professional?',
+        text: 'Have you ever worked with a therapist or counselor before?',
         type: 'multiple_choice',
-        options: ['Yes, currently', 'Yes, in the past', 'Never, but interested', 'Never, not interested', 'Prefer not to share']
+        options: ['Yes, currently', 'Yes, in the past', 'No, but interested', 'No, and not interested', 'Unsure']
       },
       {
         id: 'mh2',
-        text: 'How would you rate your current mental health?',
-        type: 'scale',
-        options: ['1 - Struggling significantly', '2', '3', '4', '5 - Doing very well']
+        text: 'How comfortable are you discussing mental health topics?',
+        type: 'multiple_choice',
+        options: ['Very comfortable', 'Somewhat comfortable', 'Neutral', 'Somewhat uncomfortable', 'Very uncomfortable']
       },
       {
         id: 'mh3',
-        text: 'What mental health challenges have you experienced? (Select all that apply)',
+        text: 'Do you have any diagnosed mental health conditions?',
         type: 'multiple_choice',
-        options: ['Anxiety', 'Depression', 'PTSD/Trauma', 'ADHD', 'Eating disorders', 'Substance use', 'Bipolar', 'OCD', 'None', 'Prefer not to share']
+        options: ['Yes, and I manage them actively', 'Yes, but I don\'t actively treat them', 'Self-diagnosed but not professionally', 'No', 'Prefer not to say']
       },
       {
         id: 'mh4',
-        text: 'Are you currently taking any medication for mental health?',
+        text: 'What mental health areas are you most interested in working on?',
         type: 'multiple_choice',
-        options: ['Yes, and it helps', 'Yes, but not sure if it helps', 'No, but considering it', 'No, prefer other approaches', 'Prefer not to share']
+        options: ['Anxiety management', 'Depression/mood', 'Stress management', 'Self-esteem', 'Relationships', 'Life transitions', 'Trauma', 'General wellness', 'Not sure']
       },
       {
         id: 'mh5',
-        text: 'What has been most helpful for your mental wellness so far?',
-        type: 'text'
+        text: 'How often do you experience anxiety or worry?',
+        type: 'multiple_choice',
+        options: ['Daily', 'Several times a week', 'Weekly', 'Monthly', 'Rarely', 'Never']
       },
       {
         id: 'mh6',
-        text: 'How often do you experience anxiety or worry?',
-        type: 'multiple_choice',
-        options: ['Daily', 'Several times a week', 'Occasionally', 'Rarely', 'Never']
+        text: 'What helps you feel more grounded when overwhelmed?',
+        type: 'text'
       },
       {
         id: 'mh7',
-        text: 'How often do you feel sad or down?',
+        text: 'How do you typically cope with difficult emotions?',
         type: 'multiple_choice',
-        options: ['Daily', 'Several times a week', 'Occasionally', 'Rarely', 'Never']
+        options: ['Talk to others', 'Keep to myself', 'Engage in activities', 'Avoid thinking about them', 'Use healthy coping strategies', 'Use unhealthy coping strategies']
       },
       {
         id: 'mh8',
-        text: 'Do you have thoughts of self-harm or suicide?',
+        text: 'Have you ever experienced panic attacks?',
         type: 'multiple_choice',
-        options: ['Never', 'Rarely', 'Sometimes', 'Often', 'Prefer not to answer']
+        options: ['Yes, frequently', 'Yes, occasionally', 'Yes, rarely', 'No', 'Not sure']
       },
       {
         id: 'mh9',
-        text: 'What triggers your mental health struggles most?',
+        text: 'How would you describe your overall mental health currently?',
         type: 'multiple_choice',
-        options: ['Stress', 'Relationship issues', 'Work/school', 'Health concerns', 'Financial pressure', 'Trauma memories', 'Seasonal changes', 'Unknown triggers']
+        options: ['Excellent', 'Good', 'Fair', 'Poor', 'Very poor']
       },
       {
         id: 'mh10',
-        text: 'How do you typically cope with mental health challenges?',
+        text: 'Do you take any medications for mental health?',
         type: 'multiple_choice',
-        options: ['Talk to someone', 'Self-care activities', 'Exercise', 'Medication', 'Avoid/isolate', 'Therapy techniques', 'Creative outlets']
+        options: ['Yes, and they help', 'Yes, but effectiveness varies', 'Yes, but they don\'t help much', 'No, but I\'ve considered it', 'No, and not interested']
       },
       {
         id: 'mh11',
-        text: 'What would improve your mental health most right now?',
+        text: 'What stigmas around mental health concern you most?',
         type: 'text'
       },
       {
         id: 'mh12',
-        text: 'How comfortable are you discussing mental health topics?',
-        type: 'scale',
-        options: ['1 - Very uncomfortable', '2', '3', '4', '5 - Very comfortable']
+        text: 'How important is mental health in your overall well-being?',
+        type: 'multiple_choice',
+        options: ['Extremely important', 'Very important', 'Somewhat important', 'Not very important', 'Not important at all']
       },
       {
         id: 'mh13',
-        text: 'Do you have family history of mental health conditions?',
+        text: 'What would make you more likely to seek mental health support?',
         type: 'multiple_choice',
-        options: ['Yes, and it affects me', 'Yes, but minimal impact', 'No family history', 'Unknown', 'Prefer not to share']
+        options: ['Lower cost', 'Less stigma', 'More accessibility', 'Better understanding from others', 'Nothing - I\'m already open to it', 'I\'m not interested']
       },
       {
         id: 'mh14',
-        text: 'What mental health stigma have you experienced?',
+        text: 'How do you prefer to learn about mental health topics?',
         type: 'multiple_choice',
-        options: ['From family', 'From friends', 'At work/school', 'Self-stigma', 'Healthcare settings', 'None', 'Prefer not to share']
+        options: ['Reading articles/books', 'Talking with professionals', 'Peer support groups', 'Online resources', 'Apps and digital tools', 'I prefer not to learn about them']
       },
       {
         id: 'mh15',
-        text: 'How important is mental health in your daily life priorities?',
-        type: 'scale',
-        options: ['1 - Not a priority', '2', '3', '4', '5 - Top priority']
+        text: 'What mental health goal would be most meaningful to achieve?',
+        type: 'text'
       }
     ]
   },
@@ -517,95 +682,95 @@ const questionCategories: QuestionCategory[] = [
     id: 'physical_health',
     name: 'Physical Health & Wellness',
     icon: Activity,
-    description: 'Share about your physical health and wellness habits',
+    description: 'Tell me about your physical health and wellness practices',
     questions: [
       {
         id: 'ph1',
-        text: 'How would you rate your current physical health?',
-        type: 'scale',
-        options: ['1 - Poor', '2', '3', '4', '5 - Excellent']
+        text: 'How would you rate your overall physical health?',
+        type: 'multiple_choice',
+        options: ['Excellent', 'Good', 'Fair', 'Poor', 'Very poor']
       },
       {
         id: 'ph2',
-        text: 'How often do you exercise or do physical activity?',
+        text: 'How often do you exercise or engage in physical activity?',
         type: 'multiple_choice',
-        options: ['Daily', '3-5 times per week', '1-2 times per week', 'Occasionally', 'Rarely or never']
+        options: ['Daily', 'Several times a week', 'Weekly', 'Monthly', 'Rarely', 'Never']
       },
       {
         id: 'ph3',
         text: 'What type of physical activity do you enjoy most?',
         type: 'multiple_choice',
-        options: ['Walking/hiking', 'Running', 'Gym/weights', 'Yoga/stretching', 'Sports', 'Dancing', 'Swimming', 'None really appeal to me']
+        options: ['Walking/hiking', 'Running', 'Weight training', 'Yoga/stretching', 'Sports', 'Swimming', 'Dancing', 'I don\'t enjoy exercise']
       },
       {
         id: 'ph4',
-        text: 'How many hours of sleep do you typically get?',
+        text: 'How many hours of sleep do you typically get per night?',
         type: 'multiple_choice',
-        options: ['Less than 5 hours', '5-6 hours', '6-7 hours', '7-8 hours', '8+ hours']
+        options: ['Less than 5', '5-6', '6-7', '7-8', '8-9', 'More than 9']
       },
       {
         id: 'ph5',
         text: 'How would you describe your sleep quality?',
         type: 'multiple_choice',
-        options: ['Very poor', 'Poor', 'Fair', 'Good', 'Excellent']
+        options: ['Excellent - wake up refreshed', 'Good - usually feel rested', 'Fair - sometimes tired', 'Poor - often tired', 'Very poor - always exhausted']
       },
       {
         id: 'ph6',
-        text: 'Do you have any chronic health conditions?',
+        text: 'What affects your sleep most negatively?',
         type: 'multiple_choice',
-        options: ['Yes, affects daily life significantly', 'Yes, but manageable', 'Minor conditions only', 'No chronic conditions', 'Prefer not to share']
+        options: ['Stress/anxiety', 'Screen time', 'Caffeine', 'Physical discomfort', 'Environment (noise, light)', 'Irregular schedule', 'Nothing specific']
       },
       {
         id: 'ph7',
-        text: 'How do you feel about your current diet/nutrition?',
+        text: 'How often do you eat fruits and vegetables?',
         type: 'multiple_choice',
-        options: ['Very healthy', 'Mostly healthy', 'Mixed - some good, some bad', 'Not very healthy', 'Poor']
+        options: ['Every meal', 'Daily', 'Several times a week', 'Weekly', 'Rarely', 'Never']
       },
       {
         id: 'ph8',
-        text: 'What affects your energy levels most?',
+        text: 'Do you have any chronic health conditions?',
         type: 'multiple_choice',
-        options: ['Sleep quality', 'Diet/nutrition', 'Exercise', 'Stress levels', 'Health conditions', 'Work schedule', 'Mood']
+        options: ['Yes, multiple', 'Yes, one', 'No', 'Prefer not to say']
       },
       {
         id: 'ph9',
-        text: 'Do you use substances to cope with stress? (alcohol, drugs, etc.)',
+        text: 'How often do you see healthcare providers for checkups?',
         type: 'multiple_choice',
-        options: ['Never', 'Rarely', 'Occasionally', 'Regularly', 'Daily', 'Prefer not to share']
+        options: ['Annually', 'Every 2-3 years', 'Only when sick', 'Rarely', 'Never']
       },
       {
         id: 'ph10',
-        text: 'How much water do you drink daily?',
+        text: 'What wellness practices are most important to you?',
         type: 'multiple_choice',
-        options: ['Less than 2 glasses', '2-4 glasses', '4-6 glasses', '6-8 glasses', '8+ glasses']
+        options: ['Regular exercise', 'Healthy eating', 'Adequate sleep', 'Stress management', 'Preventive healthcare', 'Mental health care', 'Social connections']
       },
       {
         id: 'ph11',
-        text: 'What physical symptoms do you notice when stressed?',
-        type: 'text'
-      },
-      {
-        id: 'ph12',
-        text: 'Do you take any vitamins or supplements?',
-        type: 'multiple_choice',
-        options: ['Yes, regularly', 'Yes, occasionally', 'No, but interested', 'No, not interested', 'Only when sick']
-      },
-      {
-        id: 'ph13',
-        text: 'How often do you go to medical checkups?',
-        type: 'multiple_choice',
-        options: ['Annually as recommended', 'Every few years', 'Only when sick', 'Rarely', 'Never']
-      },
-      {
-        id: 'ph14',
-        text: 'What health goal would you most like to achieve?',
-        type: 'text'
-      },
-      {
-        id: 'ph15',
         text: 'How does your physical health affect your mental health?',
         type: 'multiple_choice',
         options: ['Significantly - they\'re very connected', 'Somewhat connected', 'Minimally connected', 'Not connected', 'I\'m not sure']
+      },
+      {
+        id: 'ph12',
+        text: 'What physical health goal would you most like to achieve?',
+        type: 'text'
+      },
+      {
+        id: 'ph13',
+        text: 'How much water do you typically drink per day?',
+        type: 'multiple_choice',
+        options: ['Less than 2 glasses', '2-4 glasses', '4-6 glasses', '6-8 glasses', 'More than 8 glasses']
+      },
+      {
+        id: 'ph14',
+        text: 'What prevents you from being as healthy as you\'d like?',
+        type: 'multiple_choice',
+        options: ['Time constraints', 'Financial limitations', 'Lack of motivation', 'Health conditions', 'Knowledge gaps', 'Social barriers', 'Nothing specific']
+      },
+      {
+        id: 'ph15',
+        text: 'How do you manage physical pain or discomfort?',
+        type: 'text'
       }
     ]
   },
@@ -613,7 +778,7 @@ const questionCategories: QuestionCategory[] = [
     id: 'daily_life',
     name: 'Daily Life & Routines',
     icon: Clock,
-    description: 'Tell me about your daily routines and lifestyle patterns',
+    description: 'Share about your daily patterns and lifestyle habits',
     questions: [
       {
         id: 'dl1',
@@ -622,82 +787,84 @@ const questionCategories: QuestionCategory[] = [
       },
       {
         id: 'dl2',
-        text: 'How structured vs. flexible do you prefer your days?',
+        text: 'How structured vs. flexible is your daily schedule?',
         type: 'multiple_choice',
-        options: ['Highly structured with set routines', 'Somewhat structured with flexibility', 'Balanced structure and spontaneity', 'Mostly flexible and spontaneous', 'No structure - go with the flow']
+        options: ['Very structured - same routine daily', 'Somewhat structured with flexibility', 'Loosely structured', 'Mostly flexible', 'Completely unstructured']
       },
       {
         id: 'dl3',
-        text: 'What time do you typically wake up?',
+        text: 'What time do you typically go to bed?',
         type: 'multiple_choice',
-        options: ['Before 6 AM', '6-7 AM', '7-8 AM', '8-9 AM', '9-10 AM', 'After 10 AM', 'Varies greatly']
+        options: ['Before 9 PM', '9-10 PM', '10-11 PM', '11 PM-12 AM', '12-1 AM', 'After 1 AM', 'Very inconsistent']
       },
       {
         id: 'dl4',
-        text: 'What time do you typically go to bed?',
+        text: 'How often do you eat meals at regular times?',
         type: 'multiple_choice',
-        options: ['Before 9 PM', '9-10 PM', '10-11 PM', '11 PM-12 AM', '12-1 AM', 'After 1 AM', 'Varies greatly']
+        options: ['Always - very consistent', 'Usually consistent', 'Somewhat consistent', 'Often irregular', 'Very irregular', 'I don\'t really eat regular meals']
       },
       {
         id: 'dl5',
-        text: 'How do you typically spend your evenings?',
+        text: 'What part of your day feels most productive?',
         type: 'multiple_choice',
-        options: ['Relaxing at home', 'Social activities', 'Hobbies/personal projects', 'Exercise', 'Work/studying', 'Screen time', 'Varies daily']
+        options: ['Early morning', 'Mid-morning', 'Afternoon', 'Early evening', 'Late evening/night', 'It varies']
       },
       {
         id: 'dl6',
-        text: 'What part of your day do you feel most productive?',
+        text: 'How do you typically unwind at the end of the day?',
         type: 'multiple_choice',
-        options: ['Early morning', 'Late morning', 'Afternoon', 'Evening', 'Late night', 'Varies']
+        options: ['Watch TV/streaming', 'Read', 'Scroll on phone/social media', 'Talk with family/friends', 'Take a bath/shower', 'Listen to music/podcasts', 'Other activities']
       },
       {
         id: 'dl7',
-        text: 'How much screen time do you have daily (excluding work)?',
+        text: 'What household tasks do you find most challenging?',
         type: 'multiple_choice',
-        options: ['Less than 1 hour', '1-2 hours', '2-4 hours', '4-6 hours', '6+ hours']
+        options: ['Cleaning/organizing', 'Cooking/meal prep', 'Laundry', 'Financial management', 'Home maintenance', 'All of them', 'None - I manage well']
       },
       {
         id: 'dl8',
-        text: 'What daily habit would you most like to change?',
-        type: 'text'
+        text: 'How much time do you spend on screens daily (outside of work)?',
+        type: 'multiple_choice',
+        options: ['Less than 1 hour', '1-2 hours', '2-4 hours', '4-6 hours', '6-8 hours', 'More than 8 hours']
       },
       {
         id: 'dl9',
-        text: 'What daily habit are you most proud of?',
-        type: 'text'
+        text: 'What does your living environment look like most of the time?',
+        type: 'multiple_choice',
+        options: ['Very organized and clean', 'Mostly organized', 'Lived-in but not messy', 'Somewhat cluttered', 'Very cluttered/messy']
       },
       {
         id: 'dl10',
-        text: 'How do you typically handle household chores?',
+        text: 'How often do you spend time in nature?',
         type: 'multiple_choice',
-        options: ['Do them as needed', 'Set schedule/routine', 'Batch them on weekends', 'Minimal cleaning', 'Share with others', 'Procrastinate on them']
+        options: ['Daily', 'Several times a week', 'Weekly', 'Monthly', 'Rarely', 'Never']
       },
       {
         id: 'dl11',
-        text: 'What makes a day feel successful to you?',
+        text: 'What daily habit would you most like to develop?',
         type: 'text'
       },
       {
         id: 'dl12',
-        text: 'How do you typically spend your weekends?',
+        text: 'How do you handle transitions between activities?',
         type: 'multiple_choice',
-        options: ['Relaxing and recharging', 'Social activities', 'Household tasks', 'Hobbies/personal projects', 'Work or catching up', 'Adventure/exploration']
+        options: ['Need time to mentally prepare', 'Adjust quickly', 'Prefer gradual transitions', 'Like clear breaks between tasks', 'Transitions are difficult for me']
       },
       {
         id: 'dl13',
-        text: 'What daily routine grounds you most?',
+        text: 'What\'s your biggest daily life stressor?',
         type: 'multiple_choice',
-        options: ['Morning routine', 'Exercise', 'Meals', 'Evening wind-down', 'Meditation/reflection', 'None - I prefer flexibility']
+        options: ['Time management', 'Financial pressures', 'Work demands', 'Family responsibilities', 'Health concerns', 'Social obligations', 'Technology/overwhelm']
       },
       {
         id: 'dl14',
-        text: 'How do you handle unexpected changes to your plans?',
+        text: 'How often do you engage in hobbies or personal interests?',
         type: 'multiple_choice',
-        options: ['Adapt easily', 'Need some time to adjust', 'Get stressed/anxious', 'Try to stick to original plan', 'See it as an opportunity']
+        options: ['Daily', 'Several times a week', 'Weekly', 'Monthly', 'Rarely', 'I don\'t have time for hobbies']
       },
       {
         id: 'dl15',
-        text: 'What would improve your daily life quality most?',
+        text: 'What would make your daily life feel more balanced?',
         type: 'text'
       }
     ]
@@ -740,60 +907,60 @@ const questionCategories: QuestionCategory[] = [
       },
       {
         id: 'wl6',
-        text: 'Do you work from home, office, or mixed?',
+        text: 'What motivates you most in your work?',
         type: 'multiple_choice',
-        options: ['Fully remote/home', 'Mostly home', 'Hybrid/mixed', 'Mostly office', 'Fully in office', 'Multiple locations', 'Not applicable']
+        options: ['Financial security', 'Personal fulfillment', 'Helping others', 'Learning and growth', 'Recognition', 'Creative expression', 'Making a difference']
       },
       {
         id: 'wl7',
-        text: 'What motivates you most in your work/career?',
+        text: 'How do you handle work-related stress?',
         type: 'multiple_choice',
-        options: ['Purpose and meaning', 'Financial security', 'Growth and learning', 'Recognition and achievement', 'Helping others', 'Creative expression', 'Flexibility and freedom']
+        options: ['Take breaks during the day', 'Exercise or physical activity', 'Talk to colleagues/friends', 'Compartmentalize work and home', 'I struggle with work stress', 'Mindfulness/meditation']
       },
       {
         id: 'wl8',
-        text: 'How do you handle work stress?',
-        type: 'multiple_choice',
-        options: ['Talk to colleagues', 'Take breaks during day', 'Exercise after work', 'Disconnect completely', 'Work through it', 'Seek support from manager']
+        text: 'What would your ideal work environment look like?',
+        type: 'text'
       },
       {
         id: 'wl9',
-        text: 'What career goal are you working toward?',
-        type: 'text'
+        text: 'Do you feel valued and appreciated at work?',
+        type: 'multiple_choice',
+        options: ['Yes, very much', 'Somewhat', 'Not really', 'Not at all', 'Not applicable']
       },
       {
         id: 'wl10',
-        text: 'How supportive is your work environment for mental health?',
+        text: 'How often do you think about changing careers?',
         type: 'multiple_choice',
-        options: ['Very supportive', 'Somewhat supportive', 'Neutral', 'Not very supportive', 'Unsupportive', 'Not applicable']
+        options: ['Never', 'Rarely', 'Sometimes', 'Often', 'Constantly planning a change']
       },
       {
         id: 'wl11',
-        text: 'Do you feel financially secure?',
-        type: 'multiple_choice',
-        options: ['Very secure', 'Mostly secure', 'Somewhat secure', 'Insecure', 'Very insecure']
+        text: 'What skills would you like to develop professionally?',
+        type: 'text'
       },
       {
         id: 'wl12',
-        text: 'What would improve your work-life balance most?',
-        type: 'text'
+        text: 'How do you prefer to receive feedback at work?',
+        type: 'multiple_choice',
+        options: ['Regular formal reviews', 'Ongoing informal feedback', 'Written feedback', 'Face-to-face discussions', 'I prefer minimal feedback']
       },
       {
         id: 'wl13',
-        text: 'How do you separate work time from personal time?',
+        text: 'What role does money play in your job satisfaction?',
         type: 'multiple_choice',
-        options: ['Clear boundaries', 'Somewhat clear', 'Blurred boundaries', 'Very blurred', 'No separation', 'Not applicable']
+        options: ['Primary motivator', 'Important but not everything', 'Somewhat important', 'Not very important', 'I value other things more']
       },
       {
         id: 'wl14',
-        text: 'What skills would you most like to develop?',
-        type: 'text'
+        text: 'How do you separate work from personal time?',
+        type: 'multiple_choice',
+        options: ['Clear boundaries - no work at home', 'Some overlap but mostly separate', 'Significant overlap', 'Work bleeds into personal time', 'I work from home so boundaries blur']
       },
       {
         id: 'wl15',
-        text: 'How does your work impact your mental health?',
-        type: 'multiple_choice',
-        options: ['Very positive impact', 'Somewhat positive', 'Neutral', 'Somewhat negative', 'Very negative impact']
+        text: 'What would make you feel more fulfilled in your career?',
+        type: 'text'
       }
     ]
   }
@@ -956,33 +1123,8 @@ export default function VoluntaryQuestionDeck() {
             </div>
           </div>
 
-          {/* Sample Questions Preview */}
-          <div className="max-w-2xl mx-auto mb-4 md:mb-8 px-2">
-            <div className="theme-card rounded-xl p-3 md:p-6 border border-[var(--theme-accent)]/30">
-              <h3 className="text-sm md:text-lg font-semibold theme-text mb-2 md:mb-4 text-center">💭 Sample Questions You'll Find:</h3>
-              <div className="space-y-2 md:space-y-3 text-xs md:text-sm theme-text-secondary">
-                <div className="flex items-start">
-                  <span className="mr-2">❤️</span>
-                  <span>"If your friends had to describe you in 3 words, what would they say?"</span>
-                </div>
-                <div className="flex items-start">
-                  <span className="mr-2">🧠</span>
-                  <span>"When you're stressed, what helps you feel better?"</span>
-                </div>
-                <div className="flex items-start">
-                  <span className="mr-2">🎯</span>
-                  <span>"What's one thing you'd like to change about yourself?"</span>
-                </div>
-                <div className="flex items-start">
-                  <span className="mr-2">☕</span>
-                  <span>"Are you more of a morning person or night owl?"</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Category Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6 px-2">
+          {/* Categories Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6 px-2">
             {questionCategories.map((category) => {
               const IconComponent = category.icon;
               const progress = getProgressForCategory(category.id);
@@ -1034,138 +1176,157 @@ export default function VoluntaryQuestionDeck() {
 
   return (
     <div className="min-h-screen theme-background p-4">
-      <div className="max-w-2xl mx-auto">
-        {/* Header with Back Button */}
-        <div className="flex items-center justify-between mb-8">
+      <div className="max-w-4xl mx-auto">
+        {/* Header with back button */}
+        <div className="flex items-center mb-6">
           <button
-            onClick={() => {
-              setActiveCategory(null);
-              setCurrentQuestionIndex(0);
-            }}
-            className="flex items-center theme-accent hover:theme-primary transition-colors"
+            onClick={() => setActiveCategory(null)}
+            className="flex items-center theme-accent text-sm font-semibold hover:underline"
           >
-            <ChevronLeft className="mr-2" size={20} />
+            <ChevronLeft size={16} className="mr-1" />
             Back to Categories
           </button>
-          
           {saving && (
-            <div className="flex items-center theme-text-secondary text-sm">
-              <Save className="mr-2 animate-pulse" size={16} />
+            <div className="ml-auto flex items-center theme-text text-sm">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500 mr-2"></div>
               Saving...
             </div>
           )}
         </div>
 
-        {currentCategory && currentQuestion && (
-          <div className="theme-card rounded-xl p-8 border border-[var(--theme-accent)]/30 shadow-lg">
+        {currentCategory && (
+          <div className="theme-card rounded-xl p-6 shadow-lg">
             {/* Category Header */}
-            <div className="text-center mb-8">
-              <div className="flex items-center justify-center mb-4">
-                <currentCategory.icon className="mr-3 theme-accent" size={28} />
-                <h2 className="text-2xl font-bold theme-text font-serif">{currentCategory.name}</h2>
+            <div className="flex items-center mb-6">
+              <currentCategory.icon className="mr-3 theme-accent" size={24} />
+              <div>
+                <h2 className="text-2xl font-bold theme-text">{currentCategory.name}</h2>
+                <p className="theme-text-secondary">{currentCategory.description}</p>
               </div>
-              
-              {/* Question Progress */}
-              <div className="max-w-md mx-auto">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="theme-text text-sm">Question {currentQuestionIndex + 1} of {currentCategory.questions.length}</span>
-                  <span className="theme-text text-sm">{Math.round(getProgressForCategory(currentCategory.id))}% complete</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div 
-                    className="bg-gradient-to-r from-purple-400 to-pink-500 h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${((currentQuestionIndex + 1) / currentCategory.questions.length) * 100}%` }}
-                  ></div>
-                </div>
+            </div>
+
+            {/* Progress */}
+            <div className="mb-6">
+              <div className="flex justify-between items-center mb-2">
+                <span className="theme-text text-sm">Question {currentQuestionIndex + 1} of {currentCategory.questions.length}</span>
+                <span className="theme-text text-sm">{Math.round(getProgressForCategory(activeCategory))}% complete</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div 
+                  className="bg-gradient-to-r from-blue-400 to-purple-500 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${((currentQuestionIndex + 1) / currentCategory.questions.length) * 100}%` }}
+                ></div>
               </div>
             </div>
 
             {/* Question */}
-            <div className="mb-8">
-              <h3 className="text-xl theme-text mb-6 leading-relaxed font-medium">
-                {currentQuestion.text}
-              </h3>
-
-              {/* Answer Options */}
-              <div className="space-y-4">
-                {currentQuestion.type === 'multiple_choice' && currentQuestion.options && (
-                  <div className="space-y-3">
-                    {currentQuestion.options.map((option, index) => {
-                      const isSelected = answers[currentQuestion.id]?.answer === option;
-                      return (
+            {currentQuestion && (
+              <div className="mb-8">
+                <h3 className="text-xl font-semibold theme-text mb-4">{currentQuestion.text}</h3>
+                
+                {/* Answer Input */}
+                <div className="space-y-3">
+                  {currentQuestion.type === 'multiple_choice' && (
+                    <div className="space-y-2">
+                      {currentQuestion.options?.map((option, index) => (
                         <button
                           key={index}
-                          onClick={() => handleAnswer(currentQuestion.id, option, currentCategory.id)}
-                          className={`w-full p-4 rounded-lg border-2 text-left transition-all duration-200 ${
-                            isSelected
-                              ? 'border-[var(--theme-accent)] bg-[var(--theme-accent)]/10 theme-text'
-                              : 'border-gray-200 hover:border-[var(--theme-accent)]/50 theme-text hover:bg-[var(--theme-surface)]'
+                          onClick={() => handleAnswer(currentQuestion.id, option, activeCategory)}
+                          className={`w-full text-left p-3 rounded-lg border transition-all duration-200 ${
+                            answers[currentQuestion.id]?.answer === option
+                              ? 'border-blue-500 bg-blue-50 theme-accent'
+                              : 'border-gray-200 hover:border-blue-300 theme-text'
                           }`}
                         >
                           {option}
                         </button>
-                      );
-                    })}
-                  </div>
-                )}
+                      ))}
+                    </div>
+                  )}
 
-                {currentQuestion.type === 'text' && (
-                  <textarea
-                    className="w-full p-4 rounded-lg border-2 border-gray-200 focus:border-[var(--theme-accent)] theme-background theme-text resize-none"
-                    rows={4}
-                    placeholder="Type your answer here..."
-                    value={answers[currentQuestion.id]?.answer as string || ''}
-                    onChange={(e) => handleAnswer(currentQuestion.id, e.target.value, currentCategory.id)}
-                  />
-                )}
+                  {currentQuestion.type === 'text' && (
+                    <textarea
+                      className="w-full p-3 border border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none theme-text"
+                      rows={4}
+                      placeholder="Share your thoughts..."
+                      value={(answers[currentQuestion.id]?.answer as string) || ''}
+                      onChange={(e) => handleAnswer(currentQuestion.id, e.target.value, activeCategory)}
+                    />
+                  )}
 
-                {currentQuestion.type === 'yes_no' && (
-                  <div className="flex space-x-4">
-                    {['Yes', 'No'].map((option) => {
-                      const isSelected = answers[currentQuestion.id]?.answer === option;
-                      return (
+                  {currentQuestion.type === 'scale' && (
+                    <div className="space-y-2">
+                      {currentQuestion.options?.map((option, index) => (
+                        <button
+                          key={index}
+                          onClick={() => handleAnswer(currentQuestion.id, index + 1, activeCategory)}
+                          className={`w-full text-left p-3 rounded-lg border transition-all duration-200 ${
+                            answers[currentQuestion.id]?.answer === (index + 1)
+                              ? 'border-blue-500 bg-blue-50 theme-accent'
+                              : 'border-gray-200 hover:border-blue-300 theme-text'
+                          }`}
+                        >
+                          {option}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {currentQuestion.type === 'yes_no' && (
+                    <div className="flex space-x-4">
+                      {['Yes', 'No'].map((option) => (
                         <button
                           key={option}
-                          onClick={() => handleAnswer(currentQuestion.id, option, currentCategory.id)}
-                          className={`flex-1 p-4 rounded-lg border-2 transition-all duration-200 ${
-                            isSelected
-                              ? 'border-[var(--theme-accent)] bg-[var(--theme-accent)]/10 theme-text'
-                              : 'border-gray-200 hover:border-[var(--theme-accent)]/50 theme-text hover:bg-[var(--theme-surface)]'
+                          onClick={() => handleAnswer(currentQuestion.id, option, activeCategory)}
+                          className={`flex-1 p-3 rounded-lg border transition-all duration-200 ${
+                            answers[currentQuestion.id]?.answer === option
+                              ? 'border-blue-500 bg-blue-50 theme-accent'
+                              : 'border-gray-200 hover:border-blue-300 theme-text'
                           }`}
                         >
                           {option}
                         </button>
-                      );
-                    })}
-                  </div>
-                )}
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Navigation */}
             <div className="flex justify-between items-center">
               <button
                 onClick={() => setCurrentQuestionIndex(Math.max(0, currentQuestionIndex - 1))}
                 disabled={currentQuestionIndex === 0}
-                className="flex items-center px-4 py-2 theme-accent hover:theme-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center px-4 py-2 theme-secondary rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 transition-colors"
               >
-                <ChevronLeft className="mr-2" size={16} />
+                <ChevronLeft size={16} className="mr-1" />
                 Previous
               </button>
 
+              <div className="flex space-x-2">
+                {currentCategory.questions.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setCurrentQuestionIndex(index)}
+                    className={`w-2 h-2 rounded-full transition-all duration-200 ${
+                      index === currentQuestionIndex
+                        ? 'bg-blue-500 scale-125'
+                        : answeredQuestions.has(currentCategory.questions[index].id)
+                        ? 'bg-green-400'
+                        : 'bg-gray-300'
+                    }`}
+                  />
+                ))}
+              </div>
+
               <button
-                onClick={() => {
-                  if (currentQuestionIndex < currentCategory.questions.length - 1) {
-                    setCurrentQuestionIndex(currentQuestionIndex + 1);
-                  } else {
-                    setActiveCategory(null);
-                    setCurrentQuestionIndex(0);
-                  }
-                }}
-                className="flex items-center px-6 py-2 bg-[var(--theme-accent)] text-white rounded-lg hover:bg-[var(--theme-primary)] transition-colors"
+                onClick={() => setCurrentQuestionIndex(Math.min(currentCategory.questions.length - 1, currentQuestionIndex + 1))}
+                disabled={currentQuestionIndex === currentCategory.questions.length - 1}
+                className="flex items-center px-4 py-2 theme-secondary rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 transition-colors"
               >
-                {currentQuestionIndex < currentCategory.questions.length - 1 ? 'Next' : 'Finish Category'}
-                <ChevronRight className="ml-2" size={16} />
+                Next
+                <ChevronRight size={16} className="ml-1" />
               </button>
             </div>
           </div>
