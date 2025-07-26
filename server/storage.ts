@@ -208,6 +208,7 @@ export interface IStorage {
   getUserStreaks(userId: number): Promise<any[]>;
   updateStreak(userId: number, streakType: string): Promise<any>;
   getWellnessStreak(userId: number, activityType: string): Promise<any>;
+  createWellnessStreak(data: any): Promise<any>;
   
   getActiveCommunityChallenes(): Promise<any[]>;
   getUserChallengeProgress(userId: number): Promise<any[]>;
@@ -1210,6 +1211,11 @@ export class DbStorage implements IStorage {
         eq(wellnessStreaks.streakType, activityType)
       ));
     return streak || null;
+  }
+
+  async createWellnessStreak(data: any): Promise<any> {
+    const [streak] = await this.db.insert(wellnessStreaks).values(data).returning();
+    return streak;
   }
 
   async getActiveCommunityChallenes(): Promise<any[]> {
