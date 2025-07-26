@@ -92,7 +92,7 @@ const useIsFreshStart = () => {
 
 // Main Component
 export default function JournalDashboard({ userId }: JournalDashboardProps) {
-  const [activeView, setActiveView] = useState<'list' | 'editor' | 'analytics'>('list');
+  const [activeView, setActiveView] = useState<'list' | 'editor' | 'analytics'>('analytics'); // Default to analytics for Journal Analytics page
   const [selectedEntry, setSelectedEntry] = useState<JournalEntry | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [moodFilter, setMoodFilter] = useState('all');
@@ -152,7 +152,28 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
     refetch: refetchAnalytics
   } = useQuery<JournalAnalytics>({
     queryKey: ['/api/journal/analytics'],
-    enabled: false, // Temporarily disabled - will implement device fingerprint approach later
+    queryFn: async () => {
+      const deviceFingerprint = localStorage.getItem('deviceFingerprint') || 
+                               `device_${Math.random().toString(36).substring(2, 15)}`;
+      const sessionId = localStorage.getItem('sessionId') || 
+                       `session_${Math.random().toString(36).substring(2, 15)}`;
+      
+      localStorage.setItem('deviceFingerprint', deviceFingerprint);
+      localStorage.setItem('sessionId', sessionId);
+      
+      const response = await fetch('/api/journal/analytics', {
+        headers: {
+          'X-Device-Fingerprint': deviceFingerprint,
+          'X-Session-ID': sessionId
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch analytics data');
+      }
+      
+      return response.json();
+    },
     retry: 2,
     staleTime: 10 * 60 * 1000, // 10 minutes
   });
