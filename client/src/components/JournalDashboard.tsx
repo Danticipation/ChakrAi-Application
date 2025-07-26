@@ -656,6 +656,14 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
 
   // Main Render Logic
   if (activeView === 'editor') {
+    if (!userId) {
+      return (
+        <ErrorMessage 
+          error="User session required to create journal entries" 
+          onRetry={() => setActiveView('list')}
+        />
+      );
+    }
     return (
       <div className="h-full">
         <JournalEditor
