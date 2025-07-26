@@ -187,6 +187,7 @@ export interface IStorage {
   calculateTherapeuticEngagement(userId: number, days?: number): Promise<number>;
   generateWellnessInsights(userId: number): Promise<string>;
   getHealthCorrelations(userId: number): Promise<any[]>;
+  getHealthMetrics(userId: number, period?: string, limit?: number): Promise<any[]>;
 
   // Enhanced Gamification & Rewards System
   getUserWellnessPoints(userId: number): Promise<any>;
@@ -979,6 +980,12 @@ export class DbStorage implements IStorage {
 
   async getHealthCorrelations(userId: number): Promise<any[]> {
     // Return empty array for now - health correlations would be implemented
+    // when integrating with actual health data sources (wearables, health apps)
+    return [];
+  }
+
+  async getHealthMetrics(userId: number, period?: string, limit: number = 100): Promise<any[]> {
+    // Return empty array for now - health metrics would be implemented
     // when integrating with actual health data sources (wearables, health apps)
     return [];
   }
