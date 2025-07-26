@@ -1544,6 +1544,9 @@ app.get('/api/user-profile-check/:userId', async (req, res) => {
     const userId = parseInt(req.params.userId);
     const profile = await storage.getUserProfile(userId);
     
+    console.log(`Checking profile for user ${userId}:`, profile ? 'Profile exists' : 'No profile');
+    console.log(`Quiz completed status:`, profile?.quizCompleted);
+    
     res.json({
       needsQuiz: !profile || !profile.quizCompleted
     });
@@ -1553,15 +1556,35 @@ app.get('/api/user-profile-check/:userId', async (req, res) => {
   }
 });
 
-// User profile creation endpoint
+// User profile creation/update endpoint
 app.post('/api/user-profile', async (req, res) => {
   try {
-    const profileData = req.body;
-    const profile = await storage.createUserProfile(profileData);
-    res.json(profile);
+    const { userId, quizCompleted, ...profileData } = req.body;
+    
+    console.log(`Saving profile for user ${userId} with quiz completion:`, quizCompleted);
+    
+    // Check if profile exists
+    const existingProfile = await storage.getUserProfile(userId);
+    
+    if (existingProfile) {
+      // Update existing profile
+      await storage.updateUserProfile(userId, {
+        ...profileData,
+        quizCompleted: quizCompleted || false
+      });
+    } else {
+      // Create new profile
+      await storage.createUserProfile({
+        userId,
+        ...profileData,
+        quizCompleted: quizCompleted || false
+      });
+    }
+    
+    res.json({ success: true });
   } catch (error) {
-    console.error('Create user profile error:', error);
-    res.status(500).json({ error: 'Failed to create user profile' });
+    console.error('Save user profile error:', error);
+    res.status(500).json({ error: 'Failed to save user profile' });
   }
 });
 

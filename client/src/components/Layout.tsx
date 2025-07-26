@@ -721,19 +721,26 @@ const AppWithOnboarding = () => {
         // Get device fingerprint for anonymous users
         const deviceFingerprint = await generateDeviceFingerprint();
 
+        console.log('Using device fingerprint:', deviceFingerprint);
+        
         // Check if user exists or create anonymous user
         const response = await axios.post('/api/users/anonymous', {
           deviceFingerprint
         });
 
         const userId = response.data.user.id;
+        console.log('Got user ID:', userId);
         setCurrentUserId(userId);
 
         // Check if this specific user needs personality quiz
         const profileResponse = await axios.get(`/api/user-profile-check/${userId}`);
+        console.log('Profile check response:', profileResponse.data);
 
         if (profileResponse.data.needsQuiz) {
+          console.log('User needs personality quiz');
           setShowPersonalityQuiz(true);
+        } else {
+          console.log('User has completed personality quiz');
         }
       } catch (error) {
         console.error('Failed to initialize user:', error);
