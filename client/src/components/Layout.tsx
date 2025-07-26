@@ -81,6 +81,7 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
   const [messages, setMessages] = useState<Array<{sender: 'user' | 'bot', text: string, time: string}>>([]);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Voice recording functions
   const handleStartRecording = async () => {
@@ -98,6 +99,64 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
       handleStartRecording();
     }
   };
+
+  // Send message functionality
+  const handleSendMessage = async () => {
+    if (!chatInput.trim()) return;
+    
+    const userMessage = {
+      sender: 'user' as const,
+      text: chatInput,
+      time: new Date().toLocaleTimeString()
+    };
+    
+    setMessages(prev => [...prev, userMessage]);
+    setChatInput('');
+    
+    // Send to AI API
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: chatInput,
+          userId: currentUserId || 98
+        })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        const botMessage = {
+          sender: 'bot' as const,
+          text: data.response || 'I received your message.',
+          time: new Date().toLocaleTimeString()
+        };
+        setMessages(prev => [...prev, botMessage]);
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
+      const errorMessage = {
+        sender: 'bot' as const,
+        text: 'Sorry, I had trouble processing your message. Please try again.',
+        time: new Date().toLocaleTimeString()
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
+
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
   const [showSettings, setShowSettings] = useState(false);
   const [showThemeModal, setShowThemeModal] = useState(false);
   const [showMovableChat, setShowMovableChat] = useState(false);
@@ -228,6 +287,30 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
                     </p>
                   </div>
                 </div>
+                
+                {/* Chat Messages */}
+                {messages.map((message, index) => (
+                  <div key={index} className={`flex items-start space-x-3 ${message.sender === 'user' ? 'flex-row-reverse space-x-reverse' : ''}`}>
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                      message.sender === 'user' 
+                        ? 'bg-gradient-to-br from-green-500 to-blue-500' 
+                        : 'bg-gradient-to-br from-blue-500 to-purple-600'
+                    }`}>
+                      {message.sender === 'user' ? (
+                        <User className="w-5 h-5 text-white" />
+                      ) : (
+                        <Brain className="w-5 h-5 text-white" />
+                      )}
+                    </div>
+                    <div className={`theme-card max-w-2xl p-4 rounded-2xl shadow-lg ${
+                      message.sender === 'user' ? 'rounded-tr-sm' : 'rounded-tl-sm'
+                    }`}>
+                      <p className="theme-text leading-relaxed">{message.text}</p>
+                      <p className="theme-text-secondary text-xs mt-2">{message.time}</p>
+                    </div>
+                  </div>
+                ))}
+                <div ref={messagesEndRef} />
               </div>
 
               {/* Chat Input Area */}
@@ -239,11 +322,16 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
                         <textarea
                           value={chatInput}
                           onChange={(e) => setChatInput(e.target.value)}
+                          onKeyPress={handleKeyPress}
                           placeholder="Share your thoughts, feelings, or ask me anything..."
                           className="w-full theme-input resize-none rounded-2xl pl-4 pr-12 py-4 min-h-[60px] max-h-32 focus:ring-2 focus:ring-blue-500/50 transition-all"
                           rows={2}
                         />
-                        <button className="absolute right-3 bottom-3 p-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-full hover:shadow-lg transition-all transform hover:scale-105">
+                        <button 
+                          onClick={handleSendMessage}
+                          disabled={!chatInput.trim()}
+                          className="absolute right-3 bottom-3 p-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-full hover:shadow-lg transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
                           <Send className="w-5 h-5" />
                         </button>
                         {isRecording && (
