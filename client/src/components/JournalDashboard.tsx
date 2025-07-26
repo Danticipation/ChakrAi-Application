@@ -106,20 +106,41 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
   // Clear cache only when truly necessary (fresh start)
   useEffect(() => {
     if (isFreshStart) {
-      queryClient.removeQueries({ queryKey: ['/api/journal'] });
+      queryClient.removeQueries({ queryKey: ['/api/journal/user-entries'] });
       queryClient.removeQueries({ queryKey: ['/api/journal/analytics'] });
     }
   }, [isFreshStart, queryClient]);
 
-  // Data fetching with proper typing
+  // Data fetching using device fingerprint approach
   const { 
     data: entries = [], 
     isLoading: entriesLoading, 
     error: entriesError,
     refetch: refetchEntries 
   } = useQuery<JournalEntry[]>({
-    queryKey: ['/api/journal', userId],
-    enabled: !!userId,
+    queryKey: ['/api/journal/user-entries'],
+    queryFn: async () => {
+      const deviceFingerprint = localStorage.getItem('deviceFingerprint') || 
+                               `device_${Math.random().toString(36).substring(2, 15)}`;
+      const sessionId = localStorage.getItem('sessionId') || 
+                       `session_${Math.random().toString(36).substring(2, 15)}`;
+      
+      localStorage.setItem('deviceFingerprint', deviceFingerprint);
+      localStorage.setItem('sessionId', sessionId);
+      
+      const response = await fetch('/api/journal/user-entries', {
+        headers: {
+          'X-Device-Fingerprint': deviceFingerprint,
+          'X-Session-ID': sessionId
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch journal entries');
+      }
+      
+      return response.json();
+    },
     retry: 2,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
@@ -174,8 +195,8 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
     setActiveView('list');
     setSelectedEntry(null);
     // Invalidate queries to refresh data
-    queryClient.invalidateQueries({ queryKey: ['/api/journal', userId] });
-    queryClient.invalidateQueries({ queryKey: ['/api/journal/analytics', userId] });
+    queryClient.invalidateQueries({ queryKey: ['/api/journal/user-entries'] });
+    queryClient.invalidateQueries({ queryKey: ['/api/journal/analytics'] });
   }, [queryClient, userId]);
 
   const handleCancelEdit = useCallback(() => {
