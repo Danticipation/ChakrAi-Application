@@ -221,7 +221,7 @@ export async function generateWellnessInsights(userId: number): Promise<string[]
 }
 
 // Process health data from wearable devices
-export function processHealthData(rawData: any, deviceType: string): HealthMetric[] {
+export function processHealthData(rawData: any, deviceType: string): any[] {
   const processedMetrics: any[] = [];
 
   try {
@@ -245,7 +245,7 @@ export function processHealthData(rawData: any, deviceType: string): HealthMetri
   }
 }
 
-function processAppleWatchData(data: any): HealthMetric[] {
+function processAppleWatchData(data: any): any[] {
   const metrics: any[] = [];
   
   // Process heart rate data
@@ -295,7 +295,7 @@ function processAppleWatchData(data: any): HealthMetric[] {
   return metrics;
 }
 
-function processFitbitData(data: any): HealthMetric[] {
+function processFitbitData(data: any): any[] {
   // Similar processing for Fitbit data structure
   const metrics: any[] = [];
   
@@ -313,7 +313,7 @@ function processFitbitData(data: any): HealthMetric[] {
   return metrics;
 }
 
-function processPixelWatchData(data: any): HealthMetric[] {
+function processPixelWatchData(data: any): any[] {
   // Process Google Pixel Watch data structure
   const metrics: any[] = [];
   
@@ -422,17 +422,17 @@ function processPixelWatchData(data: any): HealthMetric[] {
   return metrics;
 }
 
-function processGarminData(data: any): HealthMetric[] {
+function processGarminData(data: any): any[] {
   // Process Garmin-specific data structure
   return [];
 }
 
-function processSamsungHealthData(data: any): HealthMetric[] {
+function processSamsungHealthData(data: any): any[] {
   // Process Samsung Health data structure
   return [];
 }
 
-function processGenericHealthData(data: any): HealthMetric[] {
+function processGenericHealthData(data: any): any[] {
   // Generic processor for unknown device types
   const metrics: any[] = [];
   
