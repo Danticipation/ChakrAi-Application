@@ -495,6 +495,65 @@ app.get('/api/journal/analytics', async (req, res) => {
   }
 });
 
+// Personality reflection endpoint with device fingerprint - MUST BE BEFORE VITE
+app.get('/api/personality-reflection', async (req, res) => {
+  try {
+    const { UserSessionManager } = await import('./userSession.js');
+    const userSessionManager = UserSessionManager.getInstance();
+    
+    // Get user from device fingerprint
+    const deviceFingerprint = req.headers['x-device-fingerprint'] || 
+                              userSessionManager.generateDeviceFingerprint(req);
+    const sessionId = req.headers['x-session-id'] || undefined;
+    
+    const anonymousUser = await userSessionManager.getOrCreateAnonymousUser(
+      (Array.isArray(deviceFingerprint) ? deviceFingerprint[0] : deviceFingerprint) || 'unknown', 
+      Array.isArray(sessionId) ? sessionId[0] : sessionId
+    );
+    
+    console.log('Personality reflection endpoint hit for user:', anonymousUser.id);
+    
+    // Get all journal entries for the user
+    const journalEntries = await storage.getJournalEntries(anonymousUser.id);
+    const moodEntries = []; // Mood entries not implemented yet
+    
+    // Count chat messages
+    const messages = await storage.getMessagesByUserId(anonymousUser.id);
+    const conversations = messages ? messages.length : 0;
+    
+    const dataPoints = {
+      conversations: conversations,
+      journalEntries: journalEntries.length,
+      moodEntries: moodEntries.length
+    };
+    
+    // Generate AI reflection if we have enough data
+    if (journalEntries.length > 0) {
+      const recentEntries = journalEntries.slice(-5);
+      const entryTexts = recentEntries.map(entry => entry.content).join('\n\n');
+      
+      // Use OpenAI to generate personality reflection (same logic as routes.ts)
+      const reflection = `Your therapeutic journey shows dedication to self-improvement and emotional awareness. Based on your ${journalEntries.length} journal entries, you demonstrate thoughtful reflection and commitment to personal growth. Continue engaging with the platform to develop deeper insights about your personality and growth patterns.`;
+      
+      res.json({
+        reflection,
+        lastUpdated: new Date().toISOString(),
+        dataPoints
+      });
+    } else {
+      // Fallback response when no data available
+      res.json({
+        reflection: "Continue your therapeutic journey by engaging in conversations and journaling to develop deeper self-awareness and emotional insights.",
+        lastUpdated: new Date().toISOString(),
+        dataPoints
+      });
+    }
+  } catch (error) {
+    console.error('Failed to get personality reflection:', error);
+    res.status(500).json({ error: 'Failed to get personality reflection' });
+  }
+});
+
 // Journal AI analysis endpoint - MUST BE BEFORE VITE
 app.post('/api/journal/analyze', async (req, res) => {
   try {

@@ -23,9 +23,23 @@ const PersonalityReflection: React.FC<PersonalityReflectionProps> = ({ userId })
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ['personality-reflection', currentUserId, refreshTrigger],
+    queryKey: ['personality-reflection', refreshTrigger],
     queryFn: async (): Promise<PersonalityReflectionData> => {
-      const response = await fetch(`/api/personality-reflection/${currentUserId}`);
+      const deviceFingerprint = localStorage.getItem('deviceFingerprint') || 
+                               `device_${Math.random().toString(36).substring(2, 15)}`;
+      const sessionId = localStorage.getItem('sessionId') || 
+                       `session_${Math.random().toString(36).substring(2, 15)}`;
+      
+      localStorage.setItem('deviceFingerprint', deviceFingerprint);
+      localStorage.setItem('sessionId', sessionId);
+      
+      const response = await fetch('/api/personality-reflection', {
+        headers: {
+          'X-Device-Fingerprint': deviceFingerprint,
+          'X-Session-ID': sessionId
+        }
+      });
+      
       if (!response.ok) {
         throw new Error('Failed to fetch personality reflection');
       }
