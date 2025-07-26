@@ -1757,9 +1757,9 @@ const AppLayout = ({ currentUserId, onDataReset }: AppLayoutProps) => {
 
               </div>
             </div>
-          ) : false ? (
-            /* OLD CHAT INTERFACE DISABLED - USE MOVABLE CHAT INSTEAD */
-            <div className="w-full h-full theme-background relative flex flex-col max-h-screen">
+          ) : (
+            /* Separate Full Panels for Other Sections */
+            <div className="w-full h-full theme-background p-6 overflow-y-auto">
               {/* Compact Chat Header */}
               <div className="flex items-center justify-between p-4 border-b border-white/10 shrink-0">
                 <div className="flex items-center space-x-3">
