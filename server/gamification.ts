@@ -291,7 +291,7 @@ async function updateWellnessStreak(userId: number, activityType: string): Promi
 async function checkAchievements(userId: number): Promise<UserAchievement[]> {
   const newAchievements: UserAchievement[] = [];
   const userAchievements = await storage.getUserAchievements(userId);
-  const earnedBadgeIds = userAchievements.map(a => a.badgeId);
+  const earnedBadgeIds = userAchievements.map(a => a.achievementId);
 
   for (const badge of ACHIEVEMENT_BADGES) {
     if (earnedBadgeIds.includes(badge.id)) {
@@ -302,7 +302,7 @@ async function checkAchievements(userId: number): Promise<UserAchievement[]> {
     if (meetsRequirement) {
       const achievement = await storage.createUserAchievement({
         userId,
-        badgeId: badge.id,
+        achievementId: badge.id,
         progress: badge.requirement.target
       });
       newAchievements.push(achievement);
