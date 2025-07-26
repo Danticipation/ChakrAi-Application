@@ -976,7 +976,7 @@ DO NOT immediately jump into "support" mode or therapeutic language unless someo
       // Extract and store semantic memory asynchronously
       setTimeout(async () => {
         try {
-          const { analyzeConversationForMemory } = await import('./semanticMemory.js');
+          const { analyzeConversationForMemory } = await import('./semanticMemory');
           const semanticMemory = await analyzeConversationForMemory(userId, message, aiResponse);
           if (semanticMemory) {
             console.log('Semantic memory created:', semanticMemory.id);
