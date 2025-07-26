@@ -102,63 +102,174 @@ const NavItem: React.FC<{ to: string; icon: React.FC<any>; label: string; collap
   </NavLink>
 );
 
-// Sidebar component
-const Sidebar: React.FC<{ collapsed: boolean }> = ({ collapsed }) => (
-  <aside
-    className={`bg-gray-800 text-white transition-width duration-200 ${
-      collapsed ? 'w-16' : 'w-64'
-    } hidden md:flex flex-col`}
-  >
-    <div className="flex items-center justify-center h-16">
-      {!collapsed && <span className="text-2xl font-bold">Chakrai</span>}
-    </div>
-    <SidebarGroup title="🟦 Core Companion" collapsed={collapsed}>
-      <NavItem to="/chat" icon={MessageCircle} label="Chat" collapsed={collapsed} />
-      <NavItem to="/dashboard" icon={Brain} label="Dashboard" collapsed={collapsed} />
-      <NavItem to="/rewards" icon={Gift} label="Rewards" collapsed={collapsed} />
-      <NavItem to="/affirmation" icon={Sparkles} label="Daily Affirmation" collapsed={collapsed} />
+// Collapsible sidebar component with section management
+const Sidebar: React.FC<{ collapsed: boolean }> = ({ collapsed }) => {
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({
+    core: false,
+    mirrors: false,
+    guided: false,
+    healthcare: true, // Start collapsed
+    community: true, // Start collapsed  
+    settings: true,  // Start collapsed
+  });
 
-    </SidebarGroup>
-    <SidebarGroup title="💠 Mirrors of You" collapsed={collapsed}>
-      <NavItem to="/journal" icon={BookOpen} label="Journal" collapsed={collapsed} />
-      <NavItem to="/journal-dashboard" icon={BarChart2} label="Journal Analytics" collapsed={collapsed} />
-      <NavItem to="/reflection" icon={Square} label="Reflection" collapsed={collapsed} />
-      <NavItem to="/analytics" icon={PieChart} label="Analytics" collapsed={collapsed} />
-      <NavItem to="/emotional-intelligence" icon={Brain} label="Emotional Intelligence" collapsed={collapsed} />
-      <NavItem to="/mood-tracker" icon={Activity} label="Mood Tracker" collapsed={collapsed} />
-    </SidebarGroup>
-    <SidebarGroup title="🧘 Guided Support" collapsed={collapsed}>
-      <NavItem to="/quiz" icon={Brain} label="Quiz" collapsed={collapsed} />
-      <NavItem to="/adaptive" icon={SettingsIcon} label="Adaptive" collapsed={collapsed} />
-      <NavItem to="/therapy" icon={Heart} label="Therapy Plan" collapsed={collapsed} />
-      <NavItem to="/agent" icon={Users} label="AI Agents" collapsed={collapsed} />
-      <NavItem to="/vr" icon={Eye} label="VR Therapy" collapsed={collapsed} />
-      <NavItem to="/challenges" icon={Award} label="Challenges" collapsed={collapsed} />
-      <NavItem to="/achievements" icon={Gift} label="Achievements" collapsed={collapsed} />
-    </SidebarGroup>
-    <SidebarGroup title="🏥 Healthcare" collapsed={collapsed}>
-      <NavItem to="/health" icon={Heart} label="Health Integration" collapsed={collapsed} />
+  const toggleSection = (section: string) => {
+    setCollapsedSections(prev => ({ ...prev, [section]: !prev[section] }));
+  };
 
-      <NavItem to="/analytics-therapeutic" icon={BarChart2} label="Therapeutic Analytics" collapsed={collapsed} />
-      <NavItem to="/reports" icon={Calendar} label="Monthly Reports" collapsed={collapsed} />
-      <NavItem to="/therapist" icon={Users} label="Therapist Portal" collapsed={collapsed} />
-    </SidebarGroup>
-    <SidebarGroup title="🏘️ Community" collapsed={collapsed}>
-      <NavItem to="/community" icon={Users} label="Community Support" collapsed={collapsed} />
-      <NavItem to="/community-portal" icon={MessageCircle} label="Community Portal" collapsed={collapsed} />
-      <NavItem to="/crisis" icon={AlertTriangle} label="Crisis Support" collapsed={collapsed} />
-    </SidebarGroup>
-    <SidebarGroup title="⚙️ Settings & Tools" collapsed={collapsed}>
-      <NavItem to="/settings/theme" icon={Palette} label="Theme" collapsed={collapsed} />
-      <NavItem to="/settings/voice" icon={Mic} label="Voice" collapsed={collapsed} />
+  return (
+    <aside
+      className={`bg-gray-800 text-white transition-width duration-200 ${
+        collapsed ? 'w-16' : 'w-64'
+      } hidden md:flex flex-col overflow-y-auto`}
+    >
+      <div className="flex items-center justify-center h-16 border-b border-gray-700">
+        {!collapsed && <span className="text-2xl font-bold text-blue-400">Chakrai</span>}
+        {collapsed && <Brain className="h-8 w-8 text-blue-400" />}
+      </div>
+      
+      <div className="flex-1 p-3">
+        {/* Core Companion Section */}
+        <div className="mb-3">
+          {!collapsed && (
+            <button
+              onClick={() => toggleSection('core')}
+              className="w-full flex items-center justify-between text-gray-400 text-xs font-medium px-3 py-2 hover:text-white transition-colors rounded"
+            >
+              <span>🟦 Core Companion</span>
+              {collapsedSections.core ? '›' : '⌄'}
+            </button>
+          )}
+          {(!collapsedSections.core || collapsed) && (
+            <nav className="space-y-1">
+              <NavItem to="/chat" icon={MessageCircle} label="Chat" collapsed={collapsed} />
+              <NavItem to="/dashboard" icon={Brain} label="Dashboard" collapsed={collapsed} />
+              <NavItem to="/rewards" icon={Gift} label="Rewards" collapsed={collapsed} />
+              <NavItem to="/affirmation" icon={Sparkles} label="Daily Affirmation" collapsed={collapsed} />
+            </nav>
+          )}
+        </div>
 
-      <NavItem to="/settings/privacy" icon={Shield} label="Privacy" collapsed={collapsed} />
-      <NavItem to="/mic-test" icon={Headphones} label="Mic Test" collapsed={collapsed} />
-      <NavItem to="/feedback" icon={MessageCircle} label="Feedback" collapsed={collapsed} />
-      <NavItem to="/ai-monitoring" icon={Monitor} label="AI Monitoring" collapsed={collapsed} />
-    </SidebarGroup>
-  </aside>
-);
+        {/* Mirrors of You Section */}
+        <div className="mb-3 border-t border-gray-700 pt-3">
+          {!collapsed && (
+            <button
+              onClick={() => toggleSection('mirrors')}
+              className="w-full flex items-center justify-between text-gray-400 text-xs font-medium px-3 py-2 hover:text-white transition-colors rounded"
+            >
+              <span>💠 Mirrors of You</span>
+              {collapsedSections.mirrors ? '›' : '⌄'}
+            </button>
+          )}
+          {(!collapsedSections.mirrors || collapsed) && (
+            <nav className="space-y-1">
+              <NavItem to="/journal" icon={BookOpen} label="Journal" collapsed={collapsed} />
+              <NavItem to="/journal-dashboard" icon={BarChart2} label="Journal Analytics" collapsed={collapsed} />
+              <NavItem to="/reflection" icon={Square} label="Reflection" collapsed={collapsed} />
+              <NavItem to="/analytics" icon={PieChart} label="Analytics" collapsed={collapsed} />
+              <NavItem to="/emotional-intelligence" icon={Brain} label="Emotional Intelligence" collapsed={collapsed} />
+              <NavItem to="/mood-tracker" icon={Activity} label="Mood Tracker" collapsed={collapsed} />
+            </nav>
+          )}
+        </div>
+
+        {/* Guided Support Section */}
+        <div className="mb-3 border-t border-gray-700 pt-3">
+          {!collapsed && (
+            <button
+              onClick={() => toggleSection('guided')}
+              className="w-full flex items-center justify-between text-gray-400 text-xs font-medium px-3 py-2 hover:text-white transition-colors rounded"
+            >
+              <span>🧘 Guided Support</span>
+              {collapsedSections.guided ? '›' : '⌄'}
+            </button>
+          )}
+          {(!collapsedSections.guided || collapsed) && (
+            <nav className="space-y-1">
+              <NavItem to="/quiz" icon={Brain} label="Quiz" collapsed={collapsed} />
+              <NavItem to="/adaptive" icon={SettingsIcon} label="Adaptive" collapsed={collapsed} />
+              <NavItem to="/therapy" icon={Heart} label="Therapy Plan" collapsed={collapsed} />
+              <NavItem to="/agent" icon={Users} label="AI Agents" collapsed={collapsed} />
+              <NavItem to="/vr" icon={Eye} label="VR Therapy" collapsed={collapsed} />
+              <NavItem to="/challenges" icon={Award} label="Challenges" collapsed={collapsed} />
+              <NavItem to="/achievements" icon={Gift} label="Achievements" collapsed={collapsed} />
+            </nav>
+          )}
+        </div>
+
+        {/* Healthcare Section - Starts Collapsed */}
+        <div className="mb-3 border-t border-gray-700 pt-3">
+          {!collapsed && (
+            <button
+              onClick={() => toggleSection('healthcare')}
+              className="w-full flex items-center justify-between text-gray-400 text-xs font-medium px-3 py-2 hover:text-white transition-colors rounded"
+            >
+              <span>🏥 Healthcare</span>
+              {collapsedSections.healthcare ? '›' : '⌄'}
+            </button>
+          )}
+          {(!collapsedSections.healthcare || collapsed) && (
+            <nav className="space-y-1">
+              <NavItem to="/health" icon={Heart} label="Health Integration" collapsed={collapsed} />
+              <NavItem to="/analytics-therapeutic" icon={BarChart2} label="Therapeutic Analytics" collapsed={collapsed} />
+              <NavItem to="/therapist" icon={Users} label="Therapist Portal" collapsed={collapsed} />
+            </nav>
+          )}
+        </div>
+
+        {/* Community Section - Starts Collapsed */}
+        <div className="mb-3 border-t border-gray-700 pt-3">
+          {!collapsed && (
+            <button
+              onClick={() => toggleSection('community')}
+              className="w-full flex items-center justify-between text-gray-400 text-xs font-medium px-3 py-2 hover:text-white transition-colors rounded"
+            >
+              <span>🏘️ Community</span>
+              {collapsedSections.community ? '›' : '⌄'}
+            </button>
+          )}
+          {(!collapsedSections.community || collapsed) && (
+            <nav className="space-y-1">
+              <NavItem to="/community" icon={Users} label="Community Support" collapsed={collapsed} />
+            </nav>
+          )}
+        </div>
+
+        {/* Settings & Tools Section - Starts Collapsed */}
+        <div className="mb-3 border-t border-gray-700 pt-3">
+          {!collapsed && (
+            <button
+              onClick={() => toggleSection('settings')}
+              className="w-full flex items-center justify-between text-gray-400 text-xs font-medium px-3 py-2 hover:text-white transition-colors rounded"
+            >
+              <span>⚙️ Settings & Tools</span>
+              {collapsedSections.settings ? '›' : '⌄'}
+            </button>
+          )}
+          {(!collapsedSections.settings || collapsed) && (
+            <nav className="space-y-1">
+              <NavItem to="/settings/theme" icon={Palette} label="Theme" collapsed={collapsed} />
+              <NavItem to="/settings/voice" icon={Mic} label="Voice" collapsed={collapsed} />
+              <NavItem to="/settings/privacy" icon={Shield} label="Privacy" collapsed={collapsed} />
+              <NavItem to="/mic-test" icon={Headphones} label="Mic Test" collapsed={collapsed} />
+              <NavItem to="/feedback" icon={MessageCircle} label="Feedback" collapsed={collapsed} />
+              <NavItem to="/ai-monitoring" icon={Monitor} label="AI Monitoring" collapsed={collapsed} />
+            </nav>
+          )}
+        </div>
+
+        {/* Section Status Indicator */}
+        {!collapsed && (
+          <div className="mt-4 pt-3 border-t border-gray-700">
+            <div className="text-xs text-gray-500 text-center">
+              {Object.values(collapsedSections).filter(collapsed => !collapsed).length} of 6 sections expanded
+            </div>
+          </div>
+        )}
+      </div>
+    </aside>
+  );
+};
 
 // Dynamic header title based on route
 const Header: React.FC<{ collapsed: boolean; setCollapsed: (c: boolean) => void }> = ({ collapsed, setCollapsed }) => {
