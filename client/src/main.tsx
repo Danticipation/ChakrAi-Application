@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import App from './App';
+import App from './components/Layout';
 import './index.css';
 
 // PWA Service Worker Registration with aggressive updates
