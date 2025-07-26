@@ -223,10 +223,11 @@ export default function MoodTracker({ userId = getCurrentUserId()}: { userId?: n
         <button
           onClick={handleSubmitMood}
           disabled={!selectedEmotion || logMood.isPending}
-          className="w-full px-4 py-3 rounded-xl font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full px-4 py-3 rounded-xl font-medium shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:shadow-xl"
           style={{ 
-            backgroundColor: 'var(--soft-blue-dark)',
-            color: 'white'
+            backgroundColor: selectedEmotion ? '#2563eb' : '#9ca3af',
+            color: '#ffffff',
+            border: 'none'
           }}
         >
           {logMood.isPending ? 'Saving...' : !selectedEmotion ? 'Select an emotion to save' : 'Save Mood Entry'}
