@@ -246,9 +246,9 @@ export default function AdaptiveLearning() {
         <AdaptiveLearningCard title="Personality Focus" icon={<User className="w-5 h-5" />}>
           <div className="space-y-2">
             {preferences.personalityFocus?.map((focus: string, index: number) => (
-              <div key={index} className="flex items-center justify-between p-2 bg-blue-50 rounded-lg">
+              <div key={index} className="flex items-center justify-between p-2 bg-black-50 rounded-lg">
                 <span className="text-sm font-medium theme-text capitalize">{focus.replace('-', ' ')}</span>
-                <CheckCircle className="w-4 h-4 text-green-500" />
+                <CheckCircle className="w-4 h-4 text-green-600" />
               </div>
             ))}
           </div>
@@ -257,7 +257,7 @@ export default function AdaptiveLearning() {
         <AdaptiveLearningCard title="Therapeutic Goals" icon={<Target className="w-5 h-5" />}>
           <div className="space-y-2">
             {preferences.therapeuticGoals?.map((goal: string, index: number) => (
-              <div key={index} className="flex items-center justify-between p-2 bg-green-50 rounded-lg">
+              <div key={index} className="flex items-center justify-between p-2 bg-black-50 rounded-lg">
                 <span className="text-sm font-medium theme-text capitalize">{goal.replace('-', ' ')}</span>
                 <Award className="w-4 h-4 text-blue-500" />
               </div>
@@ -289,16 +289,16 @@ export default function AdaptiveLearning() {
         >
           <div className="space-y-4">
             {patterns.map((pattern: ConversationPattern) => (
-              <div key={pattern.id} className="p-4 bg-white/10 rounded-lg border border-gray-200">
+              <div key={pattern.id} className="p-4 bg-gray-800 rounded-lg border border-gray-600 hover:border-blue-400 transition-colors shadow-lg">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="theme-text font-medium capitalize">{pattern.type}</span>
+                  <span className="text-white font-medium capitalize">{pattern.type}</span>
                   <div className="flex items-center space-x-2">
-                    <span className="theme-text-secondary text-sm">Confidence:</span>
-                    <span className="theme-text font-bold">{pattern.confidence}%</span>
+                    <span className="text-gray-300 text-sm">Confidence:</span>
+                    <span className="text-white font-bold">{pattern.confidence}%</span>
                   </div>
                 </div>
-                <p className="theme-text-secondary text-sm mb-2">{pattern.pattern}</p>
-                <div className="flex items-center justify-between text-xs theme-text-secondary">
+                <p className="text-gray-200 text-sm mb-2">{pattern.pattern}</p>
+                <div className="flex items-center justify-between text-xs text-gray-300">
                   <span>Used {pattern.frequency} times</span>
                   <span>Last observed: {new Date(pattern.lastObserved).toLocaleDateString()}</span>
                 </div>
@@ -331,23 +331,23 @@ export default function AdaptiveLearning() {
         >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {recommendations.map((rec: WellnessRecommendation) => (
-              <div key={rec.id} className="p-4 bg-white/10 rounded-lg border border-gray-200 hover:border-blue-300 transition-colors">
+              <div key={rec.id} className="p-4 bg-gray-800 rounded-lg border border-gray-600 hover:border-blue-400 transition-colors shadow-lg">
                 <div className="flex items-center justify-between mb-2">
-                  <h4 className="theme-text font-medium">{rec.title}</h4>
-                  <span className="text-xs theme-text-secondary px-2 py-1 bg-blue-100 text-blue-700 rounded capitalize">
+                  <h4 className="text-white font-medium">{rec.title}</h4>
+                  <span className="text-xs px-2 py-1 bg-blue-600 text-white rounded capitalize">
                     {rec.priority}
                   </span>
                 </div>
-                <p className="theme-text-secondary text-sm mb-2">{rec.description}</p>
-                <p className="theme-text-secondary text-xs mb-2 italic">Why for you: {rec.adaptationReason}</p>
+                <p className="text-gray-200 text-sm mb-2">{rec.description}</p>
+                <p className="text-gray-300 text-xs mb-2 italic">Why for you: {rec.adaptationReason}</p>
                 <div className="flex items-center justify-between">
-                  <span className="theme-text-secondary text-xs flex items-center">
+                  <span className="text-gray-300 text-xs flex items-center">
                     <span className="mr-1">⏱️</span>
                     {rec.estimatedDuration}
                   </span>
                   <div className="flex items-center space-x-1">
-                    <span className="theme-text-secondary text-xs">Confidence:</span>
-                    <span className="theme-text font-bold text-xs">{rec.confidence}%</span>
+                    <span className="text-gray-300 text-xs">Confidence:</span>
+                    <span className="text-white font-bold text-xs">{rec.confidence}%</span>
                   </div>
                 </div>
               </div>
@@ -379,20 +379,20 @@ export default function AdaptiveLearning() {
         >
           <div className="space-y-4">
             {insights.map((insight: LearningInsights) => (
-              <div key={insight.id} className="p-4 bg-white/10 rounded-lg border border-gray-200">
+              <div key={insight.id} className="p-4 bg-gray-800 rounded-lg border border-gray-600 hover:border-blue-400 transition-colors shadow-lg">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="theme-text font-medium capitalize">{insight.category}</span>
+                  <span className="text-white font-medium capitalize">{insight.category}</span>
                   <div className="flex items-center space-x-2">
-                    <span className="text-xs theme-text-secondary px-2 py-1 bg-green-100 text-green-700 rounded">
+                    <span className="text-xs px-2 py-1 bg-green-600 text-white rounded">
                       {insight.actionable ? 'Actionable' : 'Insight'}
                     </span>
-                    <span className="theme-text-secondary text-sm">Strength:</span>
-                    <span className="theme-text font-bold">{Math.round(insight.strength * 100)}%</span>
+                    <span className="text-gray-300 text-sm">Strength:</span>
+                    <span className="text-white font-bold">{Math.round(insight.strength * 100)}%</span>
                   </div>
                 </div>
-                <p className="theme-text-secondary text-sm mb-2">{insight.insight}</p>
-                <p className="theme-text-secondary text-xs italic mb-2">{insight.suggestion}</p>
-                <div className="flex items-center justify-between text-xs theme-text-secondary">
+                <p className="text-gray-200 text-sm mb-2">{insight.insight}</p>
+                <p className="text-gray-300 text-xs italic mb-2">{insight.suggestion}</p>
+                <div className="flex items-center justify-between text-xs text-gray-300">
                   <span>Type: {insight.type.replace('-', ' ')}</span>
                   <span>Discovered: {new Date(insight.discoveredAt).toLocaleDateString()}</span>
                 </div>
