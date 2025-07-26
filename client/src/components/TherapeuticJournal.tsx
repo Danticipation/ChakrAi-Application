@@ -808,6 +808,7 @@ const TherapeuticJournal: React.FC<TherapeuticJournalProps> = ({ userId, onEntry
             )}
           </button>
         </div>
+        </>
         )}
 
         {/* Recent Entries (shown only on write tab) */}
