@@ -14,9 +14,22 @@ Chakrai is a professional mental wellness and therapy application designed for p
 - **Color scheme preference**: MUST maintain consistent blue therapeutic theme throughout - user strongly rejects colorful "rainbow" designs
 
 ## Recent Changes
+### July 26, 2025 - OLLAMA INTEGRATION FOR DEVELOPMENT MODE COMPLETED - Dual AI Provider Support Successfully Implemented
+
+- **Dual AI Provider Architecture**: Successfully implemented comprehensive Ollama integration for development/test mode while maintaining OpenAI for production, providing cost-effective local development capabilities
+- **Automatic Provider Detection**: Enhanced system to automatically detect environment (NODE_ENV) and switch between Ollama (development) and OpenAI (production) with intelligent fallback mechanisms
+- **Complete Chat Integration**: Updated chat endpoint in server/index.ts to use Ollama for development mode with automatic fallback to OpenAI if Ollama unavailable, maintaining conversational AI functionality
+- **Journal Analysis Dual Support**: Enhanced journalAnalysis.ts to support both Ollama and OpenAI for therapeutic journal analysis, ensuring consistent insights generation across environments
+- **Semantic Memory Enhancement**: Updated semanticMemory.js to use Ollama for memory extraction in development mode while preserving OpenAI for production semantic analysis
+- **Comprehensive Ollama Integration Module**: Created server/ollamaIntegration.ts with complete functionality including response generation, journal analysis, semantic memory extraction, and health monitoring
+- **API Endpoints for Development**: Added /api/ollama/status and /api/ollama/models endpoints for monitoring Ollama service health and available models during development
+- **Intelligent Fallback System**: Implemented robust error handling that gracefully falls back to OpenAI when Ollama is unavailable, ensuring uninterrupted therapeutic functionality
+- **Cost-Effective Development**: Ollama integration enables local development and testing without OpenAI API costs while maintaining full therapeutic AI capabilities
+- **Production Readiness Maintained**: OpenAI integration preserved for production environment ensuring reliable, high-quality therapeutic AI responses for end users
+
 ### July 26, 2025 - CRITICAL AI ANALYSIS SYSTEM COMPLETELY RESTORED - Core Therapeutic Functionality Now Fully Operational
 
-- **AI Analysis System Fully Functional**: Successfully fixed the core issue where AI analysis of conversations and journal entries was completely non-functional - now 100% working with real OpenAI integration
+- **AI Analysis System Fully Functional**: Successfully fixed the core issue where AI analysis of conversations and journal entries was completely non-functional - now 100% working with real AI integration
 - **Journal Analysis Pipeline Operational**: Journal entries now automatically trigger comprehensive AI analysis with sentiment scoring, emotional intensity analysis, theme extraction, and therapeutic recommendations stored in database
 - **Semantic Memory Analysis Working**: Chat conversations automatically analyzed for semantic memory extraction with proper database storage and contextual recall for authentic relationship building
 - **Database Connection Stability Restored**: Eliminated PostgreSQL connection failures that were breaking the analysis system - database now stable and reliably storing AI insights

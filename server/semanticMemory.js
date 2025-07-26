@@ -28,12 +28,43 @@ Extract semantic information and return JSON with exactly these fields:
 
 CRITICAL: Base the summary and all fields on the ACTUAL conversation content above, not on examples. The summary must reflect what was really discussed.`;
 
-    const response = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
-      messages: [{ role: "user", content: analysisPrompt }],
-      response_format: { type: "json_object" },
-      temperature: 0.3
-    });
+    // Use Ollama in development, OpenAI in production
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    let response;
+    
+    if (isDevelopment) {
+      try {
+        console.log('🦙 Using Ollama for semantic memory analysis in development mode');
+        const { generateOllamaResponse, isOllamaAvailable } = await import('./ollamaIntegration');
+        
+        if (await isOllamaAvailable()) {
+          const ollamaMessages = [{ role: 'user', content: analysisPrompt }];
+          const responseText = await generateOllamaResponse(ollamaMessages);
+          response = { choices: [{ message: { content: responseText } }] };
+          console.log('✅ Ollama semantic analysis completed');
+        } else {
+          console.log('⚠️ Ollama not available, falling back to OpenAI');
+          throw new Error('Ollama not available');
+        }
+      } catch (ollamaError) {
+        console.log('❌ Ollama semantic analysis failed, using OpenAI fallback:', ollamaError.message);
+        response = await openai.chat.completions.create({
+          model: "gpt-3.5-turbo",
+          messages: [{ role: "user", content: analysisPrompt }],
+          response_format: { type: "json_object" },
+          temperature: 0.3
+        });
+      }
+    } else {
+      // Production mode - use OpenAI
+      console.log('🤖 Using OpenAI for semantic memory analysis in production mode');
+      response = await openai.chat.completions.create({
+        model: "gpt-3.5-turbo",
+        messages: [{ role: "user", content: analysisPrompt }],
+        response_format: { type: "json_object" },
+        temperature: 0.3
+      });
+    }
 
     const analysis = JSON.parse(response.choices[0].message.content || '{}');
     

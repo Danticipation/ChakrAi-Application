@@ -40,28 +40,78 @@ export async function analyzeJournalEntry(
     // Quick analysis for immediate feedback
     const quickAnalysis = performQuickJournalAnalysis(entry);
     
-    // Comprehensive AI analysis
-    const aiAnalysis = await retryOpenAIRequest(async () => {
-      const prompt = constructJournalAnalysisPrompt(entry, previousEntries);
-      
-      const response = await openai.chat.completions.create({
-        model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-        messages: [
-          {
-            role: "system",
-            content: "You are a specialized therapeutic AI assistant trained in journal analysis and mental health insights. Provide comprehensive, professional analysis suitable for both users and mental health professionals. Respond with valid JSON only."
-          },
-          {
-            role: "user",
-            content: prompt
-          }
-        ],
-        response_format: { type: "json_object" },
-        temperature: 0.3
-      });
+    // AI analysis - Use Ollama in development, OpenAI in production
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    let aiAnalysis: any = {};
+    
+    if (isDevelopment) {
+      try {
+        console.log('🦙 Using Ollama for journal analysis in development mode');
+        const { analyzeJournalWithOllama, isOllamaAvailable } = await import('./ollamaIntegration');
+        
+        if (await isOllamaAvailable()) {
+          const previousContents = previousEntries.slice(0, 3).map(e => e.content);
+          aiAnalysis = await analyzeJournalWithOllama(
+            entry.content, 
+            entry.title, 
+            entry.mood || 'neutral',
+            previousContents
+          );
+          console.log('✅ Ollama journal analysis completed');
+        } else {
+          console.log('⚠️ Ollama not available, falling back to OpenAI');
+          throw new Error('Ollama not available');
+        }
+      } catch (ollamaError) {
+        console.log('❌ Ollama journal analysis failed, using OpenAI fallback:', ollamaError.message);
+        // Fallback to OpenAI
+        aiAnalysis = await retryOpenAIRequest(async () => {
+          const prompt = constructJournalAnalysisPrompt(entry, previousEntries);
+          
+          const response = await openai.chat.completions.create({
+            model: "gpt-4o",
+            messages: [
+              {
+                role: "system",
+                content: "You are a specialized therapeutic AI assistant trained in journal analysis and mental health insights. Provide comprehensive, professional analysis suitable for both users and mental health professionals. Respond with valid JSON only."
+              },
+              {
+                role: "user",
+                content: prompt
+              }
+            ],
+            response_format: { type: "json_object" },
+            temperature: 0.3
+          });
 
-      return JSON.parse(response.choices[0].message.content || '{}');
-    });
+          return JSON.parse(response.choices[0].message.content || '{}');
+        });
+      }
+    } else {
+      // Production mode - use OpenAI
+      console.log('🤖 Using OpenAI for journal analysis in production mode');
+      aiAnalysis = await retryOpenAIRequest(async () => {
+        const prompt = constructJournalAnalysisPrompt(entry, previousEntries);
+        
+        const response = await openai.chat.completions.create({
+          model: "gpt-4o",
+          messages: [
+            {
+              role: "system",
+              content: "You are a specialized therapeutic AI assistant trained in journal analysis and mental health insights. Provide comprehensive, professional analysis suitable for both users and mental health professionals. Respond with valid JSON only."
+            },
+            {
+              role: "user",
+              content: prompt
+            }
+          ],
+          response_format: { type: "json_object" },
+          temperature: 0.3
+        });
+
+        return JSON.parse(response.choices[0].message.content || '{}');
+      });
+    }
 
     // Combine quick and AI analysis
     return combineJournalAnalyses(quickAnalysis, aiAnalysis);

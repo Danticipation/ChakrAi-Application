@@ -969,34 +969,83 @@ DO NOT immediately jump into "support" mode or therapeutic language unless someo
     
     console.log(`Including ${recentMessages.length} previous messages for context`);
     
-    // Generate AI response using OpenAI
+    // Generate AI response - Use Ollama in development, OpenAI in production
     let aiResponse = '';
-    try {
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
-        },
-        body: JSON.stringify({
-          model: 'gpt-3.5-turbo',
-          messages: conversationMessages,
-          max_tokens: 150,
-          temperature: 0.7
-        })
-      });
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    
+    if (isDevelopment) {
+      try {
+        console.log('🦙 Using Ollama for development mode');
+        const { generateOllamaResponse, isOllamaAvailable } = await import('./ollamaIntegration');
+        
+        if (await isOllamaAvailable()) {
+          aiResponse = await generateOllamaResponse(conversationMessages);
+          console.log('✅ Ollama response generated successfully');
+        } else {
+          console.log('⚠️ Ollama not available, falling back to OpenAI');
+          throw new Error('Ollama not available');
+        }
+      } catch (ollamaError) {
+        console.log('❌ Ollama failed, using OpenAI fallback:', ollamaError.message);
+        // Fallback to OpenAI if Ollama fails
+        try {
+          const response = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
+            },
+            body: JSON.stringify({
+              model: 'gpt-3.5-turbo',
+              messages: conversationMessages,
+              max_tokens: 150,
+              temperature: 0.7
+            })
+          });
 
-      if (response.ok) {
-        const data = await response.json();
-        aiResponse = data.choices[0].message.content.trim();
-        console.log('OpenAI response generated successfully');
-      } else {
-        console.error('OpenAI API error:', response.status, response.statusText);
-        aiResponse = 'I understand you\'re reaching out. How can I support your wellness journey today?';
+          if (response.ok) {
+            const data = await response.json();
+            aiResponse = data.choices[0].message.content.trim();
+            console.log('✅ OpenAI fallback response generated successfully');
+          } else {
+            console.error('OpenAI API error:', response.status, response.statusText);
+            aiResponse = 'I understand you\'re reaching out. How can I support your wellness journey today?';
+          }
+        } catch (openaiError) {
+          console.error('Error calling OpenAI fallback:', openaiError);
+          aiResponse = 'I\'m here to listen and support you. What\'s on your mind today?';
+        }
       }
-    } catch (error) {
-      console.error('Error calling OpenAI:', error);
-      aiResponse = 'I\'m here to listen and support you. What\'s on your mind today?';
+    } else {
+      // Production mode - use OpenAI
+      try {
+        console.log('🤖 Using OpenAI for production mode');
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
+          },
+          body: JSON.stringify({
+            model: 'gpt-3.5-turbo',
+            messages: conversationMessages,
+            max_tokens: 150,
+            temperature: 0.7
+          })
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          aiResponse = data.choices[0].message.content.trim();
+          console.log('✅ OpenAI response generated successfully');
+        } else {
+          console.error('OpenAI API error:', response.status, response.statusText);
+          aiResponse = 'I understand you\'re reaching out. How can I support your wellness journey today?';
+        }
+      } catch (error) {
+        console.error('Error calling OpenAI:', error);
+        aiResponse = 'I\'m here to listen and support you. What\'s on your mind today?';
+      }
     }
     
     // Store messages in database and extract semantic memory
@@ -1541,7 +1590,33 @@ app.post('/api/users/:userId/migrate-journal-data', async (req, res) => {
   }
 });
 
+// Ollama status endpoint for development mode testing
+app.get('/api/ollama/status', async (req, res) => {
+  try {
+    const { checkOllamaHealth } = await import('./ollamaIntegration');
+    const status = await checkOllamaHealth();
+    res.json(status);
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      error: error.message
+    });
+  }
+});
 
+// Ollama models endpoint for development mode
+app.get('/api/ollama/models', async (req, res) => {
+  try {
+    const { getAvailableModels } = await import('./ollamaIntegration');
+    const models = await getAvailableModels();
+    res.json({ models });
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      error: error.message
+    });
+  }
+});
 
 // Setup Vite in development or serve static files in production
 async function setupServer() {
