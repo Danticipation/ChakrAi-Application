@@ -1213,7 +1213,131 @@ const AppLayout = ({ currentUserId, onDataReset }: AppLayoutProps) => {
         {/* Desktop: Original Layout */}
         <div className="hidden lg:block">
           <div className="flex">
-            <div className="w-72"></div>
+            <div className="w-72 fixed left-0 top-0 h-full theme-card border-r border-white/10 z-10 overflow-y-auto">
+              {/* Desktop Left Sidebar Navigation - 4-Tier Hierarchy */}
+              <div className="p-6">
+                {/* Core Companion Section */}
+                <div className="mb-6">
+                  <div className="theme-text-secondary text-sm font-medium px-6 pb-2">🟦 Core Companion</div>
+                  {[
+                    { id: 'home', label: 'Chat with Chakrai' },
+                    { id: 'challenges', label: 'Reflection Goals' },
+                    { id: 'rewards', label: 'Reflection Rewards' }
+                  ].map((tab) => (
+                    <button
+                      key={tab.id}
+                      onClick={() => {
+                        console.log('Desktop Core Companion: Clicked tab:', tab.id, tab.label);
+                        if (tab.id === 'home') {
+                          console.log('Desktop: Opening MovableChat directly from Home');
+                          setShowMovableChat(true);
+                        } else {
+                          setActiveSection(tab.id);
+                          setIsFloatingChatOpen(false);
+                        }
+                      }}
+                      className={`shimmer-border w-full h-16 px-6 text-lg font-medium transition-all border-soft hover-lift text-luxury ${
+                        (tab.id === 'home' && showMovableChat) || 
+                        (activeSection === tab.id && tab.id !== 'home')
+                          ? 'theme-surface theme-text glass-luxury shadow-luxury'
+                          : 'theme-primary theme-text hover:theme-primary-light gradient-soft'
+                      }`}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Mirrors of You Section */}
+                <div className="mb-6 border-t border-white/10 pt-4">
+                  <div className="theme-text-secondary text-sm font-medium px-6 pb-2">💠 Mirrors of You</div>
+                  {[
+                    { id: 'questions', label: 'Get to Know Me' },
+                    { id: 'journal', label: 'Journal' },
+                    { id: 'memory', label: 'Insight Vault' },
+                    { id: 'adaptive', label: 'Mind Mirror' },
+                    { id: 'analytics', label: 'State of Self' },
+                    { id: 'health', label: 'Somatic Mirror' }
+                  ].map((tab) => (
+                    <button
+                      key={tab.id}
+                      onClick={() => {
+                        console.log('Desktop Mirrors of You: Clicked tab:', tab.id, tab.label);
+                        setActiveSection(tab.id);
+                      }}
+                      className={`shimmer-border w-full h-16 px-6 text-lg font-medium transition-all border-soft hover-lift text-luxury ${
+                        activeSection === tab.id
+                          ? 'theme-surface theme-text glass-luxury shadow-luxury'
+                          : 'theme-primary theme-text hover:theme-primary-light gradient-soft'
+                      }`}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Guided Support Section */}
+                <div className="mb-6 border-t border-white/10 pt-4">
+                  <div className="theme-text-secondary text-sm font-medium px-6 pb-2">🧘 Guided Support</div>
+                  {[
+                    { id: 'agents', label: 'Reflective Allies' },
+                    { id: 'vr', label: 'InnerScape' },
+                    { id: 'therapy-plans', label: 'Therapy Plans' },
+                    { id: 'community', label: 'Community' }
+                  ].map((tab) => (
+                    <button
+                      key={tab.id}
+                      onClick={() => {
+                        console.log('Desktop Guided Support: Clicked tab:', tab.id, tab.label);
+                        setActiveSection(tab.id);
+                      }}
+                      className={`shimmer-border w-full h-16 px-6 text-lg font-medium transition-all border-soft hover-lift text-luxury ${
+                        activeSection === tab.id
+                          ? 'theme-surface theme-text glass-luxury shadow-luxury'
+                          : 'theme-primary theme-text hover:theme-primary-light gradient-soft'
+                      }`}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Personalization & Settings Section */}
+                <div className="mb-6 border-t border-white/10 pt-4">
+                  <div className="theme-text-secondary text-sm font-medium px-6 pb-2">⚙️ Personalization</div>
+                  {[
+                    { id: 'voice', label: 'Voice Settings' },
+                    { id: 'themes', label: 'Themes' },
+                    { id: 'daily', label: 'Reflection' },
+                    { id: 'feedback', label: 'Feedback' },
+                    { id: 'microphone-test', label: 'Mic Test' },
+                    { id: 'privacy', label: 'Privacy' }
+                  ].map((tab) => (
+                    <button
+                      key={tab.id}
+                      onClick={() => {
+                        console.log('Desktop Settings: Clicked tab:', tab.id, tab.label);
+                        if (tab.id === 'themes') {
+                          setShowThemeModal(true);
+                        } else if (tab.id === 'voice') {
+                          setShowSettings(true);
+                        } else {
+                          setActiveSection(tab.id);
+                        }
+                      }}
+                      className={`shimmer-border w-full h-16 px-6 text-lg font-medium transition-all border-soft hover-lift text-luxury ${
+                        activeSection === tab.id
+                          ? 'theme-surface theme-text glass-luxury shadow-luxury'
+                          : 'theme-primary theme-text hover:theme-primary-light gradient-soft'
+                      }`}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="ml-72">
             <div className="flex-1">
               <div className="max-w-6xl mx-auto header-card-container">
                 <div className="grid grid-cols-3 gap-4 header-card-grid" style={{height: 'auto', minHeight: '300px'}}>
@@ -1439,126 +1563,7 @@ const AppLayout = ({ currentUserId, onDataReset }: AppLayoutProps) => {
           </div>
         </div>
 
-        {/* Desktop Left Sidebar Navigation - 4-Tier Hierarchy */}
-          {/* Core Companion Section */}
-          <div className="mb-6">
-            <div className="theme-text-secondary text-sm font-medium px-6 pb-2">🟦 Core Companion</div>
-            {[
-              { id: 'home', label: 'Chat with Chakrai' },
-              { id: 'challenges', label: 'Reflection Goals' },
-              { id: 'rewards', label: 'Reflection Rewards' }
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => {
-                  console.log('Desktop Core Companion: Clicked tab:', tab.id, tab.label);
-                  if (tab.id === 'home') {
-                    console.log('Desktop: Opening MovableChat directly from Home');
-                    setShowMovableChat(true);
-                  } else {
-                    setActiveSection(tab.id);
-                    setIsFloatingChatOpen(false);
-                  }
-                }}
-                className={`shimmer-border w-full h-16 px-6 text-lg font-medium transition-all border-soft hover-lift text-luxury ${
-                  (tab.id === 'home' && showMovableChat) || 
-                  (activeSection === tab.id && tab.id !== 'home')
-                    ? 'theme-surface theme-text glass-luxury shadow-luxury'
-                    : 'theme-primary theme-text hover:theme-primary-light gradient-soft'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
 
-          {/* Mirrors of You Section */}
-          <div className="mb-6 border-t border-white/10 pt-4">
-            <div className="theme-text-secondary text-sm font-medium px-6 pb-2">💠 Mirrors of You</div>
-            {[
-              { id: 'questions', label: 'Get to Know Me' },
-              { id: 'journal', label: 'Journal' },
-              { id: 'memory', label: 'Insight Vault' },
-              { id: 'adaptive', label: 'Mind Mirror' },
-              { id: 'analytics', label: 'State of Self' },
-              { id: 'health', label: 'Somatic Mirror' }
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => {
-                  console.log('Desktop Mirrors of You: Clicked tab:', tab.id, tab.label);
-                  setActiveSection(tab.id);
-                }}
-                className={`shimmer-border w-full h-16 px-6 text-lg font-medium transition-all border-soft hover-lift text-luxury ${
-                  activeSection === tab.id
-                    ? 'theme-surface theme-text glass-luxury shadow-luxury'
-                    : 'theme-primary theme-text hover:theme-primary-light gradient-soft'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Guided Support Section */}
-          <div className="mb-6 border-t border-white/10 pt-4">
-            <div className="theme-text-secondary text-sm font-medium px-6 pb-2">🧘 Guided Support</div>
-            {[
-              { id: 'agents', label: 'Reflective Allies' },
-              { id: 'vr', label: 'InnerScape' },
-              { id: 'therapy-plans', label: 'Therapy Plans' },
-              { id: 'community', label: 'Community' }
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => {
-                  console.log('Desktop Guided Support: Clicked tab:', tab.id, tab.label);
-                  setActiveSection(tab.id);
-                }}
-                className={`shimmer-border w-full h-16 px-6 text-lg font-medium transition-all border-soft hover-lift text-luxury ${
-                  activeSection === tab.id
-                    ? 'theme-surface theme-text glass-luxury shadow-luxury'
-                    : 'theme-primary theme-text hover:theme-primary-light gradient-soft'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Personalization & Settings Section */}
-          <div className="border-t border-white/10 pt-4">
-            <div className="theme-text-secondary text-sm font-medium px-6 pb-2">⚙️ Personalization & Settings</div>
-            {[
-              { id: 'daily', label: 'Reflection' },
-              { id: 'voice', label: 'Voice Settings' },
-              { id: 'themes', label: 'Color Themes' },
-              { id: 'feedback', label: 'Feedback & Suggestions' },
-              { id: 'microphone-test', label: 'Mic Test' },
-              { id: 'privacy', label: 'Privacy & Compliance' },
-              { id: 'settings', label: 'Settings' }
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => {
-                  console.log('Desktop Personalization: Clicked tab:', tab.id, tab.label);
-                  if (tab.id === 'settings') {
-                    setShowSettings(true);
-                  } else {
-                    setActiveSection(tab.id);
-                  }
-                }}
-                className={`shimmer-border w-full h-16 px-6 text-lg font-medium transition-all border-soft hover-lift text-luxury ${
-                  activeSection === tab.id
-                    ? 'theme-surface theme-text glass-luxury shadow-luxury'
-                    : 'theme-accent theme-text hover:theme-primary-light gradient-soft'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-        </div>
 
         {/* Center Content Area - Mobile Responsive with Prominent Chat */}
         <div className="flex-1 mobile-content-scroll-area relative" data-main-content>
@@ -1904,6 +1909,7 @@ const AppLayout = ({ currentUserId, onDataReset }: AppLayoutProps) => {
             </div>
           )}
         </div>
+        }
 
         {/* Right Stats Sidebar - Enhanced with Rounded Cards and Gradients */}
         <div className="hidden lg:block w-96 py-8 px-8">
