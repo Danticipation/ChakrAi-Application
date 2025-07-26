@@ -19,11 +19,13 @@ interface JournalEntry {
 
 interface JournalAnalytics {
   totalEntries: number;
+  entriesThisMonth: number;
   averageMoodIntensity: number;
   themes: Array<{ theme: string; count: number }>;
   sentimentTrend: 'positive' | 'neutral' | 'negative';
   writingStreak: number;
   averageWordsPerEntry: number;
+  moodDistribution?: { [mood: string]: number };
 }
 
 interface JournalDashboardProps {
@@ -474,6 +476,15 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
       return sum + entry.content.split(/\s+/).filter(word => word.length > 0).length;
     }, 0);
     const avgWordsPerEntry = entries.length > 0 ? Math.round(totalWords / entries.length) : 0;
+    
+    // Calculate entries this month
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+    const entriesThisMonth = entries.filter(entry => {
+      if (!entry.createdAt) return false;
+      const entryDate = new Date(entry.createdAt);
+      return entryDate.getMonth() === currentMonth && entryDate.getFullYear() === currentYear;
+    }).length;
 
     return (
       <div className="space-y-6">
@@ -486,7 +497,7 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
             </div>
             <p className="text-2xl font-bold theme-text">{analytics.totalEntries || 0}</p>
             <p className="text-sm theme-text-secondary mt-1">
-              {analytics.entriesThisMonth || 0} this month
+              {analytics.entriesThisMonth || entriesThisMonth || 0} this month
             </p>
           </div>
 
