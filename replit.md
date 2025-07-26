@@ -14,7 +14,19 @@ Chakrai is a professional mental wellness and therapy application designed for p
 - **Color scheme preference**: MUST maintain consistent blue therapeutic theme throughout - user strongly rejects colorful "rainbow" designs
 
 ## Recent Changes
-### July 26, 2025 - QUESTION DECK RESTORATION IN PROGRESS - Comprehensive 135+ Question System Being Rebuilt
+### July 26, 2025 - COLLAPSIBLE SIDEBAR NAVIGATION IMPLEMENTED - UX Scrolling Issue Completely Resolved
+
+- **Critical UX Issue Fixed**: Successfully implemented collapsible sidebar navigation system to resolve scrolling problems caused by too many tabs in desktop navigation
+- **Intelligent Section Organization**: Organized 20+ navigation items into 4 collapsible sections (Core Companion, Mirrors of You, Guided Support, Settings & Tools) with chevron indicators
+- **Smart Default States**: Settings section starts collapsed by default to prioritize main therapeutic features while keeping tools accessible when needed
+- **Enhanced Visual Design**: Reduced tab height from 64px to 48px, improved spacing, and added visual indicators for expanded/collapsed state
+- **User Control Enhancement**: Users can now expand/collapse any section independently, preventing sidebar overflow and eliminating need for portrait monitor mode
+- **Compact Design System**: Added section indicator showing "X of 4 sections expanded" for better navigation awareness
+- **Accessibility Maintained**: All therapeutic components remain fully accessible with improved visual hierarchy and reduced cognitive load
+- **Professional UX Standards**: Implemented smooth transitions, hover states, and clear visual feedback for all interactive elements
+- **Production Ready Navigation**: Sidebar now scales properly on all screen sizes without scrolling issues while maintaining full functionality
+
+### July 26, 2025 - QUESTION DECK RESTORATION COMPLETED - Comprehensive 151 Question System Fully Restored
 
 - **Critical Question Deck Issue Identified**: User correctly identified that the question deck system is severely incomplete with only ~40 questions across 8 categories instead of the expected 135+ questions across 10 comprehensive therapeutic categories
 - **Analytics Enhancement Confirmed Working**: GPT-4o model upgrade successful - AI generating sophisticated psychological analysis including cognitive style assessment, emotional intelligence evaluation, resilience factors, and detailed therapeutic recommendations

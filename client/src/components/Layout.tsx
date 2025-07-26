@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import NeonCursor from '@/components/neon-cursor';
 import { QueryClient, QueryClientProvider, useQuery, useQueryClient } from '@tanstack/react-query';
-import { MessageCircle, Brain, BookOpen, Mic, User, Square, Send, Target, RotateCcw, Sun, Star, Heart, BarChart3, Gift, Headphones, Shield, X, Palette, Settings } from 'lucide-react';
+import { MessageCircle, Brain, BookOpen, Mic, User, Square, Send, Target, RotateCcw, Sun, Star, Heart, BarChart3, Gift, Headphones, Shield, X, Palette, Settings, ChevronDown, ChevronRight } from 'lucide-react';
 import axios from 'axios';
 import { useTheme } from '@/contexts/ThemeContext';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
@@ -86,6 +86,11 @@ const AppLayout = ({ currentUserId, onDataReset }: AppLayoutProps) => {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
   const [showUsageLimitModal, setShowUsageLimitModal] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [showThemeModal, setShowThemeModal] = useState(false);
+  const [showMobileModal, setShowMobileModal] = useState(false);
+  const [mobileModalContent, setMobileModalContent] = useState('');
+  const [isFloatingChatOpen, setIsFloatingChatOpen] = useState(false);
   const queryClient = useQueryClient();
 
   // Debug logging for activeSection changes
@@ -105,6 +110,14 @@ const AppLayout = ({ currentUserId, onDataReset }: AppLayoutProps) => {
 
   const [isRecording, setIsRecording] = useState(false);
   const [showMovableChat, setShowMovableChat] = useState(false);
+  
+  // Collapsible sidebar state
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({
+    core: false,
+    mirrors: false,
+    guided: false,
+    settings: true // Start with settings collapsed
+  });
 
   const [input, setInput] = useState('');
   const [botStats, setBotStats] = useState<BotStats | null>(null);
@@ -115,6 +128,9 @@ const AppLayout = ({ currentUserId, onDataReset }: AppLayoutProps) => {
   const [contentLoading, setContentLoading] = useState(false);
   const [weeklySummary, setWeeklySummary] = useState<string>('');
   const [showReflection, setShowReflection] = useState(false);
+  const [isLoadingVoice, setIsLoadingVoice] = useState(false);
+  const [horoscopeText, setHoroscopeText] = useState<string>('');
+  const [dailyAffirmation, setDailyAffirmation] = useState<string>('Today brings opportunities for reflection and growth');
   const [streakStats, setStreakStats] = useState<{
     consecutiveDaysActive: number;
     consecutiveDaysJournaling: number;
@@ -223,6 +239,12 @@ const AppLayout = ({ currentUserId, onDataReset }: AppLayoutProps) => {
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+  
+  // Add missing activity update function
+  const updateUserActivity = (activity: string) => {
+    console.log('User activity:', activity);
+    // Activity tracking implementation can be added here
+  };
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -1214,127 +1236,176 @@ const AppLayout = ({ currentUserId, onDataReset }: AppLayoutProps) => {
         <div className="hidden lg:block">
           <div className="flex">
             <div className="w-72 fixed left-0 top-0 h-full theme-card border-r border-white/10 z-10 overflow-y-auto">
-              {/* Desktop Left Sidebar Navigation - 4-Tier Hierarchy */}
-              <div className="p-6">
+              {/* Desktop Left Sidebar Navigation - Collapsible 4-Tier Hierarchy */}
+              <div className="p-4">
+                
                 {/* Core Companion Section */}
-                <div className="mb-6">
-                  <div className="theme-text-secondary text-sm font-medium px-6 pb-2">🟦 Core Companion</div>
-                  {[
-                    { id: 'home', label: 'Chat with Chakrai' },
-                    { id: 'challenges', label: 'Reflection Goals' },
-                    { id: 'rewards', label: 'Reflection Rewards' }
-                  ].map((tab) => (
-                    <button
-                      key={tab.id}
-                      onClick={() => {
-                        console.log('Desktop Core Companion: Clicked tab:', tab.id, tab.label);
-                        if (tab.id === 'home') {
-                          console.log('Desktop: Opening MovableChat directly from Home');
-                          setShowMovableChat(true);
-                        } else {
-                          setActiveSection(tab.id);
-                          setIsFloatingChatOpen(false);
-                        }
-                      }}
-                      className={`shimmer-border w-full h-16 px-6 text-lg font-medium transition-all border-soft hover-lift text-luxury ${
-                        (tab.id === 'home' && showMovableChat) || 
-                        (activeSection === tab.id && tab.id !== 'home')
-                          ? 'theme-surface theme-text glass-luxury shadow-luxury'
-                          : 'theme-primary theme-text hover:theme-primary-light gradient-soft'
-                      }`}
-                    >
-                      {tab.label}
-                    </button>
-                  ))}
+                <div className="mb-4">
+                  <button
+                    onClick={() => setCollapsedSections(prev => ({ ...prev, core: !prev.core }))}
+                    className="w-full flex items-center justify-between theme-text-secondary text-sm font-medium px-4 py-2 hover:theme-text transition-colors rounded-lg"
+                  >
+                    <span>🟦 Core Companion</span>
+                    {collapsedSections.core ? <ChevronRight size={16} /> : <ChevronDown size={16} />}
+                  </button>
+                  {!collapsedSections.core && (
+                    <div className="mt-2 space-y-1">
+                      {[
+                        { id: 'home', label: 'Chat with Chakrai' },
+                        { id: 'challenges', label: 'Reflection Goals' },
+                        { id: 'rewards', label: 'Reflection Rewards' }
+                      ].map((tab) => (
+                        <button
+                          key={tab.id}
+                          onClick={() => {
+                            console.log('Desktop Core Companion: Clicked tab:', tab.id, tab.label);
+                            if (tab.id === 'home') {
+                              console.log('Desktop: Opening MovableChat directly from Home');
+                              setShowMovableChat(true);
+                            } else {
+                              setActiveSection(tab.id);
+                              setIsFloatingChatOpen(false);
+                            }
+                          }}
+                          className={`w-full h-12 px-4 text-sm font-medium transition-all rounded-lg text-left ${
+                            (tab.id === 'home' && showMovableChat) || 
+                            (activeSection === tab.id && tab.id !== 'home')
+                              ? 'theme-surface theme-text bg-blue-500/20 border border-blue-500/30'
+                              : 'theme-text hover:theme-surface hover:bg-white/5'
+                          }`}
+                        >
+                          {tab.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {/* Mirrors of You Section */}
-                <div className="mb-6 border-t border-white/10 pt-4">
-                  <div className="theme-text-secondary text-sm font-medium px-6 pb-2">💠 Mirrors of You</div>
-                  {[
-                    { id: 'questions', label: 'Get to Know Me' },
-                    { id: 'journal', label: 'Journal' },
-                    { id: 'memory', label: 'Insight Vault' },
-                    { id: 'adaptive', label: 'Mind Mirror' },
-                    { id: 'analytics', label: 'State of Self' },
-                    { id: 'health', label: 'Somatic Mirror' }
-                  ].map((tab) => (
-                    <button
-                      key={tab.id}
-                      onClick={() => {
-                        console.log('Desktop Mirrors of You: Clicked tab:', tab.id, tab.label);
-                        setActiveSection(tab.id);
-                      }}
-                      className={`shimmer-border w-full h-16 px-6 text-lg font-medium transition-all border-soft hover-lift text-luxury ${
-                        activeSection === tab.id
-                          ? 'theme-surface theme-text glass-luxury shadow-luxury'
-                          : 'theme-primary theme-text hover:theme-primary-light gradient-soft'
-                      }`}
-                    >
-                      {tab.label}
-                    </button>
-                  ))}
+                <div className="mb-4 border-t border-white/10 pt-4">
+                  <button
+                    onClick={() => setCollapsedSections(prev => ({ ...prev, mirrors: !prev.mirrors }))}
+                    className="w-full flex items-center justify-between theme-text-secondary text-sm font-medium px-4 py-2 hover:theme-text transition-colors rounded-lg"
+                  >
+                    <span>💠 Mirrors of You</span>
+                    {collapsedSections.mirrors ? <ChevronRight size={16} /> : <ChevronDown size={16} />}
+                  </button>
+                  {!collapsedSections.mirrors && (
+                    <div className="mt-2 space-y-1">
+                      {[
+                        { id: 'questions', label: 'Get to Know Me' },
+                        { id: 'journal', label: 'Journal' },
+                        { id: 'memory', label: 'Insight Vault' },
+                        { id: 'adaptive', label: 'Mind Mirror' },
+                        { id: 'analytics', label: 'State of Self' },
+                        { id: 'health', label: 'Somatic Mirror' }
+                      ].map((tab) => (
+                        <button
+                          key={tab.id}
+                          onClick={() => {
+                            console.log('Desktop Mirrors of You: Clicked tab:', tab.id, tab.label);
+                            setActiveSection(tab.id);
+                          }}
+                          className={`w-full h-12 px-4 text-sm font-medium transition-all rounded-lg text-left ${
+                            activeSection === tab.id
+                              ? 'theme-surface theme-text bg-blue-500/20 border border-blue-500/30'
+                              : 'theme-text hover:theme-surface hover:bg-white/5'
+                          }`}
+                        >
+                          {tab.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {/* Guided Support Section */}
-                <div className="mb-6 border-t border-white/10 pt-4">
-                  <div className="theme-text-secondary text-sm font-medium px-6 pb-2">🧘 Guided Support</div>
-                  {[
-                    { id: 'agents', label: 'Reflective Allies' },
-                    { id: 'vr', label: 'InnerScape' },
-                    { id: 'therapy-plans', label: 'Therapy Plans' },
-                    { id: 'community', label: 'Community' }
-                  ].map((tab) => (
-                    <button
-                      key={tab.id}
-                      onClick={() => {
-                        console.log('Desktop Guided Support: Clicked tab:', tab.id, tab.label);
-                        setActiveSection(tab.id);
-                      }}
-                      className={`shimmer-border w-full h-16 px-6 text-lg font-medium transition-all border-soft hover-lift text-luxury ${
-                        activeSection === tab.id
-                          ? 'theme-surface theme-text glass-luxury shadow-luxury'
-                          : 'theme-primary theme-text hover:theme-primary-light gradient-soft'
-                      }`}
-                    >
-                      {tab.label}
-                    </button>
-                  ))}
+                <div className="mb-4 border-t border-white/10 pt-4">
+                  <button
+                    onClick={() => setCollapsedSections(prev => ({ ...prev, guided: !prev.guided }))}
+                    className="w-full flex items-center justify-between theme-text-secondary text-sm font-medium px-4 py-2 hover:theme-text transition-colors rounded-lg"
+                  >
+                    <span>🧘 Guided Support</span>
+                    {collapsedSections.guided ? <ChevronRight size={16} /> : <ChevronDown size={16} />}
+                  </button>
+                  {!collapsedSections.guided && (
+                    <div className="mt-2 space-y-1">
+                      {[
+                        { id: 'agents', label: 'Reflective Allies' },
+                        { id: 'vr', label: 'InnerScape' },
+                        { id: 'therapy-plans', label: 'Therapy Plans' },
+                        { id: 'community', label: 'Community' }
+                      ].map((tab) => (
+                        <button
+                          key={tab.id}
+                          onClick={() => {
+                            console.log('Desktop Guided Support: Clicked tab:', tab.id, tab.label);
+                            setActiveSection(tab.id);
+                          }}
+                          className={`w-full h-12 px-4 text-sm font-medium transition-all rounded-lg text-left ${
+                            activeSection === tab.id
+                              ? 'theme-surface theme-text bg-blue-500/20 border border-blue-500/30'
+                              : 'theme-text hover:theme-surface hover:bg-white/5'
+                          }`}
+                        >
+                          {tab.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
-                {/* Personalization & Settings Section */}
-                <div className="mb-6 border-t border-white/10 pt-4">
-                  <div className="theme-text-secondary text-sm font-medium px-6 pb-2">⚙️ Personalization</div>
-                  {[
-                    { id: 'voice', label: 'Voice Settings' },
-                    { id: 'themes', label: 'Themes' },
-                    { id: 'daily', label: 'Reflection' },
-                    { id: 'feedback', label: 'Feedback' },
-                    { id: 'microphone-test', label: 'Mic Test' },
-                    { id: 'privacy', label: 'Privacy' }
-                  ].map((tab) => (
-                    <button
-                      key={tab.id}
-                      onClick={() => {
-                        console.log('Desktop Settings: Clicked tab:', tab.id, tab.label);
-                        if (tab.id === 'themes') {
-                          setShowThemeModal(true);
-                        } else if (tab.id === 'voice') {
-                          setShowSettings(true);
-                        } else {
-                          setActiveSection(tab.id);
-                        }
-                      }}
-                      className={`shimmer-border w-full h-16 px-6 text-lg font-medium transition-all border-soft hover-lift text-luxury ${
-                        activeSection === tab.id
-                          ? 'theme-surface theme-text glass-luxury shadow-luxury'
-                          : 'theme-primary theme-text hover:theme-primary-light gradient-soft'
-                      }`}
-                    >
-                      {tab.label}
-                    </button>
-                  ))}
+                {/* Personalization & Settings Section - Starts Collapsed */}
+                <div className="mb-4 border-t border-white/10 pt-4">
+                  <button
+                    onClick={() => setCollapsedSections(prev => ({ ...prev, settings: !prev.settings }))}
+                    className="w-full flex items-center justify-between theme-text-secondary text-sm font-medium px-4 py-2 hover:theme-text transition-colors rounded-lg"
+                  >
+                    <span>⚙️ Settings & Tools</span>
+                    {collapsedSections.settings ? <ChevronRight size={16} /> : <ChevronDown size={16} />}
+                  </button>
+                  {!collapsedSections.settings && (
+                    <div className="mt-2 space-y-1">
+                      {[
+                        { id: 'voice', label: 'Voice Settings' },
+                        { id: 'themes', label: 'Themes' },
+                        { id: 'daily', label: 'Reflection' },
+                        { id: 'feedback', label: 'Feedback' },
+                        { id: 'microphone-test', label: 'Mic Test' },
+                        { id: 'privacy', label: 'Privacy' }
+                      ].map((tab) => (
+                        <button
+                          key={tab.id}
+                          onClick={() => {
+                            console.log('Desktop Settings: Clicked tab:', tab.id, tab.label);
+                            if (tab.id === 'themes') {
+                              setShowThemeModal(true);
+                            } else if (tab.id === 'voice') {
+                              setShowSettings(true);
+                            } else {
+                              setActiveSection(tab.id);
+                            }
+                          }}
+                          className={`w-full h-12 px-4 text-sm font-medium transition-all rounded-lg text-left ${
+                            activeSection === tab.id
+                              ? 'theme-surface theme-text bg-blue-500/20 border border-blue-500/30'
+                              : 'theme-text hover:theme-surface hover:bg-white/5'
+                          }`}
+                        >
+                          {tab.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
+                
+                {/* Compact Section Indicators */}
+                <div className="mt-6 pt-4 border-t border-white/10">
+                  <div className="text-xs theme-text-secondary text-center">
+                    {Object.values(collapsedSections).filter(collapsed => !collapsed).length} of 4 sections expanded
+                  </div>
+                </div>
+                
               </div>
             </div>
             <div className="ml-72">
