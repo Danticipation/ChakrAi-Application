@@ -35,6 +35,7 @@ import DailyAffirmation from '@/components/DailyAffirmation';
 import FloatingChat from '@/components/FloatingChat';
 import MovableChat from '@/components/MovableChat';
 import ChallengeSystem from '@/components/ChallengeSystem';
+import { startRecording as startAudioRecording, stopRecording, sendAudioToWhisper } from '@/utils/audio';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -73,6 +74,30 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
   const { theme } = useTheme();
   const [activeSection, setActiveSection] = useState('home');
   const [selectedVoice, setSelectedVoice] = useState('james');
+  
+  // Chat functionality
+  const [chatInput, setChatInput] = useState('');
+  const [isRecording, setIsRecording] = useState(false);
+  const [messages, setMessages] = useState<Array<{sender: 'user' | 'bot', text: string, time: string}>>([]);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+
+  // Voice recording functions
+  const handleStartRecording = async () => {
+    await startAudioRecording(mediaRecorderRef, audioChunksRef, setIsRecording, setChatInput);
+  };
+
+  const handleStopRecording = () => {
+    stopRecording(mediaRecorderRef, setIsRecording);
+  };
+
+  const handleVoiceToggle = () => {
+    if (isRecording) {
+      handleStopRecording();
+    } else {
+      handleStartRecording();
+    }
+  };
   const [showSettings, setShowSettings] = useState(false);
   const [showThemeModal, setShowThemeModal] = useState(false);
   const [showMovableChat, setShowMovableChat] = useState(false);
@@ -212,6 +237,8 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
                     <div className="flex-1">
                       <div className="relative">
                         <textarea
+                          value={chatInput}
+                          onChange={(e) => setChatInput(e.target.value)}
                           placeholder="Share your thoughts, feelings, or ask me anything..."
                           className="w-full theme-input resize-none rounded-2xl pl-4 pr-12 py-4 min-h-[60px] max-h-32 focus:ring-2 focus:ring-blue-500/50 transition-all"
                           rows={2}
@@ -219,9 +246,22 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
                         <button className="absolute right-3 bottom-3 p-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-full hover:shadow-lg transition-all transform hover:scale-105">
                           <Send className="w-5 h-5" />
                         </button>
+                        {isRecording && (
+                          <div className="absolute top-2 left-3 flex items-center space-x-2 bg-red-500 text-white px-2 py-1 rounded-full text-xs">
+                            <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                            <span>Recording...</span>
+                          </div>
+                        )}
                       </div>
                     </div>
-                    <button className="p-3 theme-text-secondary hover:theme-text rounded-full transition-colors">
+                    <button 
+                      onClick={handleVoiceToggle}
+                      className={`p-3 rounded-full transition-colors ${
+                        isRecording 
+                          ? 'bg-red-500 text-white animate-pulse' 
+                          : 'theme-text-secondary hover:theme-text'
+                      }`}
+                    >
                       <Mic className="w-6 h-6" />
                     </button>
                   </div>
