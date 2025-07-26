@@ -1441,7 +1441,7 @@ export class DbStorage implements IStorage {
   async getMemoryInsights(userId: number): Promise<MemoryInsight[]> {
     return await this.db.select().from(memoryInsights)
       .where(eq(memoryInsights.userId, userId))
-      .orderBy(desc(memoryInsights.generatedAt));
+      .orderBy(desc(memoryInsights.createdAt));
   }
 
   // Therapist Portal System Implementation

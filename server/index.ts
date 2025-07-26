@@ -1233,6 +1233,38 @@ app.get('/api/streak-stats', (req, res) => {
   });
 });
 
+// Direct memory dashboard endpoint to bypass Vite interception
+app.get('/api/memory-dashboard', async (req, res) => {
+  try {
+    const userId = parseInt(req.query.userId) || 98;
+    
+    // Import semantic memory functions
+    const { getMemoryDashboard } = await import('./semanticMemory.js');
+    const dashboard = await getMemoryDashboard(userId);
+    
+    // Return with proper structure expected by frontend
+    const response = {
+      summary: {
+        totalMemories: dashboard?.stats?.totalMemories || 0,
+        activeMemories: dashboard?.stats?.activeMemories || 0,
+        conversationSessions: dashboard?.stats?.connectionCount || 0,
+        memoryConnections: dashboard?.stats?.connectionCount || 0,
+        lastMemoryDate: dashboard?.memories?.[0]?.createdAt || null
+      },
+      recentMemories: dashboard?.memories || [],
+      topTopics: dashboard?.stats?.topTopics || [],
+      memoryInsights: dashboard?.insights || [],
+      emotionalPatterns: []
+    };
+    
+    console.log('Memory dashboard response for user', userId, ':', JSON.stringify(response, null, 2));
+    res.json(response);
+  } catch (error) {
+    console.error('Memory dashboard error:', error);
+    res.status(500).json({ error: 'Failed to get memory dashboard' });
+  }
+});
+
 // ADAPTIVE LEARNING ENDPOINTS - Direct Implementation
 app.get('/api/adaptive-learning/preferences', (req, res) => {
   const preferences = {
