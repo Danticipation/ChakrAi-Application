@@ -288,13 +288,25 @@ async function updateWellnessStreak(userId: number, activityType: string): Promi
   });
 }
 
+// Simple hash function to convert string badge ID to number
+function hashBadgeId(badgeId: string): number {
+  let hash = 0;
+  for (let i = 0; i < badgeId.length; i++) {
+    const char = badgeId.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32-bit integer
+  }
+  return Math.abs(hash);
+}
+
 async function checkAchievements(userId: number): Promise<UserAchievement[]> {
   const newAchievements: UserAchievement[] = [];
   const userAchievements = await storage.getUserAchievements(userId);
   const earnedBadgeIds = userAchievements.map(a => a.achievementId);
 
   for (const badge of ACHIEVEMENT_BADGES) {
-    if (earnedBadgeIds.includes(badge.id)) {
+    const badgeIdHash = hashBadgeId(badge.id);
+    if (earnedBadgeIds.includes(badgeIdHash)) {
       continue; // Already earned
     }
 
@@ -302,7 +314,7 @@ async function checkAchievements(userId: number): Promise<UserAchievement[]> {
     if (meetsRequirement) {
       const achievement = await storage.createUserAchievement({
         userId,
-        achievementId: badge.id,
+        achievementId: badgeIdHash,
         progress: badge.requirement.target
       });
       newAchievements.push(achievement);
