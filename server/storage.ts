@@ -265,6 +265,7 @@ export interface IStorage {
   recordDailyActivity(data: InsertDailyActivity): Promise<DailyActivity>;
   getDailyActivities(userId: number, days?: number): Promise<DailyActivity[]>;
   hasActivityToday(userId: number, activityType: string): Promise<boolean>;
+  updateDailyActivity(userId: number, date: Date, activityType: string): Promise<void>;
   
   calculateStreak(userId: number, streakType: string): Promise<number>;
   updateStreakOnActivity(userId: number, activityType: string): Promise<void>;
@@ -1697,6 +1698,28 @@ export class DbStorage implements IStorage {
       ));
 
     return !!activity;
+  }
+
+  async updateDailyActivity(userId: number, date: Date, activityType: string): Promise<void> {
+    // Check if activity already exists for this date and type
+    const existingActivity = await this.db
+      .select()
+      .from(dailyActivities)
+      .where(and(
+        eq(dailyActivities.userId, userId),
+        eq(dailyActivities.activityType, activityType),
+        eq(dailyActivities.activityDate, date)
+      ));
+
+    // If no existing activity, create one
+    if (existingActivity.length === 0) {
+      await this.recordDailyActivity({
+        userId,
+        activityType,
+        activityDate: date,
+        metadata: {}
+      });
+    }
   }
 
   async calculateStreak(userId: number, streakType: string): Promise<number> {
