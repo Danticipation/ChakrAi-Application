@@ -1223,127 +1223,166 @@ const AppLayout = ({ currentUserId, onDataReset }: AppLayoutProps) => {
         <div className="hidden lg:block">
           <div className="flex">
             <div className="w-72 fixed left-0 top-0 h-full theme-card border-r border-white/10 z-10 overflow-y-auto">
-              {/* Desktop Left Sidebar Navigation - 4-Tier Hierarchy */}
-              <div className="p-6">
-                {/* Core Companion Section */}
-                <div className="mb-6">
-                  <div className="theme-text-secondary text-sm font-medium px-6 pb-2">🟦 Core Companion</div>
-                  {[
-                    { id: 'home', label: 'Chat with Chakrai' },
-                    { id: 'challenges', label: 'Reflection Goals' },
-                    { id: 'rewards', label: 'Reflection Rewards' }
-                  ].map((tab) => (
-                    <button
-                      key={tab.id}
-                      onClick={() => {
-                        console.log('Desktop Core Companion: Clicked tab:', tab.id, tab.label);
-                        if (tab.id === 'home') {
-                          console.log('Desktop: Opening MovableChat directly from Home');
-                          setShowMovableChat(true);
-                        } else {
-                          setActiveSection(tab.id);
-                          setIsFloatingChatOpen(false);
-                        }
-                      }}
-                      className={`shimmer-border w-full h-12 px-6 text-sm font-medium transition-all border-soft hover-lift text-luxury ${
-                        (tab.id === 'home' && showMovableChat) || 
-                        (activeSection === tab.id && tab.id !== 'home')
-                          ? 'theme-surface theme-text glass-luxury shadow-luxury'
-                          : 'theme-primary theme-text hover:theme-primary-light gradient-soft'
-                      }`}
-                    >
-                      {tab.label}
-                    </button>
-                  ))}
+              <div className="p-3">
+                
+                {/* Core Companion Section - Collapsible */}
+                <div className="mb-2">
+                  <button
+                    onClick={() => setCollapsedSections(prev => ({ ...prev, core: !prev.core }))}
+                    className="w-full flex items-center justify-between theme-text-secondary text-xs font-medium px-3 py-2 hover:theme-text transition-colors rounded-lg mb-1"
+                  >
+                    <span>🟦 Core Companion</span>
+                    {collapsedSections.core ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
+                  </button>
+                  {!collapsedSections.core && (
+                    <div className="space-y-1">
+                      {[
+                        { id: 'home', label: 'Chat with Chakrai' },
+                        { id: 'challenges', label: 'Reflection Goals' },
+                        { id: 'rewards', label: 'Reflection Rewards' }
+                      ].map((tab) => (
+                        <button
+                          key={tab.id}
+                          onClick={() => {
+                            if (tab.id === 'home') {
+                              setShowMovableChat(true);
+                            } else {
+                              setActiveSection(tab.id);
+                              setIsFloatingChatOpen(false);
+                            }
+                          }}
+                          className={`w-full h-9 px-3 text-xs font-medium transition-all rounded text-left ${
+                            (tab.id === 'home' && showMovableChat) || 
+                            (activeSection === tab.id && tab.id !== 'home')
+                              ? 'bg-blue-500/20 border border-blue-500/30 theme-text'
+                              : 'theme-text hover:bg-white/5'
+                          }`}
+                        >
+                          {tab.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
-                {/* Mirrors of You Section */}
-                <div className="mb-6 border-t border-white/10 pt-4">
-                  <div className="theme-text-secondary text-sm font-medium px-6 pb-2">💠 Mirrors of You</div>
-                  {[
-                    { id: 'questions', label: 'Get to Know Me' },
-                    { id: 'journal', label: 'Journal' },
-                    { id: 'memory', label: 'Insight Vault' },
-                    { id: 'adaptive', label: 'Mind Mirror' },
-                    { id: 'analytics', label: 'State of Self' },
-                    { id: 'health', label: 'Somatic Mirror' }
-                  ].map((tab) => (
-                    <button
-                      key={tab.id}
-                      onClick={() => {
-                        console.log('Desktop Mirrors of You: Clicked tab:', tab.id, tab.label);
-                        setActiveSection(tab.id);
-                      }}
-                      className={`shimmer-border w-full h-12 px-6 text-sm font-medium transition-all border-soft hover-lift text-luxury ${
-                        activeSection === tab.id
-                          ? 'theme-surface theme-text glass-luxury shadow-luxury'
-                          : 'theme-primary theme-text hover:theme-primary-light gradient-soft'
-                      }`}
-                    >
-                      {tab.label}
-                    </button>
-                  ))}
+                {/* Mirrors of You Section - Collapsible */}
+                <div className="mb-2 border-t border-white/10 pt-2">
+                  <button
+                    onClick={() => setCollapsedSections(prev => ({ ...prev, mirrors: !prev.mirrors }))}
+                    className="w-full flex items-center justify-between theme-text-secondary text-xs font-medium px-3 py-2 hover:theme-text transition-colors rounded-lg mb-1"
+                  >
+                    <span>💠 Mirrors of You</span>
+                    {collapsedSections.mirrors ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
+                  </button>
+                  {!collapsedSections.mirrors && (
+                    <div className="space-y-1">
+                      {[
+                        { id: 'questions', label: 'Get to Know Me' },
+                        { id: 'journal', label: 'Journal' },
+                        { id: 'memory', label: 'Insight Vault' },
+                        { id: 'adaptive', label: 'Mind Mirror' },
+                        { id: 'analytics', label: 'State of Self' },
+                        { id: 'health', label: 'Somatic Mirror' }
+                      ].map((tab) => (
+                        <button
+                          key={tab.id}
+                          onClick={() => setActiveSection(tab.id)}
+                          className={`w-full h-9 px-3 text-xs font-medium transition-all rounded text-left ${
+                            activeSection === tab.id
+                              ? 'bg-blue-500/20 border border-blue-500/30 theme-text'
+                              : 'theme-text hover:bg-white/5'
+                          }`}
+                        >
+                          {tab.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
-                {/* Guided Support Section */}
-                <div className="mb-6 border-t border-white/10 pt-4">
-                  <div className="theme-text-secondary text-sm font-medium px-6 pb-2">🧘 Guided Support</div>
-                  {[
-                    { id: 'agents', label: 'Reflective Allies' },
-                    { id: 'vr', label: 'InnerScape' },
-                    { id: 'therapy-plans', label: 'Therapy Plans' },
-                    { id: 'community', label: 'Community' }
-                  ].map((tab) => (
-                    <button
-                      key={tab.id}
-                      onClick={() => {
-                        console.log('Desktop Guided Support: Clicked tab:', tab.id, tab.label);
-                        setActiveSection(tab.id);
-                      }}
-                      className={`shimmer-border w-full h-12 px-6 text-sm font-medium transition-all border-soft hover-lift text-luxury ${
-                        activeSection === tab.id
-                          ? 'theme-surface theme-text glass-luxury shadow-luxury'
-                          : 'theme-primary theme-text hover:theme-primary-light gradient-soft'
-                      }`}
-                    >
-                      {tab.label}
-                    </button>
-                  ))}
+                {/* Guided Support Section - Collapsible */}
+                <div className="mb-2 border-t border-white/10 pt-2">
+                  <button
+                    onClick={() => setCollapsedSections(prev => ({ ...prev, guided: !prev.guided }))}
+                    className="w-full flex items-center justify-between theme-text-secondary text-xs font-medium px-3 py-2 hover:theme-text transition-colors rounded-lg mb-1"
+                  >
+                    <span>🧘 Guided Support</span>
+                    {collapsedSections.guided ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
+                  </button>
+                  {!collapsedSections.guided && (
+                    <div className="space-y-1">
+                      {[
+                        { id: 'agents', label: 'Reflective Allies' },
+                        { id: 'vr', label: 'InnerScape' },
+                        { id: 'therapy-plans', label: 'Therapy Plans' },
+                        { id: 'community', label: 'Community' }
+                      ].map((tab) => (
+                        <button
+                          key={tab.id}
+                          onClick={() => setActiveSection(tab.id)}
+                          className={`w-full h-9 px-3 text-xs font-medium transition-all rounded text-left ${
+                            activeSection === tab.id
+                              ? 'bg-blue-500/20 border border-blue-500/30 theme-text'
+                              : 'theme-text hover:bg-white/5'
+                          }`}
+                        >
+                          {tab.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
-                {/* Personalization & Settings Section */}
-                <div className="mb-6 border-t border-white/10 pt-4">
-                  <div className="theme-text-secondary text-sm font-medium px-6 pb-2">⚙️ Personalization</div>
-                  {[
-                    { id: 'voice', label: 'Voice Settings' },
-                    { id: 'themes', label: 'Themes' },
-                    { id: 'daily', label: 'Reflection' },
-                    { id: 'feedback', label: 'Feedback' },
-                    { id: 'microphone-test', label: 'Mic Test' },
-                    { id: 'privacy', label: 'Privacy' }
-                  ].map((tab) => (
-                    <button
-                      key={tab.id}
-                      onClick={() => {
-                        console.log('Desktop Settings: Clicked tab:', tab.id, tab.label);
-                        if (tab.id === 'themes') {
-                          setShowThemeModal(true);
-                        } else if (tab.id === 'voice') {
-                          setShowSettings(true);
-                        } else {
-                          setActiveSection(tab.id);
-                        }
-                      }}
-                      className={`shimmer-border w-full h-12 px-6 text-sm font-medium transition-all border-soft hover-lift text-luxury ${
-                        activeSection === tab.id
-                          ? 'theme-surface theme-text glass-luxury shadow-luxury'
-                          : 'theme-primary theme-text hover:theme-primary-light gradient-soft'
-                      }`}
-                    >
-                      {tab.label}
-                    </button>
-                  ))}
+                {/* Settings & Tools Section - Starts Collapsed */}
+                <div className="mb-2 border-t border-white/10 pt-2">
+                  <button
+                    onClick={() => setCollapsedSections(prev => ({ ...prev, settings: !prev.settings }))}
+                    className="w-full flex items-center justify-between theme-text-secondary text-xs font-medium px-3 py-2 hover:theme-text transition-colors rounded-lg mb-1"
+                  >
+                    <span>⚙️ Settings & Tools</span>
+                    {collapsedSections.settings ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
+                  </button>
+                  {!collapsedSections.settings && (
+                    <div className="space-y-1">
+                      {[
+                        { id: 'voice', label: 'Voice Settings' },
+                        { id: 'themes', label: 'Themes' },
+                        { id: 'daily', label: 'Reflection' },
+                        { id: 'feedback', label: 'Feedback' },
+                        { id: 'microphone-test', label: 'Mic Test' },
+                        { id: 'privacy', label: 'Privacy' }
+                      ].map((tab) => (
+                        <button
+                          key={tab.id}
+                          onClick={() => {
+                            if (tab.id === 'themes') {
+                              setShowThemeModal(true);
+                            } else if (tab.id === 'voice') {
+                              setShowSettings(true);
+                            } else {
+                              setActiveSection(tab.id);
+                            }
+                          }}
+                          className={`w-full h-9 px-3 text-xs font-medium transition-all rounded text-left ${
+                            activeSection === tab.id
+                              ? 'bg-blue-500/20 border border-blue-500/30 theme-text'
+                              : 'theme-text hover:bg-white/5'
+                          }`}
+                        >
+                          {tab.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
+                
+                {/* Section Status Indicator */}
+                <div className="mt-4 pt-2 border-t border-white/10">
+                  <div className="text-xs theme-text-secondary text-center opacity-60">
+                    {Object.values(collapsedSections).filter(collapsed => !collapsed).length} of 4 sections expanded
+                  </div>
+                </div>
+                
               </div>
             </div>
             <div className="ml-72">
