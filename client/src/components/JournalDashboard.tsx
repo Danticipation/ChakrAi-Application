@@ -21,7 +21,7 @@ interface JournalAnalytics {
   totalEntries: number;
   entriesThisMonth: number;
   averageMoodIntensity: number;
-  themes: Array<{ theme: string; count: number }>;
+  themes: { [theme: string]: number };
   sentimentTrend: 'positive' | 'neutral' | 'negative';
   writingStreak: number;
   averageWordsPerEntry: number;
@@ -610,7 +610,7 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
             <h3 className="font-semibold theme-text mb-4">Recurring Themes & Tags</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {Object.entries(analytics.themes)
-                .sort(([,a], [,b]) => (b as number) - (a as number))
+                .sort(([,a], [,b]) => b - a)
                 .slice(0, 8)
                 .map(([theme, count]) => (
                   <div key={`theme-${theme}`} className="flex items-center justify-between p-3 theme-surface rounded-lg">
