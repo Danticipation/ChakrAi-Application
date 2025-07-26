@@ -873,6 +873,7 @@ app.post('/api/chat', async (req, res) => {
     // Get semantic memory context for long-term recall
     let memoryContext = '';
     try {
+      // @ts-ignore
       const { getSemanticContext } = await import('./semanticMemory');
       const semanticContext = await getSemanticContext(userId, message);
       
@@ -976,6 +977,7 @@ DO NOT immediately jump into "support" mode or therapeutic language unless someo
       // Extract and store semantic memory asynchronously
       setTimeout(async () => {
         try {
+          // @ts-ignore
           const { analyzeConversationForMemory } = await import('./semanticMemory');
           const semanticMemory = await analyzeConversationForMemory(userId, message, aiResponse);
           if (semanticMemory) {
