@@ -3,15 +3,15 @@ import NeonCursor from '@/components/neon-cursor';
 import { QueryClient, QueryClientProvider, useQuery, useQueryClient } from '@tanstack/react-query';
 import { MessageCircle, Brain, BookOpen, Mic, User, Square, Send, Target, RotateCcw, Sun, Star, Heart, BarChart3, Gift, Headphones, Shield, X, Palette, Settings, ChevronDown, ChevronRight } from 'lucide-react';
 import axios from 'axios';
-import { useTheme } from '@/contexts/ThemeContext';
+import { useTheme, ThemeProvider } from '@/contexts/ThemeContext';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { SubscriptionProvider, useSubscription } from '@/contexts/SubscriptionContext';
-import { SubscriptionModal } from '@/components/SubscriptionModal';
-import { UsageLimitModal } from '@/components/UsageLimitModal';
+// import { SubscriptionModal } from '@/components/SubscriptionModal';
+// import { UsageLimitModal } from '@/components/UsageLimitModal';
 import MemoryDashboard from '@/components/MemoryDashboard';
 import VoiceSelector from '@/components/VoiceSelector';
 import ThemeSelector from '@/components/ThemeSelector';
-import AuthModal from '@/components/AuthModal';
+// import AuthModal from '@/components/AuthModal';
 
 import PersonalityQuiz from '@/components/PersonalityQuiz';
 import VoluntaryQuestionDeck from '@/components/VoluntaryQuestionDeck';
@@ -35,7 +35,6 @@ import DailyAffirmation from '@/components/DailyAffirmation';
 import FloatingChat from '@/components/FloatingChat';
 import MovableChat from '@/components/MovableChat';
 import ChallengeSystem from '@/components/ChallengeSystem';
-import { getCurrentUserId } from '@/utils/userSession';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -610,14 +609,14 @@ const AppWithOnboarding = () => {
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <useTheme.Provider>
+      <ThemeProvider>
         <AuthProvider>
           <SubscriptionProvider>
             <AppWithOnboarding />
             <NeonCursor />
           </SubscriptionProvider>
         </AuthProvider>
-      </useTheme.Provider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }
