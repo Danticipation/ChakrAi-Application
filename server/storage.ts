@@ -1,7 +1,7 @@
 import { db } from "./db";
 import { 
   users, userProfiles, bots, messages, userMemories, userFacts,
-  journalEntries, moodEntries, therapeuticGoals, supportForums, forumPosts,
+  journalEntries, journalAnalytics, moodEntries, therapeuticGoals, supportForums, forumPosts,
   userAchievements, wellnessStreaks, emotionalPatterns,
   moodForecasts, emotionalContexts, predictiveInsights, emotionalResponseAdaptations, crisisDetectionLogs,
   monthlyWellnessReports, analyticsMetrics, progressTracking, riskAssessments, longitudinalTrends,
@@ -129,6 +129,10 @@ export interface IStorage {
   createJournalEntry(data: InsertJournalEntry): Promise<JournalEntry>;
   getJournalEntries(userId: number, limit?: number): Promise<JournalEntry[]>;
   migrateJournalEntries(currentUserId: number): Promise<number>;
+  
+  // Journal Analytics
+  createJournalAnalytics(data: any): Promise<any>;
+  getJournalAnalytics(userId: number, entryId?: number): Promise<any[]>;
   
   // Mood Entries
   createMoodEntry(data: InsertMoodEntry): Promise<MoodEntry>;
@@ -564,6 +568,33 @@ export class DbStorage implements IStorage {
     } else {
       return await this.db.select().from(journalEntries).where(eq(journalEntries.userId, userId)).orderBy(desc(journalEntries.createdAt));
     }
+  }
+
+  // Journal Analytics implementation
+  async createJournalAnalytics(data: any): Promise<any> {
+    const journalAnalyticsData = {
+      userId: data.userId,
+      entryId: data.journalEntryId,
+      insights: JSON.stringify(data.keyInsights || []),
+      themes: data.emotionDistribution ? Object.keys(data.emotionDistribution) : [],
+      riskLevel: data.riskLevel || 'low',
+      recommendations: data.recommendedActions || [],
+      sentimentScore: data.sentimentScore ? data.sentimentScore.toString() : '0',
+      emotionalIntensity: data.emotionalIntensity || 50
+    };
+    const [analytics] = await this.db.insert(journalAnalytics).values(journalAnalyticsData).returning();
+    return analytics;
+  }
+
+  async getJournalAnalytics(userId: number, entryId?: number): Promise<any[]> {
+    if (entryId) {
+      return await this.db.select().from(journalAnalytics)
+        .where(and(eq(journalAnalytics.userId, userId), eq(journalAnalytics.entryId, entryId)));
+    }
+    return await this.db.select().from(journalAnalytics)
+      .where(eq(journalAnalytics.userId, userId))
+      .orderBy(desc(journalAnalytics.createdAt))
+      .limit(20);
   }
 
   // Migrate all journal entries from other users to current user

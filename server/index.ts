@@ -298,11 +298,13 @@ app.get('/api/journal/user-entries', async (req, res) => {
   }
 });
 
-// Create journal entry endpoint - MUST BE BEFORE VITE
+// Create journal entry endpoint with AI analysis - MUST BE BEFORE VITE
 app.post('/api/journal', async (req, res) => {
   try {
     const userId = req.body.userId;
     console.log('Create journal entry for user:', userId, req.body);
+    
+    // Create the journal entry
     const newEntry = await storage.createJournalEntry({
       userId,
       title: req.body.title || null,
@@ -313,6 +315,51 @@ app.post('/api/journal', async (req, res) => {
       isPrivate: req.body.isPrivate || false
     });
     console.log('Created entry:', newEntry);
+    
+    // Trigger AI analysis in background (don't wait for it to complete)
+    setImmediate(async () => {
+      try {
+        console.log('🧠 Starting AI analysis for journal entry:', newEntry.id);
+        
+        // Import journal analysis module
+        const { analyzeJournalEntry } = await import('./journalAnalysis.js');
+        
+        // Get previous entries for context
+        const previousEntries = await storage.getJournalEntries(userId, 5);
+        
+        // Analyze the journal entry
+        const analysis = await analyzeJournalEntry(newEntry, previousEntries);
+        console.log('✅ Journal analysis completed:', {
+          sentimentScore: analysis.sentimentScore,
+          emotionalIntensity: analysis.emotionalIntensity,
+          keyInsights: analysis.keyInsights.length,
+          confidenceScore: analysis.confidenceScore
+        });
+        
+        // Store the analysis results
+        await storage.createJournalAnalytics({
+          userId,
+          journalEntryId: newEntry.id,
+          emotionDistribution: analysis.emotionalThemes,
+          sentimentScore: analysis.sentimentScore,
+          emotionalIntensity: analysis.emotionalIntensity,
+          keyInsights: analysis.keyInsights,
+          copingStrategies: analysis.copingStrategies,
+          growthIndicators: analysis.growthIndicators,
+          concernAreas: analysis.concernAreas,
+          recommendedActions: analysis.recommendedActions,
+          therapistNotes: analysis.therapistNotes,
+          patternConnections: analysis.patternConnections,
+          confidenceScore: analysis.confidenceScore,
+          riskLevel: analysis.emotionalIntensity > 80 ? 'high' : analysis.emotionalIntensity > 60 ? 'medium' : 'low'
+        });
+        
+        console.log('📊 Journal analytics stored successfully');
+      } catch (analysisError) {
+        console.error('❌ Journal analysis failed:', analysisError);
+      }
+    });
+    
     res.json(newEntry);
   } catch (error) {
     console.error('Failed to create journal entry:', error);
