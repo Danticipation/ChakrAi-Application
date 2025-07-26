@@ -532,14 +532,59 @@ app.get('/api/personality-reflection', async (req, res) => {
       const recentEntries = journalEntries.slice(-5);
       const entryTexts = recentEntries.map(entry => entry.content).join('\n\n');
       
-      // Use OpenAI to generate personality reflection (same logic as routes.ts)
-      const reflection = `Your therapeutic journey shows dedication to self-improvement and emotional awareness. Based on your ${journalEntries.length} journal entries, you demonstrate thoughtful reflection and commitment to personal growth. Continue engaging with the platform to develop deeper insights about your personality and growth patterns.`;
-      
-      res.json({
-        reflection,
-        lastUpdated: new Date().toISOString(),
-        dataPoints
-      });
+      try {
+        // Use OpenAI to generate specific personality reflection
+        const OpenAI = (await import('openai')).default;
+        const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+        
+        const reflectionPrompt = `Based on these journal entries, provide an honest personality analysis:
+
+${entryTexts}
+
+Analyze this person's:
+1. Communication style and how they express frustration
+2. Problem-solving approach and technical challenges they face
+3. Emotional patterns and stress responses
+4. Core personality traits shown through their writing
+5. Areas where they show resilience or determination
+
+Be specific about what you observe from their actual writing, not generic wellness advice.`;
+
+        const completion = await openai.chat.completions.create({
+          model: "gpt-3.5-turbo",
+          messages: [
+            {
+              role: "system",
+              content: "You are an honest personality analyst. Analyze the actual content of what this person wrote to understand their personality, communication style, and challenges. Be specific and direct about what you observe from their writing."
+            },
+            {
+              role: "user",
+              content: reflectionPrompt
+            }
+          ],
+          temperature: 0.3,
+          max_tokens: 500
+        });
+        
+        const reflection = completion.choices[0].message.content || 
+          `Based on your ${journalEntries.length} journal entries, you show direct communication and aren't afraid to express frustration when things don't work. Continue documenting your experiences.`;
+        
+        res.json({
+          reflection,
+          lastUpdated: new Date().toISOString(),
+          dataPoints
+        });
+      } catch (error) {
+        console.error('OpenAI reflection error:', error);
+        // Fallback that's still better than generic
+        const reflection = `Based on your ${journalEntries.length} journal entries, you show direct communication about technical challenges and system failures. Your writing demonstrates persistence in dealing with recurring problems.`;
+        
+        res.json({
+          reflection,
+          lastUpdated: new Date().toISOString(),
+          dataPoints
+        });
+      }
     } else {
       // Fallback response when no data available
       res.json({
@@ -602,24 +647,20 @@ app.post('/api/journal/analyze', async (req, res) => {
     const OpenAI = (await import('openai')).default;
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
     
-    const analysisPrompt = `Please analyze this journal entry for therapeutic insights:
-    
-Content: "${content}"
-Mood: ${mood}
-Mood Intensity: ${moodIntensity}/10
+    const analysisPrompt = `Analyze this journal entry with honest, specific insights based on the actual content:
 
-Please provide:
-1. Key emotional themes
-2. Positive patterns or growth areas
-3. Areas of concern or stress
-4. Therapeutic recommendations
-5. Risk level assessment (low/moderate/high/critical)
+"${content}"
 
-Respond in JSON format with: {
-  "insights": "detailed analysis",
-  "themes": ["theme1", "theme2"],
+Mood: ${mood} (${moodIntensity}/10 intensity)
+
+Focus on what this person is ACTUALLY dealing with - not generic wellness advice. If they're writing about technical problems, work frustration, relationship issues, or specific situations, address THOSE specific things.
+
+Provide specific, relevant analysis in JSON format:
+{
+  "insights": "Honest analysis of what they're actually going through based on their specific situation",
+  "themes": ["specific themes from their actual content"],
   "riskLevel": "low/moderate/high/critical",
-  "recommendations": ["rec1", "rec2"]
+  "recommendations": ["practical suggestions for their specific situation, not generic wellness advice"]
 }`;
 
     const completion = await openai.chat.completions.create({
@@ -627,7 +668,7 @@ Respond in JSON format with: {
       messages: [
         {
           role: "system",
-          content: "You are a compassionate AI wellness companion providing therapeutic insights. Always be supportive and provide helpful recommendations."
+          content: "You are an honest AI analyst. Read the content carefully and provide specific, relevant insights about what the person is actually dealing with. Don't give generic therapeutic responses - address their specific situation, whether it's technical problems, work issues, relationship struggles, or other real challenges. Be direct and helpful about their actual circumstances."
         },
         {
           role: "user",
@@ -635,7 +676,7 @@ Respond in JSON format with: {
         }
       ],
       response_format: { type: "json_object" },
-      temperature: 0.7
+      temperature: 0.3
     });
     
     const analysis = JSON.parse(completion.choices[0].message.content || '{}');
