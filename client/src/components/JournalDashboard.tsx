@@ -27,7 +27,7 @@ interface JournalAnalytics {
 }
 
 interface JournalDashboardProps {
-  userId: number;
+  userId: number | null;
 }
 
 // Utility Components
@@ -130,8 +130,8 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
     error: analyticsError,
     refetch: refetchAnalytics
   } = useQuery<JournalAnalytics>({
-    queryKey: ['/api/journal/analytics', userId],
-    enabled: !!userId && activeView === 'analytics',
+    queryKey: ['/api/journal/analytics'],
+    enabled: false, // Temporarily disabled - will implement device fingerprint approach later
     retry: 2,
     staleTime: 10 * 60 * 1000, // 10 minutes
   });
