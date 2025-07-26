@@ -151,6 +151,14 @@ export interface IStorage {
   createUserAchievement(data: InsertUserAchievement): Promise<UserAchievement>;
   updateWellnessStreak(streakId: number, updates: any): Promise<void>;
   
+  // Gamification count methods
+  getDailyCheckinCount(userId: number): Promise<number>;
+  getJournalEntryCount(userId: number): Promise<number>;
+  getMoodEntryCount(userId: number): Promise<number>;
+  getChatSessionCount(userId: number): Promise<number>;
+  getGoalProgressCount(userId: number): Promise<number>;
+  getDailyActivitiesHistory(userId: number, days?: number): Promise<any[]>;
+  
   // Advanced Emotional Intelligence
   createEmotionalContext(data: InsertEmotionalContext): Promise<EmotionalContext>;
   createMoodForecast(data: InsertMoodForecast): Promise<MoodForecast>;
@@ -647,6 +655,52 @@ export class DbStorage implements IStorage {
       .update(wellnessStreaks)
       .set(updates)
       .where(eq(wellnessStreaks.id, streakId));
+  }
+
+  // Gamification count methods
+  async getDailyCheckinCount(userId: number): Promise<number> {
+    // Count daily activities or check-ins for this user
+    const count = await this.db.select({ count: sql<number>`count(*)` })
+      .from(dailyActivities)
+      .where(eq(dailyActivities.userId, userId));
+    return count[0]?.count || 0;
+  }
+
+  async getJournalEntryCount(userId: number): Promise<number> {
+    const count = await this.db.select({ count: sql<number>`count(*)` })
+      .from(journalEntries)
+      .where(eq(journalEntries.userId, userId));
+    return count[0]?.count || 0;
+  }
+
+  async getMoodEntryCount(userId: number): Promise<number> {
+    const count = await this.db.select({ count: sql<number>`count(*)` })
+      .from(moodEntries)
+      .where(eq(moodEntries.userId, userId));
+    return count[0]?.count || 0;
+  }
+
+  async getChatSessionCount(userId: number): Promise<number> {
+    const count = await this.db.select({ count: sql<number>`count(distinct date_trunc('day', created_at))` })
+      .from(messages)
+      .where(eq(messages.userId, userId));
+    return count[0]?.count || 0;
+  }
+
+  async getGoalProgressCount(userId: number): Promise<number> {
+    const count = await this.db.select({ count: sql<number>`count(*)` })
+      .from(therapeuticGoals)
+      .where(and(eq(therapeuticGoals.userId, userId), eq(therapeuticGoals.isActive, true)));
+    return count[0]?.count || 0;
+  }
+
+  async getDailyActivitiesHistory(userId: number, days: number = 30): Promise<any[]> {
+    // Get daily activity summary for gamification
+    const activities = await this.db.select().from(dailyActivities)
+      .where(eq(dailyActivities.userId, userId))
+      .orderBy(desc(dailyActivities.date))
+      .limit(days);
+    return activities;
   }
 
   // Advanced Emotional Intelligence Storage Methods
