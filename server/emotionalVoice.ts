@@ -182,9 +182,9 @@ export async function generateEmotionalVoice(options: VoiceGenerationOptions): P
     });
     
     // Convert stream to buffer
-    const chunks: Buffer[] = [];
+    const chunks: Uint8Array[] = [];
     for await (const chunk of audioStream) {
-      chunks.push(chunk);
+      chunks.push(new Uint8Array(chunk));
     }
     
     return Buffer.concat(chunks);
