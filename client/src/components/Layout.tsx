@@ -107,7 +107,7 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
             </div>
             <div className="flex justify-center mb-8">
               <button
-                onClick={() => setShowMovableChat(true)}
+                onClick={() => setActiveSection('chat')}
                 className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold text-lg rounded-2xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 border-2 border-white/20"
               >
                 🧘 Start Your Reflection Journey
@@ -155,6 +155,97 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
         return <Horoscope />;
       case 'affirmation':
         return <DailyAffirmation />;
+      case 'chat':
+        return (
+          <div className="h-full flex flex-col relative overflow-hidden">
+            {/* AI Companion Header */}
+            <div className="flex-shrink-0 theme-card border-b border-white/10 p-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <div className="relative">
+                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-xl">
+                      <Brain className="w-8 h-8 text-white" />
+                    </div>
+                    <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white animate-pulse"></div>
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold theme-text font-serif">
+                      <span className="font-samarkan">Chakrai</span>
+                    </h2>
+                    <p className="theme-text-secondary text-sm">Your AI Wellness Companion</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setActiveSection('home')}
+                  className="p-2 theme-text-secondary hover:theme-text rounded-lg transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Chat Interface */}
+            <div className="flex-1 flex flex-col min-h-0">
+              {/* Chat Messages Area */}
+              <div className="flex-1 p-6 overflow-y-auto space-y-6">
+                {/* Welcome Message */}
+                <div className="flex items-start space-x-3">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center flex-shrink-0">
+                    <Brain className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="theme-card max-w-2xl p-4 rounded-2xl rounded-tl-sm shadow-lg">
+                    <p className="theme-text leading-relaxed">
+                      🌟 Welcome to your reflection journey! I'm Chakrai, your personal AI wellness companion. 
+                      I'm here to support your mental wellness through thoughtful conversation, insights, and guidance.
+                    </p>
+                    <p className="theme-text leading-relaxed mt-3">
+                      How are you feeling today? What's on your mind? I'm here to listen and help you explore your thoughts and emotions.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Chat Input Area */}
+              <div className="flex-shrink-0 theme-card border-t border-white/10 p-6">
+                <div className="max-w-4xl mx-auto">
+                  <div className="flex items-end space-x-4">
+                    <div className="flex-1">
+                      <div className="relative">
+                        <textarea
+                          placeholder="Share your thoughts, feelings, or ask me anything..."
+                          className="w-full theme-input resize-none rounded-2xl pl-4 pr-12 py-4 min-h-[60px] max-h-32 focus:ring-2 focus:ring-blue-500/50 transition-all"
+                          rows={2}
+                        />
+                        <button className="absolute right-3 bottom-3 p-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-full hover:shadow-lg transition-all transform hover:scale-105">
+                          <Send className="w-5 h-5" />
+                        </button>
+                      </div>
+                    </div>
+                    <button className="p-3 theme-text-secondary hover:theme-text rounded-full transition-colors">
+                      <Mic className="w-6 h-6" />
+                    </button>
+                  </div>
+                  
+                  {/* Quick Actions */}
+                  <div className="flex flex-wrap gap-2 mt-4">
+                    <button className="px-4 py-2 theme-card-hover rounded-full text-sm theme-text-secondary hover:theme-text transition-colors border border-white/10">
+                      💭 How am I feeling today?
+                    </button>
+                    <button className="px-4 py-2 theme-card-hover rounded-full text-sm theme-text-secondary hover:theme-text transition-colors border border-white/10">
+                      🎯 Set a wellness goal
+                    </button>
+                    <button className="px-4 py-2 theme-card-hover rounded-full text-sm theme-text-secondary hover:theme-text transition-colors border border-white/10">
+                      📝 Journal my thoughts
+                    </button>
+                    <button className="px-4 py-2 theme-card-hover rounded-full text-sm theme-text-secondary hover:theme-text transition-colors border border-white/10">
+                      🧘 Guided meditation
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
       default:
         return (
           <div className="p-6 space-y-6 max-h-full overflow-y-auto">
@@ -205,23 +296,19 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
                 {!collapsedSections.core && (
                   <div className="space-y-1">
                     {[
-                      { id: 'home', label: 'Chat with Chakrai' },
+                      { id: 'home', label: 'Home' },
+                      { id: 'chat', label: 'Chat with Chakrai' },
                       { id: 'challenges', label: 'Reflection Goals' },
                       { id: 'rewards', label: 'Reflection Rewards' }
                     ].map((tab) => (
                       <button
                         key={tab.id}
                         onClick={() => {
-                          if (tab.id === 'home') {
-                            setShowMovableChat(true);
-                          } else {
-                            setActiveSection(tab.id);
-                            setIsFloatingChatOpen(false);
-                          }
+                          setActiveSection(tab.id);
+                          setIsFloatingChatOpen(false);
                         }}
                         className={`w-full h-9 px-3 text-xs font-medium transition-all rounded text-left ${
-                          (tab.id === 'home' && showMovableChat) || 
-                          (activeSection === tab.id && tab.id !== 'home')
+                          activeSection === tab.id
                             ? 'bg-blue-500/20 border border-blue-500/30 theme-text'
                             : 'theme-text hover:bg-white/5'
                         }`}
