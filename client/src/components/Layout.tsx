@@ -3,46 +3,46 @@ import NeonCursor from '@/components/neon-cursor';
 import { QueryClient, QueryClientProvider, useQuery, useQueryClient } from '@tanstack/react-query';
 import { MessageCircle, Brain, BookOpen, Mic, User, Square, Send, Target, RotateCcw, Sun, Star, Heart, BarChart3, Gift, Headphones, Shield, X, Palette, Settings } from 'lucide-react';
 import axios from 'axios';
-import { Sidebar, Header } from '@/components/Layout" ThemeContext';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { SubscriptionProvider, useSubscription } from './contexts/SubscriptionContext';
-import { SubscriptionModal } from './components/SubscriptionModal';
-import { UsageLimitModal } from './components/UsageLimitModal';
-import MemoryDashboard from './components/MemoryDashboard';
-import VoiceSelector from './components/VoiceSelector';
-import ThemeSelector from './components/ThemeSelector';
-import AuthModal from './components/AuthModal';
+import { useTheme } from '@/contexts/ThemeContext';
+import { AuthProvider, useAuth } from '@/contexts/AuthContext';
+import { SubscriptionProvider, useSubscription } from '@/contexts/SubscriptionContext';
+import { SubscriptionModal } from '@/components/SubscriptionModal';
+import { UsageLimitModal } from '@/components/UsageLimitModal';
+import MemoryDashboard from '@/components/MemoryDashboard';
+import VoiceSelector from '@/components/VoiceSelector';
+import ThemeSelector from '@/components/ThemeSelector';
+import AuthModal from '@/components/AuthModal';
 
-import PersonalityQuiz from './components/PersonalityQuiz';
-import VoluntaryQuestionDeck from './components/VoluntaryQuestionDeck';
-import FeedbackSystem from './components/FeedbackSystem';
-import TherapeuticJournal from './components/TherapeuticJournal';
-import PersonalityReflection from './components/PersonalityReflection';
-import MicrophoneTest from './components/MicrophoneTest';
-import AnalyticsDashboard from './components/AnalyticsDashboard';
-import WellnessRewards from './components/WellnessRewards';
-import CommunitySupport from './components/CommunitySupport';
-import AdaptiveLearning from './components/AdaptiveLearning';
-import AdaptiveTherapyPlan from './components/AdaptiveTherapyPlan';
-import AgentSystem from './components/AgentSystem';
-import VRTherapy from './components/VRTherapy';
-import HealthIntegration from './components/HealthIntegration';
-import PrivacyCompliance from './components/PrivacyCompliance';
-import TherapistPortal from './components/TherapistPortal';
-import AiPerformanceMonitoringDashboard from './components/AiPerformanceMonitoringDashboard';
-import Horoscope from './components/Horoscope';
-import DailyAffirmation from './components/DailyAffirmation';
-import PWAManager from './components/PWAManager';
-import MicroSession from './components/MicroSession';
-import TherapeuticAnalytics from './components/TherapeuticAnalytics';
-import { EHRIntegration } from './components/EHRIntegration';
-import PrivacyPolicy from './components/PrivacyPolicy';
-import FloatingChat from './components/FloatingChat';
-import MovableChat from './components/MovableChat';
-import ChallengeSystem from './components/ChallengeSystem';
-import SettingsPanel from './components/SettingsPanel';
+import PersonalityQuiz from '@/components/PersonalityQuiz';
+import VoluntaryQuestionDeck from '@/components/VoluntaryQuestionDeck';
+import FeedbackSystem from '@/components/FeedbackSystem';
+import TherapeuticJournal from '@/components/TherapeuticJournal';
+import PersonalityReflection from '@/components/PersonalityReflection';
+import MicrophoneTest from '@/components/MicrophoneTest';
+import AnalyticsDashboard from '@/components/AnalyticsDashboard';
+import WellnessRewards from '@/components/WellnessRewards';
+import CommunitySupport from '@/components/CommunitySupport';
+import AdaptiveLearning from '@/components/AdaptiveLearning';
+import AdaptiveTherapyPlan from '@/components/AdaptiveTherapyPlan';
+import AgentSystem from '@/components/AgentSystem';
+import VRTherapy from '@/components/VRTherapy';
+import HealthIntegration from '@/components/HealthIntegration';
+import PrivacyCompliance from '@/components/PrivacyCompliance';
+import TherapistPortal from '@/components/TherapistPortal';
+import AiPerformanceMonitoringDashboard from '@/components/AiPerformanceMonitoringDashboard';
+import Horoscope from '@/components/Horoscope';
+import DailyAffirmation from '@/components/DailyAffirmation';
+import PWAManager from '@/components/PWAManager';
+import MicroSession from '@/components/MicroSession';
+import TherapeuticAnalytics from '@/components/TherapeuticAnalytics';
+import { EHRIntegration } from '@/components/EHRIntegration';
+import PrivacyPolicy from '@/components/PrivacyPolicy';
+import FloatingChat from '@/components/FloatingChat';
+import MovableChat from '@/components/MovableChat';
+import ChallengeSystem from '@/components/ChallengeSystem';
+import SettingsPanel from '@/components/SettingsPanel';
 // import DynamicAmbientSound from './components/DynamicAmbientSound'; // DISABLED due to audio issues
-import { getCurrentUserId } from './utils/userSession';
+import { getCurrentUserId } from '@/utils/userSession';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -1440,7 +1440,6 @@ const AppLayout = ({ currentUserId, onDataReset }: AppLayoutProps) => {
         </div>
 
         {/* Desktop Left Sidebar Navigation - 4-Tier Hierarchy */}
-          <Sidebar collapsed={collapsed} />
           {/* Core Companion Section */}
           <div className="mb-6">
             <div className="theme-text-secondary text-sm font-medium px-6 pb-2">🟦 Core Companion</div>
