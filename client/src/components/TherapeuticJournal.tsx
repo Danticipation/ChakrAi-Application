@@ -448,7 +448,7 @@ const TherapeuticJournal: React.FC<TherapeuticJournalProps> = ({ userId, onEntry
     if (activeTab === 'analytics') {
       fetchAnalytics();
     }
-  }, [userId, activeTab]);
+  }, [activeTab]); // Removed userId dependency since we use device fingerprint approach
 
   const selectedMood = moodOptions.find(mood => mood.value === entry.mood) || moodOptions[2];
 

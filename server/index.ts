@@ -258,19 +258,19 @@ app.get('/api/users/:userId/streak-stats', (req, res) => {
   });
 });
 
-// Journal entries endpoint - MUST BE BEFORE VITE to prevent HTML interception
-app.get('/api/journal/:userId', async (req, res) => {
-  try {
-    const userId = parseInt(req.params.userId);
-    console.log('Journal API endpoint hit for user:', userId);
-    const entries = await storage.getJournalEntries(userId);
-    console.log('Retrieved entries:', entries ? entries.length : 0);
-    res.json(entries || []);
-  } catch (error) {
-    console.error('Failed to fetch journal entries:', error);
-    res.status(500).json({ error: 'Failed to fetch journal entries' });
-  }
-});
+// OLD Journal entries endpoint - DISABLED to prevent NaN errors, use device fingerprint approach instead
+// app.get('/api/journal/:userId', async (req, res) => {
+//   try {
+//     const userId = parseInt(req.params.userId);
+//     console.log('Journal API endpoint hit for user:', userId);
+//     const entries = await storage.getJournalEntries(userId);
+//     console.log('Retrieved entries:', entries ? entries.length : 0);
+//     res.json(entries || []);
+//   } catch (error) {
+//     console.error('Failed to fetch journal entries:', error);
+//     res.status(500).json({ error: 'Failed to fetch journal entries' });
+//   }
+// });
 
 // Journal entries endpoint using device fingerprint - NEW
 app.get('/api/journal/user-entries', async (req, res) => {
