@@ -60,17 +60,14 @@ const workingHTML = `<!DOCTYPE html>
 app.use(cors());
 app.use(express.json());
 
-// Emergency fallback route first  
-app.get('/emergency', (req, res) => {
-  res.sendFile(join(__dirname, 'emergency-simple.html'));
+// Emergency route - serve working HTML directly
+app.get('/', (req, res) => {
+  res.send(workingHTML);
 });
 
-// Serve the React application
-app.use(express.static('client/dist'));
-
-// SPA fallback - serve index.html for all routes
+// Serve the working HTML for all routes
 app.get('*', (req, res) => {
-  res.sendFile(join(__dirname, 'client/dist/index.html'));
+  res.send(workingHTML);
 });
 
 // Chat endpoint with therapeutic responses
