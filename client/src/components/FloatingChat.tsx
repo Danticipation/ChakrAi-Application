@@ -261,8 +261,12 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
         setMessages(prev => [...prev, botMessage]);
         console.log('✅ Bot message added:', botMessage.text);
 
-        // Auto-play voice response if voice is enabled
-        if (selectedVoice && (response.data.message || response.data.response)) {
+        // Auto-play voice response if audio is available
+        if (selectedVoice && response.data.audioUrl) {
+          console.log('🔊 Playing audio response...');
+          playBase64Audio(response.data.audioUrl);
+        } else if (selectedVoice && (response.data.message || response.data.response)) {
+          console.log('🔊 No audio in response, using fallback TTS...');
           playVoiceResponse(response.data.message || response.data.response || '');
         }
       } else {
@@ -284,6 +288,61 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
       setIsLoading(false);
     }
   }, [selectedVoice]);
+
+  const playBase64Audio = useCallback(async (base64Audio: string): Promise<void> => {
+    if (!base64Audio || isPlayingVoice) return;
+
+    setIsPlayingVoice(true);
+    try {
+      console.log('🎵 Converting base64 to audio blob...');
+      
+      // Convert base64 to binary data
+      const binaryString = atob(base64Audio);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      
+      const audioBlob = new Blob([bytes], { type: 'audio/mpeg' });
+      const audioUrl = URL.createObjectURL(audioBlob);
+      
+      console.log('🎵 Created audio URL, size:', audioBlob.size, 'bytes');
+      
+      if (audioRef.current) {
+        audioRef.current.pause();
+        URL.revokeObjectURL(audioRef.current.src);
+      }
+
+      audioRef.current = new Audio(audioUrl);
+      audioRef.current.volume = 0.8;
+      audioRef.current.onended = () => {
+        console.log('🎵 Audio playback ended');
+        setIsPlayingVoice(false);
+        URL.revokeObjectURL(audioUrl);
+      };
+      audioRef.current.onerror = (e) => {
+        console.error('🎵 Audio playback error:', e);
+        setIsPlayingVoice(false);
+        URL.revokeObjectURL(audioUrl);
+      };
+      audioRef.current.oncanplay = () => {
+        console.log('🎵 Audio ready to play');
+      };
+      
+      try {
+        console.log('🎵 Starting audio playback...');
+        await audioRef.current.play();
+        console.log('🎵 Audio playback started successfully');
+      } catch (playError) {
+        console.error('🎵 Autoplay prevented:', playError);
+        setIsPlayingVoice(false);
+        URL.revokeObjectURL(audioUrl);
+      }
+    } catch (error) {
+      console.error('🎵 Error playing base64 audio:', error);
+      setIsPlayingVoice(false);
+    }
+  }, [isPlayingVoice]);
 
   const playVoiceResponse = useCallback(async (text: string): Promise<void> => {
     if (!selectedVoice || isPlayingVoice) return;
