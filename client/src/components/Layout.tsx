@@ -1965,7 +1965,6 @@ const AppLayout = ({ currentUserId, onDataReset }: AppLayoutProps) => {
             </div>
           )}
         </div>
-        }
 
         {/* Right Stats Sidebar - Enhanced with Rounded Cards and Gradients */}
         <div className="hidden lg:block w-96 py-8 px-8">
