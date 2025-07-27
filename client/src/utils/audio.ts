@@ -77,8 +77,10 @@ export const startRecording = async (
 
     let lastSoundTime = Date.now();
     let isContextClosed = false;
-    const SILENCE_THRESHOLD = 20; // Adjust this value (0-255) - lower = more sensitive to silence
+    let recordingStartTime = Date.now();
+    const SILENCE_THRESHOLD = 30; // Increased from 20 to reduce false positives
     const SILENCE_DURATION = 5000; // 5 seconds of silence
+    const MIN_RECORDING_DURATION = 1000; // Minimum 1 second before silence detection kicks in
 
     // Safe AudioContext cleanup
     const closeAudioContext = () => {
@@ -94,16 +96,21 @@ export const startRecording = async (
       
       analyser.getByteFrequencyData(dataArray);
       const volume = dataArray.reduce((sum, value) => sum + value, 0) / dataArray.length;
+      const currentTime = Date.now();
       
       if (volume > SILENCE_THRESHOLD) {
-        lastSoundTime = Date.now();
+        lastSoundTime = currentTime;
       } else {
-        // Check if we've been silent for too long
-        if (Date.now() - lastSoundTime > SILENCE_DURATION) {
-          console.log('🔇 Auto-stopping due to 5 seconds of silence');
-          stopRecording(mediaRecorderRef, setIsRecording);
-          closeAudioContext();
-          return;
+        // Only check for silence after minimum recording duration
+        const recordingDuration = currentTime - recordingStartTime;
+        if (recordingDuration > MIN_RECORDING_DURATION) {
+          // Check if we've been silent for too long
+          if (currentTime - lastSoundTime > SILENCE_DURATION) {
+            console.log('🔇 Auto-stopping due to 5 seconds of silence (after 1s minimum)');
+            stopRecording(mediaRecorderRef, setIsRecording);
+            closeAudioContext();
+            return;
+          }
         }
       }
       
@@ -120,9 +127,22 @@ export const startRecording = async (
       closeAudioContext();
       if (audioChunksRef.current.length > 0) {
         const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
-        await sendAudioToWhisper(audioBlob, setInput);
+        
+        // Validate audio blob before sending to transcription
+        const recordingDuration = Date.now() - recordingStartTime;
+        if (audioBlob.size < 1000) { // Less than 1KB is likely just noise
+          console.log('🚫 Recording too small, likely just noise. Skipping transcription.');
+          setInput(''); // Clear any placeholder text
+        } else if (recordingDuration < 500) { // Less than 0.5 seconds
+          console.log('🚫 Recording too short, likely accidental. Skipping transcription.');
+          setInput(''); // Clear any placeholder text
+        } else {
+          console.log(`🎤 Valid recording: ${audioBlob.size} bytes, ${recordingDuration}ms duration`);
+          await sendAudioToWhisper(audioBlob, setInput);
+        }
       } else {
-        alert('No audio was recorded. Please try again.');
+        console.log('🚫 No audio chunks recorded');
+        setInput(''); // Clear any placeholder text
       }
       stream.getTracks().forEach((track) => track.stop());
     };
