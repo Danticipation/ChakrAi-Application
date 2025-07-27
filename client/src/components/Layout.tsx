@@ -100,6 +100,25 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
     }
   };
 
+  // Device fingerprint generation
+  const generateDeviceFingerprint = () => {
+    const stored = localStorage.getItem('chakrai_device_fingerprint');
+    if (stored) return stored;
+    
+    const fingerprint = `device_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
+    localStorage.setItem('chakrai_device_fingerprint', fingerprint);
+    return fingerprint;
+  };
+
+  const generateSessionId = () => {
+    const stored = sessionStorage.getItem('chakrai_session_id');
+    if (stored) return stored;
+    
+    const sessionId = `session_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
+    sessionStorage.setItem('chakrai_session_id', sessionId);
+    return sessionId;
+  };
+
   // Send message functionality
   const handleSendMessage = async () => {
     if (!chatInput.trim()) return;
@@ -112,24 +131,32 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
     
     setMessages(prev => [...prev, userMessage]);
     
-    // Send to AI API
+    // Send to AI API with device fingerprint headers and voice parameter
     try {
+      const deviceFingerprint = generateDeviceFingerprint();
+      const sessionId = generateSessionId();
+      
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'X-Device-Fingerprint': deviceFingerprint,
+          'X-Session-Id': sessionId
         },
         body: JSON.stringify({
           message: chatInput,
-          userId: currentUserId || 98
+          voice: 'carla' // Default voice, can be made configurable later
         })
       });
       
       if (response.ok) {
         const data = await response.json();
-        console.log('Chat API response:', data);
+        console.log('📥 Main Chat API response:', data);
+        console.log('🔍 Main Chat - audioUrl exists:', !!data.audioUrl);
+        console.log('🔍 Main Chat - audioUrl length:', data.audioUrl?.length);
+        console.log('🔍 Main Chat - response keys:', Object.keys(data));
         
-        // Clear input and add user message immediately
+        // Clear input first
         setChatInput('');
         
         const botMessage = {
@@ -138,6 +165,29 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
           time: new Date().toLocaleTimeString()
         };
         setMessages(prev => [...prev, botMessage]);
+        
+        // Play audio if available
+        if (data.audioUrl) {
+          console.log('🔊 Main Chat - Playing audio response...');
+          try {
+            // Convert base64 to audio blob and play
+            const binaryString = atob(data.audioUrl);
+            const bytes = new Uint8Array(binaryString.length);
+            for (let i = 0; i < binaryString.length; i++) {
+              bytes[i] = binaryString.charCodeAt(i);
+            }
+            const audioBlob = new Blob([bytes], { type: 'audio/mpeg' });
+            const audioUrl = URL.createObjectURL(audioBlob);
+            const audio = new Audio(audioUrl);
+            audio.play().catch(error => {
+              console.error('Audio playback failed:', error);
+            });
+          } catch (audioError) {
+            console.error('Audio processing failed:', audioError);
+          }
+        } else {
+          console.log('🔇 Main Chat - No audio in response');
+        }
       } else {
         console.error('Chat API error:', response.status, response.statusText);
         const errorText = await response.text();
