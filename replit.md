@@ -66,16 +66,16 @@ Chakrai is a professional mental wellness and therapy application designed for p
 - **Cost-Effective Development**: Ollama integration enables local development and testing without OpenAI API costs while maintaining full therapeutic AI capabilities
 - **Production Readiness Maintained**: OpenAI integration preserved for production environment ensuring reliable, high-quality therapeutic AI responses for end users
 
-### July 27, 2025 - VOICE RECORDING SYSTEM ENHANCED - 45-Second Time Limit with 5-Second Silence Detection Implemented
+### July 27, 2025 - VOICE RECORDING SYSTEM ENHANCED - Manual Control with 45-Second Timeout Only
 
 - **Extended Recording Time**: Increased voice recording limit from 30 to 45 seconds for longer therapeutic conversations while maintaining performance
-- **Intelligent Silence Detection**: Added automatic stop feature that ends recording after 5 seconds of continuous silence using Web Audio API frequency analysis
-- **Advanced Audio Analysis**: Implemented AudioContext with AnalyserNode for real-time audio level monitoring and silence threshold detection (configurable at 20/255 sensitivity)
-- **Comprehensive Timeout System**: Dual timeout protection - 45-second maximum duration and 5-second silence detection with clear console logging for debugging
-- **Enhanced User Experience**: Voice recording now adapts to natural conversation patterns, stopping automatically when user finishes speaking rather than requiring manual stop
-- **Production Ready Audio Intelligence**: Complete silence detection system with frequency domain analysis, smoothing constants, and requestAnimationFrame monitoring for optimal performance
+- **Silence Detection Disabled**: Removed automatic silence detection due to cutting off natural speech pauses - now uses manual stop or 45-second timeout only
+- **Natural Speech Flow Prioritized**: Eliminated aggressive audio monitoring that was interrupting users during normal breathing and thinking pauses
+- **Enhanced Audio Validation**: Implemented comprehensive transcription filtering to prevent nonsensical results (emoji-only text, YouTube phrases, symbol-only content)
+- **Improved Audio Constraints**: Added minimum recording validation (2KB size, 0.8s duration) to filter out accidental taps and noise
+- **Manual Control Emphasis**: Voice recording now relies entirely on user control - start recording, speak naturally with pauses, manually stop when finished
 - **Main Chat Interface Voice Integration**: Fixed critical missing device fingerprint headers and voice parameters in Layout.tsx main chat - voice synthesis now fully operational
-- **Comprehensive Debug Logging**: Added detailed logging for main chat API responses, audioUrl detection, and audio playback success/failure for troubleshooting
+- **Comprehensive Debug Logging**: Added detailed logging for recording validation, transcription filtering, and audio playback success/failure for troubleshooting
 
 ### July 26, 2025 - CRITICAL AI ANALYSIS SYSTEM COMPLETELY RESTORED - Core Therapeutic Functionality Now Fully Operational
 

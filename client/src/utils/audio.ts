@@ -115,36 +115,12 @@ export const startRecording = async (
       }
     };
 
-    // Monitor audio levels for silence detection
-    let consecutiveSilenceCount = 0;
-    const CONSECUTIVE_SILENCE_THRESHOLD = 30; // 30 consecutive silent frames before considering silence
-    
+    // Simplified silence detection - only for very long pauses (disabled for now)
     const checkSilence = () => {
       if (mediaRecorder.state !== 'recording' || isContextClosed) return;
       
-      analyser.getByteFrequencyData(dataArray);
-      const volume = dataArray.reduce((sum, value) => sum + value, 0) / dataArray.length;
-      const currentTime = Date.now();
-      
-      if (volume > SILENCE_THRESHOLD) {
-        lastSoundTime = currentTime;
-        consecutiveSilenceCount = 0; // Reset silence counter
-      } else {
-        consecutiveSilenceCount++;
-        
-        // Only check for silence after minimum recording duration and consecutive silent frames
-        const recordingDuration = currentTime - recordingStartTime;
-        if (recordingDuration > MIN_RECORDING_DURATION && consecutiveSilenceCount > CONSECUTIVE_SILENCE_THRESHOLD) {
-          // Check if we've been silent for too long
-          if (currentTime - lastSoundTime > SILENCE_DURATION) {
-            console.log('🔇 Auto-stopping due to 3 seconds of continuous silence (after 2s minimum)');
-            stopRecording(mediaRecorderRef, setIsRecording);
-            closeAudioContext();
-            return;
-          }
-        }
-      }
-      
+      // Disabled automatic silence detection to prevent cutting off natural speech
+      // Only rely on manual stop or 45-second timeout
       requestAnimationFrame(checkSilence);
     };
 
