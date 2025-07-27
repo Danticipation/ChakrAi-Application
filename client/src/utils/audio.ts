@@ -16,11 +16,29 @@ export const sendAudioToWhisper = async (audioBlob: Blob, setInput: (text: strin
       console.log('Transcription result:', data);
 
       if (data.text && data.text.trim()) {
-        setInput(data.text.trim());
-        console.log('Input set to:', data.text.trim());
+        const transcription = data.text.trim();
+        
+        // Filter out common nonsensical transcriptions
+        const nonsensicalPatterns = [
+          /^[^\w\s]*$/, // Only symbols/emojis
+          /^.{1,3}$/, // Very short (1-3 characters)
+          /^(thank you|thanks|watching|subscribe)/i, // Common YouTube-like phrases
+          /^[🧡❤️💙💚💛💜🖤🤍🤎]+$/, // Only heart emojis
+          /^[\s.,!?\-]*$/, // Only punctuation/whitespace (dash escaped)
+        ];
+        
+        const isNonsensical = nonsensicalPatterns.some(pattern => pattern.test(transcription));
+        
+        if (isNonsensical) {
+          console.log('🚫 Transcription appears nonsensical, filtering out:', transcription);
+          setInput(''); // Don't set nonsensical text
+        } else {
+          setInput(transcription);
+          console.log('✅ Valid transcription set:', transcription);
+        }
       } else {
         console.log('Empty transcription result');
-        alert('No speech detected. Please try speaking louder or closer to the microphone.');
+        setInput(''); // Clear input instead of showing alert
       }
     } else {
       const errorData = await response.text();
@@ -46,7 +64,14 @@ export const startRecording = async (
         noiseSuppression: true,
         autoGainControl: true,
         sampleRate: 44100,
-        channelCount: 1
+        channelCount: 1,
+        // Prevent system audio capture
+        suppressLocalAudioPlayback: true,
+        googEchoCancellation: true,
+        googAutoGainControl: true,
+        googNoiseSuppression: true,
+        googHighpassFilter: true,
+        googTypingNoiseDetection: true
       }
     };
 
@@ -130,14 +155,16 @@ export const startRecording = async (
         
         // Validate audio blob before sending to transcription
         const recordingDuration = Date.now() - recordingStartTime;
-        if (audioBlob.size < 1000) { // Less than 1KB is likely just noise
-          console.log('🚫 Recording too small, likely just noise. Skipping transcription.');
+        console.log(`📊 Recording analysis: ${audioBlob.size} bytes, ${recordingDuration}ms duration`);
+        
+        if (audioBlob.size < 5000) { // Increased from 1KB to 5KB - very small recordings are likely noise
+          console.log('🚫 Recording too small (< 5KB), likely just noise/silence. Skipping transcription.');
           setInput(''); // Clear any placeholder text
-        } else if (recordingDuration < 500) { // Less than 0.5 seconds
-          console.log('🚫 Recording too short, likely accidental. Skipping transcription.');
+        } else if (recordingDuration < 1500) { // Increased from 0.5s to 1.5s minimum
+          console.log('🚫 Recording too short (< 1.5s), likely accidental tap. Skipping transcription.');
           setInput(''); // Clear any placeholder text
         } else {
-          console.log(`🎤 Valid recording: ${audioBlob.size} bytes, ${recordingDuration}ms duration`);
+          console.log(`🎤 Valid recording passed validation - sending to transcription`);
           await sendAudioToWhisper(audioBlob, setInput);
         }
       } else {
