@@ -247,6 +247,9 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
       });
       
       console.log('📥 Chat API response:', response.data);
+      console.log('🔍 Audio data check - audioUrl exists:', !!response.data.audioUrl);
+      console.log('🔍 Audio data check - audioUrl length:', response.data.audioUrl?.length);
+      console.log('🔍 Selected voice:', selectedVoice);
 
       // Check if we have a valid response (success field or message/response field)
       if (response.data.success !== false && (response.data.message || response.data.response)) {
