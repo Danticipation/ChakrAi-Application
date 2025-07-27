@@ -66,6 +66,17 @@ Chakrai is a professional mental wellness and therapy application designed for p
 - **Cost-Effective Development**: Ollama integration enables local development and testing without OpenAI API costs while maintaining full therapeutic AI capabilities
 - **Production Readiness Maintained**: OpenAI integration preserved for production environment ensuring reliable, high-quality therapeutic AI responses for end users
 
+### July 27, 2025 - VOICE RECORDING SYSTEM ENHANCED - 45-Second Time Limit with 5-Second Silence Detection Implemented
+
+- **Extended Recording Time**: Increased voice recording limit from 30 to 45 seconds for longer therapeutic conversations while maintaining performance
+- **Intelligent Silence Detection**: Added automatic stop feature that ends recording after 5 seconds of continuous silence using Web Audio API frequency analysis
+- **Advanced Audio Analysis**: Implemented AudioContext with AnalyserNode for real-time audio level monitoring and silence threshold detection (configurable at 20/255 sensitivity)
+- **Comprehensive Timeout System**: Dual timeout protection - 45-second maximum duration and 5-second silence detection with clear console logging for debugging
+- **Enhanced User Experience**: Voice recording now adapts to natural conversation patterns, stopping automatically when user finishes speaking rather than requiring manual stop
+- **Production Ready Audio Intelligence**: Complete silence detection system with frequency domain analysis, smoothing constants, and requestAnimationFrame monitoring for optimal performance
+- **Main Chat Interface Voice Integration**: Fixed critical missing device fingerprint headers and voice parameters in Layout.tsx main chat - voice synthesis now fully operational
+- **Comprehensive Debug Logging**: Added detailed logging for main chat API responses, audioUrl detection, and audio playback success/failure for troubleshooting
+
 ### July 26, 2025 - CRITICAL AI ANALYSIS SYSTEM COMPLETELY RESTORED - Core Therapeutic Functionality Now Fully Operational
 
 - **AI Analysis System Fully Functional**: Successfully fixed the core issue where AI analysis of conversations and journal entries was completely non-functional - now 100% working with real AI integration

@@ -65,6 +65,42 @@ export const startRecording = async (
     mediaRecorderRef.current = mediaRecorder;
     audioChunksRef.current = [];
 
+    // Silence detection setup
+    const audioContext = new AudioContext();
+    const analyser = audioContext.createAnalyser();
+    const microphone = audioContext.createMediaStreamSource(stream);
+    const dataArray = new Uint8Array(analyser.frequencyBinCount);
+    
+    analyser.smoothingTimeConstant = 0.8;
+    analyser.fftSize = 1024;
+    microphone.connect(analyser);
+
+    let lastSoundTime = Date.now();
+    const SILENCE_THRESHOLD = 20; // Adjust this value (0-255) - lower = more sensitive to silence
+    const SILENCE_DURATION = 5000; // 5 seconds of silence
+
+    // Monitor audio levels for silence detection
+    const checkSilence = () => {
+      if (mediaRecorder.state !== 'recording') return;
+      
+      analyser.getByteFrequencyData(dataArray);
+      const volume = dataArray.reduce((sum, value) => sum + value, 0) / dataArray.length;
+      
+      if (volume > SILENCE_THRESHOLD) {
+        lastSoundTime = Date.now();
+      } else {
+        // Check if we've been silent for too long
+        if (Date.now() - lastSoundTime > SILENCE_DURATION) {
+          console.log('🔇 Auto-stopping due to 5 seconds of silence');
+          stopRecording(mediaRecorderRef, setIsRecording);
+          audioContext.close();
+          return;
+        }
+      }
+      
+      requestAnimationFrame(checkSilence);
+    };
+
     mediaRecorder.ondataavailable = (event) => {
       if (event.data.size > 0) {
         audioChunksRef.current.push(event.data);
@@ -72,6 +108,7 @@ export const startRecording = async (
     };
 
     mediaRecorder.onstop = async () => {
+      audioContext.close();
       if (audioChunksRef.current.length > 0) {
         const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
         await sendAudioToWhisper(audioBlob, setInput);
@@ -83,17 +120,24 @@ export const startRecording = async (
 
     mediaRecorder.onerror = (event) => {
       console.error('MediaRecorder error:', event);
+      audioContext.close();
       alert('Recording error occurred. Please try again.');
     };
 
     mediaRecorder.start(1000);
     setIsRecording(true);
+    
+    // Start silence detection
+    checkSilence();
 
+    // Auto-stop recording after 45 seconds as safety measure
     setTimeout(() => {
       if (mediaRecorderRef.current?.state === 'recording') {
+        console.log('⏰ Auto-stopping due to 45-second time limit');
         stopRecording(mediaRecorderRef, setIsRecording);
+        audioContext.close();
       }
-    }, 30000);
+    }, 45000);
   } catch (error) {
     console.error('Error accessing microphone:', error);
     const err = error as any;
