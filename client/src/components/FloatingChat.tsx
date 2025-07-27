@@ -67,6 +67,7 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
   const [isRecording, setIsRecording] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isPlayingVoice, setIsPlayingVoice] = useState(false);
+  const [lastAudioData, setLastAudioData] = useState<string | null>(null);
   
   // Dragging and resizing state
   const [position, setPosition] = useState({ x: 24, y: 24 });
@@ -264,9 +265,11 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
         // Auto-play voice response if audio is available
         if (selectedVoice && response.data.audioUrl) {
           console.log('🔊 Playing audio response...');
+          setLastAudioData(response.data.audioUrl);
           playBase64Audio(response.data.audioUrl);
         } else if (selectedVoice && (response.data.message || response.data.response)) {
           console.log('🔊 No audio in response, using fallback TTS...');
+          setLastAudioData(null);
           playVoiceResponse(response.data.message || response.data.response || '');
         }
       } else {
@@ -295,6 +298,12 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
     setIsPlayingVoice(true);
     try {
       console.log('🎵 Converting base64 to audio blob...');
+      console.log('🎵 Base64 audio length:', base64Audio.length);
+      
+      // Validate base64 format
+      if (!/^[A-Za-z0-9+/]*={0,2}$/.test(base64Audio)) {
+        throw new Error('Invalid base64 format');
+      }
       
       // Convert base64 to binary data
       const binaryString = atob(base64Audio);
@@ -307,6 +316,7 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
       const audioUrl = URL.createObjectURL(audioBlob);
       
       console.log('🎵 Created audio URL, size:', audioBlob.size, 'bytes');
+      console.log('🎵 Audio URL:', audioUrl);
       
       if (audioRef.current) {
         audioRef.current.pause();
@@ -335,6 +345,20 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
         console.log('🎵 Audio playback started successfully');
       } catch (playError) {
         console.error('🎵 Autoplay prevented:', playError);
+        console.log('🎵 Attempting to handle autoplay restriction...');
+        
+        // Try to enable audio through user interaction
+        document.addEventListener('click', async () => {
+          try {
+            if (audioRef.current) {
+              await audioRef.current.play();
+              console.log('🎵 Audio started after user interaction');
+            }
+          } catch (retryError) {
+            console.error('🎵 Failed to play audio even after user interaction:', retryError);
+          }
+        }, { once: true });
+        
         setIsPlayingVoice(false);
         URL.revokeObjectURL(audioUrl);
       }
@@ -774,20 +798,37 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
           
           {/* Voice controls */}
           {selectedVoice && (
-            <button
-              onClick={isPlayingVoice ? stopVoice : undefined}
-              className="p-2 rounded-xl transition-colors theme-text"
-              style={{
-                backgroundColor: isPlayingVoice 
-                  ? '#ef4444' 
-                  : `var(--theme-surface)`,
-                border: `1px solid var(--theme-accent)`
-              }}
-              disabled={!isPlayingVoice}
-              aria-label={isPlayingVoice ? "Stop voice playback" : "Voice playback"}
-            >
-              {isPlayingVoice ? <VolumeX size={18} /> : <Volume2 size={18} />}
-            </button>
+            <div className="flex space-x-1">
+              {lastAudioData && (
+                <button
+                  onClick={() => playBase64Audio(lastAudioData)}
+                  className="p-2 rounded-xl transition-colors theme-text"
+                  style={{
+                    backgroundColor: `var(--theme-surface)`,
+                    border: `1px solid var(--theme-accent)`
+                  }}
+                  disabled={isPlayingVoice}
+                  aria-label="Play last voice response"
+                  title="Replay last voice response"
+                >
+                  <Volume2 size={18} />
+                </button>
+              )}
+              <button
+                onClick={isPlayingVoice ? stopVoice : undefined}
+                className="p-2 rounded-xl transition-colors theme-text"
+                style={{
+                  backgroundColor: isPlayingVoice 
+                    ? '#ef4444' 
+                    : `var(--theme-surface)`,
+                  border: `1px solid var(--theme-accent)`
+                }}
+                disabled={!isPlayingVoice}
+                aria-label={isPlayingVoice ? "Stop voice playback" : "Voice controls"}
+              >
+                {isPlayingVoice ? <VolumeX size={18} /> : <Volume2 size={18} />}
+              </button>
+            </div>
           )}
 
           {/* Microphone button */}
