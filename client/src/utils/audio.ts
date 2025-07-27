@@ -103,9 +103,9 @@ export const startRecording = async (
     let lastSoundTime = Date.now();
     let isContextClosed = false;
     let recordingStartTime = Date.now();
-    const SILENCE_THRESHOLD = 30; // Increased from 20 to reduce false positives
-    const SILENCE_DURATION = 5000; // 5 seconds of silence
-    const MIN_RECORDING_DURATION = 1000; // Minimum 1 second before silence detection kicks in
+    const SILENCE_THRESHOLD = 15; // Lowered to be more sensitive to actual speech
+    const SILENCE_DURATION = 3000; // Reduced to 3 seconds of continuous silence
+    const MIN_RECORDING_DURATION = 2000; // Minimum 2 seconds before silence detection kicks in
 
     // Safe AudioContext cleanup
     const closeAudioContext = () => {
@@ -116,6 +116,9 @@ export const startRecording = async (
     };
 
     // Monitor audio levels for silence detection
+    let consecutiveSilenceCount = 0;
+    const CONSECUTIVE_SILENCE_THRESHOLD = 30; // 30 consecutive silent frames before considering silence
+    
     const checkSilence = () => {
       if (mediaRecorder.state !== 'recording' || isContextClosed) return;
       
@@ -125,13 +128,16 @@ export const startRecording = async (
       
       if (volume > SILENCE_THRESHOLD) {
         lastSoundTime = currentTime;
+        consecutiveSilenceCount = 0; // Reset silence counter
       } else {
-        // Only check for silence after minimum recording duration
+        consecutiveSilenceCount++;
+        
+        // Only check for silence after minimum recording duration and consecutive silent frames
         const recordingDuration = currentTime - recordingStartTime;
-        if (recordingDuration > MIN_RECORDING_DURATION) {
+        if (recordingDuration > MIN_RECORDING_DURATION && consecutiveSilenceCount > CONSECUTIVE_SILENCE_THRESHOLD) {
           // Check if we've been silent for too long
           if (currentTime - lastSoundTime > SILENCE_DURATION) {
-            console.log('🔇 Auto-stopping due to 5 seconds of silence (after 1s minimum)');
+            console.log('🔇 Auto-stopping due to 3 seconds of continuous silence (after 2s minimum)');
             stopRecording(mediaRecorderRef, setIsRecording);
             closeAudioContext();
             return;
@@ -157,11 +163,11 @@ export const startRecording = async (
         const recordingDuration = Date.now() - recordingStartTime;
         console.log(`📊 Recording analysis: ${audioBlob.size} bytes, ${recordingDuration}ms duration`);
         
-        if (audioBlob.size < 5000) { // Increased from 1KB to 5KB - very small recordings are likely noise
-          console.log('🚫 Recording too small (< 5KB), likely just noise/silence. Skipping transcription.');
+        if (audioBlob.size < 2000) { // Reduced to 2KB - allow shorter legitimate speech
+          console.log('🚫 Recording too small (< 2KB), likely just noise/silence. Skipping transcription.');
           setInput(''); // Clear any placeholder text
-        } else if (recordingDuration < 1500) { // Increased from 0.5s to 1.5s minimum
-          console.log('🚫 Recording too short (< 1.5s), likely accidental tap. Skipping transcription.');
+        } else if (recordingDuration < 800) { // Reduced to 0.8s minimum - allow shorter phrases
+          console.log('🚫 Recording too short (< 0.8s), likely accidental tap. Skipping transcription.');
           setInput(''); // Clear any placeholder text
         } else {
           console.log(`🎤 Valid recording passed validation - sending to transcription`);
