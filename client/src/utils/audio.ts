@@ -76,12 +76,21 @@ export const startRecording = async (
     microphone.connect(analyser);
 
     let lastSoundTime = Date.now();
+    let isContextClosed = false;
     const SILENCE_THRESHOLD = 20; // Adjust this value (0-255) - lower = more sensitive to silence
     const SILENCE_DURATION = 5000; // 5 seconds of silence
 
+    // Safe AudioContext cleanup
+    const closeAudioContext = () => {
+      if (!isContextClosed && audioContext.state !== 'closed') {
+        audioContext.close().catch(err => console.warn('AudioContext close warning:', err));
+        isContextClosed = true;
+      }
+    };
+
     // Monitor audio levels for silence detection
     const checkSilence = () => {
-      if (mediaRecorder.state !== 'recording') return;
+      if (mediaRecorder.state !== 'recording' || isContextClosed) return;
       
       analyser.getByteFrequencyData(dataArray);
       const volume = dataArray.reduce((sum, value) => sum + value, 0) / dataArray.length;
@@ -93,7 +102,7 @@ export const startRecording = async (
         if (Date.now() - lastSoundTime > SILENCE_DURATION) {
           console.log('🔇 Auto-stopping due to 5 seconds of silence');
           stopRecording(mediaRecorderRef, setIsRecording);
-          audioContext.close();
+          closeAudioContext();
           return;
         }
       }
@@ -108,7 +117,7 @@ export const startRecording = async (
     };
 
     mediaRecorder.onstop = async () => {
-      audioContext.close();
+      closeAudioContext();
       if (audioChunksRef.current.length > 0) {
         const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
         await sendAudioToWhisper(audioBlob, setInput);
@@ -120,7 +129,7 @@ export const startRecording = async (
 
     mediaRecorder.onerror = (event) => {
       console.error('MediaRecorder error:', event);
-      audioContext.close();
+      closeAudioContext();
       alert('Recording error occurred. Please try again.');
     };
 
@@ -135,7 +144,7 @@ export const startRecording = async (
       if (mediaRecorderRef.current?.state === 'recording') {
         console.log('⏰ Auto-stopping due to 45-second time limit');
         stopRecording(mediaRecorderRef, setIsRecording);
-        audioContext.close();
+        closeAudioContext();
       }
     }, 45000);
   } catch (error) {
