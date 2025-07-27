@@ -462,6 +462,27 @@ app.get('/api/journal/analytics/:userId', async (req, res) => {
   }
 });
 
+// Ollama status endpoint for testing - MUST BE BEFORE VITE
+app.get('/api/ollama/status', async (req, res) => {
+  try {
+    const { isOllamaAvailable, getAvailableModels } = await import('./ollamaIntegration.js');
+    const available = await isOllamaAvailable();
+    const models = available ? await getAvailableModels() : [];
+    
+    res.json({
+      available,
+      models,
+      host: process.env.OLLAMA_HOST || 'http://localhost:11434'
+    });
+  } catch (error) {
+    res.json({
+      available: false,
+      error: error.message,
+      host: process.env.OLLAMA_HOST || 'http://localhost:11434'
+    });
+  }
+});
+
 // Journal analytics endpoint with device fingerprint - MUST BE BEFORE VITE
 app.get('/api/journal/analytics', async (req, res) => {
   try {

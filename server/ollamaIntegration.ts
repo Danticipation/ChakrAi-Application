@@ -49,7 +49,7 @@ export async function getAvailableModels(): Promise<string[]> {
 // Generate chat response using Ollama
 export async function generateOllamaResponse(
   messages: OllamaMessage[],
-  model: string = 'llama3.1'
+  model: string = 'llama3:8b'
 ): Promise<string> {
   try {
     console.log(`🦙 Generating Ollama response with model: ${model}`);
