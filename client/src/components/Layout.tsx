@@ -72,7 +72,7 @@ class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasErr
 }
 
 const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void}> = ({ currentUserId, onDataReset }) => {
-  const { theme } = useTheme();
+  const { currentTheme } = useTheme();
   const [activeSection, setActiveSection] = useState('home');
   const [selectedVoice, setSelectedVoice] = useState('james');
   
@@ -259,7 +259,7 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
           </div>
         );
       case 'questions':
-        return <VoluntaryQuestionDeck userId={currentUserId} />;
+        return <VoluntaryQuestionDeck />;
       case 'journal':
         return <TherapeuticJournal userId={currentUserId} onEntryCreated={() => {}} />;
       case 'memory':
@@ -283,9 +283,9 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
       case 'therapy-plans':
         return <AdaptiveTherapyPlan userId={currentUserId || 1} onPlanUpdate={() => {}} />;
       case 'daily':
-        return <PersonalityReflection userId={currentUserId} />;
+        return <PersonalityReflection userId={currentUserId || undefined} />;
       case 'feedback':
-        return <FeedbackSystem userId={currentUserId || 1} />;
+        return <FeedbackSystem />;
       case 'microphone-test':
         return <MicrophoneTest />;
       case 'privacy':
@@ -293,7 +293,7 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
       case 'supabase-setup':
         return <SupabaseSetup />;
       case 'ai-monitoring':
-        return <AiPerformanceMonitoringDashboard userId={currentUserId || 1} />;
+        return <AiPerformanceMonitoringDashboard />;
       case 'therapist':
         return <TherapistPortal />;
       case 'horoscope':
