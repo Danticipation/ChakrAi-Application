@@ -7,6 +7,7 @@ import { openai } from './openaiRetry.js';
 import { agentSystem } from './agentSystem.js';
 import { TherapeuticAnalyticsSystem } from './therapeuticAnalytics.js';
 import { userSessionManager } from './userSession.js';
+import { communityService } from './supabaseClient.js';
 
 const analyticsSystem = new TherapeuticAnalyticsSystem();
 
@@ -1326,7 +1327,180 @@ router.get('/user/notification-preferences', async (req, res) => {
     });
   } catch (error) {
     console.error('Failed to get notification preferences:', error);
-    res.status(500).json({ error: 'Failed to get preferences' });
+    res.status(500).json({ error: 'Failed to get notification preferences' });
+  }
+});
+
+// ====================
+// COMMUNITY FEATURES (SUPABASE)
+// ====================
+
+// Forums
+router.get('/community/forums', async (req, res) => {
+  try {
+    const forums = await communityService.getForums();
+    res.json(forums);
+  } catch (error) {
+    console.error('Failed to get forums:', error);
+    res.status(500).json({ error: 'Failed to get forums' });
+  }
+});
+
+router.post('/community/forums', async (req, res) => {
+  try {
+    const forum = await communityService.createForum(req.body);
+    if (!forum) {
+      return res.status(400).json({ error: 'Failed to create forum' });
+    }
+    res.status(201).json(forum);
+  } catch (error) {
+    console.error('Failed to create forum:', error);
+    res.status(500).json({ error: 'Failed to create forum' });
+  }
+});
+
+// Forum Posts
+router.get('/community/forums/:forumId/posts', async (req, res) => {
+  try {
+    const forumId = parseInt(req.params.forumId);
+    const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
+    
+    const posts = await communityService.getForumPosts(forumId, limit);
+    res.json(posts);
+  } catch (error) {
+    console.error('Failed to get forum posts:', error);
+    res.status(500).json({ error: 'Failed to get forum posts' });
+  }
+});
+
+router.post('/community/forums/:forumId/posts', async (req, res) => {
+  try {
+    const forumId = parseInt(req.params.forumId);
+    const postData = {
+      ...req.body,
+      forum_id: forumId
+    };
+    
+    const post = await communityService.createForumPost(postData);
+    if (!post) {
+      return res.status(400).json({ error: 'Failed to create post' });
+    }
+    res.status(201).json(post);
+  } catch (error) {
+    console.error('Failed to create forum post:', error);
+    res.status(500).json({ error: 'Failed to create forum post' });
+  }
+});
+
+// Forum Replies
+router.get('/community/posts/:postId/replies', async (req, res) => {
+  try {
+    const postId = parseInt(req.params.postId);
+    const replies = await communityService.getForumReplies(postId);
+    res.json(replies);
+  } catch (error) {
+    console.error('Failed to get forum replies:', error);
+    res.status(500).json({ error: 'Failed to get forum replies' });
+  }
+});
+
+router.post('/community/posts/:postId/replies', async (req, res) => {
+  try {
+    const postId = parseInt(req.params.postId);
+    const replyData = {
+      ...req.body,
+      post_id: postId
+    };
+    
+    const reply = await communityService.createForumReply(replyData);
+    if (!reply) {
+      return res.status(400).json({ error: 'Failed to create reply' });
+    }
+    res.status(201).json(reply);
+  } catch (error) {
+    console.error('Failed to create forum reply:', error);
+    res.status(500).json({ error: 'Failed to create forum reply' });
+  }
+});
+
+// Support Actions
+router.post('/community/support', async (req, res) => {
+  try {
+    const { type, id } = req.body;
+    
+    if (!['post', 'reply'].includes(type)) {
+      return res.status(400).json({ error: 'Invalid support type' });
+    }
+    
+    const success = await communityService.addSupport(type as 'post' | 'reply', parseInt(id));
+    if (!success) {
+      return res.status(400).json({ error: 'Failed to add support' });
+    }
+    
+    res.json({ success: true, message: 'Support added' });
+  } catch (error) {
+    console.error('Failed to add support:', error);
+    res.status(500).json({ error: 'Failed to add support' });
+  }
+});
+
+// Peer Check-ins
+router.get('/community/peer-checkins/:userId', async (req, res) => {
+  try {
+    const userId = parseInt(req.params.userId);
+    const checkIns = await communityService.getUserCheckIns(userId);
+    res.json(checkIns);
+  } catch (error) {
+    console.error('Failed to get user check-ins:', error);
+    res.status(500).json({ error: 'Failed to get user check-ins' });
+  }
+});
+
+router.get('/community/peer-checkins/available', async (req, res) => {
+  try {
+    const availableCheckIns = await communityService.getAvailableCheckIns();
+    res.json(availableCheckIns);
+  } catch (error) {
+    console.error('Failed to get available check-ins:', error);
+    res.status(500).json({ error: 'Failed to get available check-ins' });
+  }
+});
+
+router.post('/community/peer-checkins', async (req, res) => {
+  try {
+    const checkIn = await communityService.createPeerCheckIn(req.body);
+    if (!checkIn) {
+      return res.status(400).json({ error: 'Failed to create peer check-in' });
+    }
+    res.status(201).json(checkIn);
+  } catch (error) {
+    console.error('Failed to create peer check-in:', error);
+    res.status(500).json({ error: 'Failed to create peer check-in' });
+  }
+});
+
+// Content Moderation
+router.post('/community/flag-content', async (req, res) => {
+  try {
+    const { type, contentId, reason, details } = req.body;
+    
+    // Log the flag for moderation review
+    console.log('Content flagged:', { type, contentId, reason, details, flaggedAt: new Date() });
+    
+    // In a full implementation, this would:
+    // 1. Store the flag in a moderation queue
+    // 2. Potentially auto-moderate based on reason
+    // 3. Notify moderators if needed
+    // 4. Apply temporary restrictions if crisis content
+    
+    res.json({ 
+      success: true, 
+      message: 'Content has been flagged for review',
+      flagId: Date.now() // Temporary ID for tracking
+    });
+  } catch (error) {
+    console.error('Failed to flag content:', error);
+    res.status(500).json({ error: 'Failed to flag content' });
   }
 });
 
