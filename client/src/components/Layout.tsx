@@ -35,6 +35,7 @@ import DailyAffirmation from '@/components/DailyAffirmation';
 import FloatingChat from '@/components/FloatingChat';
 import MovableChat from '@/components/MovableChat';
 import ChallengeSystem from '@/components/ChallengeSystem';
+import SupabaseSetup from '@/components/SupabaseSetup';
 import { startRecording as startAudioRecording, stopRecording, sendAudioToWhisper } from '@/utils/audio';
 
 const queryClient = new QueryClient({
@@ -289,6 +290,8 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
         return <MicrophoneTest />;
       case 'privacy':
         return <PrivacyCompliance />;
+      case 'supabase-setup':
+        return <SupabaseSetup />;
       case 'ai-monitoring':
         return <AiPerformanceMonitoringDashboard userId={currentUserId || 1} />;
       case 'therapist':
@@ -653,6 +656,7 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
                       { id: 'themes', label: 'Themes' },
                       { id: 'feedback', label: 'Feedback' },
                       { id: 'microphone-test', label: 'Mic Test' },
+                      { id: 'supabase-setup', label: 'Community Setup' },
                       { id: 'privacy', label: 'Privacy' }
                     ].map((tab) => (
                       <button

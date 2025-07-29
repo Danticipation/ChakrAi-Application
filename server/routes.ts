@@ -1332,6 +1332,84 @@ router.get('/user/notification-preferences', async (req, res) => {
 });
 
 // ====================
+// ADMIN CONFIGURATION ENDPOINTS
+// ====================
+
+// Configure Supabase credentials
+router.post('/admin/configure-supabase', async (req, res) => {
+  try {
+    const { supabaseUrl, supabaseAnonKey, supabaseServiceKey } = req.body;
+    
+    if (!supabaseUrl || !supabaseAnonKey || !supabaseServiceKey) {
+      return res.status(400).json({ 
+        error: 'Missing required credentials',
+        message: 'Please provide supabaseUrl, supabaseAnonKey, and supabaseServiceKey'
+      });
+    }
+
+    // Validate URL format
+    try {
+      new URL(supabaseUrl);
+    } catch {
+      return res.status(400).json({ 
+        error: 'Invalid Supabase URL',
+        message: 'Please provide a valid Supabase project URL'
+      });
+    }
+
+    // In a production environment, these would be stored securely
+    // For Replit, we'll provide instructions to set them as secrets
+    const envConfig = {
+      VITE_SUPABASE_URL: supabaseUrl,
+      VITE_SUPABASE_ANON_KEY: supabaseAnonKey,
+      SUPABASE_SERVICE_ROLE_KEY: supabaseServiceKey
+    };
+
+    console.log('Supabase configuration received:');
+    console.log('- Project URL:', supabaseUrl);
+    console.log('- Anon Key: [REDACTED]');
+    console.log('- Service Key: [REDACTED]');
+    
+    res.json({ 
+      success: true, 
+      message: 'Supabase configuration received. Please add these as environment variables:',
+      environmentVariables: {
+        VITE_SUPABASE_URL: supabaseUrl,
+        VITE_SUPABASE_ANON_KEY: supabaseAnonKey.substring(0, 20) + '...',
+        SUPABASE_SERVICE_ROLE_KEY: supabaseServiceKey.substring(0, 20) + '...'
+      },
+      instructions: [
+        '1. Go to your Replit project Secrets tab',
+        '2. Add each environment variable with the provided values',
+        '3. Restart the application for changes to take effect',
+        '4. Community features will then be fully operational'
+      ]
+    });
+  } catch (error) {
+    console.error('Failed to configure Supabase:', error);
+    res.status(500).json({ error: 'Failed to configure Supabase credentials' });
+  }
+});
+
+// Check Supabase configuration status
+router.get('/admin/supabase-status', async (req, res) => {
+  try {
+    const isConfigured = !!(process.env.VITE_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
+    
+    res.json({
+      configured: isConfigured,
+      url: process.env.VITE_SUPABASE_URL ? process.env.VITE_SUPABASE_URL.substring(0, 30) + '...' : null,
+      hasAnonKey: !!process.env.VITE_SUPABASE_ANON_KEY,
+      hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+      message: isConfigured ? 'Supabase is configured and ready' : 'Supabase credentials not found'
+    });
+  } catch (error) {
+    console.error('Failed to check Supabase status:', error);
+    res.status(500).json({ error: 'Failed to check Supabase status' });
+  }
+});
+
+// ====================
 // COMMUNITY FEATURES (SUPABASE)
 // ====================
 
