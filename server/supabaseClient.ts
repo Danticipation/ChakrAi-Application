@@ -1,25 +1,10 @@
-import { createClient } from '@supabase/supabase-js';
+// Community features will use the existing PostgreSQL database instead of Supabase
+// This eliminates the need for separate Supabase credentials
 
-// Supabase configuration for community features only
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+console.log('Community features configured to use existing PostgreSQL database.');
 
-// Check if Supabase is configured
-const isSupabaseConfigured = !!(supabaseUrl && supabaseServiceKey);
-
-if (!isSupabaseConfigured) {
-  console.warn('Supabase credentials not configured. Community features will use fallback mode.');
-}
-
-// Create Supabase client for server-side operations (only if configured)
-export const supabase = isSupabaseConfigured 
-  ? createClient(supabaseUrl!, supabaseServiceKey!, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false
-      }
-    })
-  : null;
+// Mock Supabase client for compatibility - community features will use PostgreSQL directly
+export const supabase = null;
 
 // Database schema for community features in Supabase
 export interface SupabaseForum {
@@ -81,11 +66,8 @@ export interface SupabasePeerCheckIn {
 export class SupabaseCommunityService {
   
   private checkSupabaseAvailable(): boolean {
-    if (!supabase) {
-      console.warn('Supabase not configured. Using fallback mode.');
-      return false;
-    }
-    return true;
+    // Always return false to use PostgreSQL-based community features
+    return false;
   }
   
   // Forum management
