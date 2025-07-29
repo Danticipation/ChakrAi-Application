@@ -1,10 +1,5 @@
-// Community features will use the existing PostgreSQL database instead of Supabase
-// This eliminates the need for separate Supabase credentials
-
-console.log('Community features configured to use existing PostgreSQL database.');
-
-// Mock Supabase client for compatibility - community features will use PostgreSQL directly
-export const supabase = null;
+// Community features use existing PostgreSQL database - no Supabase needed
+console.log('Community features using PostgreSQL database.');
 
 // Database schema for community features in Supabase
 export interface SupabaseForum {
@@ -63,12 +58,8 @@ export interface SupabasePeerCheckIn {
 }
 
 // Community service functions
-export class SupabaseCommunityService {
-  
-  private checkSupabaseAvailable(): boolean {
-    // Always return false to use PostgreSQL-based community features
-    return false;
-  }
+export class PostgreSQLCommunityService {
+  // Community service using existing PostgreSQL database
   
   // Forum management
   async getForums(): Promise<SupabaseForum[]> {
@@ -353,4 +344,4 @@ export class SupabaseCommunityService {
   }
 }
 
-export const communityService = new SupabaseCommunityService();
+export const communityService = new PostgreSQLCommunityService();
