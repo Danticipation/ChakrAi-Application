@@ -1,5 +1,25 @@
-// Community features use existing PostgreSQL database - no Supabase needed
-console.log('Community features using PostgreSQL database.');
+import { createClient } from '@supabase/supabase-js';
+
+// Supabase configuration for community features only
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+// Check if Supabase is configured
+const isSupabaseConfigured = !!(supabaseUrl && supabaseServiceKey);
+
+if (!isSupabaseConfigured) {
+  console.warn('Supabase credentials not configured. Community features will use fallback mode.');
+}
+
+// Create Supabase client for server-side operations (only if configured)
+export const supabase = isSupabaseConfigured 
+  ? createClient(supabaseUrl!, supabaseServiceKey!, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    })
+  : null;
 
 // Database schema for community features in Supabase
 export interface SupabaseForum {
@@ -58,8 +78,15 @@ export interface SupabasePeerCheckIn {
 }
 
 // Community service functions
-export class PostgreSQLCommunityService {
-  // Community service using existing PostgreSQL database
+export class SupabaseCommunityService {
+  
+  private checkSupabaseAvailable(): boolean {
+    if (!supabase) {
+      console.warn('Supabase not configured. Using fallback mode.');
+      return false;
+    }
+    return true;
+  }
   
   // Forum management
   async getForums(): Promise<SupabaseForum[]> {
@@ -344,4 +371,4 @@ export class PostgreSQLCommunityService {
   }
 }
 
-export const communityService = new PostgreSQLCommunityService();
+export const communityService = new SupabaseCommunityService();
