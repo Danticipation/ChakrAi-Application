@@ -612,82 +612,177 @@ const CommunitySupport: React.FC<CommunitySupportProps> = ({ currentUser }) => {
 
 
 
-        {/* TEMPORARY DEBUG DISPLAY */}
-        <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-          <h4 className="font-bold text-yellow-800 mb-2">🐛 DEBUG INFO:</h4>
-          <div className="text-sm space-y-1">
-            <div><strong>Selected Forum:</strong> {selectedForum || 'None'}</div>
-            <div><strong>Forums Available:</strong> {forums?.length || 'None'}</div>
-            <div><strong>Posts Available:</strong> {posts?.length || 'None'}</div>
-            <div><strong>Show New Post:</strong> {showNewPost ? 'Yes' : 'No'}</div>
-            <div><strong>Forums Data:</strong> {JSON.stringify(forums?.map(f => ({id: f.id, name: f.name})) || 'None')}</div>
-          </div>
-          <button 
-            onClick={() => {
-              console.log('Manual forum selection test');
-              setSelectedForum(1);
-            }}
-            className="mt-2 bg-yellow-600 text-white px-3 py-1 rounded text-xs"
-          >
-            Test: Force Select Forum 1
-          </button>
-        </div>
-
-        {/* Show selected forum content FIRST (if selected) */}
+        {/* Selected Forum Interface */}
         {selectedForum && (
-          <div className="bg-white rounded-xl p-6 border-2 border-green-500">
-            <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded">
-              <h4 className="text-green-800 font-bold">✅ FORUM SELECTED!</h4>
-              <p className="text-green-700 text-sm">Forum ID: {selectedForum}</p>
-              <p className="text-green-700 text-sm">
-                Forum Name: {forums?.find(f => f.id === selectedForum)?.name || 'Unknown'}
-              </p>
-            </div>
-            
-            <div className="flex items-center justify-between mb-4">
+          <div className="bg-white rounded-xl p-6 border border-gray-200">
+            <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-4">
                 <button 
-                  onClick={() => {
-                    console.log('Back button clicked');
-                    setSelectedForum(null);
-                  }}
-                  className="text-blue-500 hover:text-blue-600 font-medium"
+                  onClick={() => setSelectedForum(null)}
+                  className="text-blue-500 hover:text-blue-600 font-medium flex items-center gap-2"
                 >
                   ← Back to Forums
                 </button>
-                <h3 className="text-lg font-semibold text-gray-800">
-                  {forums?.find(f => f.id === selectedForum)?.name || `Forum ${selectedForum}`}
-                </h3>
+                <div>
+                  <h3 className="text-xl font-semibold text-gray-800">
+                    {forums?.find(f => f.id === selectedForum)?.name || `Forum ${selectedForum}`}
+                  </h3>
+                  <p className="text-gray-600 text-sm">
+                    {forums?.find(f => f.id === selectedForum)?.description}
+                  </p>
+                </div>
               </div>
               <button 
-                onClick={() => {
-                  console.log('New Post button clicked');
-                  setShowNewPost(true);
-                }}
-                className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+                onClick={() => setShowNewPost(true)}
+                className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 font-medium"
               >
                 <Plus className="w-4 h-4" />
                 New Post
               </button>
             </div>
 
-            {/* Forum posts area */}
-            <div className="border-2 border-blue-200 rounded-lg p-4">
-              <h4 className="font-medium mb-2">Posts in this forum:</h4>
+            {/* New Post Form */}
+            {showNewPost && (
+              <div className="mb-6 p-6 border border-gray-200 rounded-lg bg-gray-50">
+                <h4 className="text-lg font-semibold text-gray-800 mb-4">Create New Post</h4>
+                <div className="space-y-4">
+                  <input
+                    type="text"
+                    placeholder="What would you like to discuss?"
+                    value={newPostTitle}
+                    onChange={(e) => setNewPostTitle(e.target.value)}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                  <textarea
+                    placeholder="Share your thoughts, experiences, or questions with the community..."
+                    value={newPostContent}
+                    onChange={(e) => setNewPostContent(e.target.value)}
+                    rows={4}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => createPostMutation.mutate({ 
+                        title: newPostTitle, 
+                        content: newPostContent, 
+                        forumId: selectedForum 
+                      })}
+                      disabled={createPostMutation.isPending || !newPostTitle.trim() || !newPostContent.trim()}
+                      className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 font-medium"
+                    >
+                      {createPostMutation.isPending ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Creating...
+                        </>
+                      ) : (
+                        <>
+                          <Send className="w-4 h-4" />
+                          Create Post
+                        </>
+                      )}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowNewPost(false);
+                        setNewPostTitle('');
+                        setNewPostContent('');
+                      }}
+                      className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Forum Posts */}
+            <div className="space-y-4">
               {posts?.filter(p => p.forum_id === selectedForum).length === 0 ? (
-                <div className="text-center py-8">
-                  <MessageSquare className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                  <h3 className="text-lg font-semibold text-gray-600 mb-2">No Posts Yet</h3>
-                  <p className="text-gray-500 mb-4">Be the first to start a conversation!</p>
+                <div className="text-center py-12">
+                  <MessageSquare className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+                  <h3 className="text-xl font-semibold text-gray-600 mb-2">No Posts Yet</h3>
+                  <p className="text-gray-500 max-w-md mx-auto mb-6">
+                    Be the first to start a meaningful conversation in this forum. Your post could help someone who needs support.
+                  </p>
                   <button
                     onClick={() => setShowNewPost(true)}
-                    className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
+                    className="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition-colors font-medium"
                   >
                     Create First Post
                   </button>
                 </div>
               ) : (
-                <div>Posts would appear here...</div>
+                posts?.filter(p => p.forum_id === selectedForum).map((post) => (
+                  <div key={post.id} className="border border-gray-200 rounded-lg p-6 bg-white">
+                    <h4 className="text-lg font-semibold text-gray-800 mb-3">{post.title}</h4>
+                    <p className="text-gray-600 mb-4 leading-relaxed">{post.content}</p>
+                    <div className="flex items-center justify-between text-sm text-gray-500">
+                      <span>By {post.author_name}</span>
+                      <div className="flex items-center gap-6">
+                        <span className="flex items-center gap-2">
+                          <Heart className="w-4 h-4" />
+                          {post.heart_count || 0}
+                        </span>
+                        <span className="flex items-center gap-2">
+                          <MessageSquare className="w-4 h-4" />
+                          {post.reply_count || 0} replies
+                        </span>
+                        <button
+                          onClick={() => setReplyingToPost(post.id)}
+                          className="text-blue-500 hover:text-blue-600 font-medium"
+                        >
+                          Reply
+                        </button>
+                      </div>
+                    </div>
+                    
+                    {/* Reply Form */}
+                    {replyingToPost === post.id && (
+                      <div className="border-t pt-4 mt-4">
+                        <textarea
+                          placeholder="Write a supportive reply..."
+                          value={replyContent}
+                          onChange={(e) => setReplyContent(e.target.value)}
+                          rows={3}
+                          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-3"
+                        />
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => sendMessageMutation.mutate({ 
+                              content: replyContent, 
+                              postId: post.id 
+                            })}
+                            disabled={sendMessageMutation.isPending || !replyContent.trim()}
+                            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
+                          >
+                            {sendMessageMutation.isPending ? (
+                              <>
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                                Sending...
+                              </>
+                            ) : (
+                              <>
+                                <Send className="w-4 h-4" />
+                                Reply
+                              </>
+                            )}
+                          </button>
+                          <button
+                            onClick={() => {
+                              setReplyingToPost(null);
+                              setReplyContent('');
+                            }}
+                            className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))
               )}
             </div>
           </div>
@@ -718,6 +813,7 @@ const CommunitySupport: React.FC<CommunitySupportProps> = ({ currentUser }) => {
                   <button 
                     onClick={() => {
                       console.log('Join Discussion clicked for forum:', forum.id, forum.name);
+                      setSelectedForum(forum.id);
                       joinForumMutation.mutate(forum.id);
                     }}
                     disabled={joinForumMutation.isPending}
