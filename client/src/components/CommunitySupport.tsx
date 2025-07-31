@@ -16,6 +16,7 @@ interface ForumPost {
   id: number;
   title: string;
   content: string;
+  forum_id: number;
   author_id: number;
   author_name: string;
   created_at: string;
@@ -105,6 +106,10 @@ const EmptyState = ({
 
 const CommunitySupport: React.FC<CommunitySupportProps> = ({ currentUser }) => {
   const [activeTab, setActiveTab] = useState('forums');
+  const [selectedForum, setSelectedForum] = useState<number | null>(null);
+  const [showNewPost, setShowNewPost] = useState(false);
+  const [newPostTitle, setNewPostTitle] = useState('');
+  const [newPostContent, setNewPostContent] = useState('');
   const [replyingToPost, setReplyingToPost] = useState<number | null>(null);
   const [replyContent, setReplyContent] = useState('');
   const [flaggingContent, setFlaggingContent] = useState<{id: number, type: string} | null>(null);
@@ -230,8 +235,8 @@ const CommunitySupport: React.FC<CommunitySupportProps> = ({ currentUser }) => {
       setError(null);
       toast({
         title: "Forum Joined Successfully!",
-        description: "You're now part of this supportive community. Full posting features coming soon.",
-        duration: 4000,
+        description: "You can now view and create posts in this forum.",
+        duration: 3000,
       });
     },
     onError: (error) => {
@@ -240,6 +245,56 @@ const CommunitySupport: React.FC<CommunitySupportProps> = ({ currentUser }) => {
       toast({
         title: "Error",
         description: errorMessage,
+        variant: "destructive",
+        duration: 5000,
+      });
+    }
+  });
+
+  // Create post mutation
+  const createPostMutation = useMutation({
+    mutationFn: async (postData: { title: string; content: string; forumId: number }) => {
+      if (!postData.title.trim() || !postData.content.trim()) {
+        throw new Error('Title and content are required');
+      }
+      
+      const response = await fetch('/api/community/posts', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+        },
+        body: JSON.stringify({
+          title: postData.title,
+          content: postData.content,
+          forum_id: postData.forumId,
+          author_id: currentUser.id,
+          author_name: `Anonymous User ${currentUser.id}`
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to create post');
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      setShowNewPost(false);
+      setNewPostTitle('');
+      setNewPostContent('');
+      queryClient.invalidateQueries({ queryKey: ['/api/community/posts'] });
+      toast({
+        title: "Post Created Successfully!",
+        description: "Your post has been shared with the community.",
+        duration: 3000,
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create post",
         variant: "destructive",
         duration: 5000,
       });
@@ -550,19 +605,7 @@ const CommunitySupport: React.FC<CommunitySupportProps> = ({ currentUser }) => {
                   <div className="flex flex-col gap-1">
                     <button 
                       onClick={() => {
-                        // Show comprehensive forum information and features
-                        alert(`✅ Joining ${forum.name}
-
-Available Features:
-• Anonymous discussion threads
-• Peer support community  
-• Crisis intervention resources
-• Professional moderation
-• Safe space guidelines
-
-Forum is successfully joined! Posting interface will be added in the next update.`);
-                        
-                        // Actually join the forum via API
+                        setSelectedForum(forum.id);
                         joinForumMutation.mutate(forum.id);
                       }}
                       disabled={joinForumMutation.isPending}
@@ -592,73 +635,233 @@ Forum is successfully joined! Posting interface will be added in the next update
           )}
         </div>
 
-        {/* Recent Posts */}
-        <div className="bg-white rounded-xl p-6 border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">Recent Posts</h3>
-          <div className="space-y-4">
-            {!posts || posts.length === 0 ? (
-              <EmptyState 
-                icon={MessageSquare}
-                title="No Posts Yet"
-                description="Be the first to start a conversation and share your experience with the community."
-                actionLabel="Create First Post"
-                onAction={() => {
-                  // Handle create post action
-                  toast({
-                    title: "Feature Coming Soon",
-                    description: "Post creation will be available soon!",
-                    duration: 3000,
-                  });
-                }}
-              />
-            ) : (
-              posts.slice(0, 5).map((post) => (
-                <div key={post.id} className="p-4 bg-gray-50 rounded-lg border">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <h4 className="font-medium text-gray-800 mb-1">{post.title}</h4>
-                      <p className="text-gray-600 text-sm mb-2 line-clamp-2">{post.content}</p>
-                      <div className="flex items-center space-x-4 text-xs text-gray-500">
-                        <span>by {post.author_name}</span>
-                        <span>{new Date(post.created_at).toLocaleDateString()}</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-2 text-gray-500">
-                      <div className="flex items-center space-x-1">
-                        <Heart className="w-4 h-4" />
-                        <span className="text-sm">{post.heart_count}</span>
-                      </div>
-                      <div className="flex items-center space-x-1">
-                        <MessageSquare className="w-4 h-4" />
-                        <span className="text-sm">{post.reply_count}</span>
-                      </div>
-                      <button 
-                        onClick={() => setReplyingToPost(post.id)}
-                        className="hover:bg-blue-500/20 p-1 rounded transition-colors"
-                        aria-label="Reply to this post"
-                      >
-                        <Send className="w-4 h-4" />
-                      </button>
-                      <button 
-                        onClick={() => setFlaggingContent({ id: post.id, type: 'post' })}
-                        className="hover:bg-red-500/20 p-1 rounded transition-colors"
-                        aria-label="Report this post"
-                      >
-                        <Flag className="w-4 h-4" />
-                      </button>
-                    </div>
+        {/* Show forum when selected */}
+        {selectedForum && (
+          <div className="bg-white rounded-xl p-6 border border-gray-200">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-4">
+                <button 
+                  onClick={() => setSelectedForum(null)}
+                  className="text-blue-500 hover:text-blue-600"
+                >
+                  ← Back to Forums
+                </button>
+                <h3 className="text-lg font-semibold text-gray-800">
+                  {forums?.find((f: Forum) => f.id === selectedForum)?.name}
+                </h3>
+              </div>
+              <button 
+                onClick={() => setShowNewPost(true)}
+                className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium flex items-center gap-2"
+              >
+                <Plus className="w-4 h-4" />
+                New Post
+              </button>
+            </div>
+
+            {/* New Post Form */}
+            {showNewPost && (
+              <div className="mb-6 p-4 border border-gray-200 rounded-lg">
+                <h4 className="text-md font-semibold text-gray-800 mb-3">Create New Post</h4>
+                <div className="space-y-3">
+                  <input
+                    type="text"
+                    placeholder="Post title..."
+                    value={newPostTitle}
+                    onChange={(e) => setNewPostTitle(e.target.value)}
+                    className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <textarea
+                    placeholder="Share your thoughts..."
+                    value={newPostContent}
+                    onChange={(e) => setNewPostContent(e.target.value)}
+                    rows={4}
+                    className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => createPostMutation.mutate({ 
+                        title: newPostTitle, 
+                        content: newPostContent, 
+                        forumId: selectedForum 
+                      })}
+                      disabled={createPostMutation.isPending || !newPostTitle.trim() || !newPostContent.trim()}
+                      className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
+                    >
+                      {createPostMutation.isPending ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Creating...
+                        </>
+                      ) : (
+                        <>
+                          <Send className="w-4 h-4" />
+                          Create Post
+                        </>
+                      )}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowNewPost(false);
+                        setNewPostTitle('');
+                        setNewPostContent('');
+                      }}
+                      className="px-4 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                      Cancel
+                    </button>
                   </div>
-                  {replyingToPost === post.id && (
-                    <ReplyComposer 
-                      postId={post.id} 
-                      onClose={() => setReplyingToPost(null)} 
-                    />
-                  )}
                 </div>
-              ))
+              </div>
             )}
+
+            {/* Forum Posts */}
+            <div className="space-y-4">
+              {!posts || posts.filter((p: ForumPost) => p.forum_id === selectedForum).length === 0 ? (
+                <EmptyState 
+                  icon={MessageSquare}
+                  title="No Posts Yet"
+                  description="Be the first to start a conversation in this forum."
+                  actionLabel="Create First Post"
+                  onAction={() => setShowNewPost(true)}
+                />
+              ) : (
+                posts.filter((p: ForumPost) => p.forum_id === selectedForum).map((post) => (
+                  <div key={post.id} className="border border-gray-200 rounded-lg p-4">
+                    <h4 className="font-semibold text-gray-800 mb-2">{post.title}</h4>
+                    <p className="text-gray-600 mb-3">{post.content}</p>
+                    <div className="flex items-center justify-between text-sm text-gray-500 mb-3">
+                      <span>By {post.author_name}</span>
+                      <div className="flex items-center gap-4">
+                        <span className="flex items-center gap-1">
+                          <Heart className="w-4 h-4" />
+                          {post.heart_count || 0}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <MessageSquare className="w-4 h-4" />
+                          {post.reply_count || 0}
+                        </span>
+                        <button
+                          onClick={() => setReplyingToPost(post.id)}
+                          className="text-blue-500 hover:text-blue-600"
+                        >
+                          Reply
+                        </button>
+                      </div>
+                    </div>
+                    
+                    {/* Reply Form */}
+                    {replyingToPost === post.id && (
+                      <div className="border-t pt-3">
+                        <textarea
+                          placeholder="Write a reply..."
+                          value={replyContent}
+                          onChange={(e) => setReplyContent(e.target.value)}
+                          rows={3}
+                          className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-2"
+                        />
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => sendMessageMutation.mutate({ 
+                              content: replyContent, 
+                              postId: post.id 
+                            })}
+                            disabled={sendMessageMutation.isPending || !replyContent.trim()}
+                            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
+                          >
+                            {sendMessageMutation.isPending ? (
+                              <>
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                                Sending...
+                              </>
+                            ) : (
+                              <>
+                                <Send className="w-4 h-4" />
+                                Reply
+                              </>
+                            )}
+                          </button>
+                          <button
+                            onClick={() => {
+                              setReplyingToPost(null);
+                              setReplyContent('');
+                            }}
+                            className="px-4 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* Recent Posts */}
+        {!selectedForum && (
+          <div className="bg-white rounded-xl p-6 border border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">Recent Posts</h3>
+            <div className="space-y-4">
+              {!posts || posts.length === 0 ? (
+                <EmptyState 
+                  icon={MessageSquare}
+                  title="No Posts Yet"
+                  description="Be the first to start a conversation and share your experience with the community."
+                  actionLabel="Join a Forum"
+                  onAction={() => {}}
+                />
+              ) : (
+                posts.slice(0, 5).map((post) => (
+                  <div key={post.id} className="p-4 bg-gray-50 rounded-lg border">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <h4 className="font-medium text-gray-800 mb-1">{post.title}</h4>
+                        <p className="text-gray-600 text-sm mb-2 line-clamp-2">{post.content}</p>
+                        <div className="flex items-center space-x-4 text-xs text-gray-500">
+                          <span>by {post.author_name}</span>
+                          <span>{new Date(post.created_at).toLocaleDateString()}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2 text-gray-500">
+                        <div className="flex items-center space-x-1">
+                          <Heart className="w-4 h-4" />
+                          <span className="text-sm">{post.heart_count}</span>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <MessageSquare className="w-4 h-4" />
+                          <span className="text-sm">{post.reply_count}</span>
+                        </div>
+                        <button 
+                          onClick={() => setReplyingToPost(post.id)}
+                          className="hover:bg-blue-500/20 p-1 rounded transition-colors"
+                          aria-label="Reply to this post"
+                        >
+                          <Send className="w-4 h-4" />
+                        </button>
+                        <button 
+                          onClick={() => setFlaggingContent({ id: post.id, type: 'post' })}
+                          className="hover:bg-red-500/20 p-1 rounded transition-colors"
+                          aria-label="Report this post"
+                        >
+                          <Flag className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                    {replyingToPost === post.id && (
+                      <ReplyComposer 
+                        postId={post.id} 
+                        onClose={() => setReplyingToPost(null)} 
+                      />
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        )}
       </div>
     );
   };

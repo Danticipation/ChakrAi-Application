@@ -1229,6 +1229,84 @@ app.post('/api/forums/:forumId/join', async (req, res) => {
   }
 });
 
+// Create forum post endpoint
+app.post('/api/community/posts', async (req, res) => {
+  try {
+    const { title, content, forum_id, author_id, author_name } = req.body;
+    
+    if (!title || !content || !forum_id || !author_id) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const { supabase } = await import('./supabaseClient.js');
+    const { data, error } = await supabase
+      .from('forum_posts')
+      .insert({
+        title,
+        content,
+        forum_id,
+        author_id,
+        author_name,
+        created_at: new Date().toISOString(),
+        heart_count: 0,
+        reply_count: 0
+      })
+      .select('*')
+      .single();
+
+    if (error) {
+      console.error('Error creating post:', error);
+      return res.status(500).json({ error: 'Failed to create post' });
+    }
+
+    res.json({ success: true, post: data });
+  } catch (error) {
+    console.error('Error in post creation:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Create forum reply endpoint
+app.post('/api/forum-replies', async (req, res) => {
+  try {
+    const { content, post_id, author_id, author_name } = req.body;
+    
+    if (!content || !post_id || !author_id) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const { supabase } = await import('./supabaseClient.js');
+    const { data, error } = await supabase
+      .from('forum_replies')
+      .insert({
+        content,
+        post_id,
+        author_id,
+        author_name,
+        created_at: new Date().toISOString(),
+        heart_count: 0
+      })
+      .select('*')
+      .single();
+
+    if (error) {
+      console.error('Error creating reply:', error);
+      return res.status(500).json({ error: 'Failed to create reply' });
+    }
+
+    // Update reply count for the post
+    await supabase
+      .from('forum_posts')
+      .update({ reply_count: 1 })
+      .eq('id', post_id);
+
+    res.json({ success: true, reply: data });
+  } catch (error) {
+    console.error('Error in reply creation:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Use API routes from routes.js (for other endpoints)
 console.log('Loading routes module...');
 try {
