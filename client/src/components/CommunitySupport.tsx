@@ -141,41 +141,15 @@ const CommunitySupport: React.FC<CommunitySupportProps> = ({ currentUser }) => {
   // Data fetching with proper error handling (no fallback data)
   const { data: forums, isLoading: forumsLoading, error: forumsError, refetch: refetchForums } = useQuery({
     queryKey: ['/api/community/forums'],
-    retry: 3,
-    retryDelay: 1000,
-    staleTime: 0, // Always refetch
-    gcTime: 0, // Don't cache (renamed from cacheTime in v5)
+
     queryFn: async () => {
-      console.log('=== FETCHING FORUMS ===');
-      try {
-        const res = await fetch('/api/community/forums', {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-          },
-          // Add timeout and retry logic
-          signal: AbortSignal.timeout(10000) // 10 second timeout
-        });
-        
-        console.log('Forums response status:', res.status);
-        console.log('Forums response ok:', res.ok);
-        
-        if (!res.ok) {
-          const errorText = await res.text();
-          console.error('Forums fetch failed:', res.status, errorText);
-          throw new Error(`Failed to fetch forums: ${res.status} ${errorText}`);
+      const res = await fetch('/api/community/forums', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
         }
-        
-        const data = await res.json();
-        console.log('Forums data received:', data);
-        console.log('Forums array length:', data?.length);
-        console.log('First forum:', data?.[0]);
-        return data;
-      } catch (error) {
-        console.error('Network error fetching forums:', error);
-        throw error;
-      }
+      });
+      if (!res.ok) throw new Error('Failed to fetch forums');
+      return res.json();
     },
   });
 
@@ -512,22 +486,10 @@ const CommunitySupport: React.FC<CommunitySupportProps> = ({ currentUser }) => {
   );
 
   const renderForumsTab = () => {
-    console.log('=== RENDER FORUMS TAB ===');
-    console.log('Forums loading:', forumsLoading);
-    console.log('Posts loading:', postsLoading);
-    console.log('Forums error:', forumsError);
-    console.log('Forums data:', forums);
-    console.log('Forums length:', Array.isArray(forums) ? forums.length : 'not array');
-    console.log('Forums is array:', Array.isArray(forums));
-    
-    if (forumsLoading || postsLoading) {
-      console.log('Showing loading spinner');
-      return <LoadingSpinner />;
-    }
+    if (forumsLoading || postsLoading) return <LoadingSpinner />;
     
     if (forumsError) {
-      console.error('Forums error in render:', forumsError);
-      return <ErrorMessage message={`Unable to load forums: ${forumsError.message}`} onRetry={refetchForums} />;
+      return <ErrorMessage message="Unable to load forums. Please try again." onRetry={refetchForums} />;
     }
     
     if (postsError) {
@@ -552,13 +514,7 @@ const CommunitySupport: React.FC<CommunitySupportProps> = ({ currentUser }) => {
 
 
 
-        {/* Debug Info */}
-        <div className="mb-4 p-3 bg-yellow-100 border-2 border-yellow-500 text-sm font-bold">
-          🔧 DEBUG: Loading: {forumsLoading.toString()} | Error: {forumsError ? String(forumsError) : 'none'} | Data: {Array.isArray(forums) ? `${forums.length} forums` : typeof forums}
-          {Array.isArray(forums) && forums.length > 0 && (
-            <div className="mt-2">First forum: {forums[0]?.name || 'no name'}</div>
-          )}
-        </div>
+
 
         {/* Forum Categories */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -599,19 +555,11 @@ const CommunitySupport: React.FC<CommunitySupportProps> = ({ currentUser }) => {
               </div>
             ))
           ) : (
-            <div className="col-span-full bg-red-100 border-2 border-red-500 p-4 rounded-lg">
-              <h3 className="font-bold text-red-800">🚨 FORUMS NOT DISPLAYING</h3>
-              <p className="text-red-700">
-                Debug: forums={JSON.stringify(forums)} | 
-                isArray={Array.isArray(forums)} | 
-                length={Array.isArray(forums) ? forums.length : 'N/A'}
-              </p>
-              <EmptyState 
-                icon={MessageSquare}
-                title="No Forums Available"
-                description="Forums are not available at the moment. Please check back later or contact support if this issue persists."
-              />
-            </div>
+            <EmptyState 
+              icon={MessageSquare}
+              title="No Forums Available"
+              description="Forums are not available at the moment. Please check back later or contact support if this issue persists."
+            />
           )}
         </div>
 
