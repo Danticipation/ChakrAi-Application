@@ -535,13 +535,7 @@ const CommunitySupport: React.FC<CommunitySupportProps> = ({ currentUser }) => {
 
         {/* Forum Categories */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {!forums || forums.length === 0 ? (
-            <EmptyState 
-              icon={MessageSquare}
-              title="No Forums Available"
-              description="Forums are not available at the moment. Please check back later or contact support if this issue persists."
-            />
-          ) : (
+          {forums && forums.length > 0 ? (
             forums.map((forum) => (
               <div key={forum.id} className="bg-white rounded-xl p-6 border border-gray-200 hover:border-blue-200 transition-colors">
                 <div className="flex items-center justify-between mb-3">
@@ -577,6 +571,12 @@ const CommunitySupport: React.FC<CommunitySupportProps> = ({ currentUser }) => {
                 </div>
               </div>
             ))
+          ) : (
+            <EmptyState 
+              icon={MessageSquare}
+              title="No Forums Available"
+              description="Forums are not available at the moment. Please check back later or contact support if this issue persists."
+            />
           )}
         </div>
 
