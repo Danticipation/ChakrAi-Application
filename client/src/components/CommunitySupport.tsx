@@ -115,6 +115,14 @@ const CommunitySupport: React.FC<CommunitySupportProps> = ({ currentUser }) => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
+  // Debug logging
+  console.log('CommunitySupport component rendered');
+  console.log('Current user in component:', currentUser);
+  
+  useEffect(() => {
+    console.log('CommunitySupport useEffect - component mounted');
+  }, []);
+
   // Authentication check
   if (!currentUser?.isAuthenticated) {
     return (
@@ -540,12 +548,26 @@ const CommunitySupport: React.FC<CommunitySupportProps> = ({ currentUser }) => {
                     {forum.category}
                   </span>
                   <button 
-                    onClick={() => {
-                      console.log('Join button clicked for forum:', forum.id, forum.name);
-                      joinForumMutation.mutate(forum.id);
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      console.log('=== JOIN BUTTON CLICKED ===');
+                      console.log('Event:', e);
+                      console.log('Forum ID:', forum.id);
+                      console.log('Forum name:', forum.name);
+                      console.log('Current user:', currentUser);
+                      console.log('joinForumMutation:', joinForumMutation);
+                      console.log('=== CALLING MUTATION ===');
+                      try {
+                        joinForumMutation.mutate(forum.id);
+                        console.log('=== MUTATION CALLED SUCCESSFULLY ===');
+                      } catch (error) {
+                        console.error('=== MUTATION CALL FAILED ===', error);
+                      }
                     }}
                     disabled={joinForumMutation.isPending}
-                    className="text-blue-500 hover:bg-blue-50 text-sm font-medium px-3 py-1 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
+                    className="text-blue-500 hover:bg-blue-50 text-sm font-medium px-3 py-1 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2 relative z-10 cursor-pointer"
+                    style={{ pointerEvents: 'auto' }}
                     aria-label={`Join ${forum.name} forum`}
                   >
                     {joinForumMutation.isPending ? (
