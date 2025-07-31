@@ -139,28 +139,43 @@ const CommunitySupport: React.FC<CommunitySupportProps> = ({ currentUser }) => {
   ], []);
 
   // Data fetching with proper error handling (no fallback data)
-  const { data: forums, isLoading: forumsLoading, error: forumsError, refetch: refetchForums } = useQuery<Forum[]>({
+  const { data: forums, isLoading: forumsLoading, error: forumsError, refetch: refetchForums } = useQuery({
     queryKey: ['/api/community/forums'],
+    retry: 3,
+    retryDelay: 1000,
+    staleTime: 0, // Always refetch
+    gcTime: 0, // Don't cache (renamed from cacheTime in v5)
     queryFn: async () => {
       console.log('=== FETCHING FORUMS ===');
-      const res = await fetch('/api/community/forums', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+      try {
+        const res = await fetch('/api/community/forums', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+          },
+          // Add timeout and retry logic
+          signal: AbortSignal.timeout(10000) // 10 second timeout
+        });
+        
+        console.log('Forums response status:', res.status);
+        console.log('Forums response ok:', res.ok);
+        
+        if (!res.ok) {
+          const errorText = await res.text();
+          console.error('Forums fetch failed:', res.status, errorText);
+          throw new Error(`Failed to fetch forums: ${res.status} ${errorText}`);
         }
-      });
-      console.log('Forums response status:', res.status);
-      console.log('Forums response ok:', res.ok);
-      
-      if (!res.ok) {
-        const errorText = await res.text();
-        console.error('Forums fetch failed:', res.status, errorText);
-        throw new Error(`Failed to fetch forums: ${res.status} ${errorText}`);
+        
+        const data = await res.json();
+        console.log('Forums data received:', data);
+        console.log('Forums array length:', data?.length);
+        console.log('First forum:', data?.[0]);
+        return data;
+      } catch (error) {
+        console.error('Network error fetching forums:', error);
+        throw error;
       }
-      
-      const data = await res.json();
-      console.log('Forums data received:', data);
-      console.log('Forums array length:', data?.length);
-      return data;
     },
   });
 
@@ -502,13 +517,17 @@ const CommunitySupport: React.FC<CommunitySupportProps> = ({ currentUser }) => {
     console.log('Posts loading:', postsLoading);
     console.log('Forums error:', forumsError);
     console.log('Forums data:', forums);
-    console.log('Forums length:', forums?.length);
+    console.log('Forums length:', Array.isArray(forums) ? forums.length : 'not array');
+    console.log('Forums is array:', Array.isArray(forums));
     
-    if (forumsLoading || postsLoading) return <LoadingSpinner />;
+    if (forumsLoading || postsLoading) {
+      console.log('Showing loading spinner');
+      return <LoadingSpinner />;
+    }
     
     if (forumsError) {
       console.error('Forums error in render:', forumsError);
-      return <ErrorMessage message="Unable to load forums. Please try again." onRetry={refetchForums} />;
+      return <ErrorMessage message={`Unable to load forums: ${forumsError.message}`} onRetry={refetchForums} />;
     }
     
     if (postsError) {
@@ -533,9 +552,14 @@ const CommunitySupport: React.FC<CommunitySupportProps> = ({ currentUser }) => {
 
 
 
+        {/* Debug Info */}
+        <div className="mb-4 p-3 bg-gray-100 text-xs">
+          Loading: {forumsLoading.toString()} | Error: {forumsError ? String(forumsError) : 'none'} | Data: {Array.isArray(forums) ? `${forums.length} forums` : 'null'}
+        </div>
+
         {/* Forum Categories */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {forums && forums.length > 0 ? (
+          {forums && Array.isArray(forums) && forums.length > 0 ? (
             forums.map((forum) => (
               <div key={forum.id} className="bg-white rounded-xl p-6 border border-gray-200 hover:border-blue-200 transition-colors">
                 <div className="flex items-center justify-between mb-3">
