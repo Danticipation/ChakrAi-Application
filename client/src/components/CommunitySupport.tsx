@@ -498,6 +498,13 @@ const CommunitySupport: React.FC<CommunitySupportProps> = ({ currentUser }) => {
   );
 
   const renderForumsTab = () => {
+    console.log('=== RENDERING FORUMS TAB ===');
+    console.log('Forums loading:', forumsLoading);
+    console.log('Posts loading:', postsLoading);
+    console.log('Forums error:', forumsError);
+    console.log('Posts error:', postsError);
+    console.log('Forums data:', forums);
+    
     if (forumsLoading || postsLoading) return <LoadingSpinner />;
     
     if (forumsError) {
@@ -523,6 +530,20 @@ const CommunitySupport: React.FC<CommunitySupportProps> = ({ currentUser }) => {
             </button>
           </div>
         )}
+
+        {/* Debug Test Button */}
+        <div className="p-4 bg-yellow-100 border border-yellow-300 rounded-lg">
+          <button 
+            onClick={() => {
+              console.log('=== TEST BUTTON CLICKED ===');
+              alert('Test button works! React events are functioning.');
+            }}
+            className="bg-yellow-500 text-white px-4 py-2 rounded cursor-pointer"
+          >
+            TEST BUTTON - Click Me
+          </button>
+          <p className="text-sm mt-2">If this button works but Join Discussion doesn't, there's an issue with the Join button specifically.</p>
+        </div>
 
         {/* Forum Categories */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
