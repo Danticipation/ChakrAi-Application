@@ -1210,6 +1210,25 @@ DO NOT immediately jump into "support" mode or therapeutic language unless someo
   }
 });
 
+// Join forum endpoint (must be before routes to prevent conflicts)
+app.post('/api/forums/:forumId/join', async (req, res) => {
+  try {
+    const forumId = parseInt(req.params.forumId);
+    const { userId } = req.body;
+    
+    // For anonymous community features, we just return success
+    res.json({ 
+      success: true, 
+      message: 'Successfully joined forum',
+      forumId,
+      userId 
+    });
+  } catch (error) {
+    console.error('Failed to join forum:', error);
+    res.status(500).json({ error: 'Failed to join forum' });
+  }
+});
+
 // Use API routes from routes.js (for other endpoints)
 console.log('Loading routes module...');
 try {
