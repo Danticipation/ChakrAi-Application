@@ -231,8 +231,13 @@ const CommunitySupport: React.FC<CommunitySupportProps> = ({ currentUser }) => {
       return result;
     },
     onSuccess: (data) => {
+      console.log('Join forum success, data:', data);
       queryClient.invalidateQueries({ queryKey: ['/api/community/forums'] });
       setError(null);
+      
+      // Show the forum interface immediately after successful join
+      console.log('Setting selectedForum to show forum interface');
+      
       toast({
         title: "Forum Joined Successfully!",
         description: "You can now view and create posts in this forum.",
@@ -607,10 +612,14 @@ const CommunitySupport: React.FC<CommunitySupportProps> = ({ currentUser }) => {
                       onClick={() => {
                         console.log('Join Discussion clicked for forum:', forum.id);
                         
-                        const userId = currentUser?.id || 1; // Fallback to ID 1 if no user
+                        const userId = currentUser?.id || 1;
                         console.log('Using userId:', userId);
                         
+                        // Set selected forum BEFORE the mutation to show the interface immediately
+                        console.log('Setting selectedForum to:', forum.id);
                         setSelectedForum(forum.id);
+                        
+                        // Then join the forum (for backend tracking)
                         joinForumMutation.mutate(forum.id);
                       }}
                       disabled={joinForumMutation.isPending}
@@ -641,6 +650,7 @@ const CommunitySupport: React.FC<CommunitySupportProps> = ({ currentUser }) => {
         </div>
 
         {/* Show forum when selected */}
+        {console.log('Rendering: selectedForum =', selectedForum)}
         {selectedForum && (
           <div className="bg-white rounded-xl p-6 border border-gray-200">
             <div className="flex items-center justify-between mb-4">
