@@ -201,7 +201,7 @@ const CommunitySupport: React.FC<CommunitySupportProps> = ({ currentUser }) => {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/support-forums'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/community/forums'] });
       setError(null);
       toast({
         title: "Success",

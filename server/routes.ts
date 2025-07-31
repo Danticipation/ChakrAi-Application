@@ -1449,6 +1449,26 @@ router.post('/community/forums', async (req, res) => {
   }
 });
 
+// Join forum (for community features)
+router.post('/api/forums/:forumId/join', async (req, res) => {
+  try {
+    const forumId = parseInt(req.params.forumId);
+    const { userId } = req.body;
+    
+    // For anonymous community features, we just return success
+    // In a full implementation, this would track forum membership
+    res.json({ 
+      success: true, 
+      message: 'Successfully joined forum',
+      forumId,
+      userId 
+    });
+  } catch (error) {
+    console.error('Failed to join forum:', error);
+    res.status(500).json({ error: 'Failed to join forum' });
+  }
+});
+
 // Forum Posts
 router.get('/community/forums/:forumId/posts', async (req, res) => {
   try {
