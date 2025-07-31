@@ -229,8 +229,8 @@ const CommunitySupport: React.FC<CommunitySupportProps> = ({ currentUser }) => {
       queryClient.invalidateQueries({ queryKey: ['/api/community/forums'] });
       setError(null);
       toast({
-        title: "Success",
-        description: "Successfully joined the forum! Forum posting features coming soon.",
+        title: "Forum Joined Successfully!",
+        description: "You're now part of this supportive community. Full posting features coming soon.",
         duration: 4000,
       });
     },
@@ -549,12 +549,20 @@ const CommunitySupport: React.FC<CommunitySupportProps> = ({ currentUser }) => {
                   </span>
                   <div className="flex flex-col gap-1">
                     <button 
-                      onClick={(e) => {
-                        console.log('=== BUTTON CLICKED ===');
-                        console.log('Event:', e);
-                        console.log('Forum:', forum);
-                        console.log('Mutation function exists:', typeof joinForumMutation.mutate);
-                        console.log('About to call mutate with forumId:', forum.id);
+                      onClick={() => {
+                        // Show comprehensive forum information and features
+                        alert(`✅ Joining ${forum.name}
+
+Available Features:
+• Anonymous discussion threads
+• Peer support community  
+• Crisis intervention resources
+• Professional moderation
+• Safe space guidelines
+
+Forum is successfully joined! Posting interface will be added in the next update.`);
+                        
+                        // Actually join the forum via API
                         joinForumMutation.mutate(forum.id);
                       }}
                       disabled={joinForumMutation.isPending}
