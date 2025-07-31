@@ -553,13 +553,16 @@ const CommunitySupport: React.FC<CommunitySupportProps> = ({ currentUser }) => {
 
 
         {/* Debug Info */}
-        <div className="mb-4 p-3 bg-gray-100 text-xs">
-          Loading: {forumsLoading.toString()} | Error: {forumsError ? String(forumsError) : 'none'} | Data: {Array.isArray(forums) ? `${forums.length} forums` : 'null'}
+        <div className="mb-4 p-3 bg-yellow-100 border-2 border-yellow-500 text-sm font-bold">
+          🔧 DEBUG: Loading: {forumsLoading.toString()} | Error: {forumsError ? String(forumsError) : 'none'} | Data: {Array.isArray(forums) ? `${forums.length} forums` : typeof forums}
+          {Array.isArray(forums) && forums.length > 0 && (
+            <div className="mt-2">First forum: {forums[0]?.name || 'no name'}</div>
+          )}
         </div>
 
         {/* Forum Categories */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {forums && Array.isArray(forums) && forums.length > 0 ? (
+          {Array.isArray(forums) && forums.length > 0 ? (
             forums.map((forum) => (
               <div key={forum.id} className="bg-white rounded-xl p-6 border border-gray-200 hover:border-blue-200 transition-colors">
                 <div className="flex items-center justify-between mb-3">
@@ -596,11 +599,19 @@ const CommunitySupport: React.FC<CommunitySupportProps> = ({ currentUser }) => {
               </div>
             ))
           ) : (
-            <EmptyState 
-              icon={MessageSquare}
-              title="No Forums Available"
-              description="Forums are not available at the moment. Please check back later or contact support if this issue persists."
-            />
+            <div className="col-span-full bg-red-100 border-2 border-red-500 p-4 rounded-lg">
+              <h3 className="font-bold text-red-800">🚨 FORUMS NOT DISPLAYING</h3>
+              <p className="text-red-700">
+                Debug: forums={JSON.stringify(forums)} | 
+                isArray={Array.isArray(forums)} | 
+                length={Array.isArray(forums) ? forums.length : 'N/A'}
+              </p>
+              <EmptyState 
+                icon={MessageSquare}
+                title="No Forums Available"
+                description="Forums are not available at the moment. Please check back later or contact support if this issue persists."
+              />
+            </div>
           )}
         </div>
 
