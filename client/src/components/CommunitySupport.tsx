@@ -612,8 +612,94 @@ const CommunitySupport: React.FC<CommunitySupportProps> = ({ currentUser }) => {
 
 
 
-        {/* Forum Categories */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* TEMPORARY DEBUG DISPLAY */}
+        <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <h4 className="font-bold text-yellow-800 mb-2">🐛 DEBUG INFO:</h4>
+          <div className="text-sm space-y-1">
+            <div><strong>Selected Forum:</strong> {selectedForum || 'None'}</div>
+            <div><strong>Forums Available:</strong> {forums?.length || 'None'}</div>
+            <div><strong>Posts Available:</strong> {posts?.length || 'None'}</div>
+            <div><strong>Show New Post:</strong> {showNewPost ? 'Yes' : 'No'}</div>
+            <div><strong>Forums Data:</strong> {JSON.stringify(forums?.map(f => ({id: f.id, name: f.name})) || 'None')}</div>
+          </div>
+          <button 
+            onClick={() => {
+              console.log('Manual forum selection test');
+              setSelectedForum(1);
+            }}
+            className="mt-2 bg-yellow-600 text-white px-3 py-1 rounded text-xs"
+          >
+            Test: Force Select Forum 1
+          </button>
+        </div>
+
+        {/* Show selected forum content FIRST (if selected) */}
+        {selectedForum && (
+          <div className="bg-white rounded-xl p-6 border-2 border-green-500">
+            <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded">
+              <h4 className="text-green-800 font-bold">✅ FORUM SELECTED!</h4>
+              <p className="text-green-700 text-sm">Forum ID: {selectedForum}</p>
+              <p className="text-green-700 text-sm">
+                Forum Name: {forums?.find(f => f.id === selectedForum)?.name || 'Unknown'}
+              </p>
+            </div>
+            
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-4">
+                <button 
+                  onClick={() => {
+                    console.log('Back button clicked');
+                    setSelectedForum(null);
+                  }}
+                  className="text-blue-500 hover:text-blue-600 font-medium"
+                >
+                  ← Back to Forums
+                </button>
+                <h3 className="text-lg font-semibold text-gray-800">
+                  {forums?.find(f => f.id === selectedForum)?.name || `Forum ${selectedForum}`}
+                </h3>
+              </div>
+              <button 
+                onClick={() => {
+                  console.log('New Post button clicked');
+                  setShowNewPost(true);
+                }}
+                className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+              >
+                <Plus className="w-4 h-4" />
+                New Post
+              </button>
+            </div>
+
+            {/* Forum posts area */}
+            <div className="border-2 border-blue-200 rounded-lg p-4">
+              <h4 className="font-medium mb-2">Posts in this forum:</h4>
+              {posts?.filter(p => p.forum_id === selectedForum).length === 0 ? (
+                <div className="text-center py-8">
+                  <MessageSquare className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                  <h3 className="text-lg font-semibold text-gray-600 mb-2">No Posts Yet</h3>
+                  <p className="text-gray-500 mb-4">Be the first to start a conversation!</p>
+                  <button
+                    onClick={() => setShowNewPost(true)}
+                    className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
+                  >
+                    Create First Post
+                  </button>
+                </div>
+              ) : (
+                <div>Posts would appear here...</div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Only show forum grid if no forum is selected */}
+        {!selectedForum && (
+          <>
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">Choose a Forum</h2>
+            
+            {/* Forum Categories */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {forums && forums.length > 0 ? (
             forums.map((forum) => (
               <div key={forum.id} className="bg-white rounded-xl p-6 border border-gray-200 hover:border-blue-200 transition-colors">
@@ -659,222 +745,11 @@ const CommunitySupport: React.FC<CommunitySupportProps> = ({ currentUser }) => {
               />
             </div>
           )}
-        </div>
-
-        {/* Selected Forum Display */}
-        {selectedForum && (
-          <div className="bg-white rounded-xl p-6 border border-gray-200 mt-6">
-            <div className="mb-4 p-2 bg-green-50 border border-green-200 rounded text-sm">
-              <strong>DEBUG:</strong> Selected Forum: {selectedForum} | 
-              Available Forums: {forums.length} | 
-              Posts: {posts.length}
             </div>
-            
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-4">
-                <button 
-                  onClick={() => {
-                    console.log('Back to forums clicked');
-                    setSelectedForum(null);
-                  }}
-                  className="text-blue-500 hover:text-blue-600"
-                >
-                  ← Back to Forums
-                </button>
-                <h3 className="text-lg font-semibold text-gray-800">
-                  {forums.find((f) => f.id === selectedForum)?.name || `Forum ${selectedForum}`}
-                </h3>
-              </div>
-              <button 
-                onClick={() => setShowNewPost(true)}
-                className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium flex items-center gap-2"
-              >
-                <Plus className="w-4 h-4" />
-                New Post
-              </button>
-            </div>
-
-            {/* Posts for selected forum */}
-            <div className="space-y-4">
-              {posts.filter((p) => p.forum_id === selectedForum).length === 0 ? (
-                <div className="text-center py-12">
-                  <MessageSquare className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-                  <h3 className="text-lg font-semibold text-gray-600 mb-2">No Posts Yet</h3>
-                  <p className="text-gray-500 max-w-md mx-auto mb-4">
-                    Be the first to start a conversation in this forum.
-                  </p>
-                  <button
-                    onClick={() => setShowNewPost(true)}
-                    className="bg-blue-500 text-white px-4 py-2 rounded-xl hover:bg-blue-600 transition-colors"
-                  >
-                    Create First Post
-                  </button>
-                </div>
-              ) : (
-                posts.filter((p) => p.forum_id === selectedForum).map((post) => (
-                  <div key={post.id} className="border border-gray-200 rounded-lg p-4">
-                    <h4 className="font-semibold text-gray-800 mb-2">{post.title}</h4>
-                    <p className="text-gray-600 mb-3">{post.content}</p>
-                    <div className="flex items-center justify-between text-sm text-gray-500">
-                      <span>By {post.author_name}</span>
-                      <div className="flex items-center gap-4">
-                        <span className="flex items-center gap-1">
-                          <Heart className="w-4 h-4" />
-                          {post.heart_count || 0}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <MessageSquare className="w-4 h-4" />
-                          {post.reply_count || 0}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-
-            {/* New Post Form */}
-            {showNewPost && (
-              <div className="mb-6 p-4 border border-gray-200 rounded-lg">
-                <h4 className="text-md font-semibold text-gray-800 mb-3">Create New Post</h4>
-                <div className="space-y-3">
-                  <input
-                    type="text"
-                    placeholder="Post title..."
-                    value={newPostTitle}
-                    onChange={(e) => setNewPostTitle(e.target.value)}
-                    className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <textarea
-                    placeholder="Share your thoughts..."
-                    value={newPostContent}
-                    onChange={(e) => setNewPostContent(e.target.value)}
-                    rows={4}
-                    className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => createPostMutation.mutate({ 
-                        title: newPostTitle, 
-                        content: newPostContent, 
-                        forumId: selectedForum 
-                      })}
-                      disabled={createPostMutation.isPending || !newPostTitle.trim() || !newPostContent.trim()}
-                      className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
-                    >
-                      {createPostMutation.isPending ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          Creating...
-                        </>
-                      ) : (
-                        <>
-                          <Send className="w-4 h-4" />
-                          Create Post
-                        </>
-                      )}
-                    </button>
-                    <button
-                      onClick={() => {
-                        setShowNewPost(false);
-                        setNewPostTitle('');
-                        setNewPostContent('');
-                      }}
-                      className="px-4 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Forum Posts */}
-            <div className="space-y-4">
-              {!posts || posts.filter((p: ForumPost) => p.forum_id === selectedForum).length === 0 ? (
-                <EmptyState 
-                  icon={MessageSquare}
-                  title="No Posts Yet"
-                  description="Be the first to start a conversation in this forum."
-                  actionLabel="Create First Post"
-                  onAction={() => setShowNewPost(true)}
-                />
-              ) : (
-                posts.filter((p: ForumPost) => p.forum_id === selectedForum).map((post) => (
-                  <div key={post.id} className="border border-gray-200 rounded-lg p-4">
-                    <h4 className="font-semibold text-gray-800 mb-2">{post.title}</h4>
-                    <p className="text-gray-600 mb-3">{post.content}</p>
-                    <div className="flex items-center justify-between text-sm text-gray-500 mb-3">
-                      <span>By {post.author_name}</span>
-                      <div className="flex items-center gap-4">
-                        <span className="flex items-center gap-1">
-                          <Heart className="w-4 h-4" />
-                          {post.heart_count || 0}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <MessageSquare className="w-4 h-4" />
-                          {post.reply_count || 0}
-                        </span>
-                        <button
-                          onClick={() => setReplyingToPost(post.id)}
-                          className="text-blue-500 hover:text-blue-600"
-                        >
-                          Reply
-                        </button>
-                      </div>
-                    </div>
-                    
-                    {/* Reply Form */}
-                    {replyingToPost === post.id && (
-                      <div className="border-t pt-3">
-                        <textarea
-                          placeholder="Write a reply..."
-                          value={replyContent}
-                          onChange={(e) => setReplyContent(e.target.value)}
-                          rows={3}
-                          className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-2"
-                        />
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => sendMessageMutation.mutate({ 
-                              content: replyContent, 
-                              postId: post.id 
-                            })}
-                            disabled={sendMessageMutation.isPending || !replyContent.trim()}
-                            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
-                          >
-                            {sendMessageMutation.isPending ? (
-                              <>
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                                Sending...
-                              </>
-                            ) : (
-                              <>
-                                <Send className="w-4 h-4" />
-                                Reply
-                              </>
-                            )}
-                          </button>
-                          <button
-                            onClick={() => {
-                              setReplyingToPost(null);
-                              setReplyContent('');
-                            }}
-                            className="px-4 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
+          </>
         )}
 
-        {/* Recent Posts */}
+        {/* Recent Posts (Only show when no forum selected) */}
         {!selectedForum && (
           <div className="bg-white rounded-xl p-6 border border-gray-200">
             <h3 className="text-lg font-semibold text-gray-800 mb-4">Recent Posts</h3>
