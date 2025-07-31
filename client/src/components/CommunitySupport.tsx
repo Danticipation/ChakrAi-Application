@@ -142,9 +142,25 @@ const CommunitySupport: React.FC<CommunitySupportProps> = ({ currentUser }) => {
   const { data: forums, isLoading: forumsLoading, error: forumsError, refetch: refetchForums } = useQuery<Forum[]>({
     queryKey: ['/api/community/forums'],
     queryFn: async () => {
-      const res = await fetch('/api/community/forums');
-      if (!res.ok) throw new Error('Failed to fetch forums');
-      return res.json();
+      console.log('=== FETCHING FORUMS ===');
+      const res = await fetch('/api/community/forums', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+        }
+      });
+      console.log('Forums response status:', res.status);
+      console.log('Forums response ok:', res.ok);
+      
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error('Forums fetch failed:', res.status, errorText);
+        throw new Error(`Failed to fetch forums: ${res.status} ${errorText}`);
+      }
+      
+      const data = await res.json();
+      console.log('Forums data received:', data);
+      console.log('Forums array length:', data?.length);
+      return data;
     },
   });
 
@@ -481,9 +497,17 @@ const CommunitySupport: React.FC<CommunitySupportProps> = ({ currentUser }) => {
   );
 
   const renderForumsTab = () => {
+    console.log('=== RENDER FORUMS TAB ===');
+    console.log('Forums loading:', forumsLoading);
+    console.log('Posts loading:', postsLoading);
+    console.log('Forums error:', forumsError);
+    console.log('Forums data:', forums);
+    console.log('Forums length:', forums?.length);
+    
     if (forumsLoading || postsLoading) return <LoadingSpinner />;
     
     if (forumsError) {
+      console.error('Forums error in render:', forumsError);
       return <ErrorMessage message="Unable to load forums. Please try again." onRetry={refetchForums} />;
     }
     
