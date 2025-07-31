@@ -191,9 +191,17 @@ const CommunitySupport: React.FC<CommunitySupportProps> = ({ currentUser }) => {
   // Enhanced mutations with proper error handling
   const joinForumMutation = useMutation({
     mutationFn: async (forumId: number) => {
+      console.log('=== MUTATION STARTED ===');
+      console.log('Forum ID:', forumId);
+      console.log('Current User:', currentUser);
+      
       if (!currentUser || !currentUser.id) {
+        console.log('ERROR: No current user');
         throw new Error('User authentication required');
       }
+      
+      console.log('Making request to:', `/api/forums/${forumId}/join`);
+      console.log('Request body:', { userId: currentUser.id });
       
       const response = await fetch(`/api/forums/${forumId}/join`, {
         method: 'POST',
@@ -204,12 +212,18 @@ const CommunitySupport: React.FC<CommunitySupportProps> = ({ currentUser }) => {
         body: JSON.stringify({ userId: currentUser.id }),
       });
       
+      console.log('Response status:', response.status);
+      console.log('Response ok:', response.ok);
+      
       if (!response.ok) {
         const errorData = await response.json();
+        console.log('Error response:', errorData);
         throw new Error(errorData.message || 'Failed to join forum');
       }
       
-      return response.json();
+      const result = await response.json();
+      console.log('Success response:', result);
+      return result;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/community/forums'] });
@@ -535,7 +549,14 @@ const CommunitySupport: React.FC<CommunitySupportProps> = ({ currentUser }) => {
                   </span>
                   <div className="flex flex-col gap-1">
                     <button 
-                      onClick={() => joinForumMutation.mutate(forum.id)}
+                      onClick={(e) => {
+                        console.log('=== BUTTON CLICKED ===');
+                        console.log('Event:', e);
+                        console.log('Forum:', forum);
+                        console.log('Mutation function exists:', typeof joinForumMutation.mutate);
+                        console.log('About to call mutate with forumId:', forum.id);
+                        joinForumMutation.mutate(forum.id);
+                      }}
                       disabled={joinForumMutation.isPending}
                       className="bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                       type="button"
