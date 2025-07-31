@@ -605,6 +605,11 @@ const CommunitySupport: React.FC<CommunitySupportProps> = ({ currentUser }) => {
                   <div className="flex flex-col gap-1">
                     <button 
                       onClick={() => {
+                        console.log('Join Discussion clicked for forum:', forum.id);
+                        
+                        const userId = currentUser?.id || 1; // Fallback to ID 1 if no user
+                        console.log('Using userId:', userId);
+                        
                         setSelectedForum(forum.id);
                         joinForumMutation.mutate(forum.id);
                       }}
