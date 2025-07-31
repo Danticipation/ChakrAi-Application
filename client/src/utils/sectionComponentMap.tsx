@@ -34,6 +34,13 @@ interface SectionComponentMapParams {
 
 export const getSectionComponentMap = ({ fetchStreakStats, setActiveSection, handleMobileModalNavigation }: SectionComponentMapParams) => {
   const userId = fetchCurrentUserId();
+  
+  // Create currentUser object for components that require it
+  const currentUser = {
+    id: userId,
+    name: `User ${userId}`,
+    isAuthenticated: true
+  };
 
   return {
     'daily': <PersonalityReflection userId={userId} />, 
@@ -44,7 +51,7 @@ export const getSectionComponentMap = ({ fetchStreakStats, setActiveSection, han
     'feedback': <FeedbackSystem />, 
     'challenges': <ChallengeSystem onNavigate={setActiveSection} onMobileModalNavigate={handleMobileModalNavigation} />, 
     'rewards': <WellnessRewards />, 
-    'community': <CommunitySupport />, 
+    'community': <CommunitySupport currentUser={currentUser} />, 
     'adaptive': <AdaptiveLearning />, 
     'therapy-plans': <AdaptiveTherapyPlan userId={userId} onPlanUpdate={console.log} />, 
     'agents': <AgentSystem userId={userId} />, 

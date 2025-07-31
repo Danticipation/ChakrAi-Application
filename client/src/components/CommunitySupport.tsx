@@ -186,6 +186,14 @@ const CommunitySupport: React.FC<CommunitySupportProps> = ({ currentUser }) => {
   // Enhanced mutations with proper error handling
   const joinForumMutation = useMutation({
     mutationFn: async (forumId: number) => {
+      console.log('Join forum mutation triggered for forum:', forumId);
+      console.log('Current user:', currentUser);
+      
+      if (!currentUser || !currentUser.id) {
+        console.error('No current user available');
+        throw new Error('User authentication required');
+      }
+      
       const response = await fetch(`/api/forums/${forumId}/join`, {
         method: 'POST',
         headers: { 
@@ -194,11 +202,18 @@ const CommunitySupport: React.FC<CommunitySupportProps> = ({ currentUser }) => {
         },
         body: JSON.stringify({ userId: currentUser.id }),
       });
+      
+      console.log('Join forum response status:', response.status);
+      
       if (!response.ok) {
         const errorData = await response.json();
+        console.error('Join forum error:', errorData);
         throw new Error(errorData.message || 'Failed to join forum');
       }
-      return response.json();
+      
+      const result = await response.json();
+      console.log('Join forum success:', result);
+      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/community/forums'] });
@@ -525,7 +540,10 @@ const CommunitySupport: React.FC<CommunitySupportProps> = ({ currentUser }) => {
                     {forum.category}
                   </span>
                   <button 
-                    onClick={() => joinForumMutation.mutate(forum.id)}
+                    onClick={() => {
+                      console.log('Join button clicked for forum:', forum.id, forum.name);
+                      joinForumMutation.mutate(forum.id);
+                    }}
                     disabled={joinForumMutation.isPending}
                     className="text-blue-500 hover:bg-blue-50 text-sm font-medium px-3 py-1 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
                     aria-label={`Join ${forum.name} forum`}
