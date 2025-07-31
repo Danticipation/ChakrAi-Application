@@ -531,18 +531,9 @@ const CommunitySupport: React.FC<CommunitySupportProps> = ({ currentUser }) => {
           </div>
         )}
 
-        {/* Debug Test Button */}
-        <div className="p-4 bg-yellow-100 border border-yellow-300 rounded-lg">
-          <button 
-            onClick={() => {
-              console.log('=== TEST BUTTON CLICKED ===');
-              alert('Test button works! React events are functioning.');
-            }}
-            className="bg-yellow-500 text-white px-4 py-2 rounded cursor-pointer"
-          >
-            TEST BUTTON - Click Me
-          </button>
-          <p className="text-sm mt-2">If this button works but Join Discussion doesn't, there's an issue with the Join button specifically.</p>
+        {/* Debug: Current User Info */}
+        <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm">
+          <strong>Debug Info:</strong> User ID: {currentUser?.id}, Authenticated: {currentUser?.isAuthenticated ? 'Yes' : 'No'}
         </div>
 
         {/* Forum Categories */}
@@ -568,38 +559,42 @@ const CommunitySupport: React.FC<CommunitySupportProps> = ({ currentUser }) => {
                   <span className="text-xs text-gray-500 px-2 py-1 bg-blue-50 text-blue-600 rounded">
                     {forum.category}
                   </span>
-                  <button 
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      console.log('=== JOIN BUTTON CLICKED ===');
-                      console.log('Event:', e);
-                      console.log('Forum ID:', forum.id);
-                      console.log('Forum name:', forum.name);
-                      console.log('Current user:', currentUser);
-                      console.log('joinForumMutation:', joinForumMutation);
-                      console.log('=== CALLING MUTATION ===');
-                      try {
+                  <div className="flex flex-col gap-1">
+                    <button 
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log('=== JOIN BUTTON CLICKED ===');
+                        console.log('Event target:', e.target);
+                        console.log('Forum ID:', forum.id);
+                        console.log('Forum name:', forum.name);
+                        console.log('Current user:', currentUser);
+                        console.log('Mutation pending:', joinForumMutation.isPending);
+                        console.log('=== CALLING MUTATION ===');
+                        
+                        if (!currentUser?.id) {
+                          console.error('No user ID available');
+                          alert('Authentication error: No user ID');
+                          return;
+                        }
+                        
                         joinForumMutation.mutate(forum.id);
-                        console.log('=== MUTATION CALLED SUCCESSFULLY ===');
-                      } catch (error) {
-                        console.error('=== MUTATION CALL FAILED ===', error);
-                      }
-                    }}
-                    disabled={joinForumMutation.isPending}
-                    className="text-blue-500 hover:bg-blue-50 text-sm font-medium px-3 py-1 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2 relative z-10 cursor-pointer"
-                    style={{ pointerEvents: 'auto' }}
-                    aria-label={`Join ${forum.name} forum`}
-                  >
-                    {joinForumMutation.isPending ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        Joining...
-                      </>
-                    ) : (
-                      'Join Discussion →'
-                    )}
-                  </button>
+                      }}
+                      disabled={joinForumMutation.isPending}
+                      className="bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                      type="button"
+                    >
+                      {joinForumMutation.isPending ? (
+                        <div className="flex items-center gap-2">
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Joining...
+                        </div>
+                      ) : (
+                        'Join Discussion →'
+                      )}
+                    </button>
+                    <span className="text-xs text-gray-400">Forum ID: {forum.id}</span>
+                  </div>
                 </div>
               </div>
             ))
