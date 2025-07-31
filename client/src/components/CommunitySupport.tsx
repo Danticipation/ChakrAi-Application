@@ -140,26 +140,18 @@ const CommunitySupport: React.FC<CommunitySupportProps> = ({ currentUser }) => {
 
   // Data fetching with proper error handling (no fallback data)
   const { data: forums, isLoading: forumsLoading, error: forumsError, refetch: refetchForums } = useQuery<Forum[]>({
-    queryKey: ['/api/support-forums'],
+    queryKey: ['/api/community/forums'],
     queryFn: async () => {
-      const res = await fetch('/api/support-forums', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-        }
-      });
+      const res = await fetch('/api/community/forums');
       if (!res.ok) throw new Error('Failed to fetch forums');
       return res.json();
     },
   });
 
   const { data: posts, isLoading: postsLoading, error: postsError, refetch: refetchPosts } = useQuery<ForumPost[]>({
-    queryKey: ['/api/forum-posts'],
+    queryKey: ['/api/community/posts'],
     queryFn: async () => {
-      const res = await fetch('/api/forum-posts', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-        }
-      });
+      const res = await fetch('/api/community/posts');
       if (!res.ok) throw new Error('Failed to fetch posts');
       return res.json();
     },

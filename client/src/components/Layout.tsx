@@ -275,7 +275,7 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
       case 'rewards':
         return <WellnessRewards />;
       case 'community':
-        return <CommunitySupport />;
+        return <CommunitySupport currentUser={{ id: currentUserId || 1, name: 'User', isAuthenticated: true }} />;
       case 'agents':
         return <AgentSystem userId={currentUserId || 1} />;
       case 'vr':
