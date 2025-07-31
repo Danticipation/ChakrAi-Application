@@ -115,14 +115,6 @@ const CommunitySupport: React.FC<CommunitySupportProps> = ({ currentUser }) => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  // Debug logging
-  console.log('CommunitySupport component rendered');
-  console.log('Current user in component:', currentUser);
-  
-  useEffect(() => {
-    console.log('CommunitySupport useEffect - component mounted');
-  }, []);
-
   // Authentication check
   if (!currentUser?.isAuthenticated) {
     return (
@@ -194,11 +186,7 @@ const CommunitySupport: React.FC<CommunitySupportProps> = ({ currentUser }) => {
   // Enhanced mutations with proper error handling
   const joinForumMutation = useMutation({
     mutationFn: async (forumId: number) => {
-      console.log('Join forum mutation triggered for forum:', forumId);
-      console.log('Current user:', currentUser);
-      
       if (!currentUser || !currentUser.id) {
-        console.error('No current user available');
         throw new Error('User authentication required');
       }
       
@@ -211,17 +199,12 @@ const CommunitySupport: React.FC<CommunitySupportProps> = ({ currentUser }) => {
         body: JSON.stringify({ userId: currentUser.id }),
       });
       
-      console.log('Join forum response status:', response.status);
-      
       if (!response.ok) {
         const errorData = await response.json();
-        console.error('Join forum error:', errorData);
         throw new Error(errorData.message || 'Failed to join forum');
       }
       
-      const result = await response.json();
-      console.log('Join forum success:', result);
-      return result;
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/community/forums'] });
@@ -498,13 +481,6 @@ const CommunitySupport: React.FC<CommunitySupportProps> = ({ currentUser }) => {
   );
 
   const renderForumsTab = () => {
-    console.log('=== RENDERING FORUMS TAB ===');
-    console.log('Forums loading:', forumsLoading);
-    console.log('Posts loading:', postsLoading);
-    console.log('Forums error:', forumsError);
-    console.log('Posts error:', postsError);
-    console.log('Forums data:', forums);
-    
     if (forumsLoading || postsLoading) return <LoadingSpinner />;
     
     if (forumsError) {
@@ -531,10 +507,7 @@ const CommunitySupport: React.FC<CommunitySupportProps> = ({ currentUser }) => {
           </div>
         )}
 
-        {/* Debug: Current User Info */}
-        <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm">
-          <strong>Debug Info:</strong> User ID: {currentUser?.id}, Authenticated: {currentUser?.isAuthenticated ? 'Yes' : 'No'}
-        </div>
+
 
         {/* Forum Categories */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -561,25 +534,7 @@ const CommunitySupport: React.FC<CommunitySupportProps> = ({ currentUser }) => {
                   </span>
                   <div className="flex flex-col gap-1">
                     <button 
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        console.log('=== JOIN BUTTON CLICKED ===');
-                        console.log('Event target:', e.target);
-                        console.log('Forum ID:', forum.id);
-                        console.log('Forum name:', forum.name);
-                        console.log('Current user:', currentUser);
-                        console.log('Mutation pending:', joinForumMutation.isPending);
-                        console.log('=== CALLING MUTATION ===');
-                        
-                        if (!currentUser?.id) {
-                          console.error('No user ID available');
-                          alert('Authentication error: No user ID');
-                          return;
-                        }
-                        
-                        joinForumMutation.mutate(forum.id);
-                      }}
+                      onClick={() => joinForumMutation.mutate(forum.id)}
                       disabled={joinForumMutation.isPending}
                       className="bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                       type="button"
@@ -593,7 +548,7 @@ const CommunitySupport: React.FC<CommunitySupportProps> = ({ currentUser }) => {
                         'Join Discussion →'
                       )}
                     </button>
-                    <span className="text-xs text-gray-400">Forum ID: {forum.id}</span>
+
                   </div>
                 </div>
               </div>
