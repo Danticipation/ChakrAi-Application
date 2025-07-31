@@ -120,6 +120,15 @@ const CommunitySupport: React.FC<CommunitySupportProps> = ({ currentUser }) => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
+  // Debug effect to watch selectedForum changes
+  useEffect(() => {
+    console.log('=== SELECTED FORUM CHANGED ===');
+    console.log('New selected forum:', selectedForum);
+    if (selectedForum) {
+      console.log('Forum details:', forums?.find(f => f.id === selectedForum));
+    }
+  }, [selectedForum, forums]);
+
   // Authentication check
   if (!currentUser?.isAuthenticated) {
     return (
@@ -228,21 +237,30 @@ const CommunitySupport: React.FC<CommunitySupportProps> = ({ currentUser }) => {
       
       const result = await response.json();
       console.log('Success response:', result);
-      return result;
+      return { ...result, forumId }; // Include forumId in the result
     },
     onSuccess: (data) => {
-      console.log('Join forum success, data:', data);
-      queryClient.invalidateQueries({ queryKey: ['/api/community/forums'] });
+      console.log('=== JOIN SUCCESS ===');
+      console.log('Joined forum ID:', data.forumId);
+      
+      // Set the selected forum to show its content
+      setSelectedForum(data.forumId);
+      
+      // Clear any previous errors
       setError(null);
       
-      // Show the forum interface immediately after successful join
-      console.log('Setting selectedForum to show forum interface');
-      
+      // Show success message
       toast({
         title: "Forum Joined Successfully!",
         description: "You can now view and create posts in this forum.",
         duration: 3000,
       });
+      
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ['/api/community/forums'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/community/posts'] });
+      
+      console.log('Selected forum set to:', data.forumId);
     },
     onError: (error) => {
       const errorMessage = `Failed to join forum: ${error.message}`;
@@ -612,14 +630,7 @@ const CommunitySupport: React.FC<CommunitySupportProps> = ({ currentUser }) => {
                       onClick={() => {
                         console.log('Join Discussion clicked for forum:', forum.id);
                         
-                        const userId = currentUser?.id || 1;
-                        console.log('Using userId:', userId);
-                        
-                        // Set selected forum BEFORE the mutation to show the interface immediately
-                        console.log('Setting selectedForum to:', forum.id);
-                        setSelectedForum(forum.id);
-                        
-                        // Then join the forum (for backend tracking)
+                        // DON'T set selectedForum here - let the mutation success handler do it
                         joinForumMutation.mutate(forum.id);
                       }}
                       disabled={joinForumMutation.isPending}
@@ -653,16 +664,26 @@ const CommunitySupport: React.FC<CommunitySupportProps> = ({ currentUser }) => {
         {console.log('Rendering: selectedForum =', selectedForum)}
         {selectedForum && (
           <div className="bg-white rounded-xl p-6 border border-gray-200">
+            {/* Debug info */}
+            <div className="mb-4 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs">
+              <strong>DEBUG:</strong> Selected Forum ID: {selectedForum} | 
+              Forums Available: {Array.isArray(forums) ? forums.length : 'Not array'} | 
+              Posts Available: {Array.isArray(posts) ? posts.length : 'Not array'}
+            </div>
+            
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-4">
                 <button 
-                  onClick={() => setSelectedForum(null)}
+                  onClick={() => {
+                    console.log('Back to forums clicked');
+                    setSelectedForum(null);
+                  }}
                   className="text-blue-500 hover:text-blue-600"
                 >
                   ← Back to Forums
                 </button>
                 <h3 className="text-lg font-semibold text-gray-800">
-                  {forums?.find((f: Forum) => f.id === selectedForum)?.name}
+                  {forums?.find((f: Forum) => f.id === selectedForum)?.name || 'Forum Not Found'}
                 </h3>
               </div>
               <button 
