@@ -211,7 +211,8 @@ const CommunitySupport: React.FC<CommunitySupportProps> = ({ currentUser }) => {
       
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('=== JOIN FORUM SUCCESS ===', data);
       queryClient.invalidateQueries({ queryKey: ['/api/community/forums'] });
       setError(null);
       toast({
@@ -219,8 +220,11 @@ const CommunitySupport: React.FC<CommunitySupportProps> = ({ currentUser }) => {
         description: "Successfully joined the forum!",
         duration: 3000,
       });
+      // Show alert for immediate feedback since navigation isn't implemented yet
+      alert('Successfully joined the forum! Forum posting features coming soon.');
     },
     onError: (error) => {
+      console.log('=== JOIN FORUM ERROR ===', error);
       const errorMessage = `Failed to join forum: ${error.message}`;
       setError(errorMessage);
       toast({
@@ -229,6 +233,7 @@ const CommunitySupport: React.FC<CommunitySupportProps> = ({ currentUser }) => {
         variant: "destructive",
         duration: 5000,
       });
+      alert(`Error: ${errorMessage}`);
     }
   });
 
@@ -535,7 +540,15 @@ const CommunitySupport: React.FC<CommunitySupportProps> = ({ currentUser }) => {
                   </span>
                   <div className="flex flex-col gap-1">
                     <button 
-                      onClick={() => joinForumMutation.mutate(forum.id)}
+                      onClick={(e) => {
+                        console.log('=== JOIN BUTTON CLICKED ===');
+                        console.log('Forum ID:', forum.id);
+                        console.log('Current user:', currentUser);
+                        console.log('Mutation:', joinForumMutation);
+                        e.preventDefault();
+                        e.stopPropagation();
+                        joinForumMutation.mutate(forum.id);
+                      }}
                       disabled={joinForumMutation.isPending}
                       className="bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                       type="button"
