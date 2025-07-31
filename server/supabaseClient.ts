@@ -9,6 +9,8 @@ const isSupabaseConfigured = !!(supabaseUrl && supabaseServiceKey);
 
 if (!isSupabaseConfigured) {
   console.warn('Supabase credentials not configured. Community features will use fallback mode.');
+} else {
+  console.log('✓ Supabase configured successfully for community features!');
 }
 
 // Create Supabase client for server-side operations (only if configured)
