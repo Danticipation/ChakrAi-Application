@@ -1313,42 +1313,7 @@ app.get('/api/peer-check-ins/:userId', (req, res) => {
   }
 });
 
-// Create forum post endpoint
-app.post('/api/community/posts', async (req, res) => {
-  try {
-    const { title, content, forum_id, author_id, author_name } = req.body;
-    
-    if (!title || !content || !forum_id || !author_id) {
-      return res.status(400).json({ error: 'Missing required fields' });
-    }
-
-    const { supabase } = await import('./supabaseClient.js');
-    const { data, error } = await supabase
-      .from('forum_posts')
-      .insert({
-        title,
-        content,
-        forum_id,
-        author_id,
-        author_name,
-        created_at: new Date().toISOString(),
-        heart_count: 0,
-        reply_count: 0
-      })
-      .select('*')
-      .single();
-
-    if (error) {
-      console.error('Error creating post:', error);
-      return res.status(500).json({ error: 'Failed to create post' });
-    }
-
-    res.json({ success: true, post: data });
-  } catch (error) {
-    console.error('Error in post creation:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
+// Note: Community posts endpoint moved below to avoid Supabase conflicts
 
 // Create forum reply endpoint
 app.post('/api/forum-replies', async (req, res) => {

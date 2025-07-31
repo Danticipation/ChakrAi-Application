@@ -885,39 +885,7 @@ const CommunitySupport: React.FC<CommunitySupportProps> = ({ currentUser }) => {
           </div>
         )}
 
-        {/* DEBUG PANEL - Add this temporarily to test showNewPost state */}
-        <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-          <h4 className="font-bold text-yellow-800 mb-2">🐛 DEBUG INFO:</h4>
-          <div className="text-sm space-y-1">
-            <div><strong>Selected Forum:</strong> {selectedForum || 'None'}</div>
-            <div><strong>Forums Available:</strong> {forums?.length || 'None'}</div>
-            <div><strong>Posts Available:</strong> {posts?.length || 'None'}</div>
-            <div><strong>Show New Post:</strong> {showNewPost ? 'YES - FORM SHOULD SHOW' : 'NO - FORM HIDDEN'}</div>
-            <div><strong>Forums Data:</strong> {JSON.stringify(forums?.map(f => ({id: f.id, name: f.name})) || 'None')}</div>
-          </div>
-          <div className="flex gap-2 mt-2">
-            <button 
-              onClick={() => {
-                console.log('Manual forum selection test');
-                setSelectedForum(1);
-              }}
-              className="bg-yellow-600 text-white px-3 py-1 rounded text-xs"
-            >
-              Test: Force Select Forum 1
-            </button>
-            <button 
-              onClick={() => {
-                console.log('Manual show new post test');
-                console.log('Current showNewPost before:', showNewPost);
-                setShowNewPost(true);
-                console.log('Set showNewPost to true');
-              }}
-              className="bg-green-600 text-white px-3 py-1 rounded text-xs"
-            >
-              Test: Force Show New Post
-            </button>
-          </div>
-        </div>
+
 
         {/* Only show forum grid if no forum is selected */}
         {!selectedForum && (
