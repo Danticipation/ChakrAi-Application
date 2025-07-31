@@ -132,6 +132,28 @@ export class SupabaseCommunityService {
     }
   }
 
+  // Get all posts across forums
+  async getAllPosts(limit: number = 50): Promise<SupabaseForumPost[]> {
+    if (!this.checkSupabaseAvailable()) {
+      return [];
+    }
+    
+    try {
+      const { data, error } = await supabase!
+        .from('forum_posts')
+        .select('*')
+        .eq('is_flagged', false)
+        .order('created_at', { ascending: false })
+        .limit(limit);
+      
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching all posts:', error);
+      return [];
+    }
+  }
+
   // Forum posts
   async getForumPosts(forumId: number, limit = 20): Promise<SupabaseForumPost[]> {
     if (!this.checkSupabaseAvailable()) {

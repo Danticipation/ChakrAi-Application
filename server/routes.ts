@@ -1424,6 +1424,18 @@ router.get('/community/forums', async (req, res) => {
   }
 });
 
+// Get all posts across all forums
+router.get('/community/posts', async (req, res) => {
+  try {
+    const limit = req.query.limit ? parseInt(req.query.limit as string) : 50;
+    const posts = await communityService.getAllPosts(limit);
+    res.json(posts);
+  } catch (error) {
+    console.error('Failed to get all posts:', error);
+    res.status(500).json({ error: 'Failed to get posts' });
+  }
+});
+
 router.post('/community/forums', async (req, res) => {
   try {
     const forum = await communityService.createForum(req.body);
