@@ -359,7 +359,8 @@ router.post('/transcribe', upload.single('audio'), async (req, res) => {
       hasFile: !!req.file,
       fileSize: req.file?.buffer?.length,
       mimeType: req.file?.mimetype,
-      userAgent: req.headers['user-agent']?.substring(0, 100)
+      userAgent: req.headers['user-agent']?.substring(0, 100),
+      firstBytes: req.file?.buffer ? Array.from(req.file.buffer.subarray(0, 20)).map(b => b.toString(16)).join(' ') : 'none'
     });
 
     if (!req.file) {
@@ -431,6 +432,7 @@ router.post('/transcribe', upload.single('audio'), async (req, res) => {
 
     const result = await response.json();
     console.log('✅ Transcription successful:', result.text);
+    console.log('🔍 Full OpenAI response:', result);
     res.json({ 
       success: true, 
       transcription: result.text,
