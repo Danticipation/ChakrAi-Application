@@ -309,7 +309,7 @@ const TherapeuticJournal: React.FC<TherapeuticJournalProps> = ({ userId, onEntry
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          userId: savedEntry.userId,
+          userId: userId,
           entryId: savedEntry.id,
           content: savedEntry.content,
           mood: savedEntry.mood,
