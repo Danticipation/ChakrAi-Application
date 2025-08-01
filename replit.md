@@ -8,8 +8,10 @@ Chakrai is a professional mental wellness and therapy application designed for i
 - **Self-reflection through mirroring**: Core purpose is reflection of self through the bot's learned personality mirror
 - **Original voice system**: Maintain only the 4 approved voices (James, Brian, Alexandra, Carla)
 - **Voice functionality**: ElevenLabs voices must work properly - user extremely frustrated with voice system failures
-- **Critical priority**: Voice system is causing significant user frustration and must be resolved immediately
-- **Communication style**: Direct, technical communication preferred
+- **CRITICAL STABILITY ISSUE**: User experiencing repeated app breakdowns and runtime errors - app stability is top priority
+- **Critical priority**: Voice system and component errors causing significant user frustration - must maintain working state
+- **Communication style**: Direct, technical communication preferred - user extremely frustrated with app instability
+- **User expectation**: App should work consistently without breaking when attempting basic interactions like voice chat
 - **Identity reflection**: Bot should reflect user's persona, identity, and mannerisms over time
 - **Color scheme preference**: MUST maintain consistent blue therapeutic theme throughout - user strongly rejects colorful "rainbow" designs
 

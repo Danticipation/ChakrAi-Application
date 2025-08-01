@@ -71,7 +71,7 @@ class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasErr
   }
 }
 
-const AppLayout: React.FC = () => {
+const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void}> = ({ currentUserId, onDataReset }) => {
   const { currentTheme } = useTheme();
   const [activeSection, setActiveSection] = useState('home');
   const [selectedVoice, setSelectedVoice] = useState('james');
