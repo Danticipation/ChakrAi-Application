@@ -444,14 +444,16 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
         throw new Error('MediaRecorder not supported. Please use a different browser.');
       }
 
-      // Test audio format support
+      // Test audio format support with mobile-friendly formats
       const supportedFormats = [];
       const testFormats = [
-        'audio/webm;codecs=opus',
-        'audio/webm',
-        'audio/mp4',
-        'audio/wav',
-        'audio/ogg'
+        'audio/webm;codecs=opus',  // Best for desktop Chrome/Firefox
+        'audio/webm',              // Fallback WebM
+        'audio/mp4;codecs=mp4a.40.2', // Good for Safari/mobile
+        'audio/mp4',               // Basic MP4
+        'audio/wav',               // Universal but large
+        'audio/ogg;codecs=opus',   // Firefox alternative
+        'audio/aac'                // Mobile Safari fallback
       ];
       
       for (const format of testFormats) {
@@ -460,21 +462,47 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
         }
       }
       
-      console.log('📊 Supported audio formats:', supportedFormats);
+      console.log('📊 All supported audio formats:', supportedFormats);
+      console.log('🏠 Platform detected:', navigator.platform);
+      console.log('📱 User agent includes mobile:', /Mobile|Android|iPhone|iPad/.test(navigator.userAgent));
       
       if (supportedFormats.length === 0) {
         throw new Error('No supported audio formats found. Please try a different browser.');
       }
+      
+      // Choose best format based on platform
+      let selectedMimeType = supportedFormats[0];
+      const isMobile = /Mobile|Android|iPhone|iPad/.test(navigator.userAgent);
+      const isSafari = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
+      
+      if (isMobile || isSafari) {
+        // Prefer MP4 for mobile/Safari compatibility
+        const mp4Format = supportedFormats.find(format => format.includes('mp4'));
+        if (mp4Format) {
+          selectedMimeType = mp4Format;
+          console.log('📱 Mobile/Safari detected, using MP4 format:', selectedMimeType);
+        }
+      } else {
+        // Desktop Chrome/Firefox - prefer WebM with Opus
+        const webmOpus = supportedFormats.find(format => format.includes('opus'));
+        if (webmOpus) {
+          selectedMimeType = webmOpus;
+          console.log('💻 Desktop detected, using WebM+Opus format:', selectedMimeType);
+        }
+      }
 
-      // Enhanced audio constraints with fallback options
+      // Enhanced audio constraints with mobile optimization  
       const constraints = {
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
           autoGainControl: true,
-          sampleRate: { ideal: 16000, min: 8000, max: 48000 },
-          channelCount: { ideal: 1, min: 1, max: 2 },
-          latency: 0.1,
+          // Mobile-optimized settings
+          sampleRate: isMobile 
+            ? { ideal: 16000, min: 8000, max: 24000 }  // Lower for mobile
+            : { ideal: 16000, min: 8000, max: 48000 }, // Higher for desktop
+          channelCount: { ideal: 1, min: 1, max: 1 },   // Force mono for consistency
+          latency: isMobile ? 0.2 : 0.1,                // Higher latency for mobile
           volume: 1.0
         }
       };
@@ -525,10 +553,7 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
       
       streamRef.current = stream;
 
-      // Select best audio format
-      let selectedMimeType = supportedFormats[0] || '';
-      
-      console.log('🎵 Selected audio format:', selectedMimeType);
+      console.log('🎵 Final selected audio format:', selectedMimeType);
       
       // Create MediaRecorder with enhanced options
       const recorderOptions = selectedMimeType ? { 
@@ -728,9 +753,26 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
     try {
       console.log('🚀 Sending audio to Whisper API...');
       console.log('📊 Audio blob size:', audioBlob.size, 'bytes');
+      console.log('📊 Audio blob type:', audioBlob.type);
+      
+      // Prevent duplicate requests
+      if (audioBlob.size === 0) {
+        console.error('❌ Empty audio blob, skipping transcription');
+        return;
+      }
+      
+      // Check minimum size (very small files might be empty/corrupt)
+      if (audioBlob.size < 1000) {
+        console.warn('⚠️ Audio file very small, might be empty recording');
+        alert('Recording seems too short or empty. Please try speaking longer.');
+        return;
+      }
       
       const formData = new FormData();
-      formData.append('audio', audioBlob, 'recording.webm');
+      // Use correct file extension based on audio type
+      const fileName = audioBlob.type.includes('mp4') ? 'recording.mp4' : 
+                      audioBlob.type.includes('wav') ? 'recording.wav' : 'recording.webm';
+      formData.append('audio', audioBlob, fileName);
       formData.append('userId', '1');
       
       const response: AxiosResponse<TranscriptionResponse> = await axios.post('/api/transcribe', formData, {
@@ -776,9 +818,13 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
   }, [inputMessage, sendMessage]);
 
   const handleMicrophoneToggle = useCallback(() => {
+    console.log('🎤 Microphone button clicked, current state:', isRecording);
+    
     if (isRecording) {
+      console.log('🛑 Stopping recording...');
       stopRecording();
     } else {
+      console.log('🎙️ Starting recording...');
       startRecording();
     }
   }, [isRecording, startRecording, stopRecording]);

@@ -355,8 +355,33 @@ Adapt your response to mirror the user's communication patterns while providing 
 // Voice transcription endpoint
 router.post('/transcribe', upload.single('audio'), async (req, res) => {
   try {
+    console.log('🎤 Transcription request received:', {
+      hasFile: !!req.file,
+      fileSize: req.file?.buffer?.length,
+      mimeType: req.file?.mimetype,
+      userAgent: req.headers['user-agent']?.substring(0, 100)
+    });
+
     if (!req.file) {
       return res.status(400).json({ error: 'No audio file provided' });
+    }
+
+    // Check file size limits (OpenAI Whisper has a 25MB limit)
+    if (req.file.buffer.length > 25 * 1024 * 1024) {
+      console.error('❌ Audio file too large:', req.file.buffer.length);
+      return res.status(400).json({ 
+        error: 'Audio file too large. Please record a shorter message.',
+        errorType: 'file_size_error'
+      });
+    }
+
+    // Check for empty file
+    if (req.file.buffer.length === 0) {
+      console.error('❌ Empty audio file received');
+      return res.status(400).json({ 
+        error: 'Empty audio file. Please try recording again.',
+        errorType: 'empty_file_error'
+      });
     }
 
     if (!process.env.OPENAI_API_KEY) {
@@ -380,13 +405,28 @@ router.post('/transcribe', upload.single('audio'), async (req, res) => {
     });
 
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`❌ OpenAI Whisper API error ${response.status}:`, errorText);
+      
       if (response.status === 429) {
         return res.status(429).json({ 
           error: 'Voice transcription temporarily unavailable due to high demand',
           errorType: 'quota_exceeded'
         });
+      } else if (response.status === 400) {
+        // Common mobile issues: file format, size, or duration
+        console.error('❌ Bad request - likely audio format issue:', {
+          fileSize: req.file.buffer.length,
+          mimeType: req.file.mimetype,
+          originalName: req.file.originalname
+        });
+        return res.status(400).json({ 
+          error: 'Audio format not supported. Please try again with a shorter recording.',
+          errorType: 'audio_format_error',
+          details: errorText
+        });
       }
-      throw new Error(`OpenAI API error: ${response.status}`);
+      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
     }
 
     const result = await response.json();
