@@ -363,6 +363,13 @@ router.post('/transcribe', upload.single('audio'), async (req, res) => {
       firstBytes: req.file?.buffer ? Array.from(req.file.buffer.subarray(0, 20)).map(b => b.toString(16)).join(' ') : 'none'
     });
 
+    // Log the actual FormData being sent to OpenAI for debugging
+    console.log('📤 Sending to OpenAI Whisper:', {
+      model: 'whisper-1',
+      fileSize: req.file.buffer.length,
+      mimeType: req.file.mimetype
+    });
+
     if (!req.file) {
       return res.status(400).json({ error: 'No audio file provided' });
     }
@@ -396,8 +403,9 @@ router.post('/transcribe', upload.single('audio'), async (req, res) => {
     const audioBlob = new Blob([req.file.buffer], { type: req.file.mimetype });
     formData.append('file', audioBlob, 'audio.webm');
     formData.append('model', 'whisper-1');
-    formData.append('language', 'en'); // Force English detection
-    formData.append('prompt', 'This is a voice message in English from a user speaking to their AI wellness companion. Please transcribe the full message accurately.'); // Context hint
+    // Remove language forcing and prompts that might be interfering
+    // formData.append('language', 'en'); 
+    // formData.append('prompt', 'This is a voice message in English from a user speaking to their AI wellness companion. Please transcribe the full message accurately.');
 
     const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
       method: 'POST',

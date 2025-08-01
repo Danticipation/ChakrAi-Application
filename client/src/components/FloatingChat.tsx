@@ -448,11 +448,11 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
       // Test audio format support with mobile-friendly formats
       const supportedFormats = [];
       const testFormats = [
-        'audio/webm;codecs=opus',  // Best for desktop Chrome/Firefox
-        'audio/webm',              // Fallback WebM
-        'audio/mp4;codecs=mp4a.40.2', // Good for Safari/mobile
+        'audio/mp4;codecs=mp4a.40.2', // Good for Safari/mobile - prioritize for better Whisper compatibility
         'audio/mp4',               // Basic MP4
-        'audio/wav',               // Universal but large
+        'audio/wav',               // Universal but large - good for transcription
+        'audio/webm;codecs=opus',  // Desktop Chrome/Firefox
+        'audio/webm',              // Fallback WebM
         'audio/ogg;codecs=opus',   // Firefox alternative
         'audio/aac'                // Mobile Safari fallback
       ];
@@ -476,20 +476,19 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
       const isMobile = /Mobile|Android|iPhone|iPad/.test(navigator.userAgent);
       const isSafari = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
       
-      if (isMobile || isSafari) {
-        // Prefer MP4 for mobile/Safari compatibility
-        const mp4Format = supportedFormats.find(format => format.includes('mp4'));
-        if (mp4Format) {
-          selectedMimeType = mp4Format;
-          console.log('📱 Mobile/Safari detected, using MP4 format:', selectedMimeType);
-        }
+      // Always prefer MP4 or WAV for better OpenAI Whisper compatibility
+      const mp4Format = supportedFormats.find(format => format.includes('mp4'));
+      const wavFormat = supportedFormats.find(format => format.includes('wav'));
+      
+      if (mp4Format) {
+        selectedMimeType = mp4Format;
+        console.log('🎵 Using MP4 format for better transcription:', selectedMimeType);
+      } else if (wavFormat) {
+        selectedMimeType = wavFormat;
+        console.log('🎵 Using WAV format for better transcription:', selectedMimeType);
       } else {
-        // Desktop Chrome/Firefox - prefer WebM with Opus
-        const webmOpus = supportedFormats.find(format => format.includes('opus'));
-        if (webmOpus) {
-          selectedMimeType = webmOpus;
-          console.log('💻 Desktop detected, using WebM+Opus format:', selectedMimeType);
-        }
+        // Fallback to WebM only if no better options
+        console.log('⚠️ Using WebM fallback, transcription may be less accurate:', selectedMimeType);
       }
 
       // Enhanced audio constraints with mobile optimization  
@@ -801,7 +800,8 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
           
           // Show warning to user if transcription was unclear
           if (response.data.warning && (transcript.length <= 3 || transcript.toLowerCase() === 'you')) {
-            alert('I heard something but it was unclear. I sent "' + transcript + '" - please try speaking more clearly and closer to the microphone.');
+            console.warn('Voice transcription issue - got:', transcript, 'from', response.data.audioDetails);
+            // Don't alert for now, just log - let's see what we're actually getting
           }
         } else {
           console.warn('⚠️ No transcription received:', transcript);
