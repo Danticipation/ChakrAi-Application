@@ -471,24 +471,24 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
         throw new Error('No supported audio formats found. Please try a different browser.');
       }
       
-      // Choose best format based on platform
-      let selectedMimeType = supportedFormats[0];
+      // FORCE MP4 format - completely bypass WebM to fix transcription
+      let selectedMimeType = '';
       const isMobile = /Mobile|Android|iPhone|iPad/.test(navigator.userAgent);
       const isSafari = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
       
-      // Always prefer MP4 or WAV for better OpenAI Whisper compatibility
+      // Force MP4 first, then WAV - NEVER use WebM for transcription
       const mp4Format = supportedFormats.find(format => format.includes('mp4'));
       const wavFormat = supportedFormats.find(format => format.includes('wav'));
       
       if (mp4Format) {
         selectedMimeType = mp4Format;
-        console.log('🎵 Using MP4 format for better transcription:', selectedMimeType);
+        console.log('🎵 FORCED MP4 format for transcription fix:', selectedMimeType);
       } else if (wavFormat) {
         selectedMimeType = wavFormat;
-        console.log('🎵 Using WAV format for better transcription:', selectedMimeType);
+        console.log('🎵 FORCED WAV format for transcription fix:', selectedMimeType);
       } else {
-        // Fallback to WebM only if no better options
-        console.log('⚠️ Using WebM fallback, transcription may be less accurate:', selectedMimeType);
+        // If neither available, don't record - WebM is broken
+        throw new Error('MP4/WAV recording required for voice transcription. WebM format causes transcription failures. Please use a browser that supports MP4 recording.');
       }
 
       // Enhanced audio constraints with mobile optimization  
@@ -555,12 +555,14 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
 
       console.log('🎵 Final selected audio format:', selectedMimeType);
       
-      // Create MediaRecorder with enhanced options
-      const recorderOptions = selectedMimeType ? { 
+      // Create MediaRecorder with FORCED non-WebM options
+      if (!selectedMimeType || selectedMimeType.includes('webm')) {
+        throw new Error('WebM format blocked - causes transcription failures. Browser must support MP4 or WAV recording.');
+      }
+      
+      const recorderOptions = { 
         mimeType: selectedMimeType,
-        audioBitsPerSecond: 128000 
-      } : { 
-        audioBitsPerSecond: 128000 
+        audioBitsPerSecond: selectedMimeType.includes('wav') ? 256000 : 128000 // Higher bitrate for WAV
       };
       
       console.log('📊 MediaRecorder options:', recorderOptions);
