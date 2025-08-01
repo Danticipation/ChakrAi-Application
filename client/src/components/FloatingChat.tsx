@@ -238,6 +238,7 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
       console.log('🚀 Sending chat message:', text.trim());
       const response: AxiosResponse<ChatApiResponse> = await axios.post('/api/chat', {
         message: text.trim(),
+        voice: selectedVoice,
         context: 'floating_chat'
       }, {
         headers: {

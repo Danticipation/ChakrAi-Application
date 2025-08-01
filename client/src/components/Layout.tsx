@@ -146,7 +146,7 @@ const AppLayout: React.FC = () => {
         },
         body: JSON.stringify({
           message: chatInput,
-          voice: 'carla' // Default voice, can be made configurable later
+          voice: selectedVoice // Use the selected voice from state
         })
       });
       
