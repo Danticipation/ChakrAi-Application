@@ -787,7 +787,14 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
       
       if (response.data.success && response.data.transcription) {
         console.log('✅ Transcription successful:', response.data.transcription);
-        await sendMessage(response.data.transcription);
+        // Only send message if transcription has actual content (not just "you")
+        const transcript = response.data.transcription.trim();
+        if (transcript && transcript.length > 2 && transcript !== 'you') {
+          await sendMessage(transcript);
+        } else {
+          console.warn('⚠️ Transcription too short or unclear:', transcript);
+          alert('Speech was unclear. Please try speaking more clearly and for longer.');
+        }
       } else {
         console.warn('⚠️ Transcription failed or empty:', response.data);
         alert('No speech detected. Please try speaking louder or closer to the microphone.');

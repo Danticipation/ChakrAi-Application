@@ -195,7 +195,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const theme = themes.find(t => t.id === themeId);
     if (theme) {
       setCurrentTheme(theme);
-      localStorage.setItem('Chakrai-theme', themeId);
+      localStorage.setItem('chakrai-theme', themeId);
     }
   };
 
