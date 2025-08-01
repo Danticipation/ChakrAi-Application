@@ -396,6 +396,8 @@ router.post('/transcribe', upload.single('audio'), async (req, res) => {
     const audioBlob = new Blob([req.file.buffer], { type: req.file.mimetype });
     formData.append('file', audioBlob, 'audio.webm');
     formData.append('model', 'whisper-1');
+    formData.append('language', 'en'); // Force English detection
+    formData.append('prompt', 'This is a voice message in English from a user speaking to their AI wellness companion. Please transcribe the full message accurately.'); // Context hint
 
     const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
       method: 'POST',
@@ -433,11 +435,32 @@ router.post('/transcribe', upload.single('audio'), async (req, res) => {
     const result = await response.json();
     console.log('✅ Transcription successful:', result.text);
     console.log('🔍 Full OpenAI response:', result);
-    res.json({ 
-      success: true, 
-      transcription: result.text,
-      text: result.text // Keep for compatibility
-    });
+    
+    // Check if transcription seems too short or unclear
+    const transcription = result.text?.trim() || '';
+    if (transcription.length <= 3 || transcription.toLowerCase() === 'you' || transcription.toLowerCase() === 'uh' || transcription.toLowerCase() === 'um') {
+      console.warn('⚠️ Transcription seems unclear or too short:', transcription);
+      console.warn('⚠️ Audio details - Size:', req.file.buffer.length, 'Duration seconds:', result.usage?.seconds);
+      
+      // Still return the transcription but with a warning
+      res.json({ 
+        success: true, 
+        transcription: transcription,
+        text: transcription,
+        warning: 'Speech may have been unclear. Try speaking louder and more clearly.',
+        audioDetails: {
+          size: req.file.buffer.length,
+          duration: result.usage?.seconds,
+          mimeType: req.file.mimetype
+        }
+      });
+    } else {
+      res.json({ 
+        success: true, 
+        transcription: transcription,
+        text: transcription
+      });
+    }
 
   } catch (error) {
     console.error('❌ Transcription error:', error);

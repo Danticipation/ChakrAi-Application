@@ -788,10 +788,21 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
       
       if (response.data.success && response.data.transcription) {
         console.log('✅ Transcription successful:', response.data.transcription);
+        
+        // Show warning if transcription seems unclear
+        if (response.data.warning) {
+          console.warn('⚠️ Transcription warning:', response.data.warning);
+        }
+        
         // Send message if we have any transcription result
         const transcript = response.data.transcription.trim();
         if (transcript && transcript.length > 0) {
           await sendMessage(transcript);
+          
+          // Show warning to user if transcription was unclear
+          if (response.data.warning && (transcript.length <= 3 || transcript.toLowerCase() === 'you')) {
+            alert('I heard something but it was unclear. I sent "' + transcript + '" - please try speaking more clearly and closer to the microphone.');
+          }
         } else {
           console.warn('⚠️ No transcription received:', transcript);
           alert('No speech detected. Please try speaking louder or closer to the microphone.');
