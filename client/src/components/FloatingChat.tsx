@@ -645,7 +645,7 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
       
       recorder.onerror = (event) => {
         console.error('❌ MediaRecorder error:', event);
-        console.error('❌ Error details:', event.error);
+        console.error('❌ Error details:', (event as any).error);
         
         // Clean up on error
         if (monitoringInterval) {
@@ -665,14 +665,26 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
       };
 
       setIsRecording(true);
-      recorder.start(1000); // Capture data every 1 second
+      recorder.start(500); // Capture data every 500ms for better responsiveness
       console.log('🎙️ Recording started successfully');
       console.log('🎙️ MediaRecorder state after start:', recorder.state);
+      
+      // Auto-stop recording after 10 seconds (instead of relying on silence detection)
+      const autoStopTimeout = setTimeout(() => {
+        if (recorder.state === 'recording') {
+          console.log('🕐 Auto-stopping recording after 10 seconds');
+          recorder.stop();
+        }
+      }, 10000);
+      
+      // Store timeout reference for cleanup
+      (recorder as any).autoStopTimeout = autoStopTimeout;
       
       // Test if recording is actually working
       setTimeout(() => {
         if (recorder.state === 'recording') {
           console.log('✅ Recording confirmed active after 2 seconds');
+          console.log('💡 Keep speaking - recording will auto-stop in 8 more seconds');
         } else {
           console.error('❌ Recording not active after 2 seconds, state:', recorder.state);
         }
@@ -700,6 +712,14 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
 
   const stopRecording = useCallback(() => {
     if (mediaRecorderRef.current && isRecording) {
+      console.log('🛑 Manual stop recording triggered');
+      
+      // Clear auto-stop timeout
+      const autoStopTimeout = (mediaRecorderRef.current as any).autoStopTimeout;
+      if (autoStopTimeout) {
+        clearTimeout(autoStopTimeout);
+      }
+      
       mediaRecorderRef.current.stop();
     }
   }, [isRecording]);
@@ -1036,13 +1056,20 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
         
         {isRecording && (
           <div 
-            className="mt-2 text-center"
+            className="mt-2 text-center animate-pulse"
             role="status"
             aria-live="polite"
           >
-            <span className="text-sm theme-text-secondary">
-              🎤 Recording... Click microphone to stop
-            </span>
+            <div className="flex items-center justify-center space-x-2">
+              <div className="w-3 h-3 bg-red-500 rounded-full animate-ping"></div>
+              <span className="text-sm font-medium text-red-600">
+                Recording... (10 seconds max)
+              </span>
+              <div className="w-3 h-3 bg-red-500 rounded-full animate-ping"></div>
+            </div>
+            <div className="text-xs text-gray-500 mt-1">
+              Click microphone button to stop early
+            </div>
           </div>
         )}
       </div>
