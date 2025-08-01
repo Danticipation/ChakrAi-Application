@@ -426,97 +426,257 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
 
   const startRecording = useCallback(async (): Promise<void> => {
     try {
-      console.log('🎤 Starting microphone recording...');
+      console.log('🎤 =============== MICROPHONE RECORDING DIAGNOSTIC ===============');
+      console.log('🔍 Browser info:', navigator.userAgent);
+      console.log('🔍 Platform:', navigator.platform);
+      console.log('🔍 Language:', navigator.language);
       
-      // Check browser support
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        throw new Error('Microphone not supported in this browser');
+      // Enhanced browser compatibility check
+      if (!navigator.mediaDevices) {
+        throw new Error('MediaDevices API not supported. Please use a modern browser (Chrome, Firefox, Safari, Edge).');
+      }
+      
+      if (!navigator.mediaDevices.getUserMedia) {
+        throw new Error('getUserMedia not supported. Please update your browser.');
+      }
+      
+      if (!window.MediaRecorder) {
+        throw new Error('MediaRecorder not supported. Please use a different browser.');
       }
 
-      if (!MediaRecorder.isTypeSupported('audio/webm')) {
-        console.warn('⚠️ WebM audio not supported, falling back to default');
+      // Test audio format support
+      const supportedFormats = [];
+      const testFormats = [
+        'audio/webm;codecs=opus',
+        'audio/webm',
+        'audio/mp4',
+        'audio/wav',
+        'audio/ogg'
+      ];
+      
+      for (const format of testFormats) {
+        if (MediaRecorder.isTypeSupported(format)) {
+          supportedFormats.push(format);
+        }
+      }
+      
+      console.log('📊 Supported audio formats:', supportedFormats);
+      
+      if (supportedFormats.length === 0) {
+        throw new Error('No supported audio formats found. Please try a different browser.');
       }
 
+      // Enhanced audio constraints with fallback options
       const constraints = {
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
           autoGainControl: true,
-          sampleRate: 16000,
-          channelCount: 1
+          sampleRate: { ideal: 16000, min: 8000, max: 48000 },
+          channelCount: { ideal: 1, min: 1, max: 2 },
+          latency: 0.1,
+          volume: 1.0
         }
       };
 
+      console.log('🔍 Audio constraints:', JSON.stringify(constraints, null, 2));
       console.log('🔍 Requesting microphone permission...');
+      
+      // Check available devices first
+      try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const audioInputs = devices.filter(device => device.kind === 'audioinput');
+        console.log('🎤 Available audio input devices:', audioInputs.length);
+        audioInputs.forEach((device, index) => {
+          console.log(`  ${index + 1}. ${device.label || 'Unnamed Device'} (${device.deviceId})`);
+        });
+        
+        if (audioInputs.length === 0) {
+          throw new Error('No microphone devices found. Please connect a microphone and refresh the page.');
+        }
+      } catch (deviceError) {
+        console.warn('⚠️ Could not enumerate devices:', deviceError);
+      }
+      
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
-      console.log('✅ Microphone permission granted');
+      console.log('✅ Microphone permission granted successfully');
+      console.log('📊 Stream info:', {
+        active: stream.active,
+        id: stream.id,
+        tracks: stream.getTracks().length
+      });
+      
+      // Analyze audio tracks
+      const audioTracks = stream.getAudioTracks();
+      if (audioTracks.length === 0) {
+        throw new Error('No audio tracks found in stream');
+      }
+      
+      audioTracks.forEach((track, index) => {
+        console.log(`🎤 Audio track ${index + 1}:`, {
+          label: track.label,
+          enabled: track.enabled,
+          muted: track.muted,
+          readyState: track.readyState,
+          settings: track.getSettings(),
+          capabilities: track.getCapabilities?.()
+        });
+      });
+      
       streamRef.current = stream;
 
-      // Test MIME type support
-      const mimeTypes = [
-        'audio/webm;codecs=opus',
-        'audio/webm',
-        'audio/mp4',
-        'audio/wav'
-      ];
-
-      let selectedMimeType = '';
-      for (const mimeType of mimeTypes) {
-        if (MediaRecorder.isTypeSupported(mimeType)) {
-          selectedMimeType = mimeType;
-          break;
-        }
-      }
-
-      const recorder = new MediaRecorder(stream, selectedMimeType ? { mimeType: selectedMimeType } : {});
+      // Select best audio format
+      let selectedMimeType = supportedFormats[0] || '';
+      
+      console.log('🎵 Selected audio format:', selectedMimeType);
+      
+      // Create MediaRecorder with enhanced options
+      const recorderOptions = selectedMimeType ? { 
+        mimeType: selectedMimeType,
+        audioBitsPerSecond: 128000 
+      } : { 
+        audioBitsPerSecond: 128000 
+      };
+      
+      console.log('📊 MediaRecorder options:', recorderOptions);
+      
+      const recorder = new MediaRecorder(stream, recorderOptions);
       mediaRecorderRef.current = recorder;
       audioChunksRef.current = [];
       
-      console.log('📊 MediaRecorder created with type:', selectedMimeType || 'default');
+      console.log('📊 MediaRecorder created successfully');
+      console.log('📊 MediaRecorder state:', recorder.state);
+      console.log('📊 MediaRecorder mimeType:', recorder.mimeType);
       
+      // Audio level monitoring for debugging
+      let audioContext: AudioContext | null = null;
+      let analyser: AnalyserNode | null = null;
+      let monitoringInterval: NodeJS.Timeout | null = null;
+      
+      try {
+        audioContext = new AudioContext();
+        analyser = audioContext.createAnalyser();
+        const source = audioContext.createMediaStreamSource(stream);
+        source.connect(analyser);
+        
+        analyser.fftSize = 256;
+        const bufferLength = analyser.frequencyBinCount;
+        const dataArray = new Uint8Array(bufferLength);
+        
+        console.log('🔊 Audio analysis setup complete');
+        
+        // Monitor audio levels
+        monitoringInterval = setInterval(() => {
+          if (analyser && isRecording) {
+            analyser.getByteFrequencyData(dataArray);
+            const average = dataArray.reduce((a, b) => a + b) / bufferLength;
+            if (average > 0) {
+              console.log('🎤 Audio level detected:', Math.round(average), '/255');
+            }
+          }
+        }, 1000);
+      } catch (audioContextError) {
+        console.warn('⚠️ Audio monitoring setup failed:', audioContextError);
+      }
+
       recorder.ondataavailable = (event) => {
         console.log('📦 Audio data chunk received:', event.data.size, 'bytes');
         if (event.data.size > 0) {
           audioChunksRef.current.push(event.data);
+          console.log('📊 Total chunks so far:', audioChunksRef.current.length);
+        } else {
+          console.warn('⚠️ Received empty audio chunk');
         }
       };
       
       recorder.onstop = async () => {
         console.log('🛑 Recording stopped');
         
+        // Clean up audio monitoring
+        if (monitoringInterval) {
+          clearInterval(monitoringInterval);
+        }
+        if (audioContext && audioContext.state !== 'closed') {
+          audioContext.close().catch(console.warn);
+        }
+        
         // Stop all audio tracks
         if (streamRef.current) {
-          streamRef.current.getTracks().forEach(track => track.stop());
+          streamRef.current.getTracks().forEach(track => {
+            track.stop();
+            console.log('🔇 Audio track stopped:', track.label);
+          });
           streamRef.current = null;
         }
         
         setIsRecording(false);
         
-        console.log('📈 Audio chunks collected:', audioChunksRef.current.length);
+        console.log('📈 Final audio chunks collected:', audioChunksRef.current.length);
+        console.log('📊 Chunk sizes:', audioChunksRef.current.map(chunk => chunk.size));
+        
         if (audioChunksRef.current.length > 0) {
+          const totalSize = audioChunksRef.current.reduce((sum, chunk) => sum + chunk.size, 0);
+          console.log('📊 Total audio data:', totalSize, 'bytes');
+          
+          if (totalSize === 0) {
+            console.error('❌ Audio chunks exist but total size is 0');
+            alert('Recording failed: No audio data captured. Please check your microphone settings.');
+            return;
+          }
+          
           const audioBlob = new Blob(audioChunksRef.current, { 
             type: selectedMimeType || 'audio/webm' 
           });
           console.log('🎵 Audio blob created:', audioBlob.size, 'bytes, type:', audioBlob.type);
+          
+          if (audioBlob.size === 0) {
+            console.error('❌ Audio blob is empty');
+            alert('Recording failed: Empty audio file. Please try again.');
+            return;
+          }
+          
           await sendAudioToWhisper(audioBlob);
           audioChunksRef.current = [];
         } else {
-          console.warn('⚠️ No audio data recorded');
+          console.warn('⚠️ No audio data recorded - microphone may not be working');
+          alert('No audio was captured. Please check:\n1. Microphone is connected\n2. Microphone permissions are granted\n3. Microphone is not muted\n4. Try speaking louder');
         }
       };
       
       recorder.onerror = (event) => {
-        console.error('MediaRecorder error:', event);
+        console.error('❌ MediaRecorder error:', event);
+        console.error('❌ Error details:', event.error);
+        
+        // Clean up on error
+        if (monitoringInterval) {
+          clearInterval(monitoringInterval);
+        }
+        if (audioContext && audioContext.state !== 'closed') {
+          audioContext.close().catch(console.warn);
+        }
+        
         setIsRecording(false);
         if (streamRef.current) {
           streamRef.current.getTracks().forEach(track => track.stop());
           streamRef.current = null;
         }
+        
+        alert('Recording error occurred. Please refresh the page and try again.');
       };
 
       setIsRecording(true);
-      recorder.start(1000);
+      recorder.start(1000); // Capture data every 1 second
       console.log('🎙️ Recording started successfully');
+      console.log('🎙️ MediaRecorder state after start:', recorder.state);
+      
+      // Test if recording is actually working
+      setTimeout(() => {
+        if (recorder.state === 'recording') {
+          console.log('✅ Recording confirmed active after 2 seconds');
+        } else {
+          console.error('❌ Recording not active after 2 seconds, state:', recorder.state);
+        }
+      }, 2000);
     } catch (error) {
       console.error('❌ Error starting recording:', error);
       
