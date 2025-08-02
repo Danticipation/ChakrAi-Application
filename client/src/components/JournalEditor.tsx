@@ -58,11 +58,25 @@ export default function JournalEditor({ entry, onSave, onCancel, userId }: Journ
 
   const queryClient = useQueryClient();
 
-  // Voice recording functions
+  // Voice recording functions with mimeType in scope
+  const [currentMimeType, setCurrentMimeType] = useState<string>('');
+
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
+      
+      // Try MP4 first for better OpenAI Whisper compatibility
+      let mimeType = 'audio/mp4';
+      if (!MediaRecorder.isTypeSupported(mimeType)) {
+        mimeType = 'audio/wav';
+        if (!MediaRecorder.isTypeSupported(mimeType)) {
+          throw new Error('Browser does not support MP4 or WAV recording. WebM causes transcription failures.');
+        }
+      }
+      
+      setCurrentMimeType(mimeType);
+      console.log('🎵 JournalEditor using audio format:', mimeType);
+      const mediaRecorder = new MediaRecorder(stream, { mimeType: mimeType });
       mediaRecorderRef.current = mediaRecorder;
       chunksRef.current = [];
 
@@ -73,7 +87,8 @@ export default function JournalEditor({ entry, onSave, onCancel, userId }: Journ
       };
 
       mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(chunksRef.current, { type: 'audio/webm' });
+        const audioBlob = new Blob(chunksRef.current, { type: currentMimeType });
+        console.log('🎵 JournalEditor audio blob type:', audioBlob.type);
         await sendAudioToWhisper(audioBlob);
         stream.getTracks().forEach(track => track.stop());
       };
@@ -96,7 +111,9 @@ export default function JournalEditor({ entry, onSave, onCancel, userId }: Journ
     setIsTranscribing(true);
     try {
       const formData = new FormData();
-      formData.append('audio', audioBlob, 'recording.webm');
+      const fileName = audioBlob.type.includes('wav') ? 'recording.wav' : 
+                      audioBlob.type.includes('mp4') ? 'recording.mp4' : 'recording.audio';
+      formData.append('audio', audioBlob, fileName);
 
       const response = await axios.post('/api/transcribe', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }

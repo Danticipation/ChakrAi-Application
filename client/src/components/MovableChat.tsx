@@ -183,8 +183,18 @@ const MovableChat: React.FC<MovableChatProps> = ({ selectedVoice, onVoiceChange,
       });
       
       streamRef.current = stream;
+      // Try MP4 first for better OpenAI Whisper compatibility
+      let mimeType = 'audio/mp4';
+      if (!MediaRecorder.isTypeSupported(mimeType)) {
+        mimeType = 'audio/wav';
+        if (!MediaRecorder.isTypeSupported(mimeType)) {
+          throw new Error('Browser does not support MP4 or WAV recording. WebM causes transcription failures.');
+        }
+      }
+      
+      console.log('🎵 MovableChat using audio format:', mimeType);
       const mediaRecorder = new MediaRecorder(stream, { 
-        mimeType: 'audio/webm;codecs=opus' 
+        mimeType: mimeType 
       });
       
       mediaRecorderRef.current = mediaRecorder;
@@ -197,7 +207,8 @@ const MovableChat: React.FC<MovableChatProps> = ({ selectedVoice, onVoiceChange,
       };
 
       mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+        const audioBlob = new Blob(audioChunks, { type: mimeType });
+        console.log('🎵 MovableChat audio blob type:', audioBlob.type);
         await transcribeAudio(audioBlob);
         
         // Clean up stream

@@ -432,6 +432,9 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
       console.log('🔍 Platform:', navigator.platform);
       console.log('🔍 Language:', navigator.language);
       
+      // CRITICAL: Add alert to force visibility of what's happening
+      alert('Starting recording process - check browser console for format detection logs');
+      
       // Enhanced browser compatibility check
       if (!navigator.mediaDevices) {
         throw new Error('MediaDevices API not supported. Please use a modern browser (Chrome, Firefox, Safari, Edge).');
@@ -469,11 +472,20 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
       
       // CRITICAL: Log individual format support for debugging
       console.log('🔍 Format support check:');
-      console.log('  audio/mp4:', MediaRecorder.isTypeSupported('audio/mp4'));
-      console.log('  audio/mp4;codecs=mp4a.40.2:', MediaRecorder.isTypeSupported('audio/mp4;codecs=mp4a.40.2'));
-      console.log('  audio/wav:', MediaRecorder.isTypeSupported('audio/wav'));
-      console.log('  audio/webm:', MediaRecorder.isTypeSupported('audio/webm'));
-      console.log('  audio/webm;codecs=opus:', MediaRecorder.isTypeSupported('audio/webm;codecs=opus'));
+      const mp4Support = MediaRecorder.isTypeSupported('audio/mp4');
+      const mp4CodecSupport = MediaRecorder.isTypeSupported('audio/mp4;codecs=mp4a.40.2');
+      const wavSupport = MediaRecorder.isTypeSupported('audio/wav');
+      const webmSupport = MediaRecorder.isTypeSupported('audio/webm');
+      const webmOpusSupport = MediaRecorder.isTypeSupported('audio/webm;codecs=opus');
+      
+      console.log('  audio/mp4:', mp4Support);
+      console.log('  audio/mp4;codecs=mp4a.40.2:', mp4CodecSupport);
+      console.log('  audio/wav:', wavSupport);
+      console.log('  audio/webm:', webmSupport);
+      console.log('  audio/webm;codecs=opus:', webmOpusSupport);
+      
+      // CRITICAL: Show user exactly what formats are supported
+      alert(`Format Support:\nMP4: ${mp4Support}\nMP4+codec: ${mp4CodecSupport}\nWAV: ${wavSupport}\nWebM: ${webmSupport}\nWebM+Opus: ${webmOpusSupport}`);
       
       if (supportedFormats.length === 0) {
         throw new Error('No supported audio formats found. Please try a different browser.');
@@ -566,8 +578,12 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
 
       console.log('🎵 Final selected audio format:', selectedMimeType);
       
+      // CRITICAL: Alert to show what format was selected
+      alert(`Selected audio format: ${selectedMimeType}`);
+      
       // Create MediaRecorder with FORCED non-WebM options
       if (!selectedMimeType || selectedMimeType.includes('webm')) {
+        alert(`ERROR: WebM format detected: ${selectedMimeType}. This will cause transcription failures.`);
         throw new Error('WebM format blocked - causes transcription failures. Browser must support MP4 or WAV recording.');
       }
       
