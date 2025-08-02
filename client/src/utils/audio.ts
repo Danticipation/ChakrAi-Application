@@ -77,14 +77,16 @@ export const startRecording = async (
 
     const stream = await navigator.mediaDevices.getUserMedia(constraints);
 
-    let mimeType = 'audio/webm';
-    if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
-      mimeType = 'audio/webm;codecs=opus';
-    } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
-      mimeType = 'audio/mp4';
-    } else if (MediaRecorder.isTypeSupported('audio/wav')) {
+    // CRITICAL FIX: Try MP4/WAV first for better OpenAI Whisper compatibility
+    let mimeType = 'audio/mp4';
+    if (!MediaRecorder.isTypeSupported(mimeType)) {
       mimeType = 'audio/wav';
+      if (!MediaRecorder.isTypeSupported(mimeType)) {
+        throw new Error('Browser does not support MP4 or WAV recording. WebM causes transcription failures.');
+      }
     }
+    
+    console.log('🎵 MAIN CHAT using audio format:', mimeType);
 
     const mediaRecorder = new MediaRecorder(stream, { mimeType });
     mediaRecorderRef.current = mediaRecorder;
@@ -134,6 +136,7 @@ export const startRecording = async (
       closeAudioContext();
       if (audioChunksRef.current.length > 0) {
         const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
+        console.log('🎵 MAIN CHAT audio blob type:', audioBlob.type, 'size:', audioBlob.size);
         
         // Validate audio blob before sending to transcription
         const recordingDuration = Date.now() - recordingStartTime;
