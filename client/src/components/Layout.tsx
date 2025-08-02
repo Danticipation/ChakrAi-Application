@@ -412,7 +412,7 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
                         >
                           <Send className="w-5 h-5" />
                         </button>
-                        {isRecording && (
+                        {voiceStatus === 'recording' && (
                           <div className="absolute top-2 left-3 flex items-center space-x-2 bg-red-500 text-white px-2 py-1 rounded-full text-xs">
                             <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
                             <span>Recording...</span>
@@ -422,9 +422,12 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
                     </div>
                     <button 
                       onClick={handleVoiceToggle}
-                      className={`p-3 rounded-full transition-colors ${
-                        isRecording 
+                      disabled={voiceStatus === 'processing'}
+                      className={`p-3 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                        voiceStatus === 'recording'
                           ? 'bg-red-500 text-white animate-pulse' 
+                          : voiceStatus === 'processing'
+                          ? 'bg-yellow-500 text-white'
                           : 'theme-text-secondary hover:theme-text'
                       }`}
                     >

@@ -103,7 +103,7 @@ export default function MicroSession({
       };
       
       mediaRecorder.onstop = () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/mp4' });
+        const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
         setAudioBlob(audioBlob);
         stream.getTracks().forEach(track => track.stop());
       };
