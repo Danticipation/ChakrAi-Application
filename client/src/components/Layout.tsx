@@ -35,7 +35,7 @@ import DailyAffirmation from '@/components/DailyAffirmation';
 // Removed duplicate chat components - using only main chat interface
 import ChallengeSystem from '@/components/ChallengeSystem';
 import SupabaseSetup from '@/components/SupabaseSetup';
-import { startRecording as startAudioRecording, stopRecording, sendAudioToWhisper } from '@/utils/audio';
+import { VoiceRecorder } from '@/utils/voiceRecorder';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -77,26 +77,45 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
   
   // Chat functionality
   const [chatInput, setChatInput] = useState('');
-  const [isRecording, setIsRecording] = useState(false);
+  const [voiceStatus, setVoiceStatus] = useState<'idle' | 'recording' | 'processing'>('idle');
   const [messages, setMessages] = useState<Array<{sender: 'user' | 'bot', text: string, time: string}>>([]);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const voiceRecorderRef = useRef<VoiceRecorder | null>(null);
+
+  // Initialize voice recorder
+  React.useEffect(() => {
+    voiceRecorderRef.current = new VoiceRecorder({
+      onTranscription: (text) => {
+        setChatInput(text);
+        console.log('✅ Voice transcription received:', text);
+      },
+      onError: (error) => {
+        console.error('❌ Voice recording error:', error);
+        alert(error);
+      },
+      onStatusChange: (status) => {
+        setVoiceStatus(status);
+        console.log('🎵 Voice status changed to:', status);
+      },
+      maxDuration: 60,
+      minDuration: 1
+    });
+
+    return () => {
+      if (voiceRecorderRef.current?.getIsRecording()) {
+        voiceRecorderRef.current.stopRecording();
+      }
+    };
+  }, []);
 
   // Voice recording functions
-  const handleStartRecording = async () => {
-    await startAudioRecording(mediaRecorderRef, audioChunksRef, setIsRecording, setChatInput);
-  };
-
-  const handleStopRecording = () => {
-    stopRecording(mediaRecorderRef, setIsRecording);
-  };
-
   const handleVoiceToggle = () => {
-    if (isRecording) {
-      handleStopRecording();
-    } else {
-      handleStartRecording();
+    if (voiceRecorderRef.current) {
+      if (voiceRecorderRef.current.getIsRecording()) {
+        voiceRecorderRef.current.stopRecording();
+      } else {
+        voiceRecorderRef.current.startRecording();
+      }
     }
   };
 

@@ -81,9 +81,17 @@ export default function MicroSession({
         } 
       });
       
-      const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: 'audio/webm;codecs=opus'
-      });
+      // CRITICAL FIX: Use MP4/WAV for better OpenAI Whisper compatibility
+      let mimeType = 'audio/mp4';
+      if (!MediaRecorder.isTypeSupported(mimeType)) {
+        mimeType = 'audio/wav';
+        if (!MediaRecorder.isTypeSupported(mimeType)) {
+          throw new Error('Browser does not support MP4 or WAV recording. WebM causes transcription failures.');
+        }
+      }
+      
+      console.log('🎵 MicroSession using audio format:', mimeType);
+      const mediaRecorder = new MediaRecorder(stream, { mimeType });
       
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
@@ -95,7 +103,7 @@ export default function MicroSession({
       };
       
       mediaRecorder.onstop = () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/mp4' });
         setAudioBlob(audioBlob);
         stream.getTracks().forEach(track => track.stop());
       };
