@@ -490,7 +490,7 @@ app.get('/api/ollama/status', async (req, res) => {
   } catch (error) {
     res.json({
       available: false,
-      error: error.message,
+      error: error instanceof Error ? error.message : 'Unknown error',
       host: process.env.OLLAMA_HOST || 'http://localhost:11434'
     });
   }
@@ -803,7 +803,7 @@ Provide comprehensive analysis in JSON format:
       const { journalAnalytics } = await import('../shared/schema');
       const { db } = await import('./db');
       
-      await db.insert(journalAnalytics).values(analysisData);
+      await db.insert(journalAnalytics).values([analysisData]);
       console.log('Analysis stored successfully');
       
     } catch (storageError) {
@@ -1034,14 +1034,14 @@ DO NOT immediately jump into "support" mode or therapeutic language unless someo
         const { generateOllamaResponse, isOllamaAvailable } = await import('./ollamaIntegration');
         
         if (await isOllamaAvailable()) {
-          aiResponse = await generateOllamaResponse(conversationMessages);
+          aiResponse = await generateOllamaResponse(conversationMessages as any);
           console.log('✅ Ollama response generated successfully');
         } else {
           console.log('⚠️ Ollama not available, falling back to OpenAI');
           throw new Error('Ollama not available');
         }
       } catch (ollamaError) {
-        console.log('❌ Ollama failed, using OpenAI fallback:', ollamaError.message);
+        console.log('❌ Ollama failed, using OpenAI fallback:', ollamaError instanceof Error ? ollamaError.message : 'Unknown error');
         // Fallback to OpenAI if Ollama fails
         try {
           const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -1338,6 +1338,9 @@ app.post('/api/forum-replies', async (req, res) => {
     }
 
     const { supabase } = await import('./supabaseClient.js');
+    if (!supabase) {
+      return res.status(500).json({ error: 'Supabase client not available' });
+    }
     const { data, error } = await supabase
       .from('forum_replies')
       .insert({
@@ -1357,10 +1360,12 @@ app.post('/api/forum-replies', async (req, res) => {
     }
 
     // Update reply count for the post
-    await supabase
+    if (supabase) {
+      await supabase
       .from('forum_posts')
       .update({ reply_count: 1 })
       .eq('id', post_id);
+    }
 
     res.json({ success: true, reply: data });
   } catch (error) {
@@ -1416,7 +1421,7 @@ app.get('/api/streak-stats', (req, res) => {
 // Direct memory dashboard endpoint to bypass Vite interception
 app.get('/api/memory-dashboard', async (req, res) => {
   try {
-    const userId = parseInt(req.query.userId) || 98;
+    const userId = parseInt(req.query.userId as string) || 98;
     
     // Import semantic memory functions
     const { getMemoryDashboard } = await import('./semanticMemory.js');
@@ -1855,7 +1860,7 @@ app.get('/api/ollama/status', async (req, res) => {
   } catch (error) {
     res.status(500).json({
       status: 'error',
-      error: error.message
+      error: error instanceof Error ? error.message : 'Unknown error'
     });
   }
 });
@@ -1869,7 +1874,7 @@ app.get('/api/ollama/models', async (req, res) => {
   } catch (error) {
     res.status(500).json({
       status: 'error',
-      error: error.message
+      error: error instanceof Error ? error.message : 'Unknown error'
     });
   }
 });
@@ -1944,7 +1949,7 @@ app.post('/api/community/posts', async (req, res) => {
     console.error('❌ Create post error:', error);
     res.status(500).json({ 
       error: 'Failed to create post',
-      details: error.message 
+      details: error instanceof Error ? error.message : 'Unknown error' 
     });
   }
 });

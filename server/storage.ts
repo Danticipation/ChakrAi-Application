@@ -739,7 +739,7 @@ export class DbStorage implements IStorage {
     // Get daily activity summary for gamification
     const activities = await this.db.select().from(dailyActivities)
       .where(eq(dailyActivities.userId, userId))
-      .orderBy(desc(dailyActivities.date))
+      .orderBy(desc(dailyActivities.activityDate))
       .limit(days);
     return activities;
   }
@@ -1809,7 +1809,7 @@ export class DbStorage implements IStorage {
         userId,
         activityType,
         activityDate: date,
-        metadata: {}
+        activityCount: 1
       });
     }
   }
