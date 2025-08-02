@@ -15,6 +15,11 @@ const NeonCursor: React.FC = () => {
     }
     
     const prevPoint = points[index - 1];
+    // Type guard to ensure prevPoint exists
+    if (!prevPoint) {
+      return path;
+    }
+    
     const controlPoint = {
       x: (prevPoint.x + point.x) / 2,
       y: (prevPoint.y + point.y) / 2,
