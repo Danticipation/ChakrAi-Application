@@ -54,11 +54,11 @@ class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasErr
     this.state = { hasError: false };
   }
 
-  static getDerivedStateFromError() {
+  static override getDerivedStateFromError() {
     return { hasError: true };
   }
 
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+  override componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     console.error("Layout ErrorBoundary:", error, errorInfo);
   }
 
@@ -81,7 +81,8 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
     guided: true,
     healthcare: true,
     wellness: true,
-    settings: true
+    settings: true,
+    community: true
   });
   const [showSettings, setShowSettings] = useState(false);
   const [showThemeModal, setShowThemeModal] = useState(false);
@@ -303,7 +304,7 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
       case 'therapy-plans':
         return <AdaptiveTherapyPlan userId={currentUserId || 1} onPlanUpdate={() => {}} />;
       case 'daily':
-        return <PersonalityReflection userId={currentUserId || undefined} />;
+        return <PersonalityReflection userId={currentUserId || 1} />;
       case 'feedback':
         return <FeedbackSystem />;
       case 'microphone-test':
