@@ -2,7 +2,10 @@ export const sendAudioToWhisper = async (audioBlob: Blob, setInput: (text: strin
   try {
     console.log('Sending audio to Whisper API...');
     const formData = new FormData();
-    formData.append('audio', audioBlob, 'recording.webm');
+    // CRITICAL FIX: Use correct filename based on actual audio format
+    const fileName = audioBlob.type.includes('wav') ? 'recording.wav' : 
+                    audioBlob.type.includes('mp4') ? 'recording.mp4' : 'recording.audio';
+    formData.append('audio', audioBlob, fileName);
 
     const response = await fetch('/api/transcribe', {
       method: 'POST',

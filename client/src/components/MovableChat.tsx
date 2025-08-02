@@ -236,7 +236,9 @@ const MovableChat: React.FC<MovableChatProps> = ({ selectedVoice, onVoiceChange,
   const transcribeAudio = async (audioBlob: Blob) => {
     try {
       const formData = new FormData();
-      formData.append('audio', audioBlob, 'recording.webm');
+      const fileName = audioBlob.type.includes('wav') ? 'recording.wav' : 
+                      audioBlob.type.includes('mp4') ? 'recording.mp4' : 'recording.audio';
+      formData.append('audio', audioBlob, fileName);
 
       const response = await fetch('/api/transcribe', {
         method: 'POST',

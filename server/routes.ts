@@ -401,7 +401,19 @@ router.post('/transcribe', upload.single('audio'), async (req, res) => {
 
     const formData = new FormData();
     const audioBlob = new Blob([req.file.buffer], { type: req.file.mimetype });
-    formData.append('file', audioBlob, 'audio.webm');
+    
+    // CRITICAL FIX: Use correct filename based on actual audio format
+    let fileName = 'audio.mp3'; // Default fallback
+    if (req.file.mimetype.includes('mp4')) {
+      fileName = 'audio.mp4';
+    } else if (req.file.mimetype.includes('wav')) {
+      fileName = 'audio.wav';
+    } else if (req.file.mimetype.includes('mpeg')) {
+      fileName = 'audio.mp3';
+    }
+    
+    console.log('🎵 SERVER: Using filename for OpenAI:', fileName, 'for mimetype:', req.file.mimetype);
+    formData.append('file', audioBlob, fileName);
     formData.append('model', 'whisper-1');
     // Remove language forcing and prompts that might be interfering
     // formData.append('language', 'en'); 

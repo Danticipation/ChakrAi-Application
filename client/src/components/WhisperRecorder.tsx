@@ -15,7 +15,18 @@ export default function WhisperRecorder({ onTranscription, onResponse }: Whisper
 
   const startRecording = async () => {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    const mediaRecorder = new MediaRecorder(stream);
+    
+    // CRITICAL FIX: Use MP4/WAV for better OpenAI Whisper compatibility
+    let mimeType = 'audio/mp4';
+    if (!MediaRecorder.isTypeSupported(mimeType)) {
+      mimeType = 'audio/wav';
+      if (!MediaRecorder.isTypeSupported(mimeType)) {
+        throw new Error('Browser does not support MP4 or WAV recording. WebM causes transcription failures.');
+      }
+    }
+    
+    console.log('🎵 WhisperRecorder using audio format:', mimeType);
+    const mediaRecorder = new MediaRecorder(stream, { mimeType });
     mediaRecorderRef.current = mediaRecorder;
     setRecording(true);
     chunks.length = 0;
@@ -25,13 +36,20 @@ export default function WhisperRecorder({ onTranscription, onResponse }: Whisper
     };
 
     mediaRecorder.onstop = async () => {
-      const blob = new Blob(chunks, { type: 'audio/webm' });
+      // CRITICAL FIX: Use MP4/WAV for better OpenAI Whisper compatibility
+      let mimeType = 'audio/mp4';
+      if (!MediaRecorder.isTypeSupported(mimeType)) {
+        mimeType = 'audio/wav';
+      }
+      
+      const blob = new Blob(chunks, { type: mimeType });
       const audioUrl = URL.createObjectURL(blob);
       setAudioUrl(audioUrl);
       setProcessing(true);
 
       const formData = new FormData();
-      formData.append('audio', blob, 'recording.webm');
+      const fileName = mimeType.includes('wav') ? 'recording.wav' : 'recording.mp4';
+      formData.append('audio', blob, fileName);
 
       try {
         const res = await fetch('/api/transcribe', { method: 'POST', body: formData });

@@ -135,9 +135,17 @@ const TherapeuticJournal: React.FC<TherapeuticJournalProps> = ({ userId, onEntry
         } 
       });
       
-      const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: 'audio/webm;codecs=opus'
-      });
+      // CRITICAL FIX: Use MP4/WAV for better OpenAI Whisper compatibility
+      let mimeType = 'audio/mp4';
+      if (!MediaRecorder.isTypeSupported(mimeType)) {
+        mimeType = 'audio/wav';
+        if (!MediaRecorder.isTypeSupported(mimeType)) {
+          throw new Error('Browser does not support MP4 or WAV recording. WebM causes transcription failures.');
+        }
+      }
+      
+      console.log('🎵 TherapeuticJournal using audio format:', mimeType);
+      const mediaRecorder = new MediaRecorder(stream, { mimeType });
       
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
@@ -149,7 +157,8 @@ const TherapeuticJournal: React.FC<TherapeuticJournalProps> = ({ userId, onEntry
       };
       
       mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
+        console.log('🎵 TherapeuticJournal audio blob type:', audioBlob.type);
         await transcribeAudio(audioBlob);
         stream.getTracks().forEach(track => track.stop());
       };
