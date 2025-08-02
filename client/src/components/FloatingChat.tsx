@@ -467,6 +467,14 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
       console.log('🏠 Platform detected:', navigator.platform);
       console.log('📱 User agent includes mobile:', /Mobile|Android|iPhone|iPad/.test(navigator.userAgent));
       
+      // CRITICAL: Log individual format support for debugging
+      console.log('🔍 Format support check:');
+      console.log('  audio/mp4:', MediaRecorder.isTypeSupported('audio/mp4'));
+      console.log('  audio/mp4;codecs=mp4a.40.2:', MediaRecorder.isTypeSupported('audio/mp4;codecs=mp4a.40.2'));
+      console.log('  audio/wav:', MediaRecorder.isTypeSupported('audio/wav'));
+      console.log('  audio/webm:', MediaRecorder.isTypeSupported('audio/webm'));
+      console.log('  audio/webm;codecs=opus:', MediaRecorder.isTypeSupported('audio/webm;codecs=opus'));
+      
       if (supportedFormats.length === 0) {
         throw new Error('No supported audio formats found. Please try a different browser.');
       }
@@ -487,8 +495,11 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
         selectedMimeType = wavFormat;
         console.log('🎵 FORCED WAV format for transcription fix:', selectedMimeType);
       } else {
-        // If neither available, don't record - WebM is broken
-        throw new Error('MP4/WAV recording required for voice transcription. WebM format causes transcription failures. Please use a browser that supports MP4 recording.');
+        // Log what we found and force an error
+        console.error('❌ CRITICAL: No MP4 or WAV support found!');
+        console.error('❌ Available formats:', supportedFormats);
+        console.error('❌ Your browser only supports WebM which breaks transcription');
+        throw new Error(`AUDIO FORMAT ERROR: Your browser only supports ${supportedFormats.join(', ')} which cause transcription failures. Chrome/Firefox should support MP4. Please try refreshing or using a different browser.`);
       }
 
       // Enhanced audio constraints with mobile optimization  
@@ -652,7 +663,7 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
           }
           
           const audioBlob = new Blob(audioChunksRef.current, { 
-            type: selectedMimeType || 'audio/webm' 
+            type: selectedMimeType // NEVER default to webm
           });
           console.log('🎵 Audio blob created:', audioBlob.size, 'bytes, type:', audioBlob.type);
           
@@ -772,8 +783,8 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ isOpen, onToggle, selectedV
       
       const formData = new FormData();
       // Use correct file extension based on audio type
-      const fileName = audioBlob.type.includes('mp4') ? 'recording.mp4' : 
-                      audioBlob.type.includes('wav') ? 'recording.wav' : 'recording.webm';
+      const fileName = audioBlob.type.includes('wav') ? 'recording.wav' : 
+                      audioBlob.type.includes('mp4') ? 'recording.mp4' : 'recording.audio';
       formData.append('audio', audioBlob, fileName);
       formData.append('userId', '1');
       
