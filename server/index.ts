@@ -22,7 +22,8 @@ const server = createServer(app);
 const PORT = parseInt(process.env.PORT || '5000', 10);
 
 // Trust proxy for rate limiting (must be before rate limiters)
-app.set('trust proxy', process.env.NODE_ENV === 'production' ? 1 : false);
+// Configure trust proxy specifically for Replit environment
+app.set('trust proxy', 1); // Trust first proxy only
 
 // Performance monitoring middleware (applied early)
 import { 

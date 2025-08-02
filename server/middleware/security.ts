@@ -12,7 +12,7 @@ export const authLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
-  trustProxy: process.env.NODE_ENV === 'production',
+  trustProxy: 1, // Trust first proxy only for security
 });
 
 export const generalLimiter = rateLimit({
@@ -23,7 +23,7 @@ export const generalLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
-  trustProxy: process.env.NODE_ENV === 'production',
+  trustProxy: 1, // Trust first proxy only for security
 });
 
 export const uploadLimiter = rateLimit({
@@ -34,7 +34,7 @@ export const uploadLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
-  trustProxy: process.env.NODE_ENV === 'production',
+  trustProxy: 1, // Trust first proxy only for security
 });
 
 // Helmet configuration for security headers - Development friendly
