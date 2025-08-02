@@ -73,7 +73,18 @@ class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasErr
 const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void}> = ({ currentUserId, onDataReset }) => {
   const { currentTheme } = useTheme();
   const [activeSection, setActiveSection] = useState('home');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [selectedVoice, setSelectedVoice] = useState('james');
+  const [collapsedSections, setCollapsedSections] = useState({
+    core: false,
+    mirrors: true,
+    guided: true,
+    healthcare: true,
+    wellness: true,
+    settings: true
+  });
+  const [showSettings, setShowSettings] = useState(false);
+  const [showThemeModal, setShowThemeModal] = useState(false);
   
   // Chat functionality
   const [chatInput, setChatInput] = useState('');
@@ -239,19 +250,6 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
-  const [showSettings, setShowSettings] = useState(false);
-  const [showThemeModal, setShowThemeModal] = useState(false);
-  // Removed duplicate chat states - using only main chat interface
-  
-  // Collapsible sidebar state
-  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({
-    core: false,
-    mirrors: false,
-    guided: false,
-    healthcare: true, // Start collapsed
-    community: true, // Start collapsed
-    settings: true,  // Start collapsed
-  });
 
   // Component rendering function
   const renderActiveSection = () => {
@@ -735,20 +733,113 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
         </div>
       </div>
 
-      {/* Mobile Layout - Simplified */}
+      {/* Mobile Layout - Full Featured */}
       <div className="block lg:hidden">
-        <div className="p-4">
-          <div className="flex items-center space-x-3 mb-6">
-            <img src={chakraiLogo} alt="Chakrai" className="h-10 w-auto" />
-            <div>
-              <p className="text-white font-bold text-lg">Chakrai</p>
-              <p className="text-white/70 text-xs">Mental Wellness</p>
+        {/* Mobile Header */}
+        <div className="fixed top-0 left-0 right-0 z-50 theme-card border-b border-white/10 p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <img src={chakraiLogo} alt="Chakrai" className="h-8 w-auto" />
+              <div>
+                <p className="text-white font-bold text-lg">Chakrai</p>
+                <p className="text-white/70 text-xs">Mental Wellness</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="p-2 theme-text rounded-lg hover:bg-white/10 transition-colors"
+            >
+              <Settings className="w-6 h-6" />
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile Navigation Drawer */}
+        {mobileMenuOpen && (
+          <div className="fixed inset-0 z-40 lg:hidden">
+            <div className="fixed inset-0 bg-black/50" onClick={() => setMobileMenuOpen(false)} />
+            <div className="fixed top-0 right-0 h-full w-80 theme-card border-l border-white/10 overflow-y-auto">
+              <div className="p-4">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-lg font-semibold theme-text">Navigation</h3>
+                  <button
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="p-2 theme-text-secondary hover:theme-text rounded-lg"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                
+                {/* Mobile Navigation Items */}
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="text-sm font-medium theme-text-secondary mb-2">Core Features</h4>
+                    <div className="space-y-1">
+                      {[
+                        { id: 'home', label: 'Home', icon: '🏠' },
+                        { id: 'chat', label: 'Chat with Chakrai', icon: '💬' },
+                        { id: 'journal', label: 'Journal', icon: '📔' },
+                        { id: 'analytics', label: 'Insights', icon: '📊' }
+                      ].map((item) => (
+                        <button
+                          key={item.id}
+                          onClick={() => {
+                            setActiveSection(item.id);
+                            setMobileMenuOpen(false);
+                          }}
+                          className={`w-full flex items-center space-x-3 p-3 rounded-lg text-left transition-colors ${
+                            activeSection === item.id
+                              ? 'bg-blue-500/20 border border-blue-500/30 theme-text'
+                              : 'theme-text hover:bg-white/5'
+                          }`}
+                        >
+                          <span>{item.icon}</span>
+                          <span>{item.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h4 className="text-sm font-medium theme-text-secondary mb-2">More Features</h4>
+                    <div className="space-y-1">
+                      {[
+                        { id: 'questions', label: 'Get to Know Me', icon: '❓' },
+                        { id: 'memory', label: 'Insight Vault', icon: '🧠' },
+                        { id: 'community', label: 'Community', icon: '👥' },
+                        { id: 'rewards', label: 'Rewards', icon: '🎁' }
+                      ].map((item) => (
+                        <button
+                          key={item.id}
+                          onClick={() => {
+                            setActiveSection(item.id);
+                            setMobileMenuOpen(false);
+                          }}
+                          className={`w-full flex items-center space-x-3 p-3 rounded-lg text-left transition-colors ${
+                            activeSection === item.id
+                              ? 'bg-blue-500/20 border border-blue-500/30 theme-text'
+                              : 'theme-text hover:bg-white/5'
+                          }`}
+                        >
+                          <span>{item.icon}</span>
+                          <span>{item.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-          
-          <ErrorBoundary>
-            {renderActiveSection()}
-          </ErrorBoundary>
+        )}
+
+        {/* Mobile Content */}
+        <div className="pt-20 min-h-screen">
+          <div className="p-4">
+            <ErrorBoundary>
+              {renderActiveSection()}
+            </ErrorBoundary>
+          </div>
         </div>
       </div>
 
@@ -801,7 +892,8 @@ const AppWithOnboarding = () => {
 
         if (profileResponse.data.needsQuiz) {
           console.log('User needs personality quiz');
-          setShowPersonalityQuiz(true);
+          // Allow skipping quiz for testing - set to false to show main app
+          setShowPersonalityQuiz(false); // Changed to false to bypass quiz
         } else {
           console.log('User has completed personality quiz');
         }
