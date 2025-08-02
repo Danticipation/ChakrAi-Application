@@ -1,5 +1,7 @@
-// COMPLETELY REWRITTEN VOICE RECORDING SYSTEM
-// This replaces all the broken voice recording functionality across the app
+// Web Audio API-based voice recorder for OpenAI Whisper compatibility
+// Uses proper WAV encoding to avoid transcription issues
+
+import { WebAudioRecorder } from './webAudioRecorder';
 
 export interface VoiceRecorderOptions {
   onTranscription: (text: string) => void;
@@ -10,17 +12,16 @@ export interface VoiceRecorderOptions {
 }
 
 export class VoiceRecorder {
-  private mediaRecorder: MediaRecorder | null = null;
-  private stream: MediaStream | null = null;
-  private audioChunks: Blob[] = [];
+  private webAudioRecorder: WebAudioRecorder | null = null;
   private isRecording = false;
   private options: VoiceRecorderOptions;
   private startTime = 0;
+  private recordingTimeout: NodeJS.Timeout | null = null;
 
   constructor(options: VoiceRecorderOptions) {
     this.options = {
-      maxDuration: 60,
-      minDuration: 1,
+      maxDuration: 30,
+      minDuration: 2,
       ...options
     };
   }
@@ -29,73 +30,17 @@ export class VoiceRecorder {
     try {
       this.options.onStatusChange?.('recording');
       
-      // Request microphone access with STRICT settings for speech clarity
-      const constraints = {
-        audio: {
-          echoCancellation: false,  // Disable to avoid voice artifacts
-          noiseSuppression: false,  // Disable to preserve natural speech
-          autoGainControl: false,   // Disable to avoid volume fluctuations
-          sampleRate: 44100,        // High quality sample rate
-          channelCount: 1,          // Mono for speech
-          volume: 1.0               // Maximum volume
-        }
-      };
-
-      this.stream = await navigator.mediaDevices.getUserMedia(constraints);
+      console.log('🎵 Starting WebAudioRecorder for proper WAV generation');
       
-      // FORCE WAV/PCM format - no WebM allowed due to OpenAI Whisper issues
-      let mimeType = 'audio/wav';
+      this.webAudioRecorder = new WebAudioRecorder();
+      await this.webAudioRecorder.startRecording();
       
-      // Try different WAV codecs
-      const wavFormats = [
-        'audio/wav',
-        'audio/wave',
-        'audio/wav; codecs=1', // PCM
-        'audio/x-wav'
-      ];
-      
-      let supportedFormat = null;
-      for (const format of wavFormats) {
-        if (MediaRecorder.isTypeSupported(format)) {
-          supportedFormat = format;
-          mimeType = format;
-          break;
-        }
-      }
-      
-      if (!supportedFormat) {
-        // Fallback only if WAV truly not supported
-        throw new Error('Browser does not support WAV recording. WebM causes transcription failures with OpenAI Whisper.');
-      }
-
-      console.log('🎵 VoiceRecorder using format:', mimeType);
-      
-      this.mediaRecorder = new MediaRecorder(this.stream, { mimeType });
-      this.audioChunks = [];
       this.startTime = Date.now();
       this.isRecording = true;
 
-      this.mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          this.audioChunks.push(event.data);
-        }
-      };
-
-      this.mediaRecorder.onstop = async () => {
-        await this.processRecording();
-      };
-
-      this.mediaRecorder.onerror = (event) => {
-        console.error('MediaRecorder error:', event);
-        this.options.onError?.('Recording failed. Please try again.');
-        this.cleanup();
-      };
-
-      this.mediaRecorder.start();
-
       // Auto-stop after max duration
       if (this.options.maxDuration) {
-        setTimeout(() => {
+        this.recordingTimeout = setTimeout(() => {
           if (this.isRecording) {
             this.stopRecording();
           }
@@ -103,7 +48,7 @@ export class VoiceRecorder {
       }
 
     } catch (error) {
-      console.error('Failed to start recording:', error);
+      console.error('Failed to start WebAudioRecorder:', error);
       let errorMessage = 'Could not access microphone.';
       
       if (error instanceof Error) {
@@ -120,35 +65,32 @@ export class VoiceRecorder {
   }
 
   stopRecording(): void {
-    if (this.mediaRecorder && this.isRecording) {
-      this.mediaRecorder.stop();
+    if (this.webAudioRecorder && this.isRecording) {
+      const audioBlob = this.webAudioRecorder.stopRecording();
       this.isRecording = false;
+      
+      if (this.recordingTimeout) {
+        clearTimeout(this.recordingTimeout);
+        this.recordingTimeout = null;
+      }
+      
+      this.processRecording(audioBlob);
     }
   }
 
-  private async processRecording(): Promise<void> {
+  private async processRecording(audioBlob: Blob): Promise<void> {
     try {
       this.options.onStatusChange?.('processing');
       
       const duration = (Date.now() - this.startTime) / 1000;
       
-      if (duration < (this.options.minDuration || 1)) {
-        this.options.onError?.('Recording too short. Please speak for at least 1 second.');
+      if (duration < (this.options.minDuration || 2)) {
+        this.options.onError?.('Recording too short. Please speak for at least 2 seconds.');
         this.cleanup();
         return;
       }
 
-      if (this.audioChunks.length === 0) {
-        this.options.onError?.('No audio recorded. Please try again.');
-        this.cleanup();
-        return;
-      }
-
-      // Determine correct MIME type from MediaRecorder
-      const mimeType = this.mediaRecorder?.mimeType || 'audio/mp4';
-      const audioBlob = new Blob(this.audioChunks, { type: mimeType });
-      
-      console.log('🎵 Processing audio:', {
+      console.log('🎵 Processing WebAudio-generated WAV:', {
         size: audioBlob.size,
         duration: duration,
         type: audioBlob.type
@@ -175,15 +117,8 @@ export class VoiceRecorder {
     try {
       const formData = new FormData();
       
-      // Use correct filename based on MIME type
-      let fileName = 'recording.wav';
-      if (audioBlob.type.includes('mp4')) {
-        fileName = 'recording.m4a';
-      } else if (audioBlob.type.includes('webm')) {
-        fileName = 'recording.webm';
-      } else if (audioBlob.type.includes('wav')) {
-        fileName = 'recording.wav';
-      }
+      // Always use WAV filename since WebAudioRecorder creates proper WAV files
+      const fileName = 'recording.wav';
       
       formData.append('audio', audioBlob, fileName);
 
@@ -221,14 +156,13 @@ export class VoiceRecorder {
 
   private cleanup(): void {
     this.isRecording = false;
-    this.audioChunks = [];
     
-    if (this.stream) {
-      this.stream.getTracks().forEach(track => track.stop());
-      this.stream = null;
+    if (this.recordingTimeout) {
+      clearTimeout(this.recordingTimeout);
+      this.recordingTimeout = null;
     }
     
-    this.mediaRecorder = null;
+    this.webAudioRecorder = null;
     this.options.onStatusChange?.('idle');
   }
 
