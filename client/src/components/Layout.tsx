@@ -32,8 +32,7 @@ import TherapistPortal from '@/components/TherapistPortal';
 import AiPerformanceMonitoringDashboard from '@/components/AiPerformanceMonitoringDashboard';
 import Horoscope from '@/components/Horoscope';
 import DailyAffirmation from '@/components/DailyAffirmation';
-import FloatingChat from '@/components/FloatingChat';
-import MovableChat from '@/components/MovableChat';
+// Removed duplicate chat components - using only main chat interface
 import ChallengeSystem from '@/components/ChallengeSystem';
 import SupabaseSetup from '@/components/SupabaseSetup';
 import { startRecording as startAudioRecording, stopRecording, sendAudioToWhisper } from '@/utils/audio';
@@ -218,8 +217,7 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
   }, [messages]);
   const [showSettings, setShowSettings] = useState(false);
   const [showThemeModal, setShowThemeModal] = useState(false);
-  const [showMovableChat, setShowMovableChat] = useState(false);
-  const [isFloatingChatOpen, setIsFloatingChatOpen] = useState(false);
+  // Removed duplicate chat states - using only main chat interface
   
   // Collapsible sidebar state
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({
@@ -494,7 +492,7 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
                         key={tab.id}
                         onClick={() => {
                           setActiveSection(tab.id);
-                          setIsFloatingChatOpen(false);
+                          // Removed floating chat - using only main chat
                         }}
                         className={`w-full h-9 px-3 text-xs font-medium transition-all rounded text-left ${
                           activeSection === tab.id
@@ -741,23 +739,7 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
         <ThemeSelector onClose={() => setShowThemeModal(false)} />
       )}
 
-      {/* Floating Chat Component */}
-      {!(activeSection === 'chat' && isFloatingChatOpen) && (
-        <FloatingChat
-          isOpen={isFloatingChatOpen}
-          onToggle={() => setIsFloatingChatOpen(!isFloatingChatOpen)}
-          selectedVoice={selectedVoice}
-        />
-      )}
-
-      {/* Movable Chat with Avatar */}
-      {showMovableChat && (
-        <MovableChat
-          selectedVoice={selectedVoice}
-          onVoiceChange={setSelectedVoice}
-          onClose={() => setShowMovableChat(false)}
-        />
-      )}
+      {/* Removed duplicate chat components - using only main chat interface in "Chat with Chakrai" section */}
     </div>
   );
 };
