@@ -29,29 +29,43 @@ export class VoiceRecorder {
     try {
       this.options.onStatusChange?.('recording');
       
-      // Request microphone access with optimal settings
+      // Request microphone access with STRICT settings for speech clarity
       const constraints = {
         audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
-          sampleRate: 44100, // Higher quality for better transcription
-          channelCount: 1
+          echoCancellation: false,  // Disable to avoid voice artifacts
+          noiseSuppression: false,  // Disable to preserve natural speech
+          autoGainControl: false,   // Disable to avoid volume fluctuations
+          sampleRate: 44100,        // High quality sample rate
+          channelCount: 1,          // Mono for speech
+          volume: 1.0               // Maximum volume
         }
       };
 
       this.stream = await navigator.mediaDevices.getUserMedia(constraints);
       
-      // CRITICAL: Use WAV for better OpenAI Whisper compatibility
+      // FORCE WAV/PCM format - no WebM allowed due to OpenAI Whisper issues
       let mimeType = 'audio/wav';
-      if (!MediaRecorder.isTypeSupported(mimeType)) {
-        mimeType = 'audio/webm;codecs=opus';
-        if (!MediaRecorder.isTypeSupported(mimeType)) {
-          mimeType = 'audio/mp4';
-          if (!MediaRecorder.isTypeSupported(mimeType)) {
-            throw new Error('No supported audio format found');
-          }
+      
+      // Try different WAV codecs
+      const wavFormats = [
+        'audio/wav',
+        'audio/wave',
+        'audio/wav; codecs=1', // PCM
+        'audio/x-wav'
+      ];
+      
+      let supportedFormat = null;
+      for (const format of wavFormats) {
+        if (MediaRecorder.isTypeSupported(format)) {
+          supportedFormat = format;
+          mimeType = format;
+          break;
         }
+      }
+      
+      if (!supportedFormat) {
+        // Fallback only if WAV truly not supported
+        throw new Error('Browser does not support WAV recording. WebM causes transcription failures with OpenAI Whisper.');
       }
 
       console.log('🎵 VoiceRecorder using format:', mimeType);
@@ -188,12 +202,12 @@ export class VoiceRecorder {
       
       if (data.text && data.text.trim()) {
         const transcription = data.text.trim();
-        // Filter out common Whisper artifacts but be less aggressive
-        if (transcription.length >= 2 && transcription !== 'you' && transcription !== 'Thank you.' && transcription !== 'Bye.') {
+        // Accept ANY transcription that's not the known "you" artifact
+        if (transcription !== 'you' && transcription !== 'You' && transcription.length > 0) {
           this.options.onTranscription(transcription);
         } else {
-          console.log('🚫 Filtered out likely artifact:', transcription);
-          this.options.onError?.('Recording was too unclear. Please try speaking louder and more clearly.');
+          console.log('🚫 Rejected OpenAI Whisper artifact:', transcription);
+          this.options.onError?.('OpenAI Whisper returned artifact "you". Try speaking more slowly and distinctly, closer to microphone.');
         }
       } else {
         this.options.onError?.('No speech detected. Please try again with clear speech.');

@@ -401,16 +401,25 @@ router.post('/transcribe', upload.single('audio'), async (req, res) => {
 
     const formData = new FormData();
     
+    // REJECT WebM format entirely - it causes "you" transcription issues
+    if (req.file.mimetype.includes('webm')) {
+      console.error('❌ WebM format rejected - known to cause transcription issues');
+      return res.status(400).json({ 
+        error: 'WebM audio format not supported. Please use WAV format for better transcription accuracy.',
+        errorType: 'webm_format_rejected'
+      });
+    }
+    
     // CRITICAL FIX: Convert audio to proper format for OpenAI Whisper
-    let fileName = 'audio.mp3'; // Default fallback
-    if (req.file.mimetype.includes('mp4')) {
-      fileName = 'audio.m4a'; // Use M4A for MP4 audio
-    } else if (req.file.mimetype.includes('wav')) {
+    let fileName = 'audio.wav'; // Prefer WAV
+    if (req.file.mimetype.includes('wav')) {
       fileName = 'audio.wav';
-    } else if (req.file.mimetype.includes('webm')) {
-      fileName = 'audio.webm';
+    } else if (req.file.mimetype.includes('mp4')) {
+      fileName = 'audio.m4a'; // Use M4A for MP4 audio
     } else if (req.file.mimetype.includes('mpeg')) {
       fileName = 'audio.mp3';
+    } else {
+      fileName = 'audio.wav'; // Force WAV as default
     }
     
     console.log('🎵 SERVER: Using filename for OpenAI:', fileName, 'for mimetype:', req.file.mimetype);

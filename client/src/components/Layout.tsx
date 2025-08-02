@@ -82,7 +82,7 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const voiceRecorderRef = useRef<VoiceRecorder | null>(null);
 
-  // Initialize voice recorder
+  // Initialize voice recorder with strict WAV enforcement
   React.useEffect(() => {
     voiceRecorderRef.current = new VoiceRecorder({
       onTranscription: (text) => {
@@ -91,14 +91,19 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
       },
       onError: (error) => {
         console.error('❌ Voice recording error:', error);
-        alert(error);
+        // More user-friendly error display
+        const errorDiv = document.createElement('div');
+        errorDiv.style.cssText = 'position:fixed;top:20px;right:20px;background:red;color:white;padding:15px;border-radius:8px;z-index:10000;max-width:300px;';
+        errorDiv.textContent = error;
+        document.body.appendChild(errorDiv);
+        setTimeout(() => document.body.removeChild(errorDiv), 5000);
       },
       onStatusChange: (status) => {
         setVoiceStatus(status);
         console.log('🎵 Voice status changed to:', status);
       },
-      maxDuration: 60,
-      minDuration: 1
+      maxDuration: 30, // Shorter duration for better success
+      minDuration: 2   // Longer minimum for clearer speech
     });
 
     return () => {
