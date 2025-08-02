@@ -35,19 +35,22 @@ export class VoiceRecorder {
           echoCancellation: true,
           noiseSuppression: true,
           autoGainControl: true,
-          sampleRate: 16000, // Optimal for speech recognition
+          sampleRate: 44100, // Higher quality for better transcription
           channelCount: 1
         }
       };
 
       this.stream = await navigator.mediaDevices.getUserMedia(constraints);
       
-      // Determine the best audio format
-      let mimeType = 'audio/mp4';
+      // CRITICAL: Use WAV for better OpenAI Whisper compatibility
+      let mimeType = 'audio/wav';
       if (!MediaRecorder.isTypeSupported(mimeType)) {
-        mimeType = 'audio/wav';
+        mimeType = 'audio/webm;codecs=opus';
         if (!MediaRecorder.isTypeSupported(mimeType)) {
-          mimeType = 'audio/webm'; // Last resort
+          mimeType = 'audio/mp4';
+          if (!MediaRecorder.isTypeSupported(mimeType)) {
+            throw new Error('No supported audio format found');
+          }
         }
       }
 
@@ -159,11 +162,13 @@ export class VoiceRecorder {
       const formData = new FormData();
       
       // Use correct filename based on MIME type
-      let fileName = 'recording.mp4';
-      if (audioBlob.type.includes('wav')) {
-        fileName = 'recording.wav';
+      let fileName = 'recording.wav';
+      if (audioBlob.type.includes('mp4')) {
+        fileName = 'recording.m4a';
       } else if (audioBlob.type.includes('webm')) {
         fileName = 'recording.webm';
+      } else if (audioBlob.type.includes('wav')) {
+        fileName = 'recording.wav';
       }
       
       formData.append('audio', audioBlob, fileName);
@@ -179,10 +184,19 @@ export class VoiceRecorder {
 
       const data = await response.json();
       
-      if (data.text && data.text.trim() && data.text.trim() !== 'you') {
-        this.options.onTranscription(data.text.trim());
+      console.log('🎵 Raw transcription result:', data);
+      
+      if (data.text && data.text.trim()) {
+        const transcription = data.text.trim();
+        // Filter out common Whisper artifacts but be less aggressive
+        if (transcription.length >= 2 && transcription !== 'you' && transcription !== 'Thank you.' && transcription !== 'Bye.') {
+          this.options.onTranscription(transcription);
+        } else {
+          console.log('🚫 Filtered out likely artifact:', transcription);
+          this.options.onError?.('Recording was too unclear. Please try speaking louder and more clearly.');
+        }
       } else {
-        this.options.onError?.('Could not understand the audio. Please try speaking more clearly.');
+        this.options.onError?.('No speech detected. Please try again with clear speech.');
       }
       
     } catch (error) {

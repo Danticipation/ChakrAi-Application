@@ -400,21 +400,29 @@ router.post('/transcribe', upload.single('audio'), async (req, res) => {
     }
 
     const formData = new FormData();
-    const audioBlob = new Blob([req.file.buffer], { type: req.file.mimetype });
     
-    // CRITICAL FIX: Use correct filename based on actual audio format
+    // CRITICAL FIX: Convert audio to proper format for OpenAI Whisper
     let fileName = 'audio.mp3'; // Default fallback
     if (req.file.mimetype.includes('mp4')) {
-      fileName = 'audio.mp4';
+      fileName = 'audio.m4a'; // Use M4A for MP4 audio
     } else if (req.file.mimetype.includes('wav')) {
       fileName = 'audio.wav';
+    } else if (req.file.mimetype.includes('webm')) {
+      fileName = 'audio.webm';
     } else if (req.file.mimetype.includes('mpeg')) {
       fileName = 'audio.mp3';
     }
     
     console.log('🎵 SERVER: Using filename for OpenAI:', fileName, 'for mimetype:', req.file.mimetype);
+    console.log('🎵 Audio buffer first 50 bytes:', req.file.buffer.subarray(0, 50).toString('hex'));
+    
+    // Create audio blob with correct MIME type
+    const audioBlob = new Blob([req.file.buffer], { type: req.file.mimetype });
     formData.append('file', audioBlob, fileName);
     formData.append('model', 'whisper-1');
+    
+    // Add language hint to improve transcription accuracy
+    formData.append('language', 'en');
     // Remove language forcing and prompts that might be interfering
     // formData.append('language', 'en'); 
     // formData.append('prompt', 'This is a voice message in English from a user speaking to their AI wellness companion. Please transcribe the full message accurately.');
