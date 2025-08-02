@@ -770,16 +770,17 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
                   </button>
                 </div>
                 
-                {/* Mobile Navigation Items */}
+                {/* Mobile Navigation Items - Complete Feature Set */}
                 <div className="space-y-4">
+                  {/* Core Companion */}
                   <div>
-                    <h4 className="text-sm font-medium theme-text-secondary mb-2">Core Features</h4>
+                    <h4 className="text-sm font-medium theme-text-secondary mb-2">🟦 Core Companion</h4>
                     <div className="space-y-1">
                       {[
                         { id: 'home', label: 'Home', icon: '🏠' },
                         { id: 'chat', label: 'Chat with Chakrai', icon: '💬' },
-                        { id: 'journal', label: 'Journal', icon: '📔' },
-                        { id: 'analytics', label: 'Insights', icon: '📊' }
+                        { id: 'challenges', label: 'Reflection Goals', icon: '🎯' },
+                        { id: 'rewards', label: 'Reflection Rewards', icon: '🎁' }
                       ].map((item) => (
                         <button
                           key={item.id}
@@ -787,27 +788,31 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
                             setActiveSection(item.id);
                             setMobileMenuOpen(false);
                           }}
-                          className={`w-full flex items-center space-x-3 p-3 rounded-lg text-left transition-colors ${
+                          className={`w-full flex items-center space-x-3 p-2 rounded-lg text-left transition-colors ${
                             activeSection === item.id
                               ? 'bg-blue-500/20 border border-blue-500/30 theme-text'
                               : 'theme-text hover:bg-white/5'
                           }`}
                         >
                           <span>{item.icon}</span>
-                          <span>{item.label}</span>
+                          <span className="text-sm">{item.label}</span>
                         </button>
                       ))}
                     </div>
                   </div>
-                  
+
+                  {/* Mirrors of You */}
                   <div>
-                    <h4 className="text-sm font-medium theme-text-secondary mb-2">More Features</h4>
+                    <h4 className="text-sm font-medium theme-text-secondary mb-2">💠 Mirrors of You</h4>
                     <div className="space-y-1">
                       {[
                         { id: 'questions', label: 'Get to Know Me', icon: '❓' },
+                        { id: 'journal', label: 'Journal', icon: '📔' },
+                        { id: 'daily', label: 'Reflection', icon: '🌅' },
                         { id: 'memory', label: 'Insight Vault', icon: '🧠' },
-                        { id: 'community', label: 'Community', icon: '👥' },
-                        { id: 'rewards', label: 'Rewards', icon: '🎁' }
+                        { id: 'adaptive', label: 'Mind Mirror', icon: '🪞' },
+                        { id: 'analytics', label: 'State of Self', icon: '📊' },
+                        { id: 'health', label: 'Somatic Mirror', icon: '💓' }
                       ].map((item) => (
                         <button
                           key={item.id}
@@ -815,14 +820,136 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
                             setActiveSection(item.id);
                             setMobileMenuOpen(false);
                           }}
-                          className={`w-full flex items-center space-x-3 p-3 rounded-lg text-left transition-colors ${
+                          className={`w-full flex items-center space-x-3 p-2 rounded-lg text-left transition-colors ${
                             activeSection === item.id
                               ? 'bg-blue-500/20 border border-blue-500/30 theme-text'
                               : 'theme-text hover:bg-white/5'
                           }`}
                         >
                           <span>{item.icon}</span>
-                          <span>{item.label}</span>
+                          <span className="text-sm">{item.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Guided Support */}
+                  <div>
+                    <h4 className="text-sm font-medium theme-text-secondary mb-2">🧘 Guided Support</h4>
+                    <div className="space-y-1">
+                      {[
+                        { id: 'agents', label: 'Reflective Allies', icon: '🤝' },
+                        { id: 'vr', label: 'InnerScape', icon: '🌐' },
+                        { id: 'therapy-plans', label: 'Therapy Plans', icon: '📋' },
+                        { id: 'community', label: 'Community', icon: '👥' }
+                      ].map((item) => (
+                        <button
+                          key={item.id}
+                          onClick={() => {
+                            setActiveSection(item.id);
+                            setMobileMenuOpen(false);
+                          }}
+                          className={`w-full flex items-center space-x-3 p-2 rounded-lg text-left transition-colors ${
+                            activeSection === item.id
+                              ? 'bg-blue-500/20 border border-blue-500/30 theme-text'
+                              : 'theme-text hover:bg-white/5'
+                          }`}
+                        >
+                          <span>{item.icon}</span>
+                          <span className="text-sm">{item.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Healthcare */}
+                  <div>
+                    <h4 className="text-sm font-medium theme-text-secondary mb-2">🏥 Healthcare</h4>
+                    <div className="space-y-1">
+                      {[
+                        { id: 'ai-monitoring', label: 'AI Monitoring', icon: '🔍' },
+                        { id: 'therapist', label: 'Therapist Portal', icon: '👨‍⚕️' }
+                      ].map((item) => (
+                        <button
+                          key={item.id}
+                          onClick={() => {
+                            setActiveSection(item.id);
+                            setMobileMenuOpen(false);
+                          }}
+                          className={`w-full flex items-center space-x-3 p-2 rounded-lg text-left transition-colors ${
+                            activeSection === item.id
+                              ? 'bg-blue-500/20 border border-blue-500/30 theme-text'
+                              : 'theme-text hover:bg-white/5'
+                          }`}
+                        >
+                          <span>{item.icon}</span>
+                          <span className="text-sm">{item.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Wellness */}
+                  <div>
+                    <h4 className="text-sm font-medium theme-text-secondary mb-2">🌟 Wellness</h4>
+                    <div className="space-y-1">
+                      {[
+                        { id: 'horoscope', label: 'Daily Horoscope', icon: '⭐' },
+                        { id: 'affirmation', label: 'Daily Affirmation', icon: '💫' }
+                      ].map((item) => (
+                        <button
+                          key={item.id}
+                          onClick={() => {
+                            setActiveSection(item.id);
+                            setMobileMenuOpen(false);
+                          }}
+                          className={`w-full flex items-center space-x-3 p-2 rounded-lg text-left transition-colors ${
+                            activeSection === item.id
+                              ? 'bg-blue-500/20 border border-blue-500/30 theme-text'
+                              : 'theme-text hover:bg-white/5'
+                          }`}
+                        >
+                          <span>{item.icon}</span>
+                          <span className="text-sm">{item.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Settings */}
+                  <div>
+                    <h4 className="text-sm font-medium theme-text-secondary mb-2">⚙️ Settings</h4>
+                    <div className="space-y-1">
+                      {[
+                        { id: 'voice', label: 'Voice Settings', icon: '🎤' },
+                        { id: 'themes', label: 'Themes', icon: '🎨' },
+                        { id: 'feedback', label: 'Feedback', icon: '💬' },
+                        { id: 'microphone-test', label: 'Mic Test', icon: '🎙️' },
+                        { id: 'supabase-setup', label: 'Community Setup', icon: '🔧' },
+                        { id: 'privacy', label: 'Privacy', icon: '🔒' }
+                      ].map((item) => (
+                        <button
+                          key={item.id}
+                          onClick={() => {
+                            if (item.id === 'themes') {
+                              setShowThemeModal(true);
+                              setMobileMenuOpen(false);
+                            } else if (item.id === 'voice') {
+                              setShowSettings(true);
+                              setMobileMenuOpen(false);
+                            } else {
+                              setActiveSection(item.id);
+                              setMobileMenuOpen(false);
+                            }
+                          }}
+                          className={`w-full flex items-center space-x-3 p-2 rounded-lg text-left transition-colors ${
+                            activeSection === item.id
+                              ? 'bg-blue-500/20 border border-blue-500/30 theme-text'
+                              : 'theme-text hover:bg-white/5'
+                          }`}
+                        >
+                          <span>{item.icon}</span>
+                          <span className="text-sm">{item.label}</span>
                         </button>
                       ))}
                     </div>
