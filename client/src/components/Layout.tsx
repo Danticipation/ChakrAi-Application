@@ -447,16 +447,28 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
                   
                   {/* Quick Actions */}
                   <div className="flex flex-wrap gap-2 mt-4">
-                    <button className="px-4 py-2 theme-card-hover rounded-full text-sm theme-text-secondary hover:theme-text transition-colors border border-white/10">
+                    <button 
+                      onClick={() => setChatInput("How am I feeling today?")}
+                      className="px-4 py-2 theme-card-hover rounded-full text-sm theme-text-secondary hover:theme-text transition-colors border border-white/10"
+                    >
                       💭 How am I feeling today?
                     </button>
-                    <button className="px-4 py-2 theme-card-hover rounded-full text-sm theme-text-secondary hover:theme-text transition-colors border border-white/10">
+                    <button 
+                      onClick={() => setChatInput("I want to set a wellness goal")}
+                      className="px-4 py-2 theme-card-hover rounded-full text-sm theme-text-secondary hover:theme-text transition-colors border border-white/10"
+                    >
                       🎯 Set a wellness goal
                     </button>
-                    <button className="px-4 py-2 theme-card-hover rounded-full text-sm theme-text-secondary hover:theme-text transition-colors border border-white/10">
+                    <button 
+                      onClick={() => setChatInput("I'd like to journal my thoughts")}
+                      className="px-4 py-2 theme-card-hover rounded-full text-sm theme-text-secondary hover:theme-text transition-colors border border-white/10"
+                    >
                       📝 Journal my thoughts
                     </button>
-                    <button className="px-4 py-2 theme-card-hover rounded-full text-sm theme-text-secondary hover:theme-text transition-colors border border-white/10">
+                    <button 
+                      onClick={() => setChatInput("Can you guide me through a meditation?")}
+                      className="px-4 py-2 theme-card-hover rounded-full text-sm theme-text-secondary hover:theme-text transition-colors border border-white/10"
+                    >
                       🧘 Guided meditation
                     </button>
                   </div>
