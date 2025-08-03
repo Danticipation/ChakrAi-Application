@@ -1927,6 +1927,38 @@ app.get('/api/admin/feedback/stats', async (req, res) => {
   }
 });
 
+// Admin system statistics endpoint
+app.get('/api/admin/system/stats', async (req, res) => {
+  try {
+    // Get real system statistics from database
+    const [messageCount, userCount] = await Promise.all([
+      storage.getMessageCount(),
+      storage.getActiveUserCount()
+    ]);
+    
+    // Get process memory usage
+    const memoryUsage = process.memoryUsage();
+    const memoryMB = Math.round(memoryUsage.heapUsed / 1024 / 1024);
+    
+    // Get process uptime
+    const uptimeSeconds = process.uptime();
+    const uptimeHours = Math.floor(uptimeSeconds / 3600);
+    const uptimeMinutes = Math.floor((uptimeSeconds % 3600) / 60);
+    
+    const stats = {
+      totalMessages: messageCount,
+      activeUsers: userCount,
+      memoryUsage: `${memoryMB}MB`,
+      uptime: `${uptimeHours}h ${uptimeMinutes}m`
+    };
+    
+    res.json(stats);
+  } catch (error) {
+    console.error('Error loading system stats:', error);
+    res.status(500).json({ error: 'Failed to load system statistics' });
+  }
+});
+
 // Journal data migration endpoint - consolidate entries under current user
 app.post('/api/users/:userId/migrate-journal-data', async (req, res) => {
   try {

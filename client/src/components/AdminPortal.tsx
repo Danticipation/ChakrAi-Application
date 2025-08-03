@@ -60,23 +60,23 @@ const AdminPortal: React.FC = () => {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [feedbackStatsRes, feedbackRes, healthRes] = await Promise.all([
+      const [feedbackStatsRes, feedbackRes, systemStatsRes] = await Promise.all([
         axios.get('/api/admin/feedback/stats'),
         axios.get('/api/admin/feedback?limit=10'),
-        axios.get('/api/health').catch(() => ({ data: { status: 'unknown' } }))
+        axios.get('/api/admin/system/stats').catch(() => ({ data: null }))
       ]);
 
       setStats({
         feedback: feedbackStatsRes.data,
-        system: {
-          uptime: '2h 30m',
-          memoryUsage: '128MB',
-          activeUsers: 15,
-          totalMessages: 1250
+        system: systemStatsRes.data || {
+          uptime: null,
+          memoryUsage: null,
+          activeUsers: null,
+          totalMessages: null
         }
       });
       setFeedback(feedbackRes.data.feedback);
-      setSystemHealth(healthRes.data);
+      setSystemHealth(systemStatsRes.data);
     } catch (error) {
       console.error('Failed to load admin data:', error);
     } finally {
@@ -153,7 +153,9 @@ const AdminPortal: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-400">Active Users</p>
-              <p className="text-2xl font-bold text-white mt-1">{stats?.system.activeUsers || 0}</p>
+              <p className="text-2xl font-bold text-white mt-1">
+                {stats?.system.activeUsers !== null ? stats.system.activeUsers : '—'}
+              </p>
             </div>
             <Users className="w-8 h-8 text-blue-400" />
           </div>
@@ -163,7 +165,9 @@ const AdminPortal: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-400">Total Messages</p>
-              <p className="text-2xl font-bold text-white mt-1">{stats?.system.totalMessages || 0}</p>
+              <p className="text-2xl font-bold text-white mt-1">
+                {stats?.system.totalMessages !== null ? stats.system.totalMessages : '—'}
+              </p>
             </div>
             <MessageSquare className="w-8 h-8 text-purple-400" />
           </div>
@@ -173,7 +177,9 @@ const AdminPortal: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-400">Memory Usage</p>
-              <p className="text-2xl font-bold text-white mt-1">{stats?.system.memoryUsage || 'N/A'}</p>
+              <p className="text-2xl font-bold text-white mt-1">
+                {stats?.system.memoryUsage || '—'}
+              </p>
             </div>
             <Server className="w-8 h-8 text-orange-400" />
           </div>
@@ -458,15 +464,18 @@ const AdminPortal: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
                   <div className="bg-gray-700/50 rounded-lg p-4">
                     <p className="text-sm text-gray-400">Response Time</p>
-                    <p className="text-2xl font-bold text-green-400">2.3s avg</p>
+                    <p className="text-2xl font-bold text-green-400">—</p>
+                    <p className="text-xs text-gray-500 mt-1">Real-time data not available</p>
                   </div>
                   <div className="bg-gray-700/50 rounded-lg p-4">
                     <p className="text-sm text-gray-400">Success Rate</p>
-                    <p className="text-2xl font-bold text-blue-400">98.7%</p>
+                    <p className="text-2xl font-bold text-blue-400">—</p>
+                    <p className="text-xs text-gray-500 mt-1">Real-time data not available</p>
                   </div>
                   <div className="bg-gray-700/50 rounded-lg p-4">
                     <p className="text-sm text-gray-400">API Calls Today</p>
-                    <p className="text-2xl font-bold text-purple-400">1,247</p>
+                    <p className="text-2xl font-bold text-purple-400">—</p>
+                    <p className="text-xs text-gray-500 mt-1">Real-time data not available</p>
                   </div>
                 </div>
               </div>
@@ -529,9 +538,10 @@ const AdminPortal: React.FC = () => {
                   </div>
                   <div className="bg-gray-700/50 rounded-lg p-4">
                     <p className="text-sm text-gray-400 mb-2">Active Forums</p>
-                    <p className="text-2xl font-bold text-purple-400">5</p>
+                    <p className="text-2xl font-bold text-purple-400">—</p>
                     <p className="text-sm text-gray-400 mt-2">Community Members</p>
-                    <p className="text-2xl font-bold text-blue-400">1,234</p>
+                    <p className="text-2xl font-bold text-blue-400">—</p>
+                    <p className="text-xs text-gray-500 mt-1">Real-time data not available</p>
                   </div>
                 </div>
               </div>

@@ -530,6 +530,22 @@ export class DbStorage implements IStorage {
     return stats;
   }
 
+  // System statistics methods
+  async getMessageCount(): Promise<number> {
+    const result = await this.db.select({ count: sql<number>`count(*)` }).from(messages);
+    return result[0]?.count || 0;
+  }
+
+  async getActiveUserCount(): Promise<number> {
+    // Count users active in the last 24 hours
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const result = await this.db
+      .select({ count: sql<number>`count(distinct user_id)` })
+      .from(messages)
+      .where(sql`timestamp > ${twentyFourHoursAgo}`);
+    return result[0]?.count || 0;
+  }
+
   // Authentication methods
   async getUserByEmail(email: string): Promise<User | null> {
     const result = await this.db.select().from(users).where(eq(users.email, email)).limit(1);
