@@ -31,6 +31,7 @@ import PrivacyCompliance from '@/components/PrivacyCompliance';
 import TherapistPortal from '@/components/TherapistPortal';
 import AiPerformanceMonitoringDashboard from '@/components/AiPerformanceMonitoringDashboard';
 import AdminFeedbackDashboard from '@/components/AdminFeedbackDashboard';
+import AdminPortal from '@/components/AdminPortal';
 import Horoscope from '@/components/Horoscope';
 import DailyAffirmation from '@/components/DailyAffirmation';
 // Removed duplicate chat components - using only main chat interface
@@ -318,6 +319,8 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
         return <AiPerformanceMonitoringDashboard />;
       case 'admin-feedback':
         return <AdminFeedbackDashboard />;
+      case 'admin-portal':
+        return <AdminPortal />;
       case 'therapist':
         return <TherapistPortal />;
       case 'horoscope':
@@ -619,7 +622,7 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
                     {[
                       { id: 'health', label: 'Health Integration' },
                       { id: 'feedback', label: 'Feedback System' },
-                      { id: 'admin-feedback', label: 'Feedback Management' },
+                      { id: 'admin-portal', label: 'Admin Portal' },
                       { id: 'ai-monitoring', label: 'AI Monitoring' },
                       { id: 'therapist', label: 'Therapist Portal' }
                     ].map((tab) => (
@@ -873,9 +876,9 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
                     <h4 className="text-sm font-medium theme-text-secondary mb-2">🏥 Healthcare</h4>
                     <div className="space-y-1">
                       {[
+                        { id: 'admin-portal', label: 'Admin Portal', icon: '🛡️' },
                         { id: 'ai-monitoring', label: 'AI Monitoring', icon: '🔍' },
-                        { id: 'therapist', label: 'Therapist Portal', icon: '👨‍⚕️' },
-                        { id: 'admin-feedback', label: 'Feedback Management', icon: '📝' }
+                        { id: 'therapist', label: 'Therapist Portal', icon: '👨‍⚕️' }
                       ].map((item) => (
                         <button
                           key={item.id}
