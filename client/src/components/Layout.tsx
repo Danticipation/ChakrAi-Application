@@ -618,6 +618,8 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
                   <div className="space-y-1">
                     {[
                       { id: 'health', label: 'Health Integration' },
+                      { id: 'feedback', label: 'Feedback System' },
+                      { id: 'admin-feedback', label: 'Feedback Management' },
                       { id: 'ai-monitoring', label: 'AI Monitoring' },
                       { id: 'therapist', label: 'Therapist Portal' }
                     ].map((tab) => (
