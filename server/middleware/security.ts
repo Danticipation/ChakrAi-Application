@@ -137,11 +137,11 @@ export const corsConfig = {
     // Allow requests with no origin (mobile apps, curl, etc.)
     if (!origin) return callback(null, true);
     
-    // In development, allow localhost
+    // In development, be more permissive
     if (process.env.NODE_ENV === 'development') {
-      if (origin.includes('localhost') || origin.includes('127.0.0.1') || origin.includes('.replit.dev')) {
-        return callback(null, true);
-      }
+      console.log('CORS check - Origin:', origin);
+      // Allow all localhost and replit domains in development
+      return callback(null, true);
     }
     
     // In production, only allow specific domains
