@@ -623,7 +623,6 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
                       { id: 'health', label: 'Health Integration' },
                       { id: 'feedback', label: 'Feedback System' },
                       { id: 'admin-portal', label: 'Admin Portal' },
-                      { id: 'ai-monitoring', label: 'AI Monitoring' },
                       { id: 'therapist', label: 'Therapist Portal' }
                     ].map((tab) => (
                       <button
@@ -687,8 +686,6 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
                       { id: 'voice', label: 'Voice Settings' },
                       { id: 'themes', label: 'Themes' },
                       { id: 'feedback', label: 'Feedback' },
-                      { id: 'microphone-test', label: 'Mic Test' },
-                      { id: 'supabase-setup', label: 'Community Setup' },
                       { id: 'privacy', label: 'Privacy' }
                     ].map((tab) => (
                       <button
@@ -877,7 +874,6 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
                     <div className="space-y-1">
                       {[
                         { id: 'admin-portal', label: 'Admin Portal', icon: '🛡️' },
-                        { id: 'ai-monitoring', label: 'AI Monitoring', icon: '🔍' },
                         { id: 'therapist', label: 'Therapist Portal', icon: '👨‍⚕️' }
                       ].map((item) => (
                         <button
@@ -934,8 +930,6 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
                         { id: 'voice', label: 'Voice Settings', icon: '🎤' },
                         { id: 'themes', label: 'Themes', icon: '🎨' },
                         { id: 'feedback', label: 'Feedback', icon: '💬' },
-                        { id: 'microphone-test', label: 'Mic Test', icon: '🎙️' },
-                        { id: 'supabase-setup', label: 'Community Setup', icon: '🔧' },
                         { id: 'privacy', label: 'Privacy', icon: '🔒' }
                       ].map((item) => (
                         <button
