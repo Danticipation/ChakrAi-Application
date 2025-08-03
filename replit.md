@@ -82,11 +82,11 @@ The application is built with a React frontend (TypeScript, Tailwind CSS) and an
 **Chat Interface Improvements**:
 - Fixed suggestion buttons that were non-functional
 - Added proper onClick handlers to populate chat input field
-- Buttons now properly trigger with suggested prompts:
-  - "How am I feeling today?"
-  - "I want to set a wellness goal"
-  - "I'd like to journal my thoughts"  
-  - "Can you guide me through a meditation?"
+- Buttons now properly trigger with natural conversation starters:
+  - "I'm feeling a bit overwhelmed today"
+  - "I want to set a wellness goal for myself"
+  - "I'd like to journal about what happened today"
+  - "Can you guide me through a calming meditation?"
 
 **User Impact**: Chat suggestion buttons now work properly, allowing users to quickly start conversations with pre-written prompts instead of typing from scratch
 

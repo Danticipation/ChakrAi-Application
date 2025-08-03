@@ -448,25 +448,25 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
                   {/* Quick Actions */}
                   <div className="flex flex-wrap gap-2 mt-4">
                     <button 
-                      onClick={() => setChatInput("How am I feeling today?")}
+                      onClick={() => setChatInput("I'm feeling a bit overwhelmed today")}
                       className="px-4 py-2 theme-card-hover rounded-full text-sm theme-text-secondary hover:theme-text transition-colors border border-white/10"
                     >
-                      💭 How am I feeling today?
+                      💭 Share my feelings
                     </button>
                     <button 
-                      onClick={() => setChatInput("I want to set a wellness goal")}
+                      onClick={() => setChatInput("I want to set a wellness goal for myself")}
                       className="px-4 py-2 theme-card-hover rounded-full text-sm theme-text-secondary hover:theme-text transition-colors border border-white/10"
                     >
                       🎯 Set a wellness goal
                     </button>
                     <button 
-                      onClick={() => setChatInput("I'd like to journal my thoughts")}
+                      onClick={() => setChatInput("I'd like to journal about what happened today")}
                       className="px-4 py-2 theme-card-hover rounded-full text-sm theme-text-secondary hover:theme-text transition-colors border border-white/10"
                     >
                       📝 Journal my thoughts
                     </button>
                     <button 
-                      onClick={() => setChatInput("Can you guide me through a meditation?")}
+                      onClick={() => setChatInput("Can you guide me through a calming meditation?")}
                       className="px-4 py-2 theme-card-hover rounded-full text-sm theme-text-secondary hover:theme-text transition-colors border border-white/10"
                     >
                       🧘 Guided meditation
