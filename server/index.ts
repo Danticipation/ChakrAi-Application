@@ -1863,10 +1863,12 @@ app.get('/api/feedback/:userId', async (req, res) => {
 
 app.post('/api/feedback', async (req, res) => {
   try {
-    const { userId, feedbackType, title, description, priority, rating } = req.body;
+    const { userId, type, title, description, priority, rating } = req.body;
+    
+    // Map frontend field names to database field names
     const feedback = await storage.createFeedback({
       userId,
-      feedbackType,
+      feedbackType: type, // Map 'type' to 'feedbackType' for database
       title,
       description,
       priority,
@@ -1876,6 +1878,52 @@ app.post('/api/feedback', async (req, res) => {
   } catch (error) {
     console.error('Error creating feedback:', error);
     res.status(500).json({ error: 'Failed to create feedback' });
+  }
+});
+
+// Admin feedback management endpoints
+app.get('/api/admin/feedback', async (req, res) => {
+  try {
+    const { status, type, priority, limit = 50 } = req.query;
+    const feedback = await storage.getAllFeedback({ 
+      status: status as string, 
+      type: type as string, 
+      priority: priority as string,
+      limit: parseInt(limit as string)
+    });
+    res.json({ feedback });
+  } catch (error) {
+    console.error('Error loading admin feedback:', error);
+    res.status(500).json({ error: 'Failed to load feedback' });
+  }
+});
+
+app.patch('/api/admin/feedback/:id', async (req, res) => {
+  try {
+    const feedbackId = parseInt(req.params.id);
+    const { status, adminResponse } = req.body;
+    
+    const updatedFeedback = await storage.updateFeedbackStatus(feedbackId, {
+      status,
+      adminResponse,
+      updatedAt: new Date()
+    });
+    
+    res.json({ success: true, feedback: updatedFeedback });
+  } catch (error) {
+    console.error('Error updating feedback:', error);
+    res.status(500).json({ error: 'Failed to update feedback' });
+  }
+});
+
+// Feedback statistics endpoint
+app.get('/api/admin/feedback/stats', async (req, res) => {
+  try {
+    const stats = await storage.getFeedbackStatistics();
+    res.json(stats);
+  } catch (error) {
+    console.error('Error loading feedback stats:', error);
+    res.status(500).json({ error: 'Failed to load feedback statistics' });
   }
 });
 

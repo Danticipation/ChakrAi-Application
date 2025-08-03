@@ -465,6 +465,71 @@ export class DbStorage implements IStorage {
     return feedback;
   }
 
+  // Admin feedback management methods
+  async getAllFeedback(filters: { 
+    status?: string; 
+    type?: string; 
+    priority?: string; 
+    limit?: number 
+  }): Promise<UserFeedback[]> {
+    let query = this.db.select().from(userFeedback);
+    
+    const conditions = [];
+    if (filters.status) conditions.push(eq(userFeedback.status, filters.status));
+    if (filters.type) conditions.push(eq(userFeedback.feedbackType, filters.type));
+    if (filters.priority) conditions.push(eq(userFeedback.priority, filters.priority));
+    
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions));
+    }
+    
+    return query
+      .orderBy(desc(userFeedback.createdAt))
+      .limit(filters.limit || 50);
+  }
+
+  async updateFeedbackStatus(feedbackId: number, updates: {
+    status?: string;
+    adminResponse?: string;
+    updatedAt: Date;
+  }): Promise<UserFeedback> {
+    const [feedback] = await this.db.update(userFeedback)
+      .set(updates)
+      .where(eq(userFeedback.id, feedbackId))
+      .returning();
+    return feedback;
+  }
+
+  async getFeedbackStatistics(): Promise<{
+    total: number;
+    byStatus: Record<string, number>;
+    byType: Record<string, number>;
+    byPriority: Record<string, number>;
+  }> {
+    // Get all feedback
+    const allFeedback = await this.db.select().from(userFeedback);
+    
+    const stats = {
+      total: allFeedback.length,
+      byStatus: {} as Record<string, number>,
+      byType: {} as Record<string, number>,
+      byPriority: {} as Record<string, number>
+    };
+    
+    allFeedback.forEach(feedback => {
+      // Count by status
+      stats.byStatus[feedback.status] = (stats.byStatus[feedback.status] || 0) + 1;
+      
+      // Count by type
+      stats.byType[feedback.feedbackType] = (stats.byType[feedback.feedbackType] || 0) + 1;
+      
+      // Count by priority
+      stats.byPriority[feedback.priority] = (stats.byPriority[feedback.priority] || 0) + 1;
+    });
+    
+    return stats;
+  }
+
   // Authentication methods
   async getUserByEmail(email: string): Promise<User | null> {
     const result = await this.db.select().from(users).where(eq(users.email, email)).limit(1);

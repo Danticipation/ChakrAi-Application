@@ -30,6 +30,7 @@ import HealthIntegration from '@/components/HealthIntegration';
 import PrivacyCompliance from '@/components/PrivacyCompliance';
 import TherapistPortal from '@/components/TherapistPortal';
 import AiPerformanceMonitoringDashboard from '@/components/AiPerformanceMonitoringDashboard';
+import AdminFeedbackDashboard from '@/components/AdminFeedbackDashboard';
 import Horoscope from '@/components/Horoscope';
 import DailyAffirmation from '@/components/DailyAffirmation';
 // Removed duplicate chat components - using only main chat interface
@@ -315,6 +316,8 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
         return <SupabaseSetup />;
       case 'ai-monitoring':
         return <AiPerformanceMonitoringDashboard />;
+      case 'admin-feedback':
+        return <AdminFeedbackDashboard />;
       case 'therapist':
         return <TherapistPortal />;
       case 'horoscope':
@@ -869,7 +872,8 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
                     <div className="space-y-1">
                       {[
                         { id: 'ai-monitoring', label: 'AI Monitoring', icon: '🔍' },
-                        { id: 'therapist', label: 'Therapist Portal', icon: '👨‍⚕️' }
+                        { id: 'therapist', label: 'Therapist Portal', icon: '👨‍⚕️' },
+                        { id: 'admin-feedback', label: 'Feedback Management', icon: '📝' }
                       ].map((item) => (
                         <button
                           key={item.id}
