@@ -1210,8 +1210,9 @@ DO NOT immediately jump into "support" mode or therapeutic language unless someo
       try {
         console.log(`Making ElevenLabs request for voice: ${selectedVoice} (ID: ${voiceId})`);
         
-        // Only generate audio for shorter responses to avoid large payloads
-        if (aiResponse.length <= 500) {
+        // Generate audio for all responses but filter by final size
+        console.log(`AI response length: ${aiResponse.length} characters`);
+        if (true) {
           const elevenLabsResponse = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
             method: 'POST',
             headers: {
@@ -1240,8 +1241,8 @@ DO NOT immediately jump into "support" mode or therapeutic language unless someo
             console.log(`Audio buffer size: ${audioBuffer.byteLength}`);
             console.log(`Base64 audio length: ${base64Audio.length}`);
             
-            // Only include audio if it's reasonably sized (under 150KB base64)
-            if (base64Audio.length < 150000) {
+            // Only include audio if it's reasonably sized (under 100KB base64)
+            if (base64Audio.length < 100000) {
               audioUrl = base64Audio;
               console.log('✅ Audio included in response');
             } else {
