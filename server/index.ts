@@ -1190,6 +1190,9 @@ DO NOT immediately jump into "support" mode or therapeutic language unless someo
     console.log('Voice parameter received:', voice, '(audio temporarily disabled for testing)');
     let audioUrl = null;
     
+    // Define selectedVoice for response
+    const selectedVoice = voice || 'alexandra';
+    
     console.log('Final response - audioUrl length:', audioUrl ? audioUrl.length : 'null');
     
     // Create response object
