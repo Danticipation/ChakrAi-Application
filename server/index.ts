@@ -1222,13 +1222,14 @@ DO NOT immediately jump into "support" mode or therapeutic language unless someo
             },
             body: JSON.stringify({
               text: aiResponse,
-              model_id: 'eleven_monolingual_v1',
+              model_id: 'eleven_turbo_v2_5',
               voice_settings: {
-                stability: 0.6,
-                similarity_boost: 0.8,
-                style: 0.2,
-                use_speaker_boost: true
-              }
+                stability: 0.5,
+                similarity_boost: 0.7,
+                style: 0.1,
+                use_speaker_boost: false
+              },
+              optimize_streaming_latency: 4
             })
           });
           
@@ -1241,8 +1242,8 @@ DO NOT immediately jump into "support" mode or therapeutic language unless someo
             console.log(`Audio buffer size: ${audioBuffer.byteLength}`);
             console.log(`Base64 audio length: ${base64Audio.length}`);
             
-            // Only include audio if it's reasonably sized (under 130KB base64)
-            if (base64Audio.length < 130000) {
+            // Include audio up to 250KB base64 (test with higher limit)
+            if (base64Audio.length < 250000) {
               audioUrl = base64Audio;
               console.log('✅ Audio included in response');
             } else {
