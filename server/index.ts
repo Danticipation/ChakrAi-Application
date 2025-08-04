@@ -1241,8 +1241,8 @@ DO NOT immediately jump into "support" mode or therapeutic language unless someo
             console.log(`Audio buffer size: ${audioBuffer.byteLength}`);
             console.log(`Base64 audio length: ${base64Audio.length}`);
             
-            // Only include audio if it's reasonably sized (under 100KB base64)
-            if (base64Audio.length < 100000) {
+            // Only include audio if it's reasonably sized (under 130KB base64)
+            if (base64Audio.length < 130000) {
               audioUrl = base64Audio;
               console.log('✅ Audio included in response');
             } else {

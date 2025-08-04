@@ -215,6 +215,7 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
         // Play audio if available
         if (data.audioUrl) {
           console.log('🔊 Main Chat - Playing audio response...');
+          console.log('🔊 Audio data length:', data.audioUrl.length);
           try {
             // Convert base64 to audio blob and play
             const binaryString = atob(data.audioUrl);
@@ -225,11 +226,30 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
             const audioBlob = new Blob([bytes], { type: 'audio/mpeg' });
             const audioUrl = URL.createObjectURL(audioBlob);
             const audio = new Audio(audioUrl);
-            audio.play().catch(error => {
-              console.error('Audio playback failed:', error);
-            });
+            
+            // Add event listeners for debugging
+            audio.addEventListener('loadstart', () => console.log('🔊 Audio loading started'));
+            audio.addEventListener('canplay', () => console.log('🔊 Audio can play'));
+            audio.addEventListener('playing', () => console.log('🔊 Audio is playing'));
+            audio.addEventListener('ended', () => console.log('🔊 Audio playback ended'));
+            audio.addEventListener('error', (e) => console.error('🔊 Audio error event:', e));
+            
+            // Set volume and attempt to play
+            audio.volume = 0.8;
+            const playPromise = audio.play();
+            
+            if (playPromise) {
+              playPromise
+                .then(() => {
+                  console.log('🔊 Audio playback started successfully');
+                })
+                .catch(error => {
+                  console.error('🔊 Audio playback failed:', error);
+                  console.error('🔊 Error details:', error.name, error.message);
+                });
+            }
           } catch (audioError) {
-            console.error('Audio processing failed:', audioError);
+            console.error('🔊 Audio processing failed:', audioError);
           }
         } else {
           console.log('🔇 Main Chat - No audio in response');
