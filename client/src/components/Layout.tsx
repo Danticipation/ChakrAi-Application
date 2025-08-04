@@ -174,6 +174,9 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
       const deviceFingerprint = generateDeviceFingerprint();
       const sessionId = generateSessionId();
       
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+      
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
@@ -184,8 +187,11 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
         body: JSON.stringify({
           message: chatInput,
           voice: selectedVoice // Use the selected voice from state
-        })
+        }),
+        signal: controller.signal
       });
+      
+      clearTimeout(timeoutId);
       
       if (response.ok) {
         const data = await response.json();
@@ -242,9 +248,17 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
       }
     } catch (error) {
       console.error('❌ Error sending message - Network/Parse error:', error);
+      console.error('❌ Error type:', error instanceof Error ? error.name : typeof error);
+      console.error('❌ Error message:', error instanceof Error ? error.message : String(error));
+      
+      let errorText = 'Sorry, I had trouble processing your message. Please try again.';
+      if (error instanceof Error && error.name === 'AbortError') {
+        errorText = 'The request took too long. Please try again with a shorter message.';
+      }
+      
       const errorMessage = {
         sender: 'bot' as const,
-        text: 'Sorry, I had trouble processing your message. Please try again.',
+        text: errorText,
         time: new Date().toLocaleTimeString()
       };
       setMessages(prev => [...prev, errorMessage]);

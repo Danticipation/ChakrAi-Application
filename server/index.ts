@@ -1252,13 +1252,20 @@ DO NOT immediately jump into "support" mode or therapeutic language unless someo
     
     console.log('Final response - audioUrl length:', audioUrl ? audioUrl.length : 'null');
     
-    res.json({ 
+    // Create response object
+    const responseData = { 
       message: aiResponse,
       audioUrl: audioUrl,
       voiceUsed: selectedVoice,
       userId: userId,
       timestamp: new Date().toISOString()
-    });
+    };
+    
+    // Log response size for debugging
+    const responseSize = JSON.stringify(responseData).length;
+    console.log(`Response size: ${responseSize} bytes`);
+    
+    res.json(responseData);
   } catch (error) {
     console.error('Chat endpoint error:', error);
     res.status(500).json({ error: 'Chat processing failed' });
