@@ -45,15 +45,14 @@ export const memoryMonitor = (req: Request, res: Response, next: NextFunction) =
 
 // Response compression optimization
 export const compressionOptimizer = (req: Request, res: Response, next: NextFunction) => {
-  // Override res.json to apply compression for large responses
+  // Override res.json to log large responses without setting incorrect headers
   const originalJson = res.json;
   
   res.json = function(data: any) {
     const jsonString = JSON.stringify(data);
     
-    // For large responses, add compression headers
+    // Log large responses but don't set compression headers without actual compression
     if (jsonString.length > 10000) { // > 10KB
-      this.set('Content-Encoding', 'gzip');
       console.log(`[LARGE RESPONSE] ${req.url} - ${jsonString.length} bytes`);
     }
     
