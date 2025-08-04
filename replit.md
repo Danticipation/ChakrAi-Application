@@ -95,18 +95,20 @@ The application is built with a React frontend (TypeScript, Tailwind CSS) and an
 **Status**: Resolved - Chat and voice system restored to original working configuration
 
 **Root Cause Identified**:
-- Temporary debugging changes introduced artificial size limits that didn't exist before
-- Original voice system was working fine - issue was introduced during troubleshooting
-- Over-optimization created new problems that didn't exist in the original system
+- 4-Phase Code Quality Overhaul introduced two breaking changes for voice system:
+  1. Express.json body parser limit reduced from 50MB to 10MB 
+  2. Performance middleware incorrectly setting "Content-Encoding: gzip" headers without actual compression
+- Browser expected compressed data but received uncompressed audio, causing fetch failures
+- Large audio responses (200KB+) were hitting the reduced size limits
 
 **Solution Implemented**:
-- Restored original ElevenLabs configuration (eleven_monolingual_v1 model)
-- **KEY FIX**: Restored express.json limit from 10MB back to 50MB (was reduced during security overhaul)
-- Removed artificial size filtering that was blocking audio responses
+- **KEY FIX 1**: Restored express.json limit from 10MB back to 50MB (server/index.ts line 58)
+- **KEY FIX 2**: Removed incorrect compression headers from performance middleware (server/middleware/performanceMiddleware.ts)
+- Maintained original ElevenLabs configuration (eleven_monolingual_v1 model)
 - Extended timeout to 30 seconds to accommodate normal audio processing
-- CORS configuration optimized for development environment
+- Kept response size logging for monitoring without breaking functionality
 
-**User Impact**: Voice system restored to original working state - the 4-Phase Code Quality Overhaul had inadvertently reduced the body parser limit, blocking large audio responses
+**User Impact**: Voice system fully restored - can now handle paragraph-length responses with audio as it did before the security overhaul
 
 ## Recent Updates (August 2025)
 
