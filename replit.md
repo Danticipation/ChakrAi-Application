@@ -101,11 +101,12 @@ The application is built with a React frontend (TypeScript, Tailwind CSS) and an
 
 **Solution Implemented**:
 - Restored original ElevenLabs configuration (eleven_monolingual_v1 model)
+- **KEY FIX**: Restored express.json limit from 10MB back to 50MB (was reduced during security overhaul)
 - Removed artificial size filtering that was blocking audio responses
 - Extended timeout to 30 seconds to accommodate normal audio processing
 - CORS configuration optimized for development environment
 
-**User Impact**: Voice system restored to original working state - all audio responses now included without artificial restrictions
+**User Impact**: Voice system restored to original working state - the 4-Phase Code Quality Overhaul had inadvertently reduced the body parser limit, blocking large audio responses
 
 ## Recent Updates (August 2025)
 

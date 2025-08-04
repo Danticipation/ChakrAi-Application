@@ -175,7 +175,7 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
       const sessionId = generateSessionId();
       
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout for audio responses
       
       const response = await fetch('/api/chat', {
         method: 'POST',

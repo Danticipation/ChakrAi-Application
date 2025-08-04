@@ -51,9 +51,9 @@ app.use(generalLimiter);
 // CORS configuration (secure)
 app.use(cors(corsConfig));
 
-// Body parsing with reasonable limits
-app.use(express.json({ limit: '10mb' })); // Reduced from 50mb for security
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+// Body parsing with limits suitable for audio responses
+app.use(express.json({ limit: '50mb' })); // Restored original limit for audio functionality
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // CRITICAL: Priority API endpoints MUST come before ANY other middleware to prevent Vite interception
 
