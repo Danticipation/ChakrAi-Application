@@ -4065,4 +4065,10 @@ router.get('/api/adaptive-learning/insights', async (req, res) => {
   }
 });
 
+// Import adaptive learning routes
+import adaptiveLearningRoutes from './routes/adaptiveLearningRoutes';
+
+// Register adaptive learning routes
+router.use('/api/adaptive-learning', adaptiveLearningRoutes);
+
 export default router;

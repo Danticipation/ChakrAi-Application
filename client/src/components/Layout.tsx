@@ -23,6 +23,7 @@ import AnalyticsDashboard from '@/components/AnalyticsDashboard';
 import WellnessRewards from '@/components/WellnessRewards';
 import CommunitySupport from '@/components/CommunitySupport';
 import AdaptiveLearning from '@/components/AdaptiveLearning';
+import AdaptiveLearningProgressTracker from '@/components/AdaptiveLearningProgressTracker';
 import AdaptiveTherapyPlan from '@/components/AdaptiveTherapyPlan';
 import AgentSystem from '@/components/AgentSystem';
 import VRTherapy from '@/components/VRTherapy';
@@ -332,6 +333,8 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
         return <MemoryDashboard />;
       case 'adaptive':
         return <AdaptiveLearning />;
+      case 'progress-tracker':
+        return <AdaptiveLearningProgressTracker />;
       case 'analytics':
         return <AnalyticsDashboard userId={currentUserId} onNavigate={setActiveSection} />;
       case 'health':
@@ -611,6 +614,7 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
                       { id: 'daily', label: 'Reflection' },
                       { id: 'memory', label: 'Insight Vault' },
                       { id: 'adaptive', label: 'Mind Mirror' },
+                      { id: 'progress-tracker', label: 'Progress Journey' },
                       { id: 'analytics', label: 'State of Self' },
                       { id: 'health', label: 'Somatic Mirror' }
                     ].map((tab) => (
@@ -872,6 +876,7 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
                         { id: 'daily', label: 'Reflection', icon: '🌅' },
                         { id: 'memory', label: 'Insight Vault', icon: '🧠' },
                         { id: 'adaptive', label: 'Mind Mirror', icon: '🪞' },
+                        { id: 'progress-tracker', label: 'Progress Journey', icon: '📈' },
                         { id: 'analytics', label: 'State of Self', icon: '📊' },
                         { id: 'health', label: 'Somatic Mirror', icon: '💓' }
                       ].map((item) => (

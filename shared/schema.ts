@@ -353,6 +353,71 @@ export const crisisDetectionLogs = pgTable("crisis_detection_logs", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Adaptive Learning Progress Tracker Tables
+export const learningMilestones = pgTable("learning_milestones", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  milestoneType: text("milestone_type").notNull(), // 'consistency', 'engagement', 'emotional_growth', 'self_reflection', 'communication'
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  category: text("category").notNull(), // 'daily_habits', 'emotional_wellness', 'communication', 'self_awareness'
+  targetValue: integer("target_value").notNull(),
+  currentValue: integer("current_value").default(0),
+  isCompleted: boolean("is_completed").default(false),
+  completedAt: timestamp("completed_at"),
+  celebrationShown: boolean("celebration_shown").default(false),
+  icon: text("icon").default("🎯"),
+  color: text("color").default("blue"),
+  priority: integer("priority").default(1), // 1 = highest, 5 = lowest
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const progressMetrics = pgTable("progress_metrics", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  metricType: text("metric_type").notNull(), // 'chat_sessions', 'journal_entries', 'mood_logs', 'streak_days', 'emotional_insights'
+  value: integer("value").notNull(),
+  date: timestamp("date").defaultNow(),
+  weeklyAverage: decimal("weekly_average", { precision: 5, scale: 2 }),
+  monthlyTotal: integer("monthly_total"),
+  trend: text("trend"), // 'increasing', 'stable', 'decreasing'
+  achievements: text("achievements").array(), // Achievement IDs unlocked
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const adaptiveLearningInsights = pgTable("adaptive_learning_insights", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  insightType: text("insight_type").notNull(), // 'behavioral_pattern', 'emotional_growth', 'communication_style', 'progress_trend'
+  title: text("title").notNull(),
+  content: text("content").notNull(),
+  dataPoints: jsonb("data_points"), // Supporting metrics and analysis
+  actionableRecommendations: text("actionable_recommendations").array(),
+  confidenceLevel: decimal("confidence_level", { precision: 3, scale: 2 }).notNull(),
+  importance: integer("importance").default(5), // 1-10 scale
+  isActive: boolean("is_active").default(true),
+  userViewed: boolean("user_viewed").default(false),
+  userFeedback: text("user_feedback"), // 'helpful', 'not_helpful', 'inaccurate'
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const wellnessJourneyEvents = pgTable("wellness_journey_events", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  eventType: text("event_type").notNull(), // 'milestone', 'breakthrough', 'challenge_overcome', 'pattern_recognized', 'goal_achieved'
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  emotionalContext: jsonb("emotional_context"), // Mood, intensity, triggers at the time
+  significance: integer("significance").default(5), // 1-10 scale of importance to user's journey
+  relatedMilestones: text("related_milestones").array(), // Milestone IDs
+  celebrationLevel: text("celebration_level").default("standard"), // 'minor', 'standard', 'major', 'breakthrough'
+  celebrationShown: boolean("celebration_shown").default(false),
+  userReflection: text("user_reflection"), // User's own thoughts on the event
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -461,6 +526,28 @@ export const insertCrisisDetectionLogSchema = createInsertSchema(crisisDetection
   createdAt: true,
 });
 
+export const insertLearningMilestoneSchema = createInsertSchema(learningMilestones).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertProgressMetricSchema = createInsertSchema(progressMetrics).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertAdaptiveLearningInsightSchema = createInsertSchema(adaptiveLearningInsights).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertWellnessJourneyEventSchema = createInsertSchema(wellnessJourneyEvents).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type Bot = typeof bots.$inferSelect;
@@ -483,6 +570,10 @@ export type EmotionalContext = typeof emotionalContexts.$inferSelect;
 export type PredictiveInsight = typeof predictiveInsights.$inferSelect;
 export type EmotionalResponseAdaptation = typeof emotionalResponseAdaptations.$inferSelect;
 export type CrisisDetectionLog = typeof crisisDetectionLogs.$inferSelect;
+export type LearningMilestone = typeof learningMilestones.$inferSelect;
+export type ProgressMetric = typeof progressMetrics.$inferSelect;
+export type AdaptiveLearningInsight = typeof adaptiveLearningInsights.$inferSelect;
+export type WellnessJourneyEvent = typeof wellnessJourneyEvents.$inferSelect;
 export type UserProfile = typeof userProfiles.$inferSelect;
 export type VoluntaryQuestion = typeof voluntaryQuestions.$inferSelect;
 
@@ -508,6 +599,10 @@ export type InsertEmotionalContext = z.infer<typeof insertEmotionalContextSchema
 export type InsertPredictiveInsight = z.infer<typeof insertPredictiveInsightSchema>;
 export type InsertEmotionalResponseAdaptation = z.infer<typeof insertEmotionalResponseAdaptationSchema>;
 export type InsertCrisisDetectionLog = z.infer<typeof insertCrisisDetectionLogSchema>;
+export type InsertLearningMilestone = z.infer<typeof insertLearningMilestoneSchema>;
+export type InsertProgressMetric = z.infer<typeof insertProgressMetricSchema>;
+export type InsertAdaptiveLearningInsight = z.infer<typeof insertAdaptiveLearningInsightSchema>;
+export type InsertWellnessJourneyEvent = z.infer<typeof insertWellnessJourneyEventSchema>;
 
 export const insertAuthTokenSchema = createInsertSchema(authTokens).omit({
   id: true,

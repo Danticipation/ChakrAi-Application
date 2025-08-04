@@ -4,6 +4,7 @@ import {
   journalEntries, journalAnalytics, moodEntries, therapeuticGoals, supportForums, forumPosts,
   userAchievements, wellnessStreaks, emotionalPatterns,
   moodForecasts, emotionalContexts, predictiveInsights, emotionalResponseAdaptations, crisisDetectionLogs,
+  learningMilestones, progressMetrics, adaptiveLearningInsights, wellnessJourneyEvents,
   monthlyWellnessReports, analyticsMetrics, progressTracking, riskAssessments, longitudinalTrends,
   userWellnessPoints, pointsTransactions, rewardsShop, userPurchases, achievements,
   dailyActivities, communityChallenges, userChallengeProgress, userLevels, userStreaks,
@@ -31,6 +32,10 @@ import {
   type PredictiveInsight, type InsertPredictiveInsight,
   type EmotionalResponseAdaptation, type InsertEmotionalResponseAdaptation,
   type CrisisDetectionLog, type InsertCrisisDetectionLog,
+  type LearningMilestone, type InsertLearningMilestone,
+  type ProgressMetric, type InsertProgressMetric,
+  type AdaptiveLearningInsight, type InsertAdaptiveLearningInsight,
+  type WellnessJourneyEvent, type InsertWellnessJourneyEvent,
   type MonthlyWellnessReport, type InsertMonthlyWellnessReport,
   type AnalyticsMetric, type InsertAnalyticsMetric,
   type ProgressTracking, type InsertProgressTracking,
@@ -318,6 +323,29 @@ export interface IStorage {
   updateAlarm(id: number, data: Partial<InsertAlarm>): Promise<Alarm>;
   deleteAlarm(id: number): Promise<void>;
   markAlarmNotificationSent(id: number): Promise<void>;
+
+  // Adaptive Learning Progress Tracker
+  createLearningMilestone(data: InsertLearningMilestone): Promise<LearningMilestone>;
+  getLearningMilestones(userId: number): Promise<LearningMilestone[]>;
+  updateLearningMilestone(id: number, data: Partial<InsertLearningMilestone>): Promise<LearningMilestone>;
+  markMilestoneCompleted(id: number): Promise<LearningMilestone>;
+  
+  createProgressMetric(data: InsertProgressMetric): Promise<ProgressMetric>;
+  getProgressMetrics(userId: number, timeframe?: string, metricType?: string): Promise<ProgressMetric[]>;
+  updateProgressMetric(id: number, data: Partial<InsertProgressMetric>): Promise<ProgressMetric>;
+  
+  createAdaptiveLearningInsight(data: InsertAdaptiveLearningInsight): Promise<AdaptiveLearningInsight>;
+  getAdaptiveLearningInsights(userId: number, active?: boolean): Promise<AdaptiveLearningInsight[]>;
+  markInsightViewed(id: number): Promise<AdaptiveLearningInsight>;
+  updateInsightFeedback(id: number, feedback: string): Promise<AdaptiveLearningInsight>;
+  
+  createWellnessJourneyEvent(data: InsertWellnessJourneyEvent): Promise<WellnessJourneyEvent>;
+  getWellnessJourneyEvents(userId: number): Promise<WellnessJourneyEvent[]>;
+  markCelebrationShown(id: number): Promise<WellnessJourneyEvent>;
+  
+  getProgressOverview(userId: number): Promise<any>;
+  calculateLearningProgress(userId: number): Promise<void>;
+  generateProgressInsights(userId: number): Promise<void>;
 }
 
 export class DbStorage implements IStorage {
@@ -2200,6 +2228,293 @@ export class DbStorage implements IStorage {
       .update(alarms)
       .set({ notificationSent: true, updatedAt: new Date() })
       .where(eq(alarms.id, id));
+  }
+
+  // Adaptive Learning Progress Tracker Implementation
+  async createLearningMilestone(data: InsertLearningMilestone): Promise<LearningMilestone> {
+    const [milestone] = await this.db.insert(learningMilestones).values(data).returning();
+    return milestone;
+  }
+
+  async getLearningMilestones(userId: number): Promise<LearningMilestone[]> {
+    return await this.db.select().from(learningMilestones)
+      .where(eq(learningMilestones.userId, userId))
+      .orderBy(desc(learningMilestones.priority), desc(learningMilestones.createdAt));
+  }
+
+  async updateLearningMilestone(id: number, data: Partial<InsertLearningMilestone>): Promise<LearningMilestone> {
+    const [milestone] = await this.db.update(learningMilestones)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(learningMilestones.id, id))
+      .returning();
+    return milestone;
+  }
+
+  async markMilestoneCompleted(id: number): Promise<LearningMilestone> {
+    const [milestone] = await this.db.update(learningMilestones)
+      .set({ 
+        isCompleted: true, 
+        completedAt: new Date(),
+        updatedAt: new Date()
+      })
+      .where(eq(learningMilestones.id, id))
+      .returning();
+    return milestone;
+  }
+
+  async createProgressMetric(data: InsertProgressMetric): Promise<ProgressMetric> {
+    const [metric] = await this.db.insert(progressMetrics).values(data).returning();
+    return metric;
+  }
+
+  async getProgressMetrics(userId: number, timeframe?: string, metricType?: string): Promise<ProgressMetric[]> {
+    let query = this.db.select().from(progressMetrics)
+      .where(eq(progressMetrics.userId, userId));
+
+    if (metricType) {
+      query = query.where(eq(progressMetrics.metricType, metricType));
+    }
+
+    // Apply timeframe filtering
+    if (timeframe) {
+      const now = new Date();
+      let dateFilter: Date;
+      
+      switch (timeframe) {
+        case 'week':
+          dateFilter = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+          break;
+        case 'month':
+          dateFilter = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+          break;
+        case 'quarter':
+          dateFilter = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+          break;
+        default:
+          dateFilter = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      }
+      
+      query = query.where(sql`${progressMetrics.date} >= ${dateFilter}`);
+    }
+
+    return await query.orderBy(desc(progressMetrics.date));
+  }
+
+  async updateProgressMetric(id: number, data: Partial<InsertProgressMetric>): Promise<ProgressMetric> {
+    const [metric] = await this.db.update(progressMetrics)
+      .set(data)
+      .where(eq(progressMetrics.id, id))
+      .returning();
+    return metric;
+  }
+
+  async createAdaptiveLearningInsight(data: InsertAdaptiveLearningInsight): Promise<AdaptiveLearningInsight> {
+    const [insight] = await this.db.insert(adaptiveLearningInsights).values(data).returning();
+    return insight;
+  }
+
+  async getAdaptiveLearningInsights(userId: number, active?: boolean): Promise<AdaptiveLearningInsight[]> {
+    let query = this.db.select().from(adaptiveLearningInsights)
+      .where(eq(adaptiveLearningInsights.userId, userId));
+
+    if (active !== undefined) {
+      query = query.where(eq(adaptiveLearningInsights.isActive, active));
+    }
+
+    return await query.orderBy(desc(adaptiveLearningInsights.importance), desc(adaptiveLearningInsights.createdAt));
+  }
+
+  async markInsightViewed(id: number): Promise<AdaptiveLearningInsight> {
+    const [insight] = await this.db.update(adaptiveLearningInsights)
+      .set({ 
+        userViewed: true,
+        updatedAt: new Date()
+      })
+      .where(eq(adaptiveLearningInsights.id, id))
+      .returning();
+    return insight;
+  }
+
+  async updateInsightFeedback(id: number, feedback: string): Promise<AdaptiveLearningInsight> {
+    const [insight] = await this.db.update(adaptiveLearningInsights)
+      .set({ 
+        userFeedback: feedback,
+        updatedAt: new Date()
+      })
+      .where(eq(adaptiveLearningInsights.id, id))
+      .returning();
+    return insight;
+  }
+
+  async createWellnessJourneyEvent(data: InsertWellnessJourneyEvent): Promise<WellnessJourneyEvent> {
+    const [event] = await this.db.insert(wellnessJourneyEvents).values(data).returning();
+    return event;
+  }
+
+  async getWellnessJourneyEvents(userId: number): Promise<WellnessJourneyEvent[]> {
+    return await this.db.select().from(wellnessJourneyEvents)
+      .where(eq(wellnessJourneyEvents.userId, userId))
+      .orderBy(desc(wellnessJourneyEvents.createdAt));
+  }
+
+  async markCelebrationShown(id: number): Promise<WellnessJourneyEvent> {
+    const [event] = await this.db.update(wellnessJourneyEvents)
+      .set({ celebrationShown: true })
+      .where(eq(wellnessJourneyEvents.id, id))
+      .returning();
+    return event;
+  }
+
+  async getProgressOverview(userId: number): Promise<any> {
+    // Get milestone counts
+    const milestones = await this.getLearningMilestones(userId);
+    const completedMilestones = milestones.filter(m => m.isCompleted).length;
+    const activeMilestones = milestones.filter(m => !m.isCompleted).length;
+
+    // Get current streak data
+    const streaks = await this.getUserStreaks(userId);
+    const currentStreak = streaks.find(s => s.streakType === 'daily_active')?.currentStreak || 0;
+    const longestStreak = streaks.reduce((max, s) => Math.max(max, s.longestStreak || 0), 0);
+
+    // Get wellness points
+    const pointsData = await this.getUserWellnessPoints(userId);
+    const totalPoints = pointsData?.totalPoints || 0;
+    const currentLevel = pointsData?.currentLevel || 1;
+    const pointsToNextLevel = pointsData?.pointsToNextLevel || 100;
+    const nextLevelProgress = Math.max(0, (100 - pointsToNextLevel) / 100 * 100);
+
+    // Calculate monthly progress (simplified - could be more sophisticated)
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const monthlyMetrics = await this.db.select().from(progressMetrics)
+      .where(and(
+        eq(progressMetrics.userId, userId),
+        sql`${progressMetrics.date} >= ${monthStart}`
+      ));
+
+    const monthlyProgress = monthlyMetrics.length > 0 ? 
+      Math.round(monthlyMetrics.reduce((acc, m) => acc + m.value, 0) / monthlyMetrics.length * 10) : 0;
+
+    // Calculate weekly progress
+    const weekStart = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const weeklyMetrics = await this.db.select().from(progressMetrics)
+      .where(and(
+        eq(progressMetrics.userId, userId),
+        sql`${progressMetrics.date} >= ${weekStart}`
+      ));
+
+    const weeklyProgress = weeklyMetrics.length > 0 ?
+      Math.round(weeklyMetrics.reduce((acc, m) => acc + m.value, 0) / weeklyMetrics.length * 10) : 0;
+
+    return {
+      totalMilestones: milestones.length,
+      completedMilestones,
+      activeMilestones,
+      weeklyProgress,
+      monthlyProgress,
+      currentStreak,
+      longestStreak,
+      totalPoints,
+      currentLevel,
+      nextLevelProgress
+    };
+  }
+
+  async calculateLearningProgress(userId: number): Promise<void> {
+    // This method would calculate and update various progress metrics
+    // For now, we'll create basic metrics based on user activity
+    
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    // Count today's activities
+    const chatCount = await this.db.select().from(messages)
+      .where(and(
+        eq(messages.userId, userId),
+        sql`DATE(${messages.timestamp}) = DATE(${today})`
+      ));
+
+    const journalCount = await this.db.select().from(journalEntries)
+      .where(and(
+        eq(journalEntries.userId, userId),
+        sql`DATE(${journalEntries.createdAt}) = DATE(${today})`
+      ));
+
+    const moodCount = await this.db.select().from(moodEntries)
+      .where(and(
+        eq(moodEntries.userId, userId),
+        sql`DATE(${moodEntries.createdAt}) = DATE(${today})`
+      ));
+
+    // Create or update progress metrics
+    const metrics = [
+      { metricType: 'chat_sessions', value: chatCount.length },
+      { metricType: 'journal_entries', value: journalCount.length },
+      { metricType: 'mood_logs', value: moodCount.length }
+    ];
+
+    for (const metric of metrics) {
+      await this.createProgressMetric({
+        userId,
+        metricType: metric.metricType,
+        value: metric.value,
+        date: now
+      });
+    }
+  }
+
+  async generateProgressInsights(userId: number): Promise<void> {
+    // This method would use AI to generate insights based on user progress
+    // For now, we'll create basic insights based on patterns
+    
+    const metrics = await this.getProgressMetrics(userId, 'month');
+    const milestones = await this.getLearningMilestones(userId);
+    
+    // Generate insights based on completion patterns
+    const completedMilestones = milestones.filter(m => m.isCompleted);
+    const recentCompletions = completedMilestones.filter(m => {
+      if (!m.completedAt) return false;
+      const completedDate = new Date(m.completedAt);
+      const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+      return completedDate >= weekAgo;
+    });
+
+    if (recentCompletions.length > 0) {
+      await this.createAdaptiveLearningInsight({
+        userId,
+        insightType: 'progress_trend',
+        title: 'Great Progress This Week!',
+        content: `You've completed ${recentCompletions.length} milestone${recentCompletions.length > 1 ? 's' : ''} this week. This shows excellent commitment to your wellness journey.`,
+        actionableRecommendations: [
+          'Continue this momentum by setting new weekly goals',
+          'Reflect on what strategies helped you succeed',
+          'Consider sharing your progress in the community'
+        ],
+        confidenceLevel: 0.85,
+        importance: 7
+      });
+    }
+
+    // Analyze engagement patterns
+    const chatMetrics = metrics.filter(m => m.metricType === 'chat_sessions');
+    if (chatMetrics.length >= 7) {
+      const avgChats = chatMetrics.reduce((sum, m) => sum + m.value, 0) / chatMetrics.length;
+      if (avgChats >= 3) {
+        await this.createAdaptiveLearningInsight({
+          userId,
+          insightType: 'behavioral_pattern',
+          title: 'Strong Engagement Pattern',
+          content: `You're averaging ${avgChats.toFixed(1)} chat sessions per day, which indicates high engagement with your wellness support system.`,
+          actionableRecommendations: [
+            'Consider scheduling dedicated times for deeper conversations',
+            'Explore voice interactions for a more personal experience',
+            'Try setting specific topics for each session'
+          ],
+          confidenceLevel: 0.92,
+          importance: 6
+        });
+      }
+    }
   }
 }
 

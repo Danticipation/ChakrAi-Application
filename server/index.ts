@@ -34,19 +34,20 @@ import {
   cacheOptimizer 
 } from './middleware/performanceMiddleware.js';
 
-app.use(requestTimer);
-app.use(memoryMonitor);
-app.use(compressionOptimizer);
-app.use(dbConnectionMonitor);
-app.use(cacheOptimizer);
+// Temporarily disable performance middleware causing slow loading issues
+// app.use(requestTimer);
+// app.use(memoryMonitor);
+// app.use(compressionOptimizer);
+// app.use(dbConnectionMonitor);
+// app.use(cacheOptimizer);
 
 // Security middleware (applied early)
 app.use(enforceHTTPS);
 app.use(helmetConfig);
 app.use(securityLogger);
 
-// Rate limiting
-app.use(generalLimiter);
+// Rate limiting - temporarily disabled to fix loading issues
+// app.use(generalLimiter);
 
 // CORS configuration (secure)
 app.use(cors(corsConfig));
