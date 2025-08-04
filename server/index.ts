@@ -1210,51 +1210,39 @@ DO NOT immediately jump into "support" mode or therapeutic language unless someo
       try {
         console.log(`Making ElevenLabs request for voice: ${selectedVoice} (ID: ${voiceId})`);
         
-        // Generate audio for all responses but filter by final size
-        console.log(`AI response length: ${aiResponse.length} characters`);
-        if (true) {
-          const elevenLabsResponse = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
-            method: 'POST',
-            headers: {
-              'Accept': 'audio/mpeg',
-              'Content-Type': 'application/json',
-              'xi-api-key': process.env.ELEVENLABS_API_KEY
-            },
-            body: JSON.stringify({
-              text: aiResponse,
-              model_id: 'eleven_turbo_v2_5',
-              voice_settings: {
-                stability: 0.5,
-                similarity_boost: 0.7,
-                style: 0.1,
-                use_speaker_boost: false
-              },
-              optimize_streaming_latency: 4
-            })
-          });
-          
-          console.log('ElevenLabs response status:', elevenLabsResponse.status);
-          
-          if (elevenLabsResponse.ok) {
-            const audioBuffer = await elevenLabsResponse.arrayBuffer();
-            const base64Audio = Buffer.from(audioBuffer).toString('base64');
-            
-            console.log(`Audio buffer size: ${audioBuffer.byteLength}`);
-            console.log(`Base64 audio length: ${base64Audio.length}`);
-            
-            // Include audio up to 250KB base64 (test with higher limit)
-            if (base64Audio.length < 250000) {
-              audioUrl = base64Audio;
-              console.log('✅ Audio included in response');
-            } else {
-              console.log('⚠️ Audio too large, skipping to prevent fetch timeout');
+        const elevenLabsResponse = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+          method: 'POST',
+          headers: {
+            'Accept': 'audio/mpeg',
+            'Content-Type': 'application/json',
+            'xi-api-key': process.env.ELEVENLABS_API_KEY
+          },
+          body: JSON.stringify({
+            text: aiResponse,
+            model_id: 'eleven_monolingual_v1',
+            voice_settings: {
+              stability: 0.6,
+              similarity_boost: 0.8,
+              style: 0.2,
+              use_speaker_boost: true
             }
-          } else {
-            const errorText = await elevenLabsResponse.text();
-            console.error('ElevenLabs API error:', elevenLabsResponse.status, errorText);
-          }
+          })
+        });
+        
+        console.log('ElevenLabs response status:', elevenLabsResponse.status);
+        
+        if (elevenLabsResponse.ok) {
+          const audioBuffer = await elevenLabsResponse.arrayBuffer();
+          const base64Audio = Buffer.from(audioBuffer).toString('base64');
+          
+          console.log(`Audio buffer size: ${audioBuffer.byteLength}`);
+          console.log(`Base64 audio length: ${base64Audio.length}`);
+          
+          audioUrl = base64Audio;
+          console.log('✅ Audio included in response');
         } else {
-          console.log('⚠️ Response too long for audio generation, skipping to prevent large payload');
+          const errorText = await elevenLabsResponse.text();
+          console.error('ElevenLabs API error:', elevenLabsResponse.status, errorText);
         }
       } catch (elevenLabsError) {
         console.error('ElevenLabs request failed:', elevenLabsError);
