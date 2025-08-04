@@ -1262,7 +1262,6 @@ DO NOT immediately jump into "support" mode or therapeutic language unless someo
       timestamp: new Date().toISOString()
     };
     
-    // Log response size for debugging
     const responseSize = JSON.stringify(responseData).length;
     console.log(`Response size: ${responseSize} bytes`);
     
