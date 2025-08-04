@@ -1186,12 +1186,80 @@ DO NOT immediately jump into "support" mode or therapeutic language unless someo
       console.error('Error storing chat messages:', error);
     }
     
-    // Temporarily disable audio to test chat functionality
-    console.log('Voice parameter received:', voice, '(audio temporarily disabled for testing)');
-    let audioUrl = null;
+    // Generate ElevenLabs voice synthesis with optimized handling
+    console.log('Voice parameter received:', voice);
+    console.log('ELEVENLABS_API_KEY present:', !!process.env.ELEVENLABS_API_KEY);
     
-    // Define selectedVoice for response
+    let audioUrl = null;
+    const voiceMap: Record<string, string> = {
+      'james': 'EkK5I93UQWFDigLMpZcX',
+      'brian': 'nPczCjzI2devNBz1zQrb', 
+      'alexandra': 'kdmDKE6EkgrWrrykO9Qt',
+      'carla': 'l32B8XDoylOsZKiSdfhE',
+      'hope': 'iCrDUkL56s3C8sCRl7wb',
+      'charlotte': 'XB0fDUnXU5powFXDhCwa',
+      'bronson': 'Yko7PKHZNXotIFUBG7I9',
+      'marcus': 'y3kKRaK2dnn3OgKDBckk'
+    };
+    
     const selectedVoice = voice || 'alexandra';
+    const voiceId = voiceMap[selectedVoice] || voiceMap['alexandra'];
+    
+    if (process.env.ELEVENLABS_API_KEY) {
+      console.log('ElevenLabs API key found, proceeding with voice synthesis...');
+      try {
+        console.log(`Making ElevenLabs request for voice: ${selectedVoice} (ID: ${voiceId})`);
+        
+        // Only generate audio for shorter responses to avoid large payloads
+        if (aiResponse.length <= 500) {
+          const elevenLabsResponse = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+            method: 'POST',
+            headers: {
+              'Accept': 'audio/mpeg',
+              'Content-Type': 'application/json',
+              'xi-api-key': process.env.ELEVENLABS_API_KEY
+            },
+            body: JSON.stringify({
+              text: aiResponse,
+              model_id: 'eleven_monolingual_v1',
+              voice_settings: {
+                stability: 0.6,
+                similarity_boost: 0.8,
+                style: 0.2,
+                use_speaker_boost: true
+              }
+            })
+          });
+          
+          console.log('ElevenLabs response status:', elevenLabsResponse.status);
+          
+          if (elevenLabsResponse.ok) {
+            const audioBuffer = await elevenLabsResponse.arrayBuffer();
+            const base64Audio = Buffer.from(audioBuffer).toString('base64');
+            
+            console.log(`Audio buffer size: ${audioBuffer.byteLength}`);
+            console.log(`Base64 audio length: ${base64Audio.length}`);
+            
+            // Only include audio if it's reasonably sized (under 150KB base64)
+            if (base64Audio.length < 150000) {
+              audioUrl = base64Audio;
+              console.log('✅ Audio included in response');
+            } else {
+              console.log('⚠️ Audio too large, skipping to prevent fetch timeout');
+            }
+          } else {
+            const errorText = await elevenLabsResponse.text();
+            console.error('ElevenLabs API error:', elevenLabsResponse.status, errorText);
+          }
+        } else {
+          console.log('⚠️ Response too long for audio generation, skipping to prevent large payload');
+        }
+      } catch (elevenLabsError) {
+        console.error('ElevenLabs request failed:', elevenLabsError);
+      }
+    } else {
+      console.error('ELEVENLABS_API_KEY not configured');
+    }
     
     console.log('Final response - audioUrl length:', audioUrl ? audioUrl.length : 'null');
     
