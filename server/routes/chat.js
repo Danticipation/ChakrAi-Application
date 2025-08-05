@@ -236,14 +236,20 @@ Respond naturally and therapeutically to: "${message}"`;
       console.log('Background fact extraction failed:', error);
     });
 
-    // Update conversation continuity tracking
-    await conversationContinuity.trackConversation(userId, currentSession.id, {
-      userMessage: message,
-      botResponse: aiResponse,
-      emotionalTone: emotionalAnalysis.currentState,
-      topics: [message.split(' ').slice(0, 3).join(' ')], // Simple topic extraction
-      crisisLevel: crisisData.riskLevel
-    });
+    // Update conversation continuity tracking (with proper error handling)
+    try {
+      if (conversationContinuity && typeof conversationContinuity.trackConversation === 'function') {
+        await conversationContinuity.trackConversation(userId, currentSession.id, {
+          userMessage: message,
+          botResponse: aiResponse,
+          emotionalTone: emotionalAnalysis.currentState,
+          topics: [message.split(' ').slice(0, 3).join(' ')], // Simple topic extraction
+          crisisLevel: crisisData.riskLevel
+        });
+      }
+    } catch (error) {
+      console.log('Conversation continuity tracking failed (non-critical):', error.message);
+    }
 
     res.json({
       message: aiResponse,

@@ -536,6 +536,18 @@ export class ModularStorage implements IStorage {
     return [];
   }
 
+  async createConversationSummary(data: any): Promise<any> {
+    return { id: Date.now(), ...data };
+  }
+
+  async getUnaddressedContinuity(userId: number): Promise<any[]> {
+    return [];
+  }
+
+  async getAllUserMemoryConnections(userId: number): Promise<any[]> {
+    return [];
+  }
+
   async getConversationSessionHistory(sessionId: number, limit?: number): Promise<any[]> {
     // Return empty array for now
     return [];

@@ -302,6 +302,20 @@ Focus on therapeutic continuity - what would be important for the AI to remember
     }
   }
 
+  /**
+   * Track conversation for continuity analysis
+   */
+  async trackConversation(userId, sessionId, conversationData = {}) {
+    try {
+      // This is a stub implementation for now
+      console.log(`🔍 Tracking conversation for user ${userId}, session ${sessionId}`);
+      return { success: true };
+    } catch (error) {
+      console.error('Error tracking conversation:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
   // Helper methods
   formatTimeAgo(date) {
     const now = new Date();
