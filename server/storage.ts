@@ -2237,9 +2237,110 @@ export class DbStorage implements IStorage {
   }
 
   async getLearningMilestones(userId: number): Promise<LearningMilestone[]> {
-    return await this.db.select().from(learningMilestones)
+    const milestones = await this.db.select().from(learningMilestones)
       .where(eq(learningMilestones.userId, userId))
       .orderBy(desc(learningMilestones.priority), desc(learningMilestones.createdAt));
+    
+    // Update milestone progress based on actual user activities
+    for (const milestone of milestones) {
+      const updatedProgress = await this.calculateMilestoneProgress(userId, milestone);
+      if (updatedProgress.currentValue !== milestone.currentValue || updatedProgress.isCompleted !== milestone.isCompleted) {
+        await this.db.update(learningMilestones)
+          .set({
+            currentValue: updatedProgress.currentValue,
+            isCompleted: updatedProgress.isCompleted,
+            completedAt: updatedProgress.isCompleted && !milestone.completedAt ? new Date() : milestone.completedAt,
+            updatedAt: new Date()
+          })
+          .where(eq(learningMilestones.id, milestone.id));
+        
+        // Update the milestone object with new values
+        milestone.currentValue = updatedProgress.currentValue;
+        milestone.isCompleted = updatedProgress.isCompleted;
+        if (updatedProgress.isCompleted && !milestone.completedAt) {
+          milestone.completedAt = new Date();
+        }
+      }
+    }
+    
+    return milestones;
+  }
+
+  // Calculate milestone progress based on actual user activities
+  async calculateMilestoneProgress(userId: number, milestone: LearningMilestone): Promise<{ currentValue: number; isCompleted: boolean }> {
+    const now = new Date();
+    const last30Days = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    
+    let currentValue = 0;
+    
+    switch (milestone.milestoneType) {
+      case 'consistency': {
+        // Count consecutive active days (chat sessions or journal entries)
+        const streak = await this.calculateCurrentActivityStreak(userId);
+        currentValue = streak;
+        break;
+      }
+      
+      case 'emotional_intelligence': {
+        // Count unique emotion words used in chat sessions (simulate by counting chat sessions)
+        const chatSessions = await this.db.select().from(progressMetrics)
+          .where(and(
+            eq(progressMetrics.userId, userId),
+            eq(progressMetrics.metricType, 'chat_sessions'),
+            sql`${progressMetrics.date} >= ${last30Days}`
+          ));
+        currentValue = Math.min(chatSessions.length * 2, milestone.targetValue); // 2 words per session
+        break;
+      }
+      
+      case 'mindfulness': {
+        // Count guided sessions (simulate by counting mood logs)
+        const moodLogs = await this.db.select().from(progressMetrics)
+          .where(and(
+            eq(progressMetrics.userId, userId),
+            eq(progressMetrics.metricType, 'mood_logs'),
+            sql`${progressMetrics.date} >= ${last30Days}`
+          ));
+        currentValue = moodLogs.length;
+        break;
+      }
+      
+      case 'self_care': {
+        // Count self-care sessions (simulate by counting journal entries)
+        const journalEntries = await this.db.select().from(progressMetrics)
+          .where(and(
+            eq(progressMetrics.userId, userId),
+            eq(progressMetrics.metricType, 'journal_entries'),
+            sql`${progressMetrics.date} >= ${last30Days}`
+          ));
+        currentValue = journalEntries.length;
+        break;
+      }
+      
+      case 'coping_skills': {
+        // Count coping strategy uses (simulate by counting combined activities)
+        const activities = await this.db.select().from(progressMetrics)
+          .where(and(
+            eq(progressMetrics.userId, userId),
+            sql`${progressMetrics.date} >= ${last30Days}`
+          ));
+        currentValue = Math.min(activities.length, milestone.targetValue);
+        break;
+      }
+      
+      default: {
+        // Fallback: count any activities
+        const activities = await this.db.select().from(progressMetrics)
+          .where(and(
+            eq(progressMetrics.userId, userId),
+            sql`${progressMetrics.date} >= ${last30Days}`
+          ));
+        currentValue = Math.min(activities.length, milestone.targetValue);
+      }
+    }
+    
+    const isCompleted = currentValue >= milestone.targetValue;
+    return { currentValue, isCompleted };
   }
 
   async updateLearningMilestone(id: number, data: Partial<InsertLearningMilestone>): Promise<LearningMilestone> {
