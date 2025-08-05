@@ -5,7 +5,7 @@ export class WebAudioRecorder {
   private audioContext: AudioContext | null = null;
   private mediaStream: MediaStream | null = null;
   private sourceNode: MediaStreamAudioSourceNode | null = null;
-  private processorNode: ScriptProcessorNode | null = null;
+  private workletNode: AudioWorkletNode | null = null;
   private recording = false;
   private audioData: Float32Array[] = [];
   private sampleRate = 44100;
@@ -31,28 +31,52 @@ export class WebAudioRecorder {
       // Create source node from microphone
       this.sourceNode = this.audioContext.createMediaStreamSource(this.mediaStream);
 
-      // Create processor node to capture audio data
-      this.processorNode = this.audioContext.createScriptProcessor(4096, 1, 1);
-      
-      this.audioData = [];
-      this.recording = true;
-
-      // Capture audio data
-      this.processorNode.onaudioprocess = (event) => {
-        if (!this.recording) return;
+      // Use modern AudioWorkletNode instead of deprecated ScriptProcessorNode
+      try {
+        // Try to load audio worklet processor
+        await this.audioContext.audioWorklet.addModule('/audio-processor.js');
+        this.workletNode = new AudioWorkletNode(this.audioContext, 'audio-processor');
         
-        const inputBuffer = event.inputBuffer;
-        const inputData = inputBuffer.getChannelData(0);
-        
-        // Copy the data
-        const audioChunk = new Float32Array(inputData.length);
-        audioChunk.set(inputData);
-        this.audioData.push(audioChunk);
-      };
+        this.audioData = [];
+        this.recording = true;
 
-      // Connect the nodes
-      this.sourceNode.connect(this.processorNode);
-      this.processorNode.connect(this.audioContext.destination);
+        // Listen for audio data from worklet
+        this.workletNode.port.onmessage = (event) => {
+          if (!this.recording) return;
+          const audioChunk = new Float32Array(event.data);
+          this.audioData.push(audioChunk);
+        };
+
+        // Connect the nodes
+        this.sourceNode.connect(this.workletNode);
+        
+      } catch (workletError) {
+        console.warn('AudioWorklet not supported, falling back to deprecated ScriptProcessorNode:', workletError);
+        
+        // Fallback to ScriptProcessorNode for older browsers
+        const processorNode = this.audioContext.createScriptProcessor(4096, 1, 1);
+        
+        this.audioData = [];
+        this.recording = true;
+
+        // Capture audio data
+        processorNode.onaudioprocess = (event) => {
+          if (!this.recording) return;
+          
+          const inputBuffer = event.inputBuffer;
+          const inputData = inputBuffer.getChannelData(0);
+          
+          // Copy the data
+          const audioChunk = new Float32Array(inputData.length);
+          audioChunk.set(inputData);
+          this.audioData.push(audioChunk);
+        };
+
+        // Connect the nodes
+        this.sourceNode.connect(processorNode);
+        processorNode.connect(this.audioContext.destination);
+        this.workletNode = processorNode as any; // Store for cleanup
+      }
 
       console.log('🎵 WebAudioRecorder started successfully');
       
@@ -65,14 +89,18 @@ export class WebAudioRecorder {
   stopRecording(): Blob {
     this.recording = false;
 
-    if (this.processorNode) {
-      this.processorNode.disconnect();
-      this.processorNode = null;
+    // Disconnect and clean up
+    if (this.sourceNode && this.workletNode) {
+      this.sourceNode.disconnect();
+      this.workletNode.disconnect();
     }
 
     if (this.sourceNode) {
-      this.sourceNode.disconnect();
       this.sourceNode = null;
+    }
+
+    if (this.workletNode) {
+      this.workletNode = null;
     }
 
     if (this.mediaStream) {

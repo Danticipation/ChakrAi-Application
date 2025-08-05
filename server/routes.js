@@ -115,8 +115,8 @@ router.post('/chat', async (req, res) => {
     console.log('Making OpenAI API call with semantic memory...');
     
     // Get recent conversation history for context
-    const recentMessages = await storage.getUserMessages(userId, 10); // Get last 10 messages
-    console.log(`Fetching messages for userId: ${userId} with limit: 10`);
+    const recentMessages = await storage.getUserMessages(userId, 20); // Get last 20 messages for better context
+    console.log(`Fetching messages for userId: ${userId} with limit: 20`);
     console.log(`Found ${recentMessages.length} messages for user ${userId}`);
     
     // Get semantic context for intelligent recall
@@ -181,6 +181,12 @@ ${contextualReferences.references.map(ref =>
 
 ${personalityContext}${semanticMemoryContext}${contextualReferenceText}
 
+CONVERSATION CONTINUITY (CRITICAL FOR THERAPEUTIC TRUST):
+- You are having an ongoing conversation with this user - maintain context from previous messages in this session
+- Reference what was just discussed before when the user asks follow-up questions
+- If user mentions "we were just talking about X" or "what type of pet was it?" - refer to the immediate conversation history
+- Never respond as if you don't remember what you just discussed in the previous few messages
+
 SEMANTIC MEMORY INSTRUCTIONS:
 - Use the semantic memory context to reference past conversations naturally
 - Make contextual connections like "Last week, you mentioned feeling overwhelmed at work — has anything improved since then?"
@@ -193,6 +199,9 @@ PERSONALITY MIRRORING INSTRUCTIONS:
 - Reflect their identity, values, and interests back to them
 - Use their preferred language patterns and terminology
 - Be supportive but maintain their authentic voice
+
+RECENT CONVERSATION CONTEXT:
+The last few messages in this conversation are included in your context. Pay close attention to what was just discussed and maintain conversational flow.
 
 Current conversation mode: ${personalityMode}
 Crisis level detected: ${crisisData.riskLevel}
