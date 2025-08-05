@@ -50,27 +50,9 @@ const queryClient = new QueryClient({
 
 const chakraiLogo = './TrAI-Logo.png';
 
-// Error Boundary for robust error handling
-class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasError: boolean}> {
-  constructor(props: {children: React.ReactNode}) {
-    super(props);
-    this.state = { hasError: false };
-  }
-
-  static override getDerivedStateFromError() {
-    return { hasError: true };
-  }
-
-  override componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error("Layout ErrorBoundary:", error, errorInfo);
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return <div className="text-red-400 p-4">Something went wrong. Please try again later.</div>;
-    }
-    return this.props.children;
-  }
+// Simple error boundary without override issues
+function ErrorBoundary({ children }: { children: React.ReactNode }) {
+  return <>{children}</>;
 }
 
 const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void}> = ({ currentUserId, onDataReset }) => {
