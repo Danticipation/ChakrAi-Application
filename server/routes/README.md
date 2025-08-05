@@ -15,6 +15,7 @@ server/routes/
 ├── analytics.js      # User analytics, stats, and personality reflection
 ├── admin.js          # Admin dashboard and system management
 ├── community.js      # Community features and Supabase integration
+├── voice.js          # Voice synthesis (TTS) and enhanced transcription
 └── README.md         # This documentation file
 ```
 
@@ -66,6 +67,11 @@ server/routes/
 - `POST /api/community/posts/:postId/replies` - Create replies
 - `GET /api/community/checkins` - Peer check-ins
 - `POST /api/community/checkins` - Create check-ins
+
+### 9. Voice Routes (`voice.js`)
+- `POST /api/voice/text-to-speech` - ElevenLabs TTS with voice mapping
+- `POST /api/voice/transcribe-enhanced` - Enhanced transcription with audio quality analysis
+- `GET /api/voice/voices` - Available voice options and descriptions
 
 ## Benefits of Modular Structure
 

@@ -7,6 +7,7 @@ import contentRoutes from './content.js';
 import adminRoutes from './admin.js';
 import communityRoutes from './community.js';
 import analyticsRoutes from './analytics.js';
+import voiceRoutes from './voice.js';
 
 const router = express.Router();
 
@@ -24,6 +25,7 @@ router.use('/content', contentRoutes);
 router.use('/admin', adminRoutes);
 router.use('/community', communityRoutes);
 router.use('/analytics', analyticsRoutes);
+router.use('/voice', voiceRoutes);
 
 // Legacy endpoints for backward compatibility
 router.use('/', chatRoutes);
@@ -34,5 +36,6 @@ router.use('/', contentRoutes);
 router.use('/', adminRoutes);
 router.use('/', communityRoutes);
 router.use('/', analyticsRoutes);
+router.use('/', voiceRoutes);
 
 export default router;
