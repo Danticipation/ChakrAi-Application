@@ -5,7 +5,7 @@ import {
   Star, Award, ChevronRight, RefreshCw, Sparkles,
   BarChart3, LineChart, Zap, CheckCircle, Clock,
   ArrowUp, ArrowDown, Minus, User, MessageCircle,
-  BookOpen, Activity, Smile, ArrowRight
+  BookOpen, Activity, Smile, ArrowRight, ExternalLink
 } from 'lucide-react';
 import { format, subDays, startOfWeek, endOfWeek, isWithinInterval } from 'date-fns';
 
@@ -91,6 +91,80 @@ const AdaptiveLearningProgressTracker: React.FC = () => {
   const [selectedTimeframe, setSelectedTimeframe] = useState<'week' | 'month' | 'quarter'>('month');
   const [celebrationModal, setCelebrationModal] = useState<WellnessJourneyEvent | null>(null);
   const queryClient = useQueryClient();
+
+  // Navigation mapping for milestones
+  const getMilestoneNavigation = (milestoneType: string, category: string) => {
+    const navigationMap: Record<string, { path: string; label: string; description: string }> = {
+      // Consistency milestones - Daily activities
+      'consistency': {
+        path: '/core-companion',
+        label: 'Start Chat Session',
+        description: 'Chat with your AI companion or write in the journal to build consistency'
+      },
+      // Emotional intelligence milestones
+      'emotional_intelligence': {
+        path: '/core-companion',
+        label: 'Chat to Learn Words',
+        description: 'Have conversations with your AI companion to learn new emotional vocabulary'
+      },
+      // Mindfulness milestones
+      'mindfulness': {
+        path: '/guided-support',
+        label: 'Try Mindfulness',
+        description: 'Access guided mindfulness sessions and meditation exercises'
+      },
+      // Self-care milestones
+      'self_care': {
+        path: '/guided-support',
+        label: 'Practice Self-Care',
+        description: 'Learn self-compassion techniques and wellness practices'
+      },
+      // Coping skills milestones
+      'coping_skills': {
+        path: '/guided-support',
+        label: 'Build Coping Skills',
+        description: 'Develop personalized stress management and coping strategies'
+      },
+      // Daily habits fallback
+      'daily_habits': {
+        path: '/core-companion',
+        label: 'Start Daily Practice',
+        description: 'Begin your daily wellness routine with chat or journaling'
+      },
+      // Emotional wellness fallback
+      'emotional_wellness': {
+        path: '/mirrors-of-you',
+        label: 'Track Your Mood',
+        description: 'Use mood tracking and reflection tools to build emotional awareness'
+      },
+      // Communication fallback
+      'communication': {
+        path: '/core-companion',
+        label: 'Practice Communication',
+        description: 'Engage with your AI companion to improve communication skills'
+      },
+      // Self-awareness fallback
+      'self_awareness': {
+        path: '/mirrors-of-you',
+        label: 'Explore Self-Awareness',
+        description: 'Use reflection tools and personality insights to grow self-awareness'
+      }
+    };
+
+    // Try milestone type first, then fall back to category
+    return navigationMap[milestoneType] || navigationMap[category] || {
+      path: '/core-companion',
+      label: 'Get Started',
+      description: 'Begin your wellness journey with your AI companion'
+    };
+  };
+
+  const handleMilestoneNavigation = (navigation: { path: string; label: string; description: string }) => {
+    // Update URL to navigate to the specific section
+    window.location.hash = navigation.path;
+    // Force a page refresh to ensure navigation works
+    window.location.reload();
+  };
 
   // Fetch progress overview
   const { data: progressOverview, isLoading: overviewLoading, error: overviewError } = useQuery({
@@ -430,42 +504,63 @@ const AdaptiveLearningProgressTracker: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {milestones?.filter((m: LearningMilestone) => 
                 status === 'active' ? !m.isCompleted : m.isCompleted
-              ).map((milestone: LearningMilestone) => (
-                <div key={milestone.id} className="p-4 theme-surface rounded-lg border border-[var(--theme-accent)]/20">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center space-x-3">
-                      <span className="text-2xl">{milestone.icon}</span>
-                      <div>
-                        <h4 className="font-medium theme-text">{milestone.title}</h4>
-                        <p className="text-sm theme-text-secondary">{milestone.description}</p>
+              ).map((milestone: LearningMilestone) => {
+                const navigation = getMilestoneNavigation(milestone.milestoneType, milestone.category);
+                
+                return (
+                  <div key={milestone.id} className="p-4 theme-surface rounded-lg border border-[var(--theme-accent)]/20">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-center space-x-3">
+                        <span className="text-2xl">{milestone.icon}</span>
+                        <div>
+                          <h4 className="font-medium theme-text">{milestone.title}</h4>
+                          <p className="text-sm theme-text-secondary">{milestone.description}</p>
+                        </div>
                       </div>
+                      {milestone.isCompleted && (
+                        <CheckCircle className="w-5 h-5 text-green-500" />
+                      )}
                     </div>
-                    {milestone.isCompleted && (
-                      <CheckCircle className="w-5 h-5 text-green-500" />
-                    )}
+                    
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="theme-text-secondary">Progress</span>
+                        <span className="font-medium theme-text">
+                          {milestone.currentValue}/{milestone.targetValue}
+                        </span>
+                      </div>
+                      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                        <div 
+                          className={`h-2 rounded-full transition-all duration-300 bg-${milestone.color}-500`}
+                          style={{ width: `${getMilestoneProgress(milestone)}%` }}
+                        />
+                      </div>
+                      
+                      {/* Navigation Button for Active Milestones */}
+                      {!milestone.isCompleted && (
+                        <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
+                          <button
+                            onClick={() => handleMilestoneNavigation(navigation)}
+                            className="w-full flex items-center justify-center space-x-2 px-3 py-2 bg-[var(--theme-accent)] text-white rounded-md text-sm font-medium hover:bg-[var(--theme-accent)]/80 transition-colors"
+                          >
+                            <ExternalLink className="w-4 h-4" />
+                            <span>{navigation.label}</span>
+                          </button>
+                          <p className="text-xs theme-text-secondary mt-1 text-center">
+                            {navigation.description}
+                          </p>
+                        </div>
+                      )}
+                      
+                      {milestone.completedAt && (
+                        <p className="text-xs theme-text-secondary">
+                          Completed {format(new Date(milestone.completedAt), 'MMM dd, yyyy')}
+                        </p>
+                      )}
+                    </div>
                   </div>
-                  
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="theme-text-secondary">Progress</span>
-                      <span className="font-medium theme-text">
-                        {milestone.currentValue}/{milestone.targetValue}
-                      </span>
-                    </div>
-                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                      <div 
-                        className={`h-2 rounded-full transition-all duration-300 bg-${milestone.color}-500`}
-                        style={{ width: `${getMilestoneProgress(milestone)}%` }}
-                      />
-                    </div>
-                    {milestone.completedAt && (
-                      <p className="text-xs theme-text-secondary">
-                        Completed {format(new Date(milestone.completedAt), 'MMM dd, yyyy')}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         ))}
