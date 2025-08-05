@@ -115,7 +115,7 @@ router.get('/entries', async (req, res) => {
     );
     
     console.log('Generic mood entries endpoint hit for user:', anonymousUser.id);
-    const entries = await storage.getUserMoodEntries(anonymousUser.id);
+    const entries = await storage.getMoodEntries(anonymousUser.id);
     console.log('Retrieved mood entries via generic endpoint:', entries ? entries.length : 0);
     res.json(entries || []);
   } catch (error) {

@@ -384,4 +384,30 @@ router.post('/transcribe', upload.single('audio'), async (req, res) => {
   }
 });
 
+// Messages endpoint for backward compatibility
+router.get('/messages', async (req, res) => {
+  try {
+    const { UserSessionManager } = await import('../userSession.js');
+    const userSessionManager = UserSessionManager.getInstance();
+    
+    // Get user from device fingerprint
+    const deviceFingerprint = req.headers['x-device-fingerprint'] || 
+                              userSessionManager.generateDeviceFingerprint(req);
+    const sessionId = req.headers['x-session-id'] || undefined;
+    
+    const anonymousUser = await userSessionManager.getOrCreateAnonymousUser(
+      (Array.isArray(deviceFingerprint) ? deviceFingerprint[0] : deviceFingerprint) || 'unknown', 
+      Array.isArray(sessionId) ? sessionId[0] : sessionId
+    );
+    
+    console.log('Chat messages endpoint hit for user:', anonymousUser.id);
+    const messages = await storage.getMessagesByUserId(anonymousUser.id);
+    console.log('Retrieved messages via generic endpoint:', messages ? messages.length : 0);
+    res.json(messages || []);
+  } catch (error) {
+    console.error('Failed to fetch messages via generic endpoint:', error);
+    res.status(500).json({ error: 'Failed to fetch messages' });
+  }
+});
+
 export default router;

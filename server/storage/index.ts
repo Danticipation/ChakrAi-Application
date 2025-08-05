@@ -29,12 +29,24 @@ export interface IStorage extends
   createBot(data: any): Promise<any>;
   updateBot(id: number, data: any): Promise<any>;
   getMessagesByUserId(userId: number, limit?: number): Promise<any[]>;
+  getUserMessages(userId: number, limit?: number): Promise<any[]>;
   createMessage(data: any): Promise<any>;
   migrateAnonymousUser(anonymousUserId: number, data: any): Promise<any>;
   createAmbientSoundPreferences(data: any): Promise<any>;
   getAmbientSoundPreferences(userId: number): Promise<any>;
   logAmbientSoundUsage(data: any): Promise<any>;
   clearUserMessages(userId: number): Promise<void>;
+  
+  // Conversation Continuity methods
+  getActiveConversationSession(userId: number): Promise<any>;
+  createConversationSession(data: any): Promise<any>;
+  updateConversationSession(id: number, data: any): Promise<any>;
+  getConversationSessions(userId: number): Promise<any[]>;
+  createConversationThread(data: any): Promise<any>;
+  getActiveThreads(sessionId: number): Promise<any[]>;
+  updateConversationThread(id: number, data: any): Promise<any>;
+  createSessionContinuity(data: any): Promise<any>;
+  getSessionContinuity(fromSessionId: number, toSessionId: number): Promise<any>;
 }
 
 // Combined storage implementation
@@ -434,6 +446,81 @@ export class ModularStorage implements IStorage {
 
   async clearUserMessages(userId: number): Promise<void> {
     // Placeholder
+  }
+
+  async getUserMessages(userId: number, limit: number = 50): Promise<any[]> {
+    // Alias for getMessagesByUserId for backward compatibility
+    return this.getMessagesByUserId(userId, limit);
+  }
+
+  // Conversation Continuity methods - implement as stubs for now to fix chat
+  async getActiveConversationSession(userId: number): Promise<any> {
+    // Return null to force creation of new session
+    return null;
+  }
+
+  async createConversationSession(data: any): Promise<any> {
+    // Create a basic session object
+    return {
+      id: Date.now(),
+      userId: data.userId,
+      sessionKey: data.sessionKey,
+      title: data.title || "New Conversation",
+      keyTopics: data.keyTopics || [],
+      emotionalTone: data.emotionalTone || "neutral",
+      unresolvedThreads: data.unresolvedThreads || {},
+      contextCarryover: data.contextCarryover || {},
+      messageCount: data.messageCount || 0,
+      createdAt: new Date(),
+      lastActivity: new Date(),
+      isActive: true
+    };
+  }
+
+  async updateConversationSession(id: number, data: any): Promise<any> {
+    // Return updated session
+    return {
+      id,
+      ...data,
+      updatedAt: new Date()
+    };
+  }
+
+  async getConversationSessions(userId: number): Promise<any[]> {
+    // Return empty array for now
+    return [];
+  }
+
+  async createConversationThread(data: any): Promise<any> {
+    return {
+      id: Date.now(),
+      ...data,
+      createdAt: new Date()
+    };
+  }
+
+  async getActiveThreads(sessionId: number): Promise<any[]> {
+    return [];
+  }
+
+  async updateConversationThread(id: number, data: any): Promise<any> {
+    return {
+      id,
+      ...data,
+      updatedAt: new Date()
+    };
+  }
+
+  async createSessionContinuity(data: any): Promise<any> {
+    return {
+      id: Date.now(),
+      ...data,
+      createdAt: new Date()
+    };
+  }
+
+  async getSessionContinuity(fromSessionId: number, toSessionId: number): Promise<any> {
+    return null;
   }
 }
 
