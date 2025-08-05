@@ -113,6 +113,14 @@ CRITICAL: Base the summary and all fields on the ACTUAL conversation content abo
     // Analyze for memory connections
     await findAndCreateMemoryConnections(userId, semanticMemory.id, analysis);
 
+    // Extract discrete facts for long-term memory
+    try {
+      await extractAndStoreFacts(userId, userMessage, botResponse);
+    } catch (factError) {
+      console.error('Error extracting facts:', factError);
+    }
+
+    console.log(`Semantic memory created: ${semanticMemory.id}`);
     return semanticMemory;
   } catch (error) {
     console.error('Error analyzing conversation for memory:', error);
@@ -408,4 +416,58 @@ function getTopTopics(memories) {
     .sort(([,a], [,b]) => b - a)
     .slice(0, 5)
     .map(([topic, count]) => ({ topic, count }));
+}
+
+// Extract and store discrete facts from conversation
+export async function extractAndStoreFacts(userId, userMessage, botResponse) {
+  try {
+    const factPrompt = `Analyze this conversation to extract discrete, persistent facts about the user:
+
+USER: ${userMessage}
+BOT: ${botResponse}
+
+Extract only clear, factual statements that should be remembered long-term. Return JSON:
+{
+  "facts": [
+    {
+      "fact": "User has a dog named Max",
+      "category": "personal_life"
+    },
+    {
+      "fact": "User works as a software engineer",
+      "category": "career"
+    }
+  ]
+}
+
+Categories: personal_life, career, health, relationships, interests, preferences, challenges, goals
+
+Only include facts explicitly mentioned by the user. Do not infer or assume.`;
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      messages: [{ role: "user", content: factPrompt }],
+      response_format: { type: "json_object" },
+      temperature: 0.1
+    });
+
+    const factData = JSON.parse(response.choices[0].message.content || '{}');
+    
+    // Check for existing facts to avoid duplicates
+    const existingFacts = await storage.getUserFacts(userId);
+    const existingFactTexts = existingFacts.map(f => f.fact.toLowerCase());
+    
+    for (const factInfo of factData.facts || []) {
+      if (factInfo.fact && !existingFactTexts.includes(factInfo.fact.toLowerCase())) {
+        await storage.createUserFact({
+          userId,
+          fact: factInfo.fact,
+          category: factInfo.category || 'general'
+        });
+        console.log(`📝 New fact stored: ${factInfo.fact}`);
+      }
+    }
+  } catch (error) {
+    console.error('Error extracting facts:', error);
+  }
 }
