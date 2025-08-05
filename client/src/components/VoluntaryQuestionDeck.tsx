@@ -1039,7 +1039,7 @@ export default function VoluntaryQuestionDeck() {
       [questionId]: userAnswer
     }));
 
-    setAnsweredQuestions(prev => new Set([...prev, questionId]));
+    setAnsweredQuestions(prev => new Set(Array.from(prev).concat(questionId)));
 
     // Auto-save answer
     try {

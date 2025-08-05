@@ -393,7 +393,7 @@ export default function AdaptiveLearning() {
                 <p className="text-gray-200 text-sm mb-2">{insight.insight}</p>
                 <p className="text-gray-300 text-xs italic mb-2">{insight.suggestion}</p>
                 <div className="flex items-center justify-between text-xs text-gray-300">
-                  <span>Type: {insight.type.replace('-', ' ')}</span>
+                  <span>Type: {insight.type ? insight.type.replace('-', ' ') : 'General'}</span>
                   <span>Discovered: {new Date(insight.discoveredAt).toLocaleDateString()}</span>
                 </div>
               </div>
