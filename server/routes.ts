@@ -9,6 +9,7 @@ import { TherapeuticAnalyticsSystem } from './therapeuticAnalytics.js';
 import { userSessionManager } from './userSession.js';
 import { communityService } from './supabaseClient.js';
 import adaptiveLearningRoutes from './routes/adaptiveLearningRoutes';
+import { analyzeConversationForMemory } from './semanticMemory.js';
 
 const analyticsSystem = new TherapeuticAnalyticsSystem();
 
@@ -387,6 +388,16 @@ Adapt your response to mirror the user's communication patterns while providing 
     console.log('Final response - audioUrl length:', audioUrl ? audioUrl.length : 'null');
     console.log('Final response - selectedVoice:', selectedVoice);
     
+    // Store conversation in semantic memory for insights
+    try {
+      console.log('Storing conversation in semantic memory for user:', userId);
+      await analyzeConversationForMemory(userId, message, aiResponse);
+      console.log('Successfully stored conversation in semantic memory');
+    } catch (memoryError) {
+      console.error('Failed to store conversation in semantic memory:', memoryError);
+      // Don't fail the response if memory storage fails
+    }
+
     res.json({
       success: true,
       message: aiResponse,
@@ -3974,5 +3985,131 @@ router.post('/api/subscription/webhook', express.raw({ type: 'application/json' 
 // ====================
 // All adaptive learning endpoints moved to separate adaptiveLearningRoutes module
 // to avoid conflicts and maintain clean code organization
+
+// ====================
+// SEMANTIC MEMORY ENDPOINTS  
+// ====================
+
+// Memory dashboard endpoint for Insight Vault
+router.get('/memory-dashboard', async (req, res) => {
+  try {
+    const userId = parseInt(req.query.userId as string);
+    
+    if (!userId) {
+      return res.status(400).json({ error: 'userId is required' });
+    }
+
+    console.log(`Memory dashboard response for user ${userId} :`);
+
+    // Get semantic memories and conversation summaries
+    const [semanticMemories, conversationSummaries] = await Promise.all([
+      storage.getRecentSemanticMemories(userId, 50),
+      storage.getConversationSummaries(userId, 20)
+    ]);
+
+    console.log(`Found ${semanticMemories.length} semantic memories and ${conversationSummaries.length} conversation summaries`);
+
+    // Calculate summary statistics
+    const summary = {
+      totalMemories: semanticMemories.length,
+      activeMemories: semanticMemories.filter(m => m.isActiveMemory).length,
+      conversationSessions: conversationSummaries.length,
+      memoryConnections: 0, // We'll implement connections later
+      lastMemoryDate: semanticMemories.length > 0 ? semanticMemories[0].createdAt : null
+    };
+
+    // Get recent memories for display
+    const recentMemories = semanticMemories.slice(0, 10).map(memory => ({
+      id: memory.id,
+      content: memory.content,
+      emotionalContext: memory.emotionalContext || 'neutral',
+      temporalContext: memory.temporalContext || 'recent',
+      topics: memory.semanticTags || [],
+      accessCount: memory.accessCount || 0,
+      createdAt: memory.createdAt
+    }));
+
+    // Extract top topics from semantic tags
+    const topicCounts = semanticMemories.reduce((acc, memory) => {
+      (memory.semanticTags || []).forEach(tag => {
+        acc[tag] = (acc[tag] || 0) + 1;
+      });
+      return acc;
+    }, {} as Record<string, number>);
+
+    const topTopics = Object.entries(topicCounts)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 8)
+      .map(([topic, count]) => ({
+        topic,
+        count,
+        recentMention: 'recently' // Simplified for now
+      }));
+
+    // Generate basic insights from memories
+    const memoryInsights = [];
+    if (semanticMemories.length > 0) {
+      memoryInsights.push({
+        type: 'pattern_recognition',
+        insight: `You've shared ${semanticMemories.length} meaningful conversations that show your journey of self-reflection and growth.`,
+        confidence: 0.85,
+        generatedAt: new Date().toISOString()
+      });
+    }
+
+    // Analyze emotional patterns
+    const emotionalPatterns = [];
+    const emotions = semanticMemories
+      .filter(m => m.emotionalContext)
+      .map(m => m.emotionalContext);
+    
+    if (emotions.length > 0) {
+      const emotionCounts = emotions.reduce((acc, emotion) => {
+        acc[emotion!] = (acc[emotion!] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+      
+      const dominantEmotion = Object.entries(emotionCounts)
+        .sort(([, a], [, b]) => b - a)[0];
+      
+      if (dominantEmotion) {
+        emotionalPatterns.push({
+          timeframe: 'recent',
+          dominantEmotion: dominantEmotion[0],
+          intensity: 0.6,
+          memoryCount: dominantEmotion[1]
+        });
+      }
+    }
+
+    const response = {
+      summary,
+      recentMemories,
+      topTopics,
+      memoryInsights,
+      emotionalPatterns
+    };
+
+    console.log(`Memory dashboard response for user ${userId} :`, response);
+    res.json(response);
+
+  } catch (error) {
+    console.error('Memory dashboard error:', error);
+    // Return empty dashboard instead of error
+    res.json({
+      summary: {
+        totalMemories: 0,
+        activeMemories: 0,
+        conversationSessions: 0,
+        memoryConnections: 0,
+        lastMemoryDate: null
+      },
+      recentMemories: [],
+      topTopics: [],
+      memoryInsights: [],
+      emotionalPatterns: []
+    });
+  }
+});
 
 export default router;
