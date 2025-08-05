@@ -40,6 +40,19 @@ router.get('/conversation-continuity', async (req, res) => {
   }
 });
 
+// Memory insights endpoint  
+router.get('/insights', async (req, res) => {
+  try {
+    const userId = parseInt(req.query.userId) || 1;
+    
+    // For now, return empty insights - this should connect to the actual memory system
+    res.json([]);
+  } catch (error) {
+    console.error('Memory insights error:', error);
+    res.status(500).json({ error: 'Failed to load memory insights' });
+  }
+});
+
 // Legacy endpoints
 router.get('/memory-dashboard', async (req, res) => {
   req.url = '/dashboard';

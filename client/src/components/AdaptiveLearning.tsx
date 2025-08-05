@@ -109,9 +109,9 @@ export default function AdaptiveLearning() {
     error: preferencesError,
     refetch: refetchPreferences
   } = useQuery<LearningPreferences>({
-    queryKey: ['/api/adaptive-learning/preferences'],
+    queryKey: ['/api/user/adaptive-preferences'],
     queryFn: async () => {
-      const response = await fetch('/api/adaptive-learning/preferences');
+      const response = await fetch('/api/user/adaptive-preferences');
       if (!response.ok) {
         throw new Error('Failed to fetch preferences');
       }
@@ -126,9 +126,9 @@ export default function AdaptiveLearning() {
     error: patternsError,
     refetch: refetchPatterns
   } = useQuery<ConversationPattern[]>({
-    queryKey: ['/api/adaptive-learning/patterns'],
+    queryKey: ['/api/analytics/patterns'],
     queryFn: async () => {
-      const response = await fetch('/api/adaptive-learning/patterns');
+      const response = await fetch('/api/analytics/patterns');
       if (!response.ok) {
         throw new Error('Failed to fetch patterns');
       }
@@ -143,9 +143,9 @@ export default function AdaptiveLearning() {
     error: recommendationsError,
     refetch: refetchRecommendations
   } = useQuery<WellnessRecommendation[]>({
-    queryKey: ['/api/adaptive-learning/recommendations'],
+    queryKey: ['/api/analytics/recommendations'],
     queryFn: async () => {
-      const response = await fetch('/api/adaptive-learning/recommendations');
+      const response = await fetch('/api/analytics/recommendations');
       if (!response.ok) {
         throw new Error('Failed to fetch recommendations');
       }
@@ -160,9 +160,9 @@ export default function AdaptiveLearning() {
     error: insightsError,
     refetch: refetchInsights
   } = useQuery<LearningInsights[]>({
-    queryKey: ['/api/adaptive-learning/insights'],
+    queryKey: ['/api/memory/insights'],
     queryFn: async () => {
-      const response = await fetch('/api/adaptive-learning/insights');
+      const response = await fetch('/api/memory/insights');
       if (!response.ok) {
         throw new Error('Failed to fetch insights');
       }

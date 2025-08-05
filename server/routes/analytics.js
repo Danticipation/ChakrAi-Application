@@ -117,4 +117,30 @@ router.get('/engagement/:userId', async (req, res) => {
   }
 });
 
+// Conversation patterns endpoint
+router.get('/patterns', async (req, res) => {
+  try {
+    const userId = parseInt(req.query.userId) || 1;
+    
+    // For now, return empty patterns - this should connect to analytics system
+    res.json([]);
+  } catch (error) {
+    console.error('Analytics patterns error:', error);
+    res.status(500).json({ error: 'Failed to load conversation patterns' });
+  }
+});
+
+// Wellness recommendations endpoint
+router.get('/recommendations', async (req, res) => {
+  try {
+    const userId = parseInt(req.query.userId) || 1;
+    
+    // For now, return empty recommendations - this should connect to analytics system
+    res.json([]);
+  } catch (error) {
+    console.error('Analytics recommendations error:', error);
+    res.status(500).json({ error: 'Failed to load wellness recommendations' });
+  }
+});
+
 export default router;

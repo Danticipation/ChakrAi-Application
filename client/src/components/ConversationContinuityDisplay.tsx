@@ -49,7 +49,7 @@ const ConversationContinuityDisplay: React.FC = () => {
   const fetchContinuityData = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/conversation-continuity');
+      const response = await fetch('/api/memory/conversation-continuity');
       if (!response.ok) {
         throw new Error('Failed to fetch continuity data');
       }

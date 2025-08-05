@@ -136,4 +136,27 @@ router.delete('/:userId/mood-entries', async (req, res) => {
   }
 });
 
+// Adaptive preferences endpoint
+router.get('/adaptive-preferences', async (req, res) => {
+  try {
+    const userId = parseInt(req.query.userId) || 1;
+    
+    // For now, return default preferences - this should connect to user preferences system
+    res.json({
+      id: 1,
+      learningStyle: 'conversational',
+      responseDepth: 'detailed',
+      emotionalTone: 'supportive',
+      sessionLength: 'medium',
+      challengeLevel: 'adaptive',
+      personalityFocus: ['empathy', 'reflection'],
+      therapeuticGoals: ['anxiety_reduction', 'self_awareness'],
+      lastUpdated: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('User adaptive preferences error:', error);
+    res.status(500).json({ error: 'Failed to load adaptive preferences' });
+  }
+});
+
 export default router;
