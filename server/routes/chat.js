@@ -133,8 +133,9 @@ Key Discussion Points: ${sessionContext.keyPoints.join(', ')}
 `;
     }
 
-    // Analyze emotional state for adaptive responses
-    const emotionalAnalysis = await analyzeEmotionalState(userId, message);
+    // Analyze emotional state for adaptive responses - ensure message is a string
+    const messageText = typeof message === 'string' ? message : String(message || '');
+    const emotionalAnalysis = await analyzeEmotionalState(messageText, userId);
     console.log('Emotional analysis:', emotionalAnalysis);
 
     // Detect crisis signals in user message
