@@ -95,30 +95,55 @@ const AdaptiveLearningProgressTracker: React.FC = () => {
   // Fetch progress overview
   const { data: progressOverview, isLoading: overviewLoading, error: overviewError } = useQuery({
     queryKey: ['/api/adaptive-learning/overview'],
+    queryFn: async () => {
+      const response = await fetch('/api/adaptive-learning/overview');
+      if (!response.ok) throw new Error('Failed to fetch overview');
+      return response.json();
+    },
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
   // Fetch milestones
   const { data: milestones, isLoading: milestonesLoading, error: milestonesError } = useQuery({
     queryKey: ['/api/adaptive-learning/milestones'],
+    queryFn: async () => {
+      const response = await fetch('/api/adaptive-learning/milestones');
+      if (!response.ok) throw new Error('Failed to fetch milestones');
+      return response.json();
+    },
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
   // Fetch progress metrics
   const { data: progressMetrics, isLoading: metricsLoading, error: metricsError } = useQuery({
     queryKey: ['/api/adaptive-learning/metrics', selectedTimeframe],
+    queryFn: async () => {
+      const response = await fetch(`/api/adaptive-learning/metrics?timeframe=${selectedTimeframe}`);
+      if (!response.ok) throw new Error('Failed to fetch metrics');
+      return response.json();
+    },
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
   // Fetch learning insights
   const { data: insights, isLoading: insightsLoading, error: insightsError } = useQuery({
     queryKey: ['/api/adaptive-learning/insights'],
+    queryFn: async () => {
+      const response = await fetch('/api/adaptive-learning/insights');
+      if (!response.ok) throw new Error('Failed to fetch insights');
+      return response.json();
+    },
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
   // Fetch journey events
   const { data: journeyEvents, isLoading: journeyLoading, error: journeyError } = useQuery({
     queryKey: ['/api/adaptive-learning/journey-events'],
+    queryFn: async () => {
+      const response = await fetch('/api/adaptive-learning/journey-events');
+      if (!response.ok) throw new Error('Failed to fetch journey events');
+      return response.json();
+    },
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
