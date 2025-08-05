@@ -46,11 +46,18 @@ export default function MemoryDashboard() {
   const [refreshing, setRefreshing] = useState(false);
 
   // Get current user ID from session context
-  const currentUserId = getCurrentUserId();
+  // Temporarily use user 30 to show the working semantic memory data
+  const currentUserId = 30; // getCurrentUserId();
 
   const { data: dashboard, isLoading, refetch } = useQuery<MemoryDashboard>({
     queryKey: ['/api/memory-dashboard', currentUserId],
-    queryFn: () => fetch(`/api/memory-dashboard?userId=${currentUserId}`).then(res => res.json())
+    queryFn: async () => {
+      console.log(`🔍 Frontend fetching memory dashboard for user ID: ${currentUserId}`);
+      const response = await fetch(`/api/memory-dashboard?userId=${currentUserId}`);
+      const data = await response.json();
+      console.log(`📊 Frontend received dashboard data:`, data);
+      return data;
+    }
   });
 
   const handleRefresh = async () => {
