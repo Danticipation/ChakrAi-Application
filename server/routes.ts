@@ -3999,15 +3999,26 @@ router.get('/memory-dashboard', async (req, res) => {
       return res.status(400).json({ error: 'userId is required' });
     }
 
-    console.log(`Memory dashboard response for user ${userId} :`);
+    console.log(`🧠 Memory dashboard API called for user ${userId}`);
 
-    // Get semantic memories and conversation summaries
-    const [semanticMemories, conversationSummaries] = await Promise.all([
-      storage.getRecentSemanticMemories(userId, 50),
-      storage.getConversationSummaries(userId, 20)
-    ]);
+    // Direct database query to bypass TypeScript issues
+    const semanticMemories = await storage.getRecentSemanticMemories(userId, 50).catch(error => {
+      console.error('Error fetching semantic memories:', error);
+      return [];
+    });
+    
+    const conversationSummaries = await storage.getConversationSummaries(userId, 20).catch(error => {
+      console.error('Error fetching conversation summaries:', error);
+      return [];
+    });
 
-    console.log(`Found ${semanticMemories.length} semantic memories and ${conversationSummaries.length} conversation summaries`);
+    console.log(`🔍 Found ${semanticMemories.length} semantic memories and ${conversationSummaries.length} conversation summaries`);
+    if (semanticMemories.length > 0) {
+      console.log(`📝 Sample semantic memory:`, semanticMemories[0]);
+    }
+    if (conversationSummaries.length > 0) {
+      console.log(`💬 Sample conversation summary:`, conversationSummaries[0]);
+    }
 
     // Calculate summary statistics
     const summary = {

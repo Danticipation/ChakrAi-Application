@@ -1525,6 +1525,28 @@ export class DbStorage implements IStorage {
       .where(eq(semanticMemories.id, memoryId));
   }
 
+  async getConversationSummaries(userId: number, limit: number = 20): Promise<ConversationSummary[]> {
+    return await this.db.select().from(conversationSummaries)
+      .where(eq(conversationSummaries.userId, userId))
+      .orderBy(desc(conversationSummaries.createdAt))
+      .limit(limit);
+  }
+
+  async getConversationSummary(userId: number, sessionId: string): Promise<ConversationSummary | null> {
+    const results = await this.db.select().from(conversationSummaries)
+      .where(and(
+        eq(conversationSummaries.userId, userId),
+        eq(conversationSummaries.sessionId, sessionId)
+      ))
+      .limit(1);
+    return results[0] || null;
+  }
+
+  async createConversationSummary(data: InsertConversationSummary): Promise<ConversationSummary> {
+    const [summary] = await this.db.insert(conversationSummaries).values(data).returning();
+    return summary;
+  }
+
   async createMemoryConnection(data: InsertMemoryConnection): Promise<MemoryConnection> {
     const [connection] = await this.db.insert(memoryConnections).values(data).returning();
     return connection;
