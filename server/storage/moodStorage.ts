@@ -24,7 +24,7 @@ export class MoodStorage implements IMoodStorage {
       ...data,
       createdAt: new Date(),
     }).returning();
-    return result[0];
+    return result[0]!;
   }
 
   async getMoodEntries(userId: number, limit: number = 50): Promise<MoodEntry[]> {
@@ -39,7 +39,7 @@ export class MoodStorage implements IMoodStorage {
       ...data,
       createdAt: new Date(),
     }).returning();
-    return result[0];
+    return result[0]!;
   }
 
   async getMoodForecasts(userId: number, limit: number = 10): Promise<MoodForecast[]> {
@@ -54,7 +54,7 @@ export class MoodStorage implements IMoodStorage {
       ...data,
       createdAt: new Date(),
     }).returning();
-    return result[0];
+    return result[0]!;
   }
 
   async getEmotionalContexts(userId: number, limit: number = 20): Promise<EmotionalContext[]> {

@@ -45,8 +45,7 @@ export class UserStorage implements IUserStorage {
   async createUser(data: InsertUser): Promise<User> {
     const result = await db.insert(users).values({
       ...data,
-      createdAt: new Date(),
-      lastActive: new Date(),
+      lastActiveAt: new Date(),
     }).returning();
     return result[0];
   }
@@ -80,8 +79,7 @@ export class UserStorage implements IUserStorage {
       isAnonymous: false,
       deviceFingerprint: data.deviceFingerprint || null,
       sessionId: data.sessionId || null,
-      createdAt: new Date(),
-      lastActive: new Date(),
+      lastActiveAt: new Date(),
     };
 
     const result = await db.insert(users).values(userData).returning();
@@ -93,7 +91,7 @@ export class UserStorage implements IUserStorage {
       .set({
         ...data,
         isAnonymous: false,
-        lastActive: new Date(),
+        lastActiveAt: new Date(),
       })
       .where(eq(users.id, userId))
       .returning();
@@ -104,7 +102,7 @@ export class UserStorage implements IUserStorage {
     const result = await db.update(users)
       .set({
         ...data,
-        lastActive: new Date(),
+        lastActiveAt: new Date(),
       })
       .where(eq(users.id, id))
       .returning();
@@ -113,7 +111,7 @@ export class UserStorage implements IUserStorage {
 
   async updateUserLastActive(id: number): Promise<void> {
     await db.update(users)
-      .set({ lastActive: new Date() })
+      .set({ lastActiveAt: new Date() })
       .where(eq(users.id, id));
   }
 
@@ -121,7 +119,7 @@ export class UserStorage implements IUserStorage {
     await db.delete(users)
       .where(and(
         eq(users.isAnonymous, true),
-        lt(users.lastActive, beforeDate)
+        lt(users.lastActiveAt, beforeDate)
       ));
   }
 

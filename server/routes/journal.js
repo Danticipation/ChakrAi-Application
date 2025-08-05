@@ -209,4 +209,30 @@ router.get('/analytics', async (req, res) => {
   }
 });
 
+// Generic entries endpoint for backward compatibility
+router.get('/entries', async (req, res) => {
+  try {
+    const { UserSessionManager } = await import('../userSession.js');
+    const userSessionManager = UserSessionManager.getInstance();
+    
+    // Get user from device fingerprint  
+    const deviceFingerprint = req.headers['x-device-fingerprint'] || 
+                              userSessionManager.generateDeviceFingerprint(req);
+    const sessionId = req.headers['x-session-id'] || undefined;
+    
+    const anonymousUser = await userSessionManager.getOrCreateAnonymousUser(
+      (Array.isArray(deviceFingerprint) ? deviceFingerprint[0] : deviceFingerprint) || 'unknown', 
+      Array.isArray(sessionId) ? sessionId[0] : sessionId
+    );
+    
+    console.log('Generic journal entries endpoint hit for user:', anonymousUser.id);
+    const entries = await storage.getJournalEntries(anonymousUser.id);
+    console.log('Retrieved entries via generic endpoint:', entries ? entries.length : 0);
+    res.json(entries || []);
+  } catch (error) {
+    console.error('Failed to fetch journal entries via generic endpoint:', error);
+    res.status(500).json({ error: 'Failed to fetch journal entries' });
+  }
+});
+
 export default router;
