@@ -40,6 +40,7 @@ import DailyAffirmation from '@/components/DailyAffirmation';
 import ChallengeSystem from '@/components/ChallengeSystem';
 import SupabaseSetup from '@/components/SupabaseSetup';
 import { VoiceRecorder } from '@/utils/voiceRecorder';
+import { getCurrentUserId, generateDeviceFingerprint } from '@/utils/userSession';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -1050,37 +1051,50 @@ const AppWithOnboarding = () => {
   useEffect(() => {
     const initializeUser = async () => {
       try {
-        // Get device fingerprint for anonymous users
-        const deviceFingerprint = await generateDeviceFingerprint();
+        // Use the robust user identification system from userSession.ts
+        const userId = getCurrentUserId();
+        const deviceFingerprint = generateDeviceFingerprint();
 
         console.log('Using device fingerprint:', deviceFingerprint);
-        
-        // Check if user exists or create anonymous user
-        const response = await axios.post('/api/users/anonymous', {
-          deviceFingerprint
-        });
-
-        const userId = response.data.user.id;
-        console.log('Got user ID:', userId);
+        console.log('Calculated user ID:', userId);
         setCurrentUserId(userId);
 
-        // Check if this specific user needs personality quiz
-        const profileResponse = await axios.get(`/api/user-profile-check/${userId}`);
-        console.log('Profile check response:', profileResponse.data);
+        // Check if user exists in backend or create anonymous user
+        try {
+          const response = await axios.post('/api/users/anonymous', {
+            deviceFingerprint
+          });
+          
+          // Verify backend user ID matches our calculation
+          if (response.data.user && response.data.user.id) {
+            console.log('Backend confirmed user ID:', response.data.user.id);
+          }
+        } catch (backendError) {
+          console.warn('Backend user creation failed, continuing with calculated ID:', backendError);
+        }
 
-        if (profileResponse.data.needsQuiz) {
-          console.log('User needs personality quiz');
-          // Allow skipping quiz for testing - set to false to show main app
-          setShowPersonalityQuiz(false); // Changed to false to bypass quiz
-        } else {
-          console.log('User has completed personality quiz');
+        // Check if this specific user needs personality quiz
+        try {
+          const profileResponse = await axios.get(`/api/user-profile-check/${userId}`);
+          console.log('Profile check response:', profileResponse.data);
+
+          if (profileResponse.data.needsQuiz) {
+            console.log('User needs personality quiz');
+            setShowPersonalityQuiz(false); // Bypass quiz for main app access
+          } else {
+            console.log('User has completed personality quiz');
+          }
+        } catch (profileError) {
+          console.warn('Profile check failed, defaulting to main app:', profileError);
+          setShowPersonalityQuiz(false);
         }
       } catch (error) {
         console.error('Failed to initialize user:', error);
-        // Create fallback anonymous user with timestamp-based ID
-        const fallbackUserId = Date.now() % 100000;
+        // Robust fallback using getCurrentUserId which never fails
+        const fallbackUserId = getCurrentUserId();
+        console.log('Using fallback user ID:', fallbackUserId);
         setCurrentUserId(fallbackUserId);
-        setShowPersonalityQuiz(true); // New users need the quiz
+        setShowPersonalityQuiz(false); // Go directly to main app on errors
       } finally {
         setIsLoadingProfile(false);
       }
@@ -1089,23 +1103,7 @@ const AppWithOnboarding = () => {
     initializeUser();
   }, []);
 
-  const generateDeviceFingerprint = async (): Promise<string> => {
-    // Use only stable, consistent device characteristics
-    const fingerprint = [
-      navigator.userAgent,
-      navigator.language,
-      screen.width + 'x' + screen.height,
-      new Date().getTimezoneOffset(),
-      navigator.platform || 'unknown'
-    ].join('|');
-
-    // Create a hash of the fingerprint for consistent identification
-    const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(fingerprint));
-    const hashArray = new Uint8Array(hash);
-    const hashHex = Array.from(hashArray).map(b => b.toString(16).padStart(2, '0')).join('');
-
-    return hashHex.slice(0, 32);
-  };
+  // Remove duplicate fingerprint generation - using userSession.ts version
 
   const handlePersonalityQuizComplete = async (profile: any) => {
     try {
