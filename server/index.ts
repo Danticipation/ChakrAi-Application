@@ -1530,6 +1530,24 @@ app.get('/api/adaptive-learning/journey-events', async (req, res) => {
   }
 });
 
+// Mark celebration as shown for journey events
+app.post('/api/adaptive-learning/journey-events/:id/celebration', async (req, res) => {
+  try {
+    const eventId = parseInt(req.params.id);
+    if (isNaN(eventId)) {
+      return res.status(400).json({ error: 'Invalid event ID' });
+    }
+    
+    const event = await storage.markCelebrationShown(eventId);
+    res.json(event);
+  } catch (error) {
+    console.error('Error marking celebration as shown:', error);
+    res.status(500).json({ error: 'Failed to mark celebration as shown' });
+  }
+});
+
+
+
 // Direct memory dashboard endpoint to bypass Vite interception
 app.get('/api/memory-dashboard', async (req, res) => {
   try {
