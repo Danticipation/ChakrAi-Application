@@ -9,6 +9,7 @@ import { SubscriptionProvider, useSubscription } from '@/contexts/SubscriptionCo
 // import { SubscriptionModal } from '@/components/SubscriptionModal';
 // import { UsageLimitModal } from '@/components/UsageLimitModal';
 import MemoryDashboard from '@/components/MemoryDashboard';
+import ConversationContinuityDisplay from '@/components/ConversationContinuityDisplay';
 import VoiceSelector from '@/components/VoiceSelector';
 import ThemeSelector from '@/components/ThemeSelector';
 // import AuthModal from '@/components/AuthModal';
@@ -313,6 +314,8 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
         return <TherapeuticJournal userId={currentUserId} onEntryCreated={() => {}} />;
       case 'memory':
         return <MemoryDashboard />;
+      case 'conversation-continuity':
+        return <ConversationContinuityDisplay />;
       case 'adaptive':
         return <AdaptiveLearning />;
       case 'progress-tracker':
@@ -595,6 +598,7 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
                       { id: 'journal', label: 'Journal' },
                       { id: 'daily', label: 'Reflection' },
                       { id: 'memory', label: 'Insight Vault' },
+                      { id: 'conversation-continuity', label: 'Context Threads' },
                       { id: 'adaptive', label: 'Mind Mirror' },
                       { id: 'progress-tracker', label: 'Progress Journey' },
                       { id: 'analytics', label: 'State of Self' },
@@ -857,6 +861,7 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
                         { id: 'journal', label: 'Journal', icon: '📔' },
                         { id: 'daily', label: 'Reflection', icon: '🌅' },
                         { id: 'memory', label: 'Insight Vault', icon: '🧠' },
+                        { id: 'conversation-continuity', label: 'Context Threads', icon: '🧵' },
                         { id: 'adaptive', label: 'Mind Mirror', icon: '🪞' },
                         { id: 'progress-tracker', label: 'Progress Journey', icon: '📈' },
                         { id: 'analytics', label: 'State of Self', icon: '📊' },

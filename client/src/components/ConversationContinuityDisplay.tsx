@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Clock, MessageCircle, ArrowRight, Brain, Sparkles, Calendar, Thread } from 'lucide-react';
+import { Clock, MessageCircle, ArrowRight, Brain, Sparkles, Calendar, GitBranch } from 'lucide-react';
 
 interface ConversationSession {
   id: number;
@@ -262,7 +262,7 @@ const ConversationContinuityDisplay: React.FC = () => {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Thread className="w-5 h-5" />
+              <GitBranch className="w-5 h-5" />
               Active Conversation Threads
             </CardTitle>
           </CardHeader>
