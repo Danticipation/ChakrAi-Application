@@ -9,8 +9,10 @@ import {
   analyzeConversationForMemory, 
   getSemanticContext, 
   generateContextualReferences,
-  getMemoryDashboard 
+  getMemoryDashboard,
+  extractAndStoreFacts
 } from './semanticMemory.js';
+import { conversationContinuity } from './conversationContinuity.js';
 
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
@@ -112,7 +114,13 @@ router.post('/chat', async (req, res) => {
       return res.status(400).json({ error: 'Message is required' });
     }
 
-    console.log('Making OpenAI API call with semantic memory...');
+    console.log('Making OpenAI API call with conversation continuity...');
+    
+    // Initialize/resume conversation session for cross-session continuity
+    const currentSession = await conversationContinuity.initializeSession(userId);
+    
+    // Get session opening context for continuity
+    const sessionContext = await conversationContinuity.generateSessionOpening(userId);
     
     // Get recent conversation history for context
     const recentMessages = await storage.getUserMessages(userId, 20); // Get last 20 messages for better context
@@ -187,11 +195,20 @@ CONVERSATION CONTINUITY (CRITICAL FOR THERAPEUTIC TRUST):
 - If user mentions "we were just talking about X" or "what type of pet was it?" - refer to the immediate conversation history
 - Never respond as if you don't remember what you just discussed in the previous few messages
 
+CROSS-SESSION CONTINUITY CONTEXT:
+${sessionContext.openingContext}
+
 SEMANTIC MEMORY INSTRUCTIONS:
 - Use the semantic memory context to reference past conversations naturally
 - Make contextual connections like "Last week, you mentioned feeling overwhelmed at work — has anything improved since then?"
 - Reference emotional patterns and progress from previous sessions
 - Connect current topics to past discussions for continuity
+
+ACTIVE CONVERSATION THREADS TO FOLLOW UP ON:
+${sessionContext.activeTopics.length > 0 ? 
+  sessionContext.activeTopics.map(topic => `- ${topic}`).join('\n') : 
+  'No active threads from previous sessions'
+}
 
 PERSONALITY MIRRORING INSTRUCTIONS:
 - Mirror the user's communication style from their personality data
@@ -329,6 +346,24 @@ Respond with semantic awareness, making natural references to past conversations
       console.log('Conversation analyzed and stored in semantic memory');
     } catch (error) {
       console.error('Error storing semantic memory:', error);
+    }
+
+    // Extract and store discrete facts from conversation
+    try {
+      await extractAndStoreFacts(userId, message, aiResponse);
+    } catch (error) {
+      console.error('Error extracting facts:', error);
+    }
+
+    // Update conversation session with new message count for continuity tracking
+    try {
+      await storage.updateConversationSession(currentSession.id, {
+        messageCount: currentSession.messageCount + 2, // User + AI message
+        lastActivity: new Date()
+      });
+      console.log('Conversation session updated for continuity tracking');
+    } catch (error) {
+      console.error('Error updating conversation session:', error);
     }
 
     res.json({
@@ -846,6 +881,44 @@ router.get('/user/current', async (req, res) => {
   } catch (error) {
     console.error('User current error:', error);
     res.status(500).json({ error: 'Failed to get current user' });
+  }
+});
+
+// Conversation Continuity endpoint - cross-session context data
+router.get('/conversation-continuity', async (req, res) => {
+  try {
+    // Get or create anonymous user
+    const sessionInfo = userSessionManager.getSessionFromRequest(req);
+    const anonymousUser = await userSessionManager.getOrCreateAnonymousUser(
+      sessionInfo.deviceFingerprint, 
+      sessionInfo.sessionId
+    );
+    
+    console.log(`Fetching conversation continuity for userId: ${anonymousUser.id}`);
+    
+    // Get session opening context
+    const sessionContext = await conversationContinuity.generateSessionOpening(anonymousUser.id);
+    
+    // Get recent sessions
+    const recentSessions = await storage.getConversationSessionHistory(anonymousUser.id, 5);
+    
+    // Get active threads
+    const activeThreads = await storage.getActiveConversationThreads(anonymousUser.id);
+    
+    // Get unaddressed continuity items
+    const continuityItems = await storage.getUnaddressedContinuity(anonymousUser.id);
+    
+    const continuityData = {
+      recentSessions,
+      activeThreads,
+      continuityItems,
+      sessionContext
+    };
+    
+    res.json(continuityData);
+  } catch (error) {
+    console.error('Error fetching conversation continuity:', error);
+    res.status(500).json({ error: 'Failed to fetch conversation continuity data' });
   }
 });
 

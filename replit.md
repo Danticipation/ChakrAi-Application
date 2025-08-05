@@ -1,7 +1,13 @@
 # Chakrai - Mental Wellness & Therapy Application
 
 ## Overview
-Chakrai is a professional mental wellness and therapy application designed for individuals seeking therapeutic support. It aims to provide comprehensive mental health support, leveraging AI for personalized insights and fostering self-reflection. Key capabilities include voice interaction, daily affirmations, therapeutic personality modes, and wellness goal tracking. The project's vision is to create a calming, thoughtful, and professional environment to empower users on their mental wellness journey.
+Chakrai is a professional mental wellness and therapy application designed for individuals seeking therapeutic support. It aims to provide comprehensive mental health support, leveraging AI for personalized insights and fostering self-reflection. Key capabilities include voice interaction, daily affirmations, therapeutic personality modes, wellness goal tracking, and advanced conversation continuity for cross-session therapeutic context preservation. The project's vision is to create a calming, thoughtful, and professional environment to empower users on their mental wellness journey.
+
+## Recent Changes (August 2025)
+- **Conversation Continuity Enhancer**: Implemented comprehensive cross-session context preservation system with conversation sessions, threads, and intelligent session-to-session continuity bridging
+- **Database Enhancement**: Added conversation_sessions, conversation_threads, and session_continuity tables for sophisticated conversation tracking
+- **Advanced Session Management**: Created ConversationContinuityManager service for intelligent context preservation, session analysis, and cross-session therapeutic continuity
+- **UI Component**: Added ConversationContinuityDisplay component for visualizing conversation history, active threads, and cross-session context
 
 ## User Preferences
 - **Persistent memory system**: Bot MUST have persistent memory to remember users across sessions and build personality profiles

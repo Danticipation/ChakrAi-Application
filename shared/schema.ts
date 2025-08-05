@@ -107,6 +107,54 @@ export const userFacts = pgTable("user_facts", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Conversation Continuity Enhancer - Cross-Session Context Preservation
+export const conversationSessions = pgTable("conversation_sessions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  sessionKey: text("session_key").notNull().unique(), // UUID-based session identifier
+  title: text("title"), // AI-generated session title
+  summary: text("summary"), // AI-generated session summary
+  keyTopics: text("key_topics").array(), // Array of main topics discussed
+  emotionalTone: text("emotional_tone"), // overall, hopeful, struggling, neutral
+  unresolvedThreads: jsonb("unresolved_threads"), // Topics that need follow-up
+  contextCarryover: jsonb("context_carryover"), // Key context for next session
+  messageCount: integer("message_count").default(0),
+  lastActivity: timestamp("last_activity").defaultNow(),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const conversationThreads = pgTable("conversation_threads", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  sessionId: integer("session_id"), // Can span multiple sessions
+  threadKey: text("thread_key").notNull(), // UUID for thread tracking
+  topic: text("topic").notNull(), // "work stress", "relationship concerns"
+  status: text("status").default("active"), // active, resolved, dormant, follow_up_needed
+  priority: text("priority").default("medium"), // high, medium, low
+  lastMentioned: timestamp("last_mentioned").defaultNow(),
+  contextSummary: text("context_summary"), // Brief summary of thread context
+  nextSessionPrompt: text("next_session_prompt"), // Suggested follow-up for next session
+  relatedFacts: text("related_facts").array(), // References to user facts
+  emotionalContext: jsonb("emotional_context"), // Emotional state around this topic
+  progressNotes: text("progress_notes"), // Therapeutic progress on this topic
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const sessionContinuity = pgTable("session_continuity", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  fromSessionId: integer("from_session_id").notNull(),
+  toSessionId: integer("to_session_id").notNull(),
+  continuityType: text("continuity_type").notNull(), // topic_continuation, emotional_follow_up, goal_progress
+  carryoverData: jsonb("carryover_data"), // Structured data to carry forward
+  priority: integer("priority").default(1), // 1-5, how important to address
+  addressed: boolean("addressed").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // User streak tracking for wellness features
 export const userStreaks = pgTable("user_streaks", {
   id: serial("id").primaryKey(),
@@ -903,6 +951,32 @@ export type InsertConversationSummary = z.infer<typeof insertConversationSummary
 export type InsertSemanticMemory = z.infer<typeof insertSemanticMemorySchema>;
 export type InsertMemoryConnection = z.infer<typeof insertMemoryConnectionSchema>;
 export type InsertMemoryInsight = z.infer<typeof insertMemoryInsightSchema>;
+
+// Conversation Continuity Enhancer Types
+export const insertConversationSessionSchema = createInsertSchema(conversationSessions).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertConversationThreadSchema = createInsertSchema(conversationThreads).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertSessionContinuitySchema = createInsertSchema(sessionContinuity).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type ConversationSession = typeof conversationSessions.$inferSelect;
+export type ConversationThread = typeof conversationThreads.$inferSelect;
+export type SessionContinuity = typeof sessionContinuity.$inferSelect;
+
+export type InsertConversationSession = z.infer<typeof insertConversationSessionSchema>;
+export type InsertConversationThread = z.infer<typeof insertConversationThreadSchema>;
+export type InsertSessionContinuity = z.infer<typeof insertSessionContinuitySchema>;
 
 // Therapist Portal System - New Feature Addition
 export const therapists = pgTable("therapists", {

@@ -9,6 +9,7 @@ import {
   userWellnessPoints, pointsTransactions, rewardsShop, userPurchases, achievements,
   dailyActivities, communityChallenges, userChallengeProgress, userLevels, userStreaks,
   conversationSummaries, semanticMemories, memoryConnections, memoryInsights,
+  conversationSessions, conversationThreads, sessionContinuity,
   therapists, clientTherapistRelationships, clientPrivacySettings, therapistSessionNotes, riskAlerts,
   vrEnvironments, vrSessions, vrProgressTracking, vrTherapeuticPlans, vrAccessibilityProfiles,
   voluntaryQuestions, userFeedback, authTokens,
@@ -45,6 +46,9 @@ import {
   type SemanticMemory, type InsertSemanticMemory,
   type MemoryConnection, type InsertMemoryConnection,
   type MemoryInsight, type InsertMemoryInsight,
+  type ConversationSession, type InsertConversationSession,
+  type ConversationThread, type InsertConversationThread,
+  type SessionContinuity, type InsertSessionContinuity,
   type Therapist, type InsertTherapist,
   type ClientTherapistRelationship, type InsertClientTherapistRelationship,
   type ClientPrivacySettings, type InsertClientPrivacySettings,
@@ -252,6 +256,21 @@ export interface IStorage {
   
   createMemoryInsight(data: InsertMemoryInsight): Promise<MemoryInsight>;
   getMemoryInsights(userId: number): Promise<MemoryInsight[]>;
+
+  // Conversation Continuity Enhancer
+  createConversationSession(data: InsertConversationSession): Promise<ConversationSession>;
+  getActiveConversationSession(userId: number): Promise<ConversationSession | null>;
+  updateConversationSession(id: number, data: Partial<InsertConversationSession>): Promise<ConversationSession>;
+  getConversationSessionHistory(userId: number, limit?: number): Promise<ConversationSession[]>;
+  
+  createConversationThread(data: InsertConversationThread): Promise<ConversationThread>;
+  getActiveConversationThreads(userId: number): Promise<ConversationThread[]>;
+  updateConversationThread(id: number, data: Partial<InsertConversationThread>): Promise<ConversationThread>;
+  getConversationThreadsByTopic(userId: number, topic: string): Promise<ConversationThread[]>;
+  
+  createSessionContinuity(data: InsertSessionContinuity): Promise<SessionContinuity>;
+  getUnaddressedContinuity(userId: number): Promise<SessionContinuity[]>;
+  markContinuityAddressed(id: number): Promise<SessionContinuity>;
 
   // Therapist Portal System - New Feature Addition
   createTherapist(data: InsertTherapist): Promise<Therapist>;
@@ -1857,6 +1876,79 @@ export class DbStorage implements IStorage {
   async clearUserStreaks(userId: number): Promise<void> {
     await this.db.delete(userStreaks).where(eq(userStreaks.userId, userId));
     await this.db.delete(wellnessStreaks).where(eq(wellnessStreaks.userId, userId));
+  }
+
+  // Conversation Continuity Enhancer Implementation
+  async createConversationSession(data: InsertConversationSession): Promise<ConversationSession> {
+    const [session] = await this.db.insert(conversationSessions).values(data).returning();
+    return session;
+  }
+
+  async getActiveConversationSession(userId: number): Promise<ConversationSession | null> {
+    const [session] = await this.db.select().from(conversationSessions)
+      .where(and(eq(conversationSessions.userId, userId), eq(conversationSessions.isActive, true)))
+      .orderBy(desc(conversationSessions.lastActivity))
+      .limit(1);
+    return session || null;
+  }
+
+  async updateConversationSession(id: number, data: Partial<InsertConversationSession>): Promise<ConversationSession> {
+    const [session] = await this.db.update(conversationSessions)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(conversationSessions.id, id))
+      .returning();
+    return session;
+  }
+
+  async getConversationSessionHistory(userId: number, limit: number = 10): Promise<ConversationSession[]> {
+    return await this.db.select().from(conversationSessions)
+      .where(eq(conversationSessions.userId, userId))
+      .orderBy(desc(conversationSessions.lastActivity))
+      .limit(limit);
+  }
+
+  async createConversationThread(data: InsertConversationThread): Promise<ConversationThread> {
+    const [thread] = await this.db.insert(conversationThreads).values(data).returning();
+    return thread;
+  }
+
+  async getActiveConversationThreads(userId: number): Promise<ConversationThread[]> {
+    return await this.db.select().from(conversationThreads)
+      .where(and(eq(conversationThreads.userId, userId), eq(conversationThreads.status, 'active')))
+      .orderBy(desc(conversationThreads.lastMentioned));
+  }
+
+  async updateConversationThread(id: number, data: Partial<InsertConversationThread>): Promise<ConversationThread> {
+    const [thread] = await this.db.update(conversationThreads)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(conversationThreads.id, id))
+      .returning();
+    return thread;
+  }
+
+  async getConversationThreadsByTopic(userId: number, topic: string): Promise<ConversationThread[]> {
+    return await this.db.select().from(conversationThreads)
+      .where(and(eq(conversationThreads.userId, userId), eq(conversationThreads.topic, topic)))
+      .orderBy(desc(conversationThreads.lastMentioned));
+  }
+
+  async createSessionContinuity(data: InsertSessionContinuity): Promise<SessionContinuity> {
+    const [continuity] = await this.db.insert(sessionContinuity).values(data).returning();
+    return continuity;
+  }
+
+  async getUnaddressedContinuity(userId: number): Promise<SessionContinuity[]> {
+    return await this.db.select().from(sessionContinuity)
+      .where(and(eq(sessionContinuity.userId, userId), eq(sessionContinuity.addressed, false)))
+      .orderBy(desc(sessionContinuity.priority), desc(sessionContinuity.createdAt));
+  }
+
+  async markContinuityAddressed(id: number): Promise<SessionContinuity> {
+    const [continuity] = await this.db.update(sessionContinuity)
+      .set({ addressed: true })
+      .where(eq(sessionContinuity.id, id))
+      .returning();
+    return continuity;
   }
 
   async clearUserCommunityParticipation(userId: number): Promise<void> {
