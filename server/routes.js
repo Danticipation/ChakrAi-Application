@@ -114,6 +114,11 @@ router.post('/chat', async (req, res) => {
 
     console.log('Making OpenAI API call with semantic memory...');
     
+    // Get recent conversation history for context
+    const recentMessages = await storage.getUserMessages(userId, 10); // Get last 10 messages
+    console.log(`Fetching messages for userId: ${userId} with limit: 10`);
+    console.log(`Found ${recentMessages.length} messages for user ${userId}`);
+    
     // Get semantic context for intelligent recall
     const semanticContext = await getSemanticContext(userId, message);
     console.log('Semantic context loaded:', { 
@@ -194,6 +199,28 @@ Crisis level detected: ${crisisData.riskLevel}
 
 Respond with semantic awareness, making natural references to past conversations while providing therapeutic value.`;
 
+    // Build conversation history for context
+    const conversationHistory = [];
+    
+    // Add system prompt
+    conversationHistory.push({ role: 'system', content: systemPrompt });
+    
+    // Add recent message history (exclude the current message)
+    if (recentMessages.length > 0) {
+      const historyMessages = recentMessages
+        .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp)) // Sort chronologically
+        .map(msg => ({
+          role: msg.isBot ? 'assistant' : 'user',
+          content: msg.content
+        }));
+      
+      conversationHistory.push(...historyMessages);
+      console.log(`Including ${historyMessages.length} previous messages for context`);
+    }
+    
+    // Add current message
+    conversationHistory.push({ role: 'user', content: message });
+
     // Generate OpenAI response
     const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -203,10 +230,7 @@ Respond with semantic awareness, making natural references to past conversations
       },
       body: JSON.stringify({
         model: 'gpt-4o',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: message }
-        ],
+        messages: conversationHistory,
         max_tokens: 500,
         temperature: 0.7
       })
