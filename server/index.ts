@@ -1473,6 +1473,63 @@ app.get('/api/streak-stats', (req, res) => {
   });
 });
 
+// Direct adaptive learning endpoints to bypass Vite interception
+app.get('/api/adaptive-learning/overview', async (req, res) => {
+  try {
+    const userId = 1;
+    const overview = await storage.getProgressOverview(userId);
+    res.json(overview);
+  } catch (error) {
+    console.error('Error fetching progress overview:', error);
+    res.status(500).json({ error: 'Failed to fetch progress overview' });
+  }
+});
+
+app.get('/api/adaptive-learning/milestones', async (req, res) => {
+  try {
+    const userId = 1;
+    const milestones = await storage.getLearningMilestones(userId);
+    res.json(milestones);
+  } catch (error) {
+    console.error('Error fetching milestones:', error);
+    res.status(500).json({ error: 'Failed to fetch milestones' });
+  }
+});
+
+app.get('/api/adaptive-learning/metrics', async (req, res) => {
+  try {
+    const userId = 1;
+    const { timeframe = 'month' } = req.query;
+    const metrics = await storage.getProgressMetrics(userId, timeframe as string);
+    res.json(metrics);
+  } catch (error) {
+    console.error('Error fetching metrics:', error);
+    res.status(500).json({ error: 'Failed to fetch metrics' });
+  }
+});
+
+app.get('/api/adaptive-learning/insights', async (req, res) => {
+  try {
+    const userId = 1;
+    const insights = await storage.getAdaptiveLearningInsights(userId);
+    res.json(insights);
+  } catch (error) {
+    console.error('Error fetching insights:', error);
+    res.status(500).json({ error: 'Failed to fetch insights' });
+  }
+});
+
+app.get('/api/adaptive-learning/journey-events', async (req, res) => {
+  try {
+    const userId = 1;
+    const events = await storage.getWellnessJourneyEvents(userId);
+    res.json(events);
+  } catch (error) {
+    console.error('Error fetching journey events:', error);
+    res.status(500).json({ error: 'Failed to fetch journey events' });
+  }
+});
+
 // Direct memory dashboard endpoint to bypass Vite interception
 app.get('/api/memory-dashboard', async (req, res) => {
   try {
