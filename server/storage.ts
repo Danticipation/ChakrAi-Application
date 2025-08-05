@@ -2371,10 +2371,9 @@ export class DbStorage implements IStorage {
     const completedMilestones = milestones.filter(m => m.isCompleted).length;
     const activeMilestones = milestones.filter(m => !m.isCompleted).length;
 
-    // Get current streak data
-    const streaks = await this.getUserStreaks(userId);
-    const currentStreak = streaks.find(s => s.streakType === 'daily_active')?.currentStreak || 0;
-    const longestStreak = streaks.reduce((max, s) => Math.max(max, s.longestStreak || 0), 0);
+    // Calculate current streak based on actual activity
+    const currentStreak = await this.calculateCurrentActivityStreak(userId);
+    const longestStreak = await this.calculateLongestActivityStreak(userId);
 
     // Get wellness points
     const pointsData = await this.getUserWellnessPoints(userId);
@@ -2418,6 +2417,105 @@ export class DbStorage implements IStorage {
       currentLevel,
       nextLevelProgress
     };
+  }
+
+  // Calculate current activity streak based on any wellness activity per day
+  async calculateCurrentActivityStreak(userId: number): Promise<number> {
+    try {
+      // Get distinct activity dates from progress metrics
+      const dateQuery = await this.db.select({
+        date: sql<string>`DATE(${progressMetrics.date})`.as('activity_date')
+      })
+      .from(progressMetrics)
+      .where(eq(progressMetrics.userId, userId))
+      .groupBy(sql`DATE(${progressMetrics.date})`)
+      .orderBy(sql`DATE(${progressMetrics.date}) DESC`);
+      
+      if (dateQuery.length === 0) return 0;
+      
+      const activityDates = dateQuery.map(row => row.date).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+      
+      let streak = 1; // Start with 1 for the most recent day
+      
+      // Check for consecutive days starting from most recent
+      for (let i = 1; i < activityDates.length; i++) {
+        const currentDate = new Date(activityDates[i]);
+        const prevDate = new Date(activityDates[i - 1]);
+        const daysDiff = Math.floor((prevDate.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24));
+        
+        if (daysDiff === 1) {
+          streak++;
+        } else {
+          break; // Streak broken
+        }
+      }
+      
+      return streak;
+    } catch (error) {
+      console.error('Error calculating streak:', error);
+      return 0;
+    }
+  }
+
+  // Calculate longest activity streak
+  async calculateLongestActivityStreak(userId: number): Promise<number> {
+    const activities = await this.getProgressMetrics(userId);
+    if (activities.length === 0) return 0;
+    
+    // Group activities by date
+    const activityDates = [...new Set(activities.map(a => a.date.toISOString().split('T')[0]))];
+    activityDates.sort();
+    
+    let longestStreak = 0;
+    let currentStreak = 1;
+    
+    for (let i = 1; i < activityDates.length; i++) {
+      const prevDate = new Date(activityDates[i - 1]);
+      const currentDate = new Date(activityDates[i]);
+      const dayDiff = Math.floor((currentDate.getTime() - prevDate.getTime()) / (1000 * 60 * 60 * 24));
+      
+      if (dayDiff === 1) {
+        currentStreak++;
+      } else {
+        longestStreak = Math.max(longestStreak, currentStreak);
+        currentStreak = 1;
+      }
+    }
+    
+    return Math.max(longestStreak, currentStreak);
+  }
+
+  // Check if user has any wellness activity on a specific date
+  async hasActivityOnDate(userId: number, dateStart: Date, dateEnd: Date): Promise<boolean> {
+    // Check progress metrics (includes mood logs, chat sessions, journal entries)
+    const metrics = await this.db.select().from(progressMetrics)
+      .where(and(
+        eq(progressMetrics.userId, userId),
+        sql`${progressMetrics.date} >= ${dateStart} AND ${progressMetrics.date} <= ${dateEnd}`
+      ))
+      .limit(1);
+    
+    if (metrics.length > 0) return true;
+    
+    // Check journal entries
+    const journals = await this.db.select().from(journalEntries)
+      .where(and(
+        eq(journalEntries.userId, userId),
+        sql`${journalEntries.createdAt} >= ${dateStart} AND ${journalEntries.createdAt} <= ${dateEnd}`
+      ))
+      .limit(1);
+    
+    if (journals.length > 0) return true;
+    
+    // Check mood tracking
+    const moods = await this.db.select().from(moodEntries)
+      .where(and(
+        eq(moodEntries.userId, userId),
+        sql`${moodEntries.createdAt} >= ${dateStart} AND ${moodEntries.createdAt} <= ${dateEnd}`
+      ))
+      .limit(1);
+    
+    return moods.length > 0;
   }
 
   async calculateLearningProgress(userId: number): Promise<void> {
