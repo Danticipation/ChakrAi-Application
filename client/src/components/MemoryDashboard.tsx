@@ -7,34 +7,61 @@ import { Badge } from './ui/badge';
 import { Progress } from './ui/progress';
 
 interface MemoryDashboard {
-  summary: {
+  summary?: {
     totalMemories: number;
     activeMemories: number;
     conversationSessions: number;
     memoryConnections: number;
     lastMemoryDate: string;
   };
-  recentMemories: Array<{
+  stats?: {
+    totalMemories: number;
+    activeMemories: number;
+    connectionCount: number;
+    insightCount: number;
+    topTopics: Array<{
+      topic: string;
+      count: number;
+    }>;
+  };
+  memories?: Array<{
     id: number;
     content: string;
-    emotionalContext: string;
-    temporalContext: string;
-    topics: string[];
+    emotionalContext?: string;
+    temporalContext?: string;
+    semanticTags?: string[];
+    topics?: string[];
     accessCount: number;
     createdAt: string;
   }>;
-  topTopics: Array<{
+  recentMemories?: Array<{
+    id: number;
+    content: string;
+    emotionalContext?: string;
+    temporalContext?: string;
+    topics?: string[];
+    semanticTags?: string[];
+    accessCount: number;
+    createdAt: string;
+  }>;
+  topTopics?: Array<{
     topic: string;
     count: number;
-    recentMention: string;
+    recentMention?: string;
   }>;
-  memoryInsights: Array<{
+  memoryInsights?: Array<{
     type: string;
     insight: string;
     confidence: number;
     generatedAt: string;
   }>;
-  emotionalPatterns: Array<{
+  insights?: Array<{
+    type: string;
+    insight: string;
+    confidence: number;
+    generatedAt: string;
+  }>;
+  emotionalPatterns?: Array<{
     timeframe: string;
     dominantEmotion: string;
     intensity: number;
@@ -128,7 +155,7 @@ export default function MemoryDashboard() {
                 <MessageCircle className="w-5 h-5 text-white" />
                 <div>
                   <p className="text-sm text-white/80">Total Reflections</p>
-                  <p className="text-2xl font-bold text-white">{dashboard?.summary.totalMemories || 0}</p>
+                  <p className="text-2xl font-bold text-white">{dashboard?.summary?.totalMemories || dashboard?.stats?.totalMemories || 0}</p>
                 </div>
               </div>
             </div>
@@ -140,7 +167,7 @@ export default function MemoryDashboard() {
                 <Brain className="w-5 h-5 text-white" />
                 <div>
                   <p className="text-sm text-white/80">Active Threads</p>
-                  <p className="text-2xl font-bold text-white">{dashboard?.summary.activeMemories || 0}</p>
+                  <p className="text-2xl font-bold text-white">{dashboard?.summary?.activeMemories || dashboard?.stats?.activeMemories || 0}</p>
                 </div>
               </div>
             </div>
@@ -152,7 +179,7 @@ export default function MemoryDashboard() {
                 <Users className="w-5 h-5 text-white" />
                 <div>
                   <p className="text-sm text-white/80">Conversations</p>
-                  <p className="text-2xl font-bold text-white">{dashboard?.summary.conversationSessions || 0}</p>
+                  <p className="text-2xl font-bold text-white">{dashboard?.summary?.conversationSessions || dashboard?.stats?.connectionCount || 0}</p>
                 </div>
               </div>
             </div>
@@ -164,7 +191,7 @@ export default function MemoryDashboard() {
                 <Clock className="w-5 h-5 text-white" />
                 <div>
                   <p className="text-sm text-white/80">Last Insight</p>
-                  <p className="text-sm font-medium text-white">{dashboard?.summary.lastMemoryDate ? formatDate(dashboard.summary.lastMemoryDate) : 'None yet'}</p>
+                  <p className="text-sm font-medium text-white">{dashboard?.summary?.lastMemoryDate ? formatDate(dashboard.summary.lastMemoryDate) : 'None yet'}</p>
                 </div>
               </div>
             </div>
@@ -182,18 +209,18 @@ export default function MemoryDashboard() {
               </div>
               <p className="text-white/80 mb-6">Latest conversations and insights</p>
               <div className="space-y-4">
-                {dashboard?.recentMemories?.slice(0, 5).map((memory) => (
+                {(dashboard?.recentMemories || dashboard?.memories)?.slice(0, 5).map((memory) => (
                   <div key={memory.id} className="border border-white/30 rounded-lg p-3 theme-primary">
                     <div className="flex items-start justify-between mb-2">
                       <Badge className="bg-white/20 text-white border-white/30">
-                        {memory.emotionalContext}
+                        {memory.emotionalContext || 'neutral'}
                       </Badge>
                       <span className="text-xs text-white/60">{formatDate(memory.createdAt)}</span>
                     </div>
                     <p className="text-sm text-white mb-2">{memory.content}</p>
                     <div className="flex items-center justify-between">
                       <div className="flex flex-wrap gap-1">
-                        {memory.topics?.slice(0, 3).map((topic, index) => (
+                        {(memory.topics || memory.semanticTags)?.slice(0, 3).map((topic: string, index: number) => (
                           <Badge key={index} className="bg-white/10 text-white/80 border-white/30 text-xs">
                             {topic}
                           </Badge>
@@ -223,14 +250,14 @@ export default function MemoryDashboard() {
               </div>
               <p className="text-white/80 mb-6">Most discussed themes in our reflective conversations</p>
               <div className="space-y-3">
-                {dashboard?.topTopics?.slice(0, 6).map((topic, index) => (
+                {(dashboard?.topTopics || dashboard?.stats?.topTopics)?.slice(0, 6).map((topic, index) => (
                   <div key={index} className="flex items-center justify-between">
                     <div className="flex-1">
                       <div className="flex items-center justify-between mb-1">
                         <span className="font-medium text-white">{topic.topic}</span>
                         <span className="text-sm text-white/60">{topic.count} mentions</span>
                       </div>
-                      <Progress value={(topic.count / (dashboard.topTopics[0]?.count || 1)) * 100} className="h-2" />
+                      <Progress value={(topic.count / (dashboard?.topTopics?.[0]?.count || 1)) * 100} className="h-2" />
                     </div>
                   </div>
                 )) || (
@@ -254,7 +281,7 @@ export default function MemoryDashboard() {
               </div>
               <p className="text-white/80 mb-6">Patterns and insights from your reflective conversations</p>
               <div className="space-y-4">
-                {dashboard?.memoryInsights?.slice(0, 4).map((insight, index) => (
+                {(dashboard?.memoryInsights || dashboard?.insights)?.slice(0, 4).map((insight, index) => (
                   <div key={index} className="border border-white/30 rounded-lg p-3 theme-primary">
                     <div className="flex items-start justify-between mb-2">
                       <Badge className="bg-white/20 text-white border-white/30">{insight.type}</Badge>
