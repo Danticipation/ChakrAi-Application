@@ -103,7 +103,9 @@ export async function analyzeEmotionalState(
 }
 
 function performQuickEmotionalAnalysis(message: string): Partial<EmotionalState> {
-  const lowerMessage = message.toLowerCase();
+  // Handle case where message might not be a string
+  const messageStr = typeof message === 'string' ? message : String(message || '');
+  const lowerMessage = messageStr.toLowerCase();
   let scores: { [emotion: string]: number } = {};
   
   // Score each emotion based on keyword matches

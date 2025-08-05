@@ -522,6 +522,20 @@ export class ModularStorage implements IStorage {
   async getSessionContinuity(fromSessionId: number, toSessionId: number): Promise<any> {
     return null;
   }
+
+  // Missing semantic memory methods  
+  async getRecentSemanticMemories(userId: number, limit?: number): Promise<any[]> {
+    return this.memoryStorage.getRecentSemanticMemories(userId, limit);
+  }
+
+  async searchSemanticMemories(userId: number, query: string, limit?: number): Promise<any[]> {
+    return this.memoryStorage.searchSemanticMemories(userId, query, limit);
+  }
+
+  async getConversationSessionHistory(sessionId: number, limit?: number): Promise<any[]> {
+    // Return empty array for now
+    return [];
+  }
 }
 
 // Export singleton instance for backward compatibility
