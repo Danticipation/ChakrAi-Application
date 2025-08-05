@@ -401,7 +401,7 @@ const AdaptiveLearningProgressTracker: React.FC = () => {
                   </div>
                 </div>
                 <span className="text-sm font-medium theme-text">
-                  {milestone.currentValue}/{milestone.targetValue}
+                  {Math.round(getMilestoneProgress(milestone))}%
                 </span>
               </div>
               <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
@@ -526,7 +526,7 @@ const AdaptiveLearningProgressTracker: React.FC = () => {
                       <div className="flex items-center justify-between text-sm">
                         <span className="theme-text-secondary">Progress</span>
                         <span className="font-medium theme-text">
-                          {milestone.currentValue}/{milestone.targetValue}
+                          {Math.round(getMilestoneProgress(milestone))}%
                         </span>
                       </div>
                       <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
