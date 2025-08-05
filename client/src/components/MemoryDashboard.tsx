@@ -46,8 +46,7 @@ export default function MemoryDashboard() {
   const [refreshing, setRefreshing] = useState(false);
 
   // Get current user ID from session context
-  // Temporarily use user 30 to show the working semantic memory data
-  const currentUserId = 30; // getCurrentUserId();
+  const currentUserId = getCurrentUserId();
 
   const { data: dashboard, isLoading, refetch } = useQuery<MemoryDashboard>({
     queryKey: ['/api/memory-dashboard', currentUserId],

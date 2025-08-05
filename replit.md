@@ -1,7 +1,7 @@
 # Chakrai - Mental Wellness & Therapy Application
 
 ## Overview
-Chakrai is a professional mental wellness and therapy application designed for individuals seeking therapeutic support. It features a calming, thoughtful design with soothing pastel colors to create a welcoming, professional environment. Key capabilities include voice interaction, daily affirmations, therapeutic personality modes, and wellness goal tracking. The project aims to provide comprehensive mental health support, leveraging AI for personalized insights and fostering self-reflection.
+Chakrai is a professional mental wellness and therapy application designed for individuals seeking therapeutic support. It aims to provide comprehensive mental health support, leveraging AI for personalized insights and fostering self-reflection. Key capabilities include voice interaction, daily affirmations, therapeutic personality modes, and wellness goal tracking. The project's vision is to create a calming, thoughtful, and professional environment to empower users on their mental wellness journey.
 
 ## User Preferences
 - **Persistent memory system**: Bot MUST have persistent memory to remember users across sessions and build personality profiles
@@ -20,155 +20,41 @@ Chakrai is a professional mental wellness and therapy application designed for i
 The application is built with a React frontend (TypeScript, Tailwind CSS) and an Express backend (PostgreSQL, Drizzle ORM).
 
 **UI/UX Decisions:**
-- Calming pastel color scheme: soft blue (#ADD8E6), pale green (#98FB98), gentle lavender (#E6E6FA).
-- Consistent blue therapeutic theme for visual cohesion.
-- Modular `Layout.tsx` for component structure and error boundaries.
-- Collapsible sidebar navigation with 6 intuitive sections for organized access.
+- Calming pastel color scheme: soft blue (#ADD8E6), pale green (#98FB98), gentle lavender (#E6E6FA), with a consistent blue therapeutic theme.
+- Modular `Layout.tsx` for consistent component structure and error handling.
+- Collapsible sidebar navigation for organized access to features.
 - Professional, space-optimized layouts with touch-friendly interaction targets.
-- Engaging UI with shimmering silver borders, glass morphism effects, and subtle animations (e.g., neon cursor trail, sparkling stars background).
-- Luxury typography system with Inter and Playfair Display fonts for a refined look, and Source Code Pro for character clarity.
-- Dynamic theming system with rich color palettes and theme-independent progress bars.
+- Engaging UI elements include shimmering silver borders, glass morphism effects, neon cursor trails, and sparkling stars backgrounds.
+- Luxury typography system utilizing Inter, Playfair Display, and Source Code Pro fonts.
+- Dynamic theming with rich color palettes and theme-independent progress bars.
 - Mobile-first design with responsive layouts, optimized touch targets, and enhanced scrolling.
 - Accessible design with ARIA compliance, keyboard navigation, and screen reader support.
 
 **Technical Implementations & Feature Specifications:**
-- **Voice System:** Comprehensive voice interaction with ElevenLabs for high-quality voice synthesis (8 voices: James, Brian, Alexandra, Carla, Hope, Bronson, Marcus, Charlotte) and OpenAI Whisper for transcription. Includes voice loading indicators and manual control for recording.
+- **Voice System:** Comprehensive voice interaction with ElevenLabs for synthesis and OpenAI Whisper for transcription, featuring manual recording control.
 - **AI Core:**
-    - **Semantic Memory System:** Extracts, stores, and recalls important facts from conversations for long-term memory and personality mirroring. Supports contextual recall and dynamic integration into AI responses.
-    - **Personality Reflection:** AI-powered analysis of journal entries and mood patterns to provide personalized insights into communication style, emotional patterns, strengths, and growth opportunities.
-    - **Adaptive Learning:** Analyzes conversation patterns and user preferences to adapt responses, suggest mindfulness exercises, and provide dynamic wellness recommendations.
-    - **Adaptive Therapeutic Plans:** AI-driven generation and adaptation of therapeutic plans (CBT, MBSR, DBT) based on real-time analytics and user progress.
-    - **Emotional Intelligence:** Real-time emotion detection, advanced mood tracking, predictive mood forecasting, and contextual response adaptation based on user emotional states. Includes crisis detection and response.
-    - **LLM Agent Integration:** Specialized therapeutic agents (CBT Coach, Mindfulness Guide, Self-Compassion Coach, Anxiety Specialist) with intelligent handoff mechanisms.
-    - **AI Performance Monitoring:** Internal dashboard to track AI response quality, therapeutic effectiveness, and crisis detection accuracy.
-- **Journaling System:** AI-assisted journaling with emotional pattern analysis, sentiment tracking, and exportable professional reports.
-- **Gamification:** Achievement badge system, wellness streak tracking, activity tracking, and a rewards shop for positive reinforcement.
-- **Community & Peer Support:** Anonymous support forums and peer-to-peer check-ins with moderation.
-- **Professional Therapist Integration:** Collaboration portal for licensed therapists with session management and automated insight sharing.
-- **VR/AR Guided Therapeutic Experiences:** Virtual environments for mindfulness, relaxation, and exposure therapy with session tracking and progress analysis.
-- **Wearable Device Integration:** Health correlation analytics engine for physical health metrics (heart rate, sleep, steps) alongside emotional wellness data.
-- **Accessibility Features:** Multi-language support, visual and hearing accessibility suites, motor accessibility tools, and cognitive support systems.
-- **Privacy & Compliance:** Complete anonymous user system using device fingerprinting, zero-knowledge architecture, client-side AES-256-GCM encryption, differential privacy analytics, and encrypted backups. Eliminates all "Therapist" claims, positioning Chakrai as a "Wellness Companion."
-- **PWA Conversion:** Installable Progressive Web App (PWA) for mobile app-like experience with offline functionality and optimized icons.
-
-## Recent Updates (August 2025)
-
-### ✅ Comprehensive Admin Portal Implementation (Complete)
-**Date**: August 3, 2025  
-**Status**: Fully implemented centralized administrative interface
-
-**Admin Portal Features**:
-- **Unified Dashboard**: Single portal consolidating all administrative functions
-- **System Overview**: Real-time health monitoring, active users, memory usage, system status
-- **Feedback Management**: Complete feedback lifecycle management with status tracking and admin responses
-- **System Tools Grid**: Organized access to AI monitoring, microphone testing, community setup, database health, security monitoring
-- **Tabbed Interface**: Clean navigation between Overview, Feedback, System Tools, and individual components
-- **Real-time Updates**: Auto-refresh every 30 seconds for live administrative data
-- **Interactive Modals**: Detailed feedback review with admin response system and status updates
-
-**Technical Implementation**:
-- Created centralized AdminPortal component with comprehensive dashboard
-- Integrated existing feedback management system into unified interface
-- Added system health monitoring and statistics display
-- Implemented real-time data refresh and loading states
-- Added to Healthcare section for easy access
-
-**User Impact**: Administrators now have a single, comprehensive portal for all system management tasks instead of scattered individual components
-
-### ✅ Fixed Non-Functional Chat Suggestion Buttons (Complete)
-**Date**: August 3, 2025  
-**Status**: Fixed suggestion buttons in chat interface to populate input field
-
-**Chat Interface Improvements**:
-- Fixed suggestion buttons that were non-functional
-- Added proper onClick handlers to populate chat input field
-- Buttons now properly trigger with natural conversation starters:
-  - "I'm feeling a bit overwhelmed today"
-  - "I want to set a wellness goal for myself"
-  - "I'd like to journal about what happened today"
-  - "Can you guide me through a calming meditation?"
-
-**User Impact**: Chat suggestion buttons now work properly, allowing users to quickly start conversations with pre-written prompts instead of typing from scratch
-
-### ✅ Fixed Chat "Failed to fetch" Error (Complete)
-**Date**: August 4, 2025  
-**Status**: Resolved - Chat and voice system restored to original working configuration
-
-**Root Cause Identified**:
-- 4-Phase Code Quality Overhaul introduced two breaking changes for voice system:
-  1. Express.json body parser limit reduced from 50MB to 10MB 
-  2. Performance middleware incorrectly setting "Content-Encoding: gzip" headers without actual compression
-- Browser expected compressed data but received uncompressed audio, causing fetch failures
-- Large audio responses (200KB+) were hitting the reduced size limits
-
-**Solution Implemented**:
-- **KEY FIX 1**: Restored express.json limit from 10MB back to 50MB (server/index.ts line 58)
-- **KEY FIX 2**: Removed incorrect compression headers from performance middleware (server/middleware/performanceMiddleware.ts)
-- Maintained original ElevenLabs configuration (eleven_monolingual_v1 model)
-- Extended timeout to 30 seconds to accommodate normal audio processing
-- Kept response size logging for monitoring without breaking functionality
-
-**User Impact**: Voice system fully restored - can now handle paragraph-length responses with audio as it did before the security overhaul
-
-## Recent Updates (August 2025)
-
-### ✅ Mobile Navigation Complete Feature Set (Complete)
-**Date**: August 2, 2025  
-**Status**: Fixed critical mobile navigation issue - all features now accessible on mobile
-
-**Mobile Navigation Improvements**:
-- Fixed mobile layout showing only welcome screen instead of full app interface
-- Added complete mobile navigation drawer with all 25+ features organized into 6 sections
-- Implemented proper mobile header with Chakrai logo and settings menu button
-- Added slide-out navigation panel with complete feature parity to desktop sidebar
-- Bypassed personality quiz blocking main app access on mobile devices
-- Mobile navigation now includes: Core Companion (4), Mirrors of You (7), Guided Support (4), Healthcare (2), Wellness (2), Settings (6)
-
-**User Impact**: Mobile users can now access the complete Chakrai feature set instead of being stuck in welcome/onboarding flow
-
-### ✅ Comprehensive 4-Phase Code Quality Overhaul (Complete)
-**Date**: August 2, 2025
-**Status**: All phases successfully implemented - Enterprise-grade code quality achieved
-
-**Phase 1: Security Hardening (Complete)**
-- Comprehensive security middleware stack with helmet headers, express-rate-limit, CSRF protection
-- Input validation with express-validator and proper sanitization
-- Secure JWT handling and global error handling with proper type guards
-- Security logging and monitoring for all requests
-- Adaptive rate limiting with trustProxy configuration for Replit environment
-
-**Phase 2: Architecture Refactoring (Complete)**
-- Extracted business logic into dedicated controllers (journalController.ts, voiceController.ts)
-- Centralized services layer (analyticsService.ts, responseService.ts) for shared functionality
-- Modular route separation with proper middleware stacking
-- Consistent API response formatting with standardized error handling
-
-**Phase 3: Performance Optimization (Complete)**
-- Memory optimization utilities with automatic garbage collection and caching
-- Performance monitoring middleware with slow request detection
-- Comprehensive health check system with external API monitoring
-- Resource pooling and batch processing for large datasets
-- Real-time system health monitoring with automatic memory management
-
-**Phase 4: Code Standardization (Complete)**
-- ESLint and Prettier configured with strict TypeScript options
-- Enhanced TypeScript configuration with strict type checking
-- Import path aliases for clean code organization
-- Development tooling with quality control scripts
-- Comprehensive editor configuration for consistent formatting
-
-**Technical Achievements**:
-- Zero TypeScript errors with strict type checking enabled
-- Complete separation of concerns with business logic extracted
-- Enterprise-grade security implementation
-- Automated performance monitoring and health checks
-- Standardized code formatting and quality control
+    - **Semantic Memory System:** Extracts, stores, and recalls facts from conversations for long-term memory and personality mirroring.
+    - **Personality Reflection:** AI-powered analysis of user data to provide insights into communication, emotional patterns, strengths, and growth opportunities.
+    - **Adaptive Learning:** Analyzes conversation patterns and preferences to adapt responses, suggest mindfulness exercises, and provide wellness recommendations.
+    - **Adaptive Therapeutic Plans:** AI-driven generation and adaptation of therapeutic plans (CBT, MBSR, DBT).
+    - **Emotional Intelligence:** Real-time emotion detection, advanced mood tracking, predictive mood forecasting, and contextual response adaptation, including crisis detection.
+    - **LLM Agent Integration:** Specialized therapeutic agents (e.g., CBT Coach, Mindfulness Guide) with intelligent handoff mechanisms.
+- **Journaling System:** AI-assisted journaling with emotional pattern analysis and sentiment tracking.
+- **Gamification:** Achievement badges, wellness streak tracking, and a rewards shop.
+- **Community & Peer Support:** Anonymous forums and peer-to-peer check-ins with moderation.
+- **Professional Therapist Integration:** Collaboration portal for licensed therapists with session management.
+- **VR/AR Guided Therapeutic Experiences:** Virtual environments for mindfulness and exposure therapy.
+- **Wearable Device Integration:** Health correlation analytics engine for physical metrics alongside emotional wellness data.
+- **Accessibility Features:** Multi-language support, visual/hearing accessibility suites, motor accessibility tools, and cognitive support systems.
+- **Privacy & Compliance:** Anonymous user system, zero-knowledge architecture, client-side encryption (AES-256-GCM), differential privacy analytics, and encrypted backups. Chakrai is positioned as a "Wellness Companion."
+- **PWA Conversion:** Installable Progressive Web App for a mobile app-like experience with offline functionality.
+- **Code Quality Overhaul:** Enterprise-grade security hardening, architectural refactoring (dedicated controllers, services layer), performance optimization (memory utilities, health checks), and code standardization (ESLint, Prettier, TypeScript strict mode).
 
 ## External Dependencies
 - **ElevenLabs API:** For high-quality voice synthesis.
 - **OpenAI API:** For GPT-4o powered chat responses, semantic memory extraction, personality analysis, adaptive learning, emotional intelligence, and crisis detection.
-- **Supabase:** Used specifically for community features (forums, posts, replies, peer check-ins) for real-time capabilities and anonymous posting.
+- **Supabase:** For community features (forums, posts, replies, peer check-ins).
 - **PostgreSQL:** Primary database for core application functionality.
 - **Stripe:** For subscription monetization and payment processing.
 - **horoscope-app-api.vercel.app:** External API for daily horoscope data.
-- **Radix UI:** For accessible UI components (select, slider).
+- **Radix UI:** For accessible UI components.
