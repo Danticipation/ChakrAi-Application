@@ -1,5 +1,5 @@
 import React from 'react';
-import { Palette, Check } from 'lucide-react';
+import { Palette, Check, X } from 'lucide-react';
 import { useTheme, themes } from '../contexts/ThemeContext';
 
 interface ThemeSelectorProps {
@@ -10,17 +10,35 @@ export default function ThemeSelector({ onClose }: ThemeSelectorProps) {
   const { currentTheme, changeTheme } = useTheme();
 
   return (
-    <div className="p-6 theme-card backdrop-blur-sm rounded-2xl border border-white/20 relative">
-      <div className="flex items-center gap-3 mb-6">
-        <Palette className="theme-text" size={24} />
-        <h2 className="text-2xl font-bold theme-text">Choose Your Theme</h2>
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="theme-card backdrop-blur-sm rounded-2xl border border-white/20 relative max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b border-white/20">
+          <div className="flex items-center gap-3">
+            <Palette className="theme-text" size={24} />
+            <h2 className="text-2xl font-bold theme-text">Choose Your Theme</h2>
+          </div>
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-red-500/20 rounded-lg transition-colors"
+            >
+              <X className="w-6 h-6 text-red-400" />
+            </button>
+          )}
+        </div>
+        
+        {/* Content */}
+        <div className="p-6">
+          <p className="theme-text-secondary mb-6">Choose your preferred color theme. Changes apply instantly across the entire app.</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {themes.map((theme) => (
           <button
             key={theme.id}
-            onClick={() => changeTheme(theme.id)}
+            onClick={() => {
+              changeTheme(theme.id);
+              if (onClose) onClose();
+            }}
             className={`p-4 rounded-xl border-2 transition-all duration-300 text-left relative group ${
               currentTheme.id === theme.id
                 ? 'border-white bg-white/20 shadow-lg scale-105'
@@ -73,17 +91,19 @@ export default function ThemeSelector({ onClose }: ThemeSelectorProps) {
                 style={{ backgroundColor: theme.colors.accent }}
               ></div>
             </div>
-          </button>
-        ))}
-      </div>
-      
-      <div className="text-center pt-4">
-        <p className="text-white/70 text-sm">
-          Current theme: <span className="font-semibold text-white">{currentTheme.name}</span>
-        </p>
-        <p className="text-white/60 text-xs mt-1">
-          Theme changes apply instantly across the entire app
-        </p>
+            </button>
+          ))}
+          </div>
+          
+          <div className="text-center pt-6">
+            <p className="theme-text-secondary text-sm">
+              Current theme: <span className="font-semibold theme-text">{currentTheme.name}</span>
+            </p>
+            <p className="theme-text-secondary text-xs mt-1">
+              Theme changes apply instantly across the entire app
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );
