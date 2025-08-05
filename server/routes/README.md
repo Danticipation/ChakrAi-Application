@@ -16,6 +16,8 @@ server/routes/
 ├── admin.js          # Admin dashboard and system management
 ├── community.js      # Community features and Supabase integration
 ├── voice.js          # Voice synthesis (TTS) and enhanced transcription
+├── auth.js           # Authentication (register, login, logout, verify, migrate)
+├── journal.js        # Journal entries and AI-powered analysis
 └── README.md         # This documentation file
 ```
 
@@ -72,6 +74,20 @@ server/routes/
 - `POST /api/voice/text-to-speech` - ElevenLabs TTS with voice mapping
 - `POST /api/voice/transcribe-enhanced` - Enhanced transcription with audio quality analysis
 - `GET /api/voice/voices` - Available voice options and descriptions
+
+### 10. Authentication Routes (`auth.js`)
+- `POST /api/auth/register` - User registration with email verification
+- `POST /api/auth/login` - User login with JWT token generation
+- `POST /api/auth/logout` - User logout and token invalidation
+- `GET /api/auth/verify` - JWT token verification
+- `POST /api/auth/migrate` - Migrate anonymous user to registered user
+
+### 11. Journal Routes (`journal.js`)
+- `GET /api/journal/user-entries` - Get journal entries by device fingerprint
+- `POST /api/journal` - Create journal entry with AI analysis
+- `POST /api/journal/create` - Alternative journal creation endpoint
+- `GET /api/journal/analytics/:userId` - Journal analytics and insights
+- `GET /api/journal/analytics` - General journal analytics
 
 ## Benefits of Modular Structure
 
