@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronRight, ChevronLeft, Heart, Users, Target, Coffee, Settings, Sparkles, Brain, Activity, Clock, Home } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Heart, Users, Target, Coffee, Settings, Sparkles, Brain, Activity, Clock, Home, CheckCircle } from 'lucide-react';
 import axios from 'axios';
 import { getCurrentUserId } from '../utils/userSession';
 
@@ -974,6 +974,8 @@ export default function VoluntaryQuestionDeck() {
   const [saving, setSaving] = useState(false);
   const [userId, setUserId] = useState<number | null>(null);
   const [answeredQuestions, setAnsweredQuestions] = useState<Set<string>>(new Set());
+  const [showCompletionModal, setShowCompletionModal] = useState(false);
+  const [completedCategoryName, setCompletedCategoryName] = useState('');
 
   useEffect(() => {
     console.log('VoluntaryQuestionDeck component mounted');
@@ -1320,14 +1322,68 @@ export default function VoluntaryQuestionDeck() {
                 ))}
               </div>
 
-              <button
-                onClick={() => setCurrentQuestionIndex(Math.min(currentCategory.questions.length - 1, currentQuestionIndex + 1))}
-                disabled={currentQuestionIndex === currentCategory.questions.length - 1}
-                className="flex items-center px-4 py-2 theme-secondary rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 transition-colors"
-              >
-                Next
-                <ChevronRight size={16} className="ml-1" />
-              </button>
+{currentQuestionIndex === currentCategory.questions.length - 1 ? (
+                <button
+                  onClick={() => {
+                    setCompletedCategoryName(currentCategory.name);
+                    setShowCompletionModal(true);
+                  }}
+                  className="flex items-center px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-semibold shadow-lg"
+                >
+                  ✓ Complete Category
+                  <ChevronRight size={16} className="ml-1" />
+                </button>
+              ) : (
+                <button
+                  onClick={() => setCurrentQuestionIndex(Math.min(currentCategory.questions.length - 1, currentQuestionIndex + 1))}
+                  className="flex items-center px-4 py-2 theme-secondary rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  Next
+                  <ChevronRight size={16} className="ml-1" />
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Completion Modal */}
+        {showCompletionModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-xl p-8 max-w-md w-full shadow-2xl">
+              <div className="text-center">
+                <div className="mb-4">
+                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <CheckCircle className="w-8 h-8 text-green-500" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-gray-800 mb-2">🎉 Category Complete!</h3>
+                  <p className="text-gray-600 mb-6">
+                    Great job! You've completed all questions in the <strong>{completedCategoryName}</strong> category. 
+                    Your answers have been automatically saved and will help me provide better personalized support.
+                  </p>
+                </div>
+                
+                <div className="space-y-3">
+                  <button
+                    onClick={() => {
+                      setShowCompletionModal(false);
+                      setActiveCategory(null);
+                    }}
+                    className="w-full bg-blue-500 text-white py-3 px-6 rounded-lg hover:bg-blue-600 transition-colors font-semibold"
+                  >
+                    Continue to Question Categories
+                  </button>
+                  
+                  <button
+                    onClick={() => {
+                      setShowCompletionModal(false);
+                      // Stay in the same category to review answers
+                    }}
+                    className="w-full border border-gray-300 text-gray-700 py-3 px-6 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    Review My Answers
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         )}
