@@ -69,11 +69,35 @@ router.get('/personality-reflection/:userId?', async (req, res) => {
       console.log('🧠 Starting AI personality analysis of journal content...');
       
       try {
-        const analysisPrompt = `As a clinical psychologist, analyze these journal entries and provide detailed personality insights:
+        const analysisPrompt = `As a professional clinical psychologist, provide a comprehensive psychological analysis of these journal entries. Base your analysis on the actual content, emotions, and patterns you observe:
 
-${journalContent.map((entry, i) => `Entry ${i+1}: "${entry.content}" (Mood: ${entry.mood})`).join('\n')}
+${journalContent.map((entry, i) => `Entry ${i+1} (${entry.date}):
+Mood: ${entry.mood}
+Content: "${entry.content}"
+Tags: ${entry.tags.join(', ')}
+`).join('\n')}
 
-Provide your analysis in valid JSON format only. Do not include any markdown formatting, code blocks, or explanatory text.`;
+Provide a detailed, comprehensive psychological analysis covering:
+1. Communication style - detailed paragraph about how this person expresses themselves
+2. Emotional patterns - specific observations from the journal content
+3. Strengths - evidence-based from the entries
+4. Growth opportunities - specific to their challenges
+5. Personality insights - deep analysis of traits, preferences, and processing style
+6. Wellness recommendations - targeted to their specific needs
+
+Return as JSON with this structure:
+{
+  "communicationStyle": "detailed 3-4 sentence analysis",
+  "emotionalPatterns": ["specific pattern 1 with evidence", "specific pattern 2 with evidence", "specific pattern 3 with evidence"],
+  "strengths": ["strength 1 with examples", "strength 2 with examples", "strength 3 with examples"],
+  "growthOpportunities": ["opportunity 1 with reasoning", "opportunity 2 with reasoning", "opportunity 3 with reasoning"],
+  "personalityInsights": {
+    "dominantTraits": ["trait 1", "trait 2", "trait 3"],
+    "communicationPreference": "detailed description",
+    "emotionalProcessing": "detailed description"
+  },
+  "wellnessRecommendations": ["specific recommendation 1", "specific recommendation 2", "specific recommendation 3"]
+}`;
 
         const response = await fetch('https://api.openai.com/v1/chat/completions', {
           method: 'POST',
@@ -86,15 +110,15 @@ Provide your analysis in valid JSON format only. Do not include any markdown for
             messages: [
               {
                 role: 'system',
-                content: 'You are a professional clinical psychologist providing personality analysis. Return only valid JSON in this exact format: {"communicationStyle":"","emotionalPatterns":[],"strengths":[],"growthOpportunities":[],"personalityInsights":{"dominantTraits":[],"communicationPreference":"","emotionalProcessing":""},"wellnessRecommendations":[]}'
+                content: 'You are a professional clinical psychologist with expertise in personality analysis and therapeutic assessment. Provide comprehensive, detailed psychological insights based on journal content. Your analysis should be thorough, evidence-based, and professionally detailed. Return only valid JSON without markdown formatting.'
               },
               {
                 role: 'user',
                 content: analysisPrompt
               }
             ],
-            max_tokens: 1000,
-            temperature: 0.3
+            max_tokens: 2000,
+            temperature: 0.5
           })
         });
 
@@ -105,9 +129,10 @@ Provide your analysis in valid JSON format only. Do not include any markdown for
           console.log('🎯 AI Analysis Response received');
           
           try {
-            // Log the raw response to verify format
-            console.log('🔍 OpenAI Response starts with:', analysisText.substring(0, 50));
-            console.log('🔍 Response contains markdown?:', analysisText.includes('```'));
+            // Log the complete response to verify it's actually from OpenAI
+            console.log('🔍 FULL OpenAI Response:', analysisText);
+            console.log('🔍 Response length:', analysisText.length);
+            console.log('🔍 Contains markdown?:', analysisText.includes('```'));
             
             // Try parsing directly first (should work if no markdown)
             let parsedAnalysis;

@@ -127,11 +127,11 @@ const PersonalityReflection: React.FC<PersonalityReflectionProps> = ({ userId })
       if (!section.trim()) return null;
       
       const lines = section.trim().split('\n');
-      const title = lines[0];
+      const title = lines[0] || '';
       const content = lines.slice(1).join(' ').trim(); // Join with spaces, not newlines
       
       // Check if this is a numbered section
-      const isNumberedSection = /^\d+\.\s+[A-Z\s]+:/.test(title);
+      const isNumberedSection = /^\d+\.\s+[A-Z\s]+:/.test(title || '');
       
       if (isNumberedSection) {
         const cleanTitle = title.replace(/^\d+\.\s+/, '').replace(':', '').trim();
@@ -271,7 +271,7 @@ const PersonalityReflection: React.FC<PersonalityReflectionProps> = ({ userId })
       </div>
 
       {/* Engagement Encouragement */}
-      {(!data?.dataPoints.conversations || data.dataPoints.conversations < 3) && (
+      {(!data?.dataPoints.conversationMessages || data.dataPoints.conversationMessages < 3) && (
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mt-4">
           <p className="text-blue-700 text-sm">
             <strong>Tip:</strong> Have more conversations and write journal entries to get deeper personality insights and therapeutic guidance.
