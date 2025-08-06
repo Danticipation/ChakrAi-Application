@@ -42,12 +42,12 @@ router.get('/bot-stats', async (req, res) => {
   }
 });
 
-// Personality reflection endpoint
+// Personality reflection endpoint with real AI analysis
 router.get('/personality-reflection/:userId?', async (req, res) => {
   try {
     const userId = parseInt(req.params.userId?.toString() || '1');
     
-    const journalEntries = await storage.getJournalEntries(userId).then(entries => entries.slice(0, 5)).catch(() => []);
+    const journalEntries = await storage.getJournalEntries(userId).then(entries => entries.slice(0, 10)).catch(() => []);
     const messages = await storage.getUserMessages(userId, 10).catch(() => []);
     const moodEntries = await storage.getUserMoodEntries(userId, 10).catch(() => []);
     
@@ -56,37 +56,129 @@ router.get('/personality-reflection/:userId?', async (req, res) => {
       messages: messages.length,
       moodEntries: moodEntries.length
     });
-    
-    // Use static reflection data to avoid emotional analysis errors
-    const emotionalAnalysis = { 
-      patterns: [
-        'Demonstrates consistent engagement with wellness practices',
-        'Shows growth in emotional awareness and vocabulary',
-        'Maintains thoughtful, reflective communication style'
-      ]
-    };
-    
+
+    // If we have journal content, use real AI analysis
+    if (journalEntries.length > 0) {
+      const journalContent = journalEntries.map(entry => ({
+        content: entry.content,
+        mood: entry.mood,
+        tags: entry.tags || [],
+        date: entry.createdAt
+      }));
+
+      console.log('🧠 Starting AI personality analysis of journal content...');
+      
+      try {
+        const analysisPrompt = `Analyze these journal entries as a clinical psychologist and return ONLY the JSON object, no markdown formatting:
+
+${journalContent.map((entry, i) => `Entry ${i+1}: "${entry.content}" (Mood: ${entry.mood})`).join('\n')}
+
+Return this exact JSON structure with your analysis:
+{"communicationStyle":"your analysis","emotionalPatterns":["pattern 1","pattern 2","pattern 3"],"strengths":["strength 1","strength 2","strength 3"],"growthOpportunities":["opportunity 1","opportunity 2","opportunity 3"],"personalityInsights":{"dominantTraits":["trait 1","trait 2","trait 3"],"communicationPreference":"preference analysis","emotionalProcessing":"processing style"},"wellnessRecommendations":["recommendation 1","recommendation 2","recommendation 3"]}`;
+
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            model: 'gpt-4o',
+            messages: [
+              {
+                role: 'system',
+                content: 'You are a professional clinical psychologist. Respond ONLY with valid JSON. Do not wrap your response in markdown code blocks or any other formatting.'
+              },
+              {
+                role: 'user',
+                content: analysisPrompt
+              }
+            ],
+            max_tokens: 1500,
+            temperature: 0.7
+          })
+        });
+
+        if (response.ok) {
+          const aiResponse = await response.json();
+          let analysisText = aiResponse.choices[0].message.content;
+          
+          console.log('🎯 AI Analysis Response received');
+          
+          try {
+            // Extract JSON from markdown blocks with robust parsing
+            let cleanedText = analysisText;
+            
+            // Remove markdown code block markers
+            cleanedText = cleanedText.replace(/```json\s*/g, '').replace(/```\s*$/g, '');
+            
+            // Find the first { and last } to extract complete JSON object
+            const firstBrace = cleanedText.indexOf('{');
+            const lastBrace = cleanedText.lastIndexOf('}');
+            
+            if (firstBrace >= 0 && lastBrace > firstBrace) {
+              cleanedText = cleanedText.substring(firstBrace, lastBrace + 1);
+            }
+            
+            console.log('🔧 Attempting to parse AI JSON response');
+            const aiAnalysis = JSON.parse(cleanedText);
+            
+            const reflection = {
+              ...aiAnalysis,
+              dataPoints: {
+                journalEntries: journalEntries.length,
+                conversationMessages: messages.length,
+                moodDataPoints: moodEntries.length
+              },
+              analysisStatus: "AI-generated from real journal content",
+              lastUpdated: new Date().toISOString()
+            };
+            
+            console.log('✅ Returning AI-generated personality reflection');
+            return res.json(reflection);
+            
+          } catch (parseError) {
+            console.error('Failed to parse AI response:', parseError);
+            console.error('Raw AI response:', analysisText);
+            // Fall through to fallback
+          }
+        } else {
+          console.error('OpenAI API error:', response.status, await response.text());
+          // Fall through to fallback
+        }
+      } catch (aiError) {
+        console.error('AI analysis error:', aiError);
+        // Fall through to fallback
+      }
+    }
+
+    // Fallback: Basic analysis based on available data
+    console.log('⚠️ Using fallback analysis - AI analysis failed or unavailable');
     const reflection = {
-      communicationStyle: "thoughtful and introspective",
-      emotionalPatterns: emotionalAnalysis.patterns || [],
-      strengths: ["self-awareness", "emotional intelligence", "growth mindset"],
-      growthOpportunities: ["mindfulness practice", "stress management", "emotional regulation"],
+      communicationStyle: journalEntries.length > 0 ? "Developing self-awareness through regular journaling" : "Beginning wellness journey",
+      emotionalPatterns: journalEntries.length > 0 ? [
+        `Shows commitment to mental wellness with ${journalEntries.length} journal entries`,
+        `Displays emotional awareness through mood tracking`,
+        `Engages in therapeutic self-reflection practices`
+      ] : ["Starting mental wellness journey", "Building self-reflection habits"],
+      strengths: ["self-awareness", "commitment to growth", "emotional intelligence"],
+      growthOpportunities: ["continued journaling", "mood pattern analysis", "stress management"],
       personalityInsights: {
-        dominantTraits: ["empathetic", "analytical", "curious"],
-        communicationPreference: "deep, meaningful conversations",
-        emotionalProcessing: "reflective and contemplative"
+        dominantTraits: ["reflective", "growth-oriented", "self-aware"],
+        communicationPreference: "thoughtful self-expression",
+        emotionalProcessing: "introspective and deliberate"
       },
       wellnessRecommendations: [
-        "Continue regular self-reflection practices",
-        "Explore mindfulness meditation",
-        "Consider journaling for emotional processing"
+        "Continue regular journaling practice",
+        "Explore mood pattern insights",
+        "Consider mindfulness exercises"
       ],
       dataPoints: {
         journalEntries: journalEntries.length,
         conversationMessages: messages.length,
         moodDataPoints: moodEntries.length
       },
-      analysisStatus: "Generated from real user data",
+      analysisStatus: "FALLBACK - AI analysis unavailable",
       lastUpdated: new Date().toISOString()
     };
     

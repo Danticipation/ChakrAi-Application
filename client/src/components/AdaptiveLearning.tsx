@@ -128,7 +128,7 @@ export default function AdaptiveLearning() {
   } = useQuery<ConversationPattern[]>({
     queryKey: ['/api/analytics/patterns'],
     queryFn: async () => {
-      const response = await fetch('/api/analytics/patterns');
+      const response = await fetch('/api/analytics/patterns?userId=107');
       if (!response.ok) {
         throw new Error('Failed to fetch patterns');
       }
@@ -145,7 +145,7 @@ export default function AdaptiveLearning() {
   } = useQuery<WellnessRecommendation[]>({
     queryKey: ['/api/analytics/recommendations'],
     queryFn: async () => {
-      const response = await fetch('/api/analytics/recommendations');
+      const response = await fetch('/api/analytics/recommendations?userId=107');
       if (!response.ok) {
         throw new Error('Failed to fetch recommendations');
       }
@@ -162,7 +162,7 @@ export default function AdaptiveLearning() {
   } = useQuery<LearningInsights[]>({
     queryKey: ['/api/memory/insights'],
     queryFn: async () => {
-      const response = await fetch('/api/memory/insights');
+      const response = await fetch('/api/memory/insights?userId=107');
       if (!response.ok) {
         throw new Error('Failed to fetch insights');
       }
