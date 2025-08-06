@@ -150,7 +150,9 @@ function performQuickEmotionalAnalysis(message: string): Partial<EmotionalState>
 }
 
 function constructEmotionalAnalysisPrompt(message: string, history: string[]): string {
-  const context = history.length > 0 ? `Recent conversation context:\n${history.join('\n')}\n\n` : '';
+  // Safely handle history array
+  const safeHistory = Array.isArray(history) ? history : [];
+  const context = safeHistory.length > 0 ? `Recent conversation context:\n${safeHistory.join('\n')}\n\n` : '';
   
   return `${context}Current message to analyze: "${message}"
 
@@ -229,7 +231,9 @@ function generateRecommendedActions(emotion: string): string[] {
 }
 
 function determineRiskLevel(analysis: any, message: string): 'low' | 'medium' | 'high' | 'critical' {
-  const lowerMessage = message.toLowerCase();
+  // Safely handle message string
+  const safeMessage = typeof message === 'string' ? message : '';
+  const lowerMessage = safeMessage.toLowerCase();
   
   // Critical risk indicators
   const criticalKeywords = ['suicide', 'kill myself', 'end it all', 'not worth living', 'hurt myself'];

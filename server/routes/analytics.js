@@ -51,8 +51,14 @@ router.get('/personality-reflection/:userId?', async (req, res) => {
     const messages = await storage.getUserMessages(userId, 10).catch(() => []);
     const moodEntries = await storage.getUserMoodEntries(userId, 10).catch(() => []);
     
-    // Analyze emotional patterns
-    const emotionalAnalysis = await analyzeEmotionalState(userId, 'reflection analysis');
+    // Analyze emotional patterns safely
+    let emotionalAnalysis;
+    try {
+      emotionalAnalysis = await analyzeEmotionalState(userId, 'reflection analysis');
+    } catch (error) {
+      console.warn('Emotional analysis failed, using fallback:', error.message);
+      emotionalAnalysis = { patterns: [] };
+    }
     
     const reflection = {
       communicationStyle: "thoughtful and introspective",
