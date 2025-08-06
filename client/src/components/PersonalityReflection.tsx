@@ -205,61 +205,69 @@ const PersonalityReflection: React.FC<PersonalityReflectionProps> = ({ userId })
           <h3 className="text-lg font-semibold text-white">AI Personality Analysis</h3>
         </div>
         
-        {/* Communication Style */}
-        <div className="mb-6">
-          <h4 className="text-lg font-medium text-white mb-2">Communication Style</h4>
-          <p className="text-white/90 leading-relaxed">{data.communicationStyle}</p>
-        </div>
+        {data ? (
+          <div className="space-y-6">
+            {/* Communication Style */}
+            <div>
+              <h4 className="text-lg font-medium text-white mb-2">Communication Style</h4>
+              <p className="text-white/90 leading-relaxed">{data.communicationStyle}</p>
+            </div>
 
-        {/* Emotional Patterns */}
-        <div className="mb-6">
-          <h4 className="text-lg font-medium text-white mb-2">Emotional Patterns</h4>
-          <ul className="space-y-2">
-            {data.emotionalPatterns.map((pattern, index) => (
-              <li key={index} className="text-white/90 flex items-start gap-2">
-                <span className="text-[#9fa8da] mt-1">•</span>
-                {pattern}
-              </li>
-            ))}
-          </ul>
-        </div>
+            {/* Emotional Patterns */}
+            <div>
+              <h4 className="text-lg font-medium text-white mb-2">Emotional Patterns</h4>
+              <ul className="space-y-2">
+                {data.emotionalPatterns?.map((pattern, index) => (
+                  <li key={index} className="text-white/90 flex items-start gap-2">
+                    <span className="text-[#9fa8da] mt-1">•</span>
+                    {pattern}
+                  </li>
+                ))}
+              </ul>
+            </div>
 
-        {/* Strengths */}
-        <div className="mb-6">
-          <h4 className="text-lg font-medium text-white mb-2">Strengths</h4>
-          <div className="flex flex-wrap gap-2">
-            {data.strengths.map((strength, index) => (
-              <span key={index} className="bg-green-600/20 text-green-200 px-3 py-1 rounded-full text-sm">
-                {strength}
-              </span>
-            ))}
+            {/* Strengths */}
+            <div>
+              <h4 className="text-lg font-medium text-white mb-2">Strengths</h4>
+              <div className="flex flex-wrap gap-2">
+                {data.strengths?.map((strength, index) => (
+                  <span key={index} className="bg-green-600/20 text-green-200 px-3 py-1 rounded-full text-sm">
+                    {strength}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* Growth Opportunities */}
+            <div>
+              <h4 className="text-lg font-medium text-white mb-2">Growth Opportunities</h4>
+              <div className="flex flex-wrap gap-2">
+                {data.growthOpportunities?.map((opportunity, index) => (
+                  <span key={index} className="bg-blue-600/20 text-blue-200 px-3 py-1 rounded-full text-sm">
+                    {opportunity}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* Wellness Recommendations */}
+            <div>
+              <h4 className="text-lg font-medium text-white mb-2">Wellness Recommendations</h4>
+              <ul className="space-y-2">
+                {data.wellnessRecommendations?.map((recommendation, index) => (
+                  <li key={index} className="text-white/90 flex items-start gap-2">
+                    <span className="text-[#9fa8da] mt-1">→</span>
+                    {recommendation}
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
-        </div>
-
-        {/* Growth Opportunities */}
-        <div className="mb-6">
-          <h4 className="text-lg font-medium text-white mb-2">Growth Opportunities</h4>
-          <div className="flex flex-wrap gap-2">
-            {data.growthOpportunities.map((opportunity, index) => (
-              <span key={index} className="bg-blue-600/20 text-blue-200 px-3 py-1 rounded-full text-sm">
-                {opportunity}
-              </span>
-            ))}
-          </div>
-        </div>
-
-        {/* Wellness Recommendations */}
-        <div className="mb-6">
-          <h4 className="text-lg font-medium text-white mb-2">Wellness Recommendations</h4>
-          <ul className="space-y-2">
-            {data.wellnessRecommendations.map((recommendation, index) => (
-              <li key={index} className="text-white/90 flex items-start gap-2">
-                <span className="text-[#9fa8da] mt-1">→</span>
-                {recommendation}
-              </li>
-            ))}
-          </ul>
-        </div>
+        ) : (
+          <p className="text-white/70 italic">
+            Continue engaging with Trai through conversations and journaling to build your personality profile.
+          </p>
+        )}
       </div>
 
       {/* Engagement Encouragement */}
