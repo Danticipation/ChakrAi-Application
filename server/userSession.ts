@@ -101,6 +101,12 @@ export class UserSessionManager {
    * Generate device fingerprint from request headers
    */
   generateDeviceFingerprint(req: any): string {
+    // For consistency, always use the explicit header first
+    const explicitFingerprint = req.headers['x-device-fingerprint'];
+    if (explicitFingerprint) {
+      return Array.isArray(explicitFingerprint) ? explicitFingerprint[0] : explicitFingerprint;
+    }
+
     const userAgent = req.headers['user-agent'] || '';
     const acceptLanguage = req.headers['accept-language'] || '';
     const acceptEncoding = req.headers['accept-encoding'] || '';
