@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Plus, BookOpen, TrendingUp, Download, Calendar, Search, Filter, Edit3, Eye, Clock, BarChart3, Star, MessageCircle, Loader2, RefreshCw, AlertCircle } from 'lucide-react';
+import { Plus, BookOpen, TrendingUp, Download, Calendar, Search, Filter, Edit3, Eye, Clock, BarChart3, Star, MessageCircle, Loader2, RefreshCw, AlertCircle, Trash2 } from 'lucide-react';
 import JournalEditor from './JournalEditor';
 import { format } from 'date-fns';
 
@@ -328,6 +328,38 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
     setShowEntryModal(false);
     setSelectedEntry(null);
   }, []);
+
+  const handleDeleteEntry = useCallback(async (entryId: number) => {
+    if (!window.confirm('Are you sure you want to delete this journal entry? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const deviceFingerprint = localStorage.getItem('device-fingerprint') || '';
+      const sessionId = localStorage.getItem('session-id') || '';
+      
+      const response = await fetch(`/api/journal/${entryId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Device-Fingerprint': deviceFingerprint,
+          'X-Session-ID': sessionId
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete journal entry');
+      }
+
+      // Close the modal and refresh the data
+      handleCloseModal();
+      queryClient.invalidateQueries({ queryKey: ['/api/journal/user-entries'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/journal/analytics'] });
+    } catch (error) {
+      console.error('Failed to delete journal entry:', error);
+      alert('Failed to delete journal entry. Please try again.');
+    }
+  }, [handleCloseModal, queryClient]);
 
   // Mood utility functions (single implementation)
   const getMoodEmoji = useCallback((mood: string): string => {
@@ -866,23 +898,32 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
                 </div>
               )}
 
-              <div className="mt-6 flex justify-end gap-3">
+              <div className="mt-6 flex justify-between">
                 <button
-                  onClick={handleCloseModal}
-                  className="px-4 py-2 theme-surface border border-[var(--theme-accent)]/30 rounded-lg hover:border-[var(--theme-accent)]/50 transition-all theme-text"
+                  onClick={() => handleDeleteEntry(selectedEntry.id)}
+                  className="flex items-center space-x-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-all"
                 >
-                  Close
+                  <Trash2 size={16} />
+                  <span>Delete Entry</span>
                 </button>
-                <button
-                  onClick={() => {
-                    handleCloseModal();
-                    handleEditEntry(selectedEntry);
-                  }}
-                  className="flex items-center space-x-2 px-4 py-2 bg-[var(--theme-accent)] text-white rounded-lg hover:shadow-lg transition-all"
-                >
-                  <Edit3 size={16} />
-                  <span>Edit Entry</span>
-                </button>
+                <div className="flex gap-3">
+                  <button
+                    onClick={handleCloseModal}
+                    className="px-4 py-2 theme-surface border border-[var(--theme-accent)]/30 rounded-lg hover:border-[var(--theme-accent)]/50 transition-all theme-text"
+                  >
+                    Close
+                  </button>
+                  <button
+                    onClick={() => {
+                      handleCloseModal();
+                      handleEditEntry(selectedEntry);
+                    }}
+                    className="flex items-center space-x-2 px-4 py-2 bg-[var(--theme-accent)] text-white rounded-lg hover:shadow-lg transition-all"
+                  >
+                    <Edit3 size={16} />
+                    <span>Edit Entry</span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
