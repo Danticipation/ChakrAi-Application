@@ -192,7 +192,7 @@ const useIsFreshStart = () => {
 
 // Main Component
 export default function JournalDashboard({ userId }: JournalDashboardProps) {
-  const [activeView, setActiveView] = useState<'list' | 'editor' | 'analytics'>('analytics'); // Default to analytics for Journal Analytics page
+  const [activeView, setActiveView] = useState<'list' | 'editor' | 'analytics'>('list'); // Default to list to show journal entries with delete buttons
   const [selectedEntry, setSelectedEntry] = useState<JournalEntry | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [moodFilter, setMoodFilter] = useState('all');
