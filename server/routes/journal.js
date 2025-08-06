@@ -32,7 +32,20 @@ router.get('/user-entries', async (req, res) => {
 // Create journal entry endpoint with AI analysis
 router.post('/', async (req, res) => {
   try {
-    const userId = req.body.userId;
+    const { UserSessionManager } = await import('../userSession.js');
+    const userSessionManager = UserSessionManager.getInstance();
+    
+    // Get user from device fingerprint
+    const deviceFingerprint = req.headers['x-device-fingerprint'] || 
+                              userSessionManager.generateDeviceFingerprint(req);
+    const sessionId = req.headers['x-session-id'] || undefined;
+    
+    const anonymousUser = await userSessionManager.getOrCreateAnonymousUser(
+      (Array.isArray(deviceFingerprint) ? deviceFingerprint[0] : deviceFingerprint) || 'unknown', 
+      Array.isArray(sessionId) ? sessionId[0] : sessionId
+    );
+    
+    const userId = anonymousUser.id;
     console.log('Create journal entry for user:', userId, req.body);
     
     // Create the journal entry
@@ -70,7 +83,7 @@ router.post('/', async (req, res) => {
         // Store the analysis results
         await storage.createJournalAnalytics({
           userId,
-          journalEntryId: newEntry.id,
+          entryId: newEntry.id,
           emotionDistribution: analysis.emotionalThemes,
           sentimentScore: analysis.sentimentScore,
           emotionalIntensity: analysis.emotionalIntensity,

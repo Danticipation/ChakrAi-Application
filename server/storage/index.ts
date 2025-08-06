@@ -197,6 +197,18 @@ export class ModularStorage implements IStorage {
     return this.journalStorage.getJournalEntries(userId, limit);
   }
 
+  async getJournalEntry(id: number): Promise<any> {
+    return this.journalStorage.getJournalEntry(id);
+  }
+
+  async updateJournalEntry(id: number, data: any): Promise<any> {
+    return this.journalStorage.updateJournalEntry(id, data);
+  }
+
+  async deleteJournalEntry(id: number): Promise<void> {
+    return this.journalStorage.deleteJournalEntry(id);
+  }
+
   async migrateJournalEntries(currentUserId: number): Promise<number> {
     return this.journalStorage.migrateJournalEntries(currentUserId);
   }

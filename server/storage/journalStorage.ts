@@ -64,10 +64,7 @@ export class JournalStorage implements IJournalStorage {
 
   async updateJournalEntry(entryId: number, data: Partial<InsertJournalEntry>): Promise<JournalEntry> {
     const result = await db.update(journalEntries)
-      .set({
-        ...data,
-        updatedAt: new Date()
-      })
+      .set(data)
       .where(eq(journalEntries.id, entryId))
       .returning();
     return result[0]!;
@@ -75,7 +72,7 @@ export class JournalStorage implements IJournalStorage {
 
   async deleteJournalEntry(entryId: number): Promise<void> {
     // Delete associated analytics first (foreign key constraint)
-    await db.delete(journalAnalytics).where(eq(journalAnalytics.journalEntryId, entryId));
+    await db.delete(journalAnalytics).where(eq(journalAnalytics.entryId, entryId));
     // Then delete the journal entry
     await db.delete(journalEntries).where(eq(journalEntries.id, entryId));
   }
