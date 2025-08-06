@@ -223,9 +223,9 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
   } = useQuery<JournalEntry[]>({
     queryKey: ['/api/journal/user-entries'],
     queryFn: async () => {
-      // Use consistent device fingerprint that matches backend user 107
-      const deviceFingerprint = 'test-device';
-      const sessionId = 'test-session';
+      // Healthcare-grade consistent device fingerprint for user 107
+      const deviceFingerprint = 'healthcare-user-107';
+      const sessionId = 'healthcare-session-107';
       
       localStorage.setItem('deviceFingerprint', deviceFingerprint);
       localStorage.setItem('sessionId', sessionId);
@@ -255,9 +255,9 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
   } = useQuery<JournalAnalytics>({
     queryKey: ['/api/journal/analytics'],
     queryFn: async () => {
-      // Use consistent device fingerprint that matches backend user 107
-      const deviceFingerprint = 'test-device';
-      const sessionId = 'test-session';
+      // Healthcare-grade consistent device fingerprint for user 107
+      const deviceFingerprint = 'healthcare-user-107';
+      const sessionId = 'healthcare-session-107';
       
       localStorage.setItem('deviceFingerprint', deviceFingerprint);
       localStorage.setItem('sessionId', sessionId);

@@ -1,52 +1,43 @@
 import express from 'express';
 import { storage } from '../storage.js';
+import { SecureAuthManager } from '../middleware/secureAuth.js';
 
 const router = express.Router();
 
-// Journal entries endpoint using device fingerprint
+// Apply healthcare-grade authentication to all journal routes
+router.use(SecureAuthManager.authenticateUser);
+
+// Journal entries endpoint with healthcare-grade security
 router.get('/user-entries', async (req, res) => {
   try {
-    const { UserSessionManager } = await import('../userSession.js');
-    const userSessionManager = UserSessionManager.getInstance();
+    // User ID is securely authenticated by middleware
+    const userId = req.userId;
     
-    // Get user from device fingerprint
-    const deviceFingerprint = req.headers['x-device-fingerprint'] || 
-                              userSessionManager.generateDeviceFingerprint(req);
-    const sessionId = req.headers['x-session-id'] || undefined;
+    // Audit this data access
+    SecureAuthManager.auditUserAction(req, 'FETCH_JOURNAL_ENTRIES');
     
-    const anonymousUser = await userSessionManager.getOrCreateAnonymousUser(
-      (Array.isArray(deviceFingerprint) ? deviceFingerprint[0] : deviceFingerprint) || 'unknown', 
-      Array.isArray(sessionId) ? sessionId[0] : sessionId
-    );
-    
-    console.log('Journal user-entries endpoint hit for user:', anonymousUser.id);
-    const entries = await storage.getJournalEntries(anonymousUser.id);
+    console.log('Healthcare-secure journal entries request for user:', userId);
+    const entries = await storage.getJournalEntries(userId);
     console.log('Retrieved entries:', entries ? entries.length : 0);
+    
     res.json(entries || []);
   } catch (error) {
     console.error('Failed to fetch journal entries:', error);
+    SecureAuthManager.auditUserAction(req, 'FETCH_JOURNAL_ENTRIES_FAILED');
     res.status(500).json({ error: 'Failed to fetch journal entries' });
   }
 });
 
-// Create journal entry endpoint with AI analysis
+// Create journal entry endpoint with healthcare-grade security
 router.post('/', async (req, res) => {
   try {
-    const { UserSessionManager } = await import('../userSession.js');
-    const userSessionManager = UserSessionManager.getInstance();
+    // User ID is securely authenticated by middleware
+    const userId = req.userId;
     
-    // Get user from device fingerprint
-    const deviceFingerprint = req.headers['x-device-fingerprint'] || 
-                              userSessionManager.generateDeviceFingerprint(req);
-    const sessionId = req.headers['x-session-id'] || undefined;
+    // Audit this data creation
+    SecureAuthManager.auditUserAction(req, 'CREATE_JOURNAL_ENTRY');
     
-    const anonymousUser = await userSessionManager.getOrCreateAnonymousUser(
-      (Array.isArray(deviceFingerprint) ? deviceFingerprint[0] : deviceFingerprint) || 'unknown', 
-      Array.isArray(sessionId) ? sessionId[0] : sessionId
-    );
-    
-    const userId = anonymousUser.id;
-    console.log('Create journal entry for user:', userId, req.body);
+    console.log('Healthcare-secure journal entry creation for user:', userId, req.body);
     
     // Create the journal entry
     const newEntry = await storage.createJournalEntry({
@@ -270,40 +261,46 @@ router.get('/entries', async (req, res) => {
 // Delete journal entry endpoint
 router.delete('/:entryId', async (req, res) => {
   try {
+    // User ID is securely authenticated by middleware
+    const userId = req.userId;
     const entryId = parseInt(req.params.entryId);
     
-    // Get user from device fingerprint to verify ownership
-    const { UserSessionManager } = await import('../userSession.js');
-    const userSessionManager = UserSessionManager.getInstance();
+    // Audit this deletion attempt
+    SecureAuthManager.auditUserAction(req, 'DELETE_JOURNAL_ENTRY', entryId);
     
-    const deviceFingerprint = req.headers['x-device-fingerprint'] || 
-                              userSessionManager.generateDeviceFingerprint(req);
-    const sessionId = req.headers['x-session-id'] || undefined;
+    console.log(`Healthcare-secure deletion: entry ${entryId} for user ${userId}`);
     
-    const anonymousUser = await userSessionManager.getOrCreateAnonymousUser(
-      (Array.isArray(deviceFingerprint) ? deviceFingerprint[0] : deviceFingerprint) || 'unknown', 
-      Array.isArray(sessionId) ? sessionId[0] : sessionId
-    );
-    
-    console.log(`Deleting journal entry ${entryId} for user ${anonymousUser.id}`);
-    
-    // Verify the entry exists and belongs to this user
+    // Verify the entry exists and belongs to this user (healthcare data protection)
     const entry = await storage.getJournalEntry(entryId);
     if (!entry) {
+      SecureAuthManager.auditUserAction(req, 'DELETE_FAILED_NOT_FOUND', entryId);
       return res.status(404).json({ error: 'Journal entry not found' });
     }
     
-    if (entry.userId !== anonymousUser.id) {
-      return res.status(403).json({ error: 'Not authorized to delete this entry' });
+    // Critical healthcare security check
+    SecureAuthManager.validateDataAccess(req, entry.userId);
+    
+    if (entry.userId !== userId) {
+      console.error(`[SECURITY VIOLATION] User ${userId} attempted to delete entry ${entryId} belonging to user ${entry.userId}`);
+      SecureAuthManager.auditUserAction(req, 'DELETE_FAILED_UNAUTHORIZED', entryId);
+      return res.status(403).json({ 
+        error: 'Unauthorized: Cannot delete another user\'s entry',
+        code: 'HEALTHCARE_SECURITY_VIOLATION'
+      });
     }
     
     // Delete the journal entry
     await storage.deleteJournalEntry(entryId);
     
-    console.log(`✅ Journal entry ${entryId} deleted successfully`);
+    console.log(`✅ Healthcare-secure deletion successful: entry ${entryId} for user ${userId}`);
+    
+    // Audit successful deletion
+    SecureAuthManager.auditUserAction(req, 'DELETE_SUCCESSFUL', entryId);
+    
     res.json({ success: true, message: 'Journal entry deleted successfully' });
   } catch (error) {
     console.error('Failed to delete journal entry:', error);
+    SecureAuthManager.auditUserAction(req, 'DELETE_FAILED_ERROR', req.params.entryId);
     res.status(500).json({ error: 'Failed to delete journal entry' });
   }
 });
