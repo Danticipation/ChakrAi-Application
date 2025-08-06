@@ -69,36 +69,29 @@ router.get('/personality-reflection/:userId?', async (req, res) => {
       console.log('🧠 Starting AI personality analysis of journal content...');
       
       try {
-        const analysisPrompt = `As a professional clinical psychologist, provide a comprehensive psychological analysis of these journal entries. Base your analysis on the actual content, emotions, and patterns you observe:
+        const analysisPrompt = `You are conducting a comprehensive psychological assessment based on these authentic journal entries. Provide deep, specific, evidence-based analysis that goes beyond surface observations.
 
-${journalContent.map((entry, i) => `Entry ${i+1} (${entry.date}):
-Mood: ${entry.mood}
+JOURNAL ENTRIES:
+${journalContent.map((entry, i) => `
+Entry ${i+1} (Date: ${new Date(entry.date).toLocaleDateString()}):
+Emotional State: ${entry.mood}
 Content: "${entry.content}"
-Tags: ${entry.tags.join(', ')}
+${entry.tags.length > 0 ? `Tags: ${entry.tags.join(', ')}` : ''}
 `).join('\n')}
 
-Provide a detailed, comprehensive psychological analysis covering:
-1. Communication style - detailed paragraph about how this person expresses themselves
-2. Emotional patterns - specific observations from the journal content
-3. Strengths - evidence-based from the entries
-4. Growth opportunities - specific to their challenges
-5. Personality insights - deep analysis of traits, preferences, and processing style
-6. Wellness recommendations - targeted to their specific needs
+ANALYSIS REQUIREMENTS:
+- Quote specific phrases from the entries to support your insights
+- Identify unique communication patterns and word choices
+- Analyze the emotional progression across entries
+- Provide specific, actionable therapeutic recommendations
+- Avoid generic psychological language
 
-Return as JSON with this structure:
-{
-  "communicationStyle": "detailed 3-4 sentence analysis",
-  "emotionalPatterns": ["specific pattern 1 with evidence", "specific pattern 2 with evidence", "specific pattern 3 with evidence"],
-  "strengths": ["strength 1 with examples", "strength 2 with examples", "strength 3 with examples"],
-  "growthOpportunities": ["opportunity 1 with reasoning", "opportunity 2 with reasoning", "opportunity 3 with reasoning"],
-  "personalityInsights": {
-    "dominantTraits": ["trait 1", "trait 2", "trait 3"],
-    "communicationPreference": "detailed description",
-    "emotionalProcessing": "detailed description"
-  },
-  "wellnessRecommendations": ["specific recommendation 1", "specific recommendation 2", "specific recommendation 3"]
-}`;
+Respond with detailed JSON analysis:`;
 
+        console.log('🔍 OpenAI API Key exists:', !!process.env.OPENAI_API_KEY);
+        console.log('🔍 OpenAI API Key length:', process.env.OPENAI_API_KEY?.length);
+        console.log('🔍 Making request to OpenAI...');
+        
         const response = await fetch('https://api.openai.com/v1/chat/completions', {
           method: 'POST',
           headers: {
@@ -110,7 +103,7 @@ Return as JSON with this structure:
             messages: [
               {
                 role: 'system',
-                content: 'You are a professional clinical psychologist with expertise in personality analysis and therapeutic assessment. Provide comprehensive, detailed psychological insights based on journal content. Your analysis should be thorough, evidence-based, and professionally detailed. Return only valid JSON without markdown formatting.'
+                content: 'You are a clinical psychologist specializing in personality assessment. Analyze journal entries with clinical precision, citing specific text evidence. Avoid generic observations. Focus on unique patterns, specific quotes, and personalized insights. Return valid JSON with detailed analysis.'
               },
               {
                 role: 'user',
@@ -122,8 +115,12 @@ Return as JSON with this structure:
           })
         });
 
+        console.log('🔍 OpenAI Response Status:', response.status);
+        console.log('🔍 OpenAI Response Headers:', Object.fromEntries(response.headers.entries()));
+        
         if (response.ok) {
           const aiResponse = await response.json();
+          console.log('🔍 Full OpenAI Response Object:', JSON.stringify(aiResponse, null, 2));
           let analysisText = aiResponse.choices[0].message.content;
           
           console.log('🎯 AI Analysis Response received');
@@ -163,7 +160,7 @@ Return as JSON with this structure:
                 conversationMessages: messages.length,
                 moodDataPoints: moodEntries.length
               },
-              analysisStatus: "AI-generated from real journal content",
+              analysisStatus: "NOTICE: AI analysis may be generic - manual review needed",
               lastUpdated: new Date().toISOString()
             };
             
@@ -180,7 +177,8 @@ Return as JSON with this structure:
           // Fall through to fallback
         }
       } catch (aiError) {
-        console.error('AI analysis error:', aiError);
+        console.error('❌ AI analysis error:', aiError);
+        console.error('❌ Full error details:', JSON.stringify(aiError, null, 2));
         // Fall through to fallback
       }
     }
