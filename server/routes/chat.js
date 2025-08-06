@@ -296,7 +296,45 @@ Respond naturally and therapeutically to: "${message}"`;
         audioUrl = Buffer.from(audioBuffer).toString('base64');
         console.log(`🔊 Generated audio for chat response: ${audioBuffer.byteLength} bytes`);
       } else {
-        console.log(`⚠️ TTS failed with status: ${ttsResponse.status}`);
+        const errorText = await ttsResponse.text().catch(() => 'No error details');
+        console.log(`⚠️ TTS failed with status: ${ttsResponse.status} - ${errorText}`);
+        
+        // If rate limited, wait and retry once
+        if (ttsResponse.status === 429) {
+          console.log('⏳ Rate limited, waiting 2 seconds and retrying...');
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          
+          try {
+            const retryResponse = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+              method: 'POST',
+              headers: {
+                'Accept': 'audio/mpeg',
+                'Content-Type': 'application/json',
+                'xi-api-key': process.env.ELEVENLABS_API_KEY || ''
+              },
+              body: JSON.stringify({
+                text: scrubbedText,
+                model_id: 'eleven_monolingual_v1',
+                voice_settings: {
+                  stability: 0.5,
+                  similarity_boost: 0.8,
+                  style: 0.3,
+                  use_speaker_boost: true
+                }
+              })
+            });
+            
+            if (retryResponse.ok) {
+              const audioBuffer = await retryResponse.arrayBuffer();
+              audioUrl = Buffer.from(audioBuffer).toString('base64');
+              console.log(`🔊 Retry successful - Generated audio: ${audioBuffer.byteLength} bytes`);
+            } else {
+              console.log(`⚠️ Retry also failed with status: ${retryResponse.status}`);
+            }
+          } catch (retryError) {
+            console.log('⚠️ Retry attempt failed:', retryError.message);
+          }
+        }
       }
     } catch (error) {
       console.log('🔇 Audio generation failed (non-critical):', error.message);

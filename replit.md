@@ -4,6 +4,10 @@
 Chakrai is a professional mental wellness and therapy application designed for individuals seeking therapeutic support. It aims to provide comprehensive mental health support, leveraging AI for personalized insights and fostering self-reflection. Key capabilities include voice interaction, daily affirmations, therapeutic personality modes, wellness goal tracking, and advanced conversation continuity for cross-session therapeutic context preservation. The project's vision is to create a calming, thoughtful, and professional environment to empower users on their mental wellness journey.
 
 ## Recent Changes (August 2025)
+- **VOICE SYSTEM BREAKTHROUGH**: Fully restored audio functionality with ElevenLabs TTS integration directly into chat responses
+- **Audio Pipeline Fixed**: Chat responses now include base64 encoded audio (audioUrl field) for seamless voice playback
+- **Rate Limiting Handling**: Added intelligent retry logic for ElevenLabs API rate limits with 2-second delay and fallback
+- **End-to-End Voice**: Complete voice interaction restored - speech-to-text input + AI response + text-to-speech output
 - **Conversation Continuity Enhancer**: Implemented comprehensive cross-session context preservation system with conversation sessions, threads, and intelligent session-to-session continuity bridging
 - **Database Enhancement**: Added conversation_sessions, conversation_threads, and session_continuity tables for sophisticated conversation tracking
 - **Advanced Session Management**: Created ConversationContinuityManager service for intelligent context preservation, session analysis, and cross-session therapeutic continuity
