@@ -69,12 +69,11 @@ router.get('/personality-reflection/:userId?', async (req, res) => {
       console.log('🧠 Starting AI personality analysis of journal content...');
       
       try {
-        const analysisPrompt = `Analyze these journal entries as a clinical psychologist and return ONLY the JSON object, no markdown formatting:
+        const analysisPrompt = `As a clinical psychologist, analyze these journal entries and provide detailed personality insights:
 
 ${journalContent.map((entry, i) => `Entry ${i+1}: "${entry.content}" (Mood: ${entry.mood})`).join('\n')}
 
-Return this exact JSON structure with your analysis:
-{"communicationStyle":"your analysis","emotionalPatterns":["pattern 1","pattern 2","pattern 3"],"strengths":["strength 1","strength 2","strength 3"],"growthOpportunities":["opportunity 1","opportunity 2","opportunity 3"],"personalityInsights":{"dominantTraits":["trait 1","trait 2","trait 3"],"communicationPreference":"preference analysis","emotionalProcessing":"processing style"},"wellnessRecommendations":["recommendation 1","recommendation 2","recommendation 3"]}`;
+Provide your analysis in valid JSON format only. Do not include any markdown formatting, code blocks, or explanatory text.`;
 
         const response = await fetch('https://api.openai.com/v1/chat/completions', {
           method: 'POST',
@@ -87,15 +86,15 @@ Return this exact JSON structure with your analysis:
             messages: [
               {
                 role: 'system',
-                content: 'You are a professional clinical psychologist. Respond ONLY with valid JSON. Do not wrap your response in markdown code blocks or any other formatting.'
+                content: 'You are a professional clinical psychologist providing personality analysis. Return only valid JSON in this exact format: {"communicationStyle":"","emotionalPatterns":[],"strengths":[],"growthOpportunities":[],"personalityInsights":{"dominantTraits":[],"communicationPreference":"","emotionalProcessing":""},"wellnessRecommendations":[]}'
               },
               {
                 role: 'user',
                 content: analysisPrompt
               }
             ],
-            max_tokens: 1500,
-            temperature: 0.7
+            max_tokens: 1000,
+            temperature: 0.3
           })
         });
 
@@ -106,22 +105,31 @@ Return this exact JSON structure with your analysis:
           console.log('🎯 AI Analysis Response received');
           
           try {
-            // Extract JSON from markdown blocks with robust parsing
-            let cleanedText = analysisText;
+            // Log the raw response to verify format
+            console.log('🔍 OpenAI Response starts with:', analysisText.substring(0, 50));
+            console.log('🔍 Response contains markdown?:', analysisText.includes('```'));
             
-            // Remove markdown code block markers
-            cleanedText = cleanedText.replace(/```json\s*/g, '').replace(/```\s*$/g, '');
-            
-            // Find the first { and last } to extract complete JSON object
-            const firstBrace = cleanedText.indexOf('{');
-            const lastBrace = cleanedText.lastIndexOf('}');
-            
-            if (firstBrace >= 0 && lastBrace > firstBrace) {
-              cleanedText = cleanedText.substring(firstBrace, lastBrace + 1);
+            // Try parsing directly first (should work if no markdown)
+            let parsedAnalysis;
+            try {
+              parsedAnalysis = JSON.parse(analysisText);
+              console.log('✅ Direct JSON parse successful');
+            } catch (directParseError) {
+              // Only if direct parsing fails, try cleaning markdown
+              console.log('⚠️ Direct parse failed, attempting markdown cleanup');
+              let cleanedText = analysisText;
+              
+              // Extract JSON if wrapped in markdown
+              const jsonMatch = cleanedText.match(/\{[\s\S]*\}/);
+              if (jsonMatch) {
+                cleanedText = jsonMatch[0];
+              }
+              
+              parsedAnalysis = JSON.parse(cleanedText);
+              console.log('✅ Cleaned JSON parse successful');
             }
             
-            console.log('🔧 Attempting to parse AI JSON response');
-            const aiAnalysis = JSON.parse(cleanedText);
+            const aiAnalysis = parsedAnalysis;
             
             const reflection = {
               ...aiAnalysis,
