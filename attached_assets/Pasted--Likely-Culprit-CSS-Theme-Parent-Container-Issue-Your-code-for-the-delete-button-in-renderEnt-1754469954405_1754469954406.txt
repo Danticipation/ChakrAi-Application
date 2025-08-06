@@ -1,0 +1,131 @@
+🧠 Likely Culprit: CSS / Theme / Parent Container Issue
+Your code for the delete button in renderEntryCard looks like this:
+
+tsx
+Copy
+Edit
+<button
+  onClick={(e) => {
+    e.stopPropagation();
+    handleDeleteClick(entry);
+  }}
+  className="p-1 rounded text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+  title="Delete entry"
+>
+  <Trash2 size={16} />
+</button>
+And that should work perfectly.
+
+But if you're not seeing the icon, here's what could be causing it:
+
+✅ 1. Lucide Icon Not Rendering
+Sometimes lucide-react icons don’t render at all if:
+
+The icon component is not properly imported
+
+The containing component (e.g. <Trash2 />) renders but outputs nothing due to a theme issue or display constraint
+
+Fix/Test:
+Replace it temporarily with text to confirm button exists:
+
+tsx
+Copy
+Edit
+<button
+  onClick={(e) => {
+    e.stopPropagation();
+    handleDeleteClick(entry);
+  }}
+  className="p-1 bg-red-100 text-red-700 rounded"
+>
+  DELETE
+</button>
+If this renders? ✅ Then the issue is with the icon rendering.
+
+✅ 2. Check Parent div Flex Properties
+Sometimes the parent of your buttons (flex items-center gap-2) is:
+
+Hidden by overflow
+
+Collapsing due to flex misalignment
+
+Wrap the whole action block with a background temporarily:
+
+tsx
+Copy
+Edit
+<div className="flex items-center gap-2 bg-yellow-100">
+  ...
+</div>
+If you now see the buttons? ✅ Then it’s layout-related.
+
+✅ 3. Dark Theme CSS Conflict
+Your button uses:
+
+tsx
+Copy
+Edit
+className="... hover:bg-red-50 dark:hover:bg-red-900/20 ..."
+But if your theme is dark and your red-900/20 is blending into a black background, you won’t see the button even though it’s there.
+
+Temporarily change the button background:
+
+tsx
+Copy
+Edit
+className="bg-white text-red-700"
+Just to confirm visibility.
+
+✅ 4. Check Button Container Visibility
+Sometimes parent containers (especially in modals or card rows) are affected by:
+
+overflow: hidden
+
+z-index
+
+Incorrect flex layout
+
+Use dev tools (Inspect Element) on one card and look for:
+
+The delete button’s HTML existing but with display: none
+
+It being outside the visible card due to layout break
+
+🔨 If All Else Fails: Replace the JSX Block
+Here’s a drop-in version you can paste inside renderEntryCard() to test:
+
+tsx
+Copy
+Edit
+<div className="flex items-center gap-2 bg-red-50 border border-red-200 p-2">
+  <button
+    onClick={() => alert('View')}
+    className="px-2 py-1 bg-blue-100 text-blue-700 rounded"
+  >
+    View
+  </button>
+  <button
+    onClick={() => alert('Edit')}
+    className="px-2 py-1 bg-yellow-100 text-yellow-700 rounded"
+  >
+    Edit
+  </button>
+  <button
+    onClick={() => alert('Delete')}
+    className="px-2 py-1 bg-red-500 text-white rounded"
+  >
+    Delete
+  </button>
+</div>
+If this works, then we’ll rebuild your icon version step-by-step.
+
+🧼 Final Suggestions
+Console.log inside renderEntryCard() to make sure it’s even being called:
+
+tsx
+Copy
+Edit
+console.log("Rendering entry card for:", entry.title);
+If not being called? You’ve got a rendering issue.
+
+If being called but button not visible? CSS/layout/visibility issue.

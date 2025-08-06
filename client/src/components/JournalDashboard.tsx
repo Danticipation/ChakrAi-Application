@@ -414,6 +414,7 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
 
   // Entry Card Component
   const renderEntryCard = useCallback((entry: JournalEntry) => {
+    console.log("Rendering entry card for:", entry.title);
     const wordCount = entry.content.split(/\s+/).filter(word => word.length > 0).length;
     
     return (
@@ -445,7 +446,7 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
               )}
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 bg-yellow-100">
             <button
               onClick={() => handleViewEntry(entry)}
               className="p-1 rounded theme-text-secondary hover:theme-text transition-colors"
@@ -465,10 +466,9 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
                 e.stopPropagation();
                 handleDeleteClick(entry);
               }}
-              className="p-1 rounded text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-              title="Delete entry"
+              className="p-1 bg-red-100 text-red-700 rounded"
             >
-              <Trash2 size={16} />
+              DELETE
             </button>
           </div>
         </div>
