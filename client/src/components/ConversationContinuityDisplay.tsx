@@ -209,19 +209,19 @@ const ConversationContinuityDisplay: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="text-center">
               <div className="text-2xl font-bold text-blue-600">
-                {continuityData.recentSessions.length}
+                {continuityData?.recentSessions?.length || 0}
               </div>
               <div className="text-sm text-gray-600">Recent Sessions</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-purple-600">
-                {continuityData.activeThreads.length}
+                {continuityData?.activeThreads?.length || 0}
               </div>
               <div className="text-sm text-gray-600">Active Threads</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-green-600">
-                {continuityData.sessionContext.activeTopics.length}
+                {continuityData?.sessionContext?.activeTopics?.length || 0}
               </div>
               <div className="text-sm text-gray-600">Ongoing Topics</div>
             </div>
@@ -230,7 +230,7 @@ const ConversationContinuityDisplay: React.FC = () => {
       </Card>
 
       {/* Recent Sessions */}
-      {continuityData.recentSessions.length > 0 && (
+      {(continuityData?.recentSessions?.length || 0) > 0 && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -240,12 +240,12 @@ const ConversationContinuityDisplay: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {continuityData.recentSessions.slice(0, 3).map((session) => (
+              {(continuityData?.recentSessions || []).slice(0, 3).map((session) => (
                 <div key={session.id} className="border rounded-lg p-4 space-y-3">
                   <div className="flex items-start justify-between">
                     <div>
-                      <h4 className="font-medium">{session.title}</h4>
-                      <p className="text-sm text-gray-600 mt-1">{session.summary}</p>
+                      <h4 className="font-medium">{session.topicsSummary || session.title || 'Conversation Session'}</h4>
+                      <p className="text-sm text-gray-600 mt-1">{session.summary || 'Session summary not available'}</p>
                     </div>
                     <Badge className={getEmotionalToneColor(session.emotionalTone)}>
                       {session.emotionalTone}
@@ -255,24 +255,24 @@ const ConversationContinuityDisplay: React.FC = () => {
                   <div className="flex items-center gap-4 text-sm text-gray-500">
                     <div className="flex items-center gap-1">
                       <MessageCircle className="w-4 h-4" />
-                      {session.messageCount} messages
+                      {session.messageCount || 0} messages
                     </div>
                     <div className="flex items-center gap-1">
                       <Clock className="w-4 h-4" />
-                      {formatTimeAgo(session.lastActivity)}
+                      {formatTimeAgo(session.lastActivity || session.endTime || new Date().toISOString())}
                     </div>
                   </div>
 
-                  {session.keyTopics.length > 0 && (
+                  {(session.keyTopics?.length || session.keyInsights?.length || 0) > 0 && (
                     <div className="flex flex-wrap gap-2">
-                      {session.keyTopics.slice(0, 4).map((topic, idx) => (
+                      {(session.keyTopics || session.keyInsights || []).slice(0, 4).map((topic, idx) => (
                         <Badge key={idx} variant="secondary" className="text-xs">
                           {topic}
                         </Badge>
                       ))}
-                      {session.keyTopics.length > 4 && (
+                      {(session.keyTopics || session.keyInsights || []).length > 4 && (
                         <Badge variant="secondary" className="text-xs">
-                          +{session.keyTopics.length - 4} more
+                          +{(session.keyTopics || session.keyInsights || []).length - 4} more
                         </Badge>
                       )}
                     </div>
@@ -285,7 +285,7 @@ const ConversationContinuityDisplay: React.FC = () => {
       )}
 
       {/* Active Conversation Threads */}
-      {continuityData.activeThreads.length > 0 && (
+      {(continuityData?.activeThreads?.length || 0) > 0 && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -295,7 +295,7 @@ const ConversationContinuityDisplay: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {continuityData.activeThreads.map((thread) => (
+              {(continuityData?.activeThreads || []).map((thread) => (
                 <div key={thread.id} className="border rounded-lg p-4 space-y-3">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -306,7 +306,7 @@ const ConversationContinuityDisplay: React.FC = () => {
                           {thread.status.replace('_', ' ')}
                         </Badge>
                       </div>
-                      <p className="text-sm text-gray-600 mt-1">{thread.contextSummary}</p>
+                      <p className="text-sm text-gray-600 mt-1">{thread.contextSummary || thread.context || 'Thread context not available'}</p>
                     </div>
                   </div>
 
@@ -331,7 +331,7 @@ const ConversationContinuityDisplay: React.FC = () => {
       )}
 
       {/* Cross-Session Context */}
-      {continuityData.sessionContext.openingContext && (
+      {continuityData?.sessionContext?.openingContext && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -342,7 +342,7 @@ const ConversationContinuityDisplay: React.FC = () => {
           <CardContent>
             <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-4">
               <pre className="text-sm text-gray-700 whitespace-pre-wrap font-sans">
-                {continuityData.sessionContext.openingContext}
+                {continuityData?.sessionContext?.openingContext}
               </pre>
             </div>
           </CardContent>
