@@ -932,9 +932,8 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
-                      console.log('🗑️ DELETE BUTTON CLICKED for entry ID:', selectedEntry.id);
-                      alert(`About to delete entry: ${selectedEntry.title || 'Untitled'}`);
-                      handleDeleteEntry(selectedEntry.id);
+                      setEntryToDelete(selectedEntry);
+                      setShowDeleteModal(true);
                     }}
                     className="inline-flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-md shadow-sm transition-colors duration-200"
                   >
