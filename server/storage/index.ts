@@ -556,6 +556,11 @@ export class ModularStorage implements IStorage {
     return [];
   }
 
+  // Placeholder methods that return empty data to prevent crashes
+  async getUserMoodEntries(userId: number, limit: number = 10): Promise<any[]> {
+    return [];
+  }
+
   async getConversationSessionHistory(sessionId: number, limit?: number): Promise<any[]> {
     // Return empty array for now
     return [];
