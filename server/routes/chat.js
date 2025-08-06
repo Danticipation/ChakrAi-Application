@@ -251,6 +251,57 @@ Respond naturally and therapeutically to: "${message}"`;
       console.log('Conversation continuity tracking failed (non-critical):', error.message);
     }
 
+    // Generate audio for the response
+    let audioUrl = null;
+    try {
+      const voiceMap = {
+        'james': 'EkK5I93UQWFDigLMpZcX',  
+        'brian': 'nPczCjzI2devNBz1zQrb',  
+        'alexandra': 'kdmDKE6EkgrWrrykO9Qt', 
+        'carla': 'l32B8XDoylOsZKiSdfhE',  
+      };
+      
+      const selectedVoice = voice || 'james';
+      const voiceId = voiceMap[selectedVoice] || voiceMap['james'];
+      
+      // Scrub text for TTS
+      const scrubbedText = aiResponse
+        .replace(/\*\*(.+?)\*\*/g, '$1')  // Bold **text** -> text
+        .replace(/\*(.+?)\*/g, '$1')      // Italic *text* -> text
+        .replace(/\n{3,}/g, '\n\n')       // Max 2 line breaks
+        .replace(/\s{3,}/g, ' ')          // Max 1 space between words
+        .trim();
+      
+      const ttsResponse = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+        method: 'POST',
+        headers: {
+          'Accept': 'audio/mpeg',
+          'Content-Type': 'application/json',
+          'xi-api-key': process.env.ELEVENLABS_API_KEY || ''
+        },
+        body: JSON.stringify({
+          text: scrubbedText,
+          model_id: 'eleven_monolingual_v1',
+          voice_settings: {
+            stability: 0.5,
+            similarity_boost: 0.8,
+            style: 0.3,
+            use_speaker_boost: true
+          }
+        })
+      });
+
+      if (ttsResponse.ok) {
+        const audioBuffer = await ttsResponse.arrayBuffer();
+        audioUrl = Buffer.from(audioBuffer).toString('base64');
+        console.log(`🔊 Generated audio for chat response: ${audioBuffer.byteLength} bytes`);
+      } else {
+        console.log(`⚠️ TTS failed with status: ${ttsResponse.status}`);
+      }
+    } catch (error) {
+      console.log('🔇 Audio generation failed (non-critical):', error.message);
+    }
+
     res.json({
       message: aiResponse,
       response: aiResponse,
@@ -260,7 +311,8 @@ Respond naturally and therapeutically to: "${message}"`;
       personalityMode: personalityMode,
       timestamp: new Date().toISOString(),
       semanticContextUsed: semanticContext.relevantMemories.length > 0,
-      contextualReferences: contextualReferences.hasReferences
+      contextualReferences: contextualReferences.hasReferences,
+      audioUrl: audioUrl
     });
     
   } catch (error) {

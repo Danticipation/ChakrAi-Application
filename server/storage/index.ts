@@ -548,6 +548,14 @@ export class ModularStorage implements IStorage {
     return [];
   }
 
+  async createSemanticMemory(data: any): Promise<any> {
+    return { id: Date.now(), ...data };
+  }
+
+  async getActiveConversationThreads(userId: number): Promise<any[]> {
+    return [];
+  }
+
   async getConversationSessionHistory(sessionId: number, limit?: number): Promise<any[]> {
     // Return empty array for now
     return [];
