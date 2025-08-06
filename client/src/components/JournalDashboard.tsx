@@ -851,6 +851,31 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
         ) : (
           <>
             <div className="grid gap-4 mb-6">
+              <div style={{
+                padding: '20px',
+                marginBottom: '20px',
+                border: '3px dashed red',
+                background: '#111',
+                color: 'white',
+                zIndex: 99999999,
+                position: 'relative',
+              }}>
+                <h2>🧪 Debug Card</h2>
+                <p>This is a hardcoded test outside of renderEntryCard().</p>
+                <button
+                  onClick={() => alert('Manual Delete Works!')}
+                  style={{
+                    background: 'red',
+                    color: 'white',
+                    fontSize: '18px',
+                    padding: '10px 20px',
+                    marginTop: '10px',
+                    border: '3px solid white',
+                  }}
+                >
+                  🗑️ Big Red DELETE
+                </button>
+              </div>
               {paginatedEntries.map(renderEntryCard)}
             </div>
 
