@@ -418,10 +418,11 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
     const wordCount = entry.content.split(/\s+/).filter(word => word.length > 0).length;
     
     return (
-      <div
-        key={`entry-${entry.id}`}
-        className="theme-card rounded-lg p-4 border border-[var(--theme-accent)]/30 hover:border-[var(--theme-accent)]/50 transition-all hover-lift"
-      >
+      <div style={{ border: '2px solid lime', padding: 10, position: 'relative', overflow: 'visible', zIndex: 9999 }}>
+        <div
+          key={`entry-${entry.id}`}
+          className="theme-card rounded-lg p-4 border border-[var(--theme-accent)]/30 hover:border-[var(--theme-accent)]/50 transition-all hover-lift"
+        >
         <div className="flex items-start justify-between mb-3">
           <div className="flex-1">
             <h3 className="font-semibold theme-text mb-1">
@@ -462,14 +463,10 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
               <Edit3 size={16} />
             </button>
             <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleDeleteClick(entry);
-              }}
-              className="p-1 bg-red-100 text-red-700 rounded"
+              onClick={() => console.log('delete click')}
+              style={{ background: 'red', color: 'white', padding: 10, zIndex: 9999999, position: 'relative' }}
             >
-              <Trash2 size={20} color="red" strokeWidth={2.5} />
-              <span role="img" aria-label="trash">🗑️</span>
+              DELETE
             </button>
           </div>
         </div>
@@ -496,6 +493,7 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
             )}
           </div>
         )}
+      </div>
       </div>
     );
   }, [getMoodColor, getMoodEmoji, handleViewEntry, handleEditEntry, handleDeleteClick]);
