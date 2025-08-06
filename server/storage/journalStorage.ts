@@ -8,6 +8,9 @@ import { eq, desc } from "drizzle-orm";
 export interface IJournalStorage {
   createJournalEntry(data: InsertJournalEntry): Promise<JournalEntry>;
   getJournalEntries(userId: number, limit?: number): Promise<JournalEntry[]>;
+  getJournalEntry(entryId: number): Promise<JournalEntry | null>;
+  updateJournalEntry(entryId: number, data: Partial<InsertJournalEntry>): Promise<JournalEntry>;
+  deleteJournalEntry(entryId: number): Promise<void>;
   migrateJournalEntries(currentUserId: number): Promise<number>;
   createJournalAnalytics(data: any): Promise<any>;
   getJournalAnalytics(userId: number, entryId?: number): Promise<any[]>;
@@ -50,6 +53,31 @@ export class JournalStorage implements IJournalStorage {
     //   query = query.where(eq(journalAnalytics.entryId, entryId));
     // }
     return await query.orderBy(desc(journalAnalytics.createdAt));
+  }
+
+  async getJournalEntry(entryId: number): Promise<JournalEntry | null> {
+    const result = await db.select().from(journalEntries)
+      .where(eq(journalEntries.id, entryId))
+      .limit(1);
+    return result[0] || null;
+  }
+
+  async updateJournalEntry(entryId: number, data: Partial<InsertJournalEntry>): Promise<JournalEntry> {
+    const result = await db.update(journalEntries)
+      .set({
+        ...data,
+        updatedAt: new Date()
+      })
+      .where(eq(journalEntries.id, entryId))
+      .returning();
+    return result[0]!;
+  }
+
+  async deleteJournalEntry(entryId: number): Promise<void> {
+    // Delete associated analytics first (foreign key constraint)
+    await db.delete(journalAnalytics).where(eq(journalAnalytics.journalEntryId, entryId));
+    // Then delete the journal entry
+    await db.delete(journalEntries).where(eq(journalEntries.id, entryId));
   }
 
   async clearUserJournalEntries(userId: number): Promise<void> {

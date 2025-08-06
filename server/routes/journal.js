@@ -103,10 +103,22 @@ router.post('/create', async (req, res) => {
   try {
     console.log('Alternative journal create endpoint:', req.body);
     
-    // Ensure userId is set - use current user or fallback
+    // Get user from device fingerprint instead of hardcoding
+    const { UserSessionManager } = await import('../userSession.js');
+    const userSessionManager = UserSessionManager.getInstance();
+    
+    const deviceFingerprint = req.headers['x-device-fingerprint'] || 
+                              userSessionManager.generateDeviceFingerprint(req);
+    const sessionId = req.headers['x-session-id'] || undefined;
+    
+    const anonymousUser = await userSessionManager.getOrCreateAnonymousUser(
+      (Array.isArray(deviceFingerprint) ? deviceFingerprint[0] : deviceFingerprint) || 'unknown', 
+      Array.isArray(sessionId) ? sessionId[0] : sessionId
+    );
+    
     const entryData = {
       ...req.body,
-      userId: req.body.userId || 107 // Use the active user ID we see in logs
+      userId: anonymousUser.id // Use actual user ID from session
     };
     
     const newEntry = await storage.createJournalEntry(entryData);
@@ -239,6 +251,95 @@ router.get('/entries', async (req, res) => {
   } catch (error) {
     console.error('Failed to fetch journal entries via generic endpoint:', error);
     res.status(500).json({ error: 'Failed to fetch journal entries' });
+  }
+});
+
+// Delete journal entry endpoint
+router.delete('/:entryId', async (req, res) => {
+  try {
+    const entryId = parseInt(req.params.entryId);
+    
+    // Get user from device fingerprint to verify ownership
+    const { UserSessionManager } = await import('../userSession.js');
+    const userSessionManager = UserSessionManager.getInstance();
+    
+    const deviceFingerprint = req.headers['x-device-fingerprint'] || 
+                              userSessionManager.generateDeviceFingerprint(req);
+    const sessionId = req.headers['x-session-id'] || undefined;
+    
+    const anonymousUser = await userSessionManager.getOrCreateAnonymousUser(
+      (Array.isArray(deviceFingerprint) ? deviceFingerprint[0] : deviceFingerprint) || 'unknown', 
+      Array.isArray(sessionId) ? sessionId[0] : sessionId
+    );
+    
+    console.log(`Deleting journal entry ${entryId} for user ${anonymousUser.id}`);
+    
+    // Verify the entry exists and belongs to this user
+    const entry = await storage.getJournalEntry(entryId);
+    if (!entry) {
+      return res.status(404).json({ error: 'Journal entry not found' });
+    }
+    
+    if (entry.userId !== anonymousUser.id) {
+      return res.status(403).json({ error: 'Not authorized to delete this entry' });
+    }
+    
+    // Delete the journal entry
+    await storage.deleteJournalEntry(entryId);
+    
+    console.log(`✅ Journal entry ${entryId} deleted successfully`);
+    res.json({ success: true, message: 'Journal entry deleted successfully' });
+  } catch (error) {
+    console.error('Failed to delete journal entry:', error);
+    res.status(500).json({ error: 'Failed to delete journal entry' });
+  }
+});
+
+// Update journal entry endpoint
+router.put('/:entryId', async (req, res) => {
+  try {
+    const entryId = parseInt(req.params.entryId);
+    
+    // Get user from device fingerprint to verify ownership
+    const { UserSessionManager } = await import('../userSession.js');
+    const userSessionManager = UserSessionManager.getInstance();
+    
+    const deviceFingerprint = req.headers['x-device-fingerprint'] || 
+                              userSessionManager.generateDeviceFingerprint(req);
+    const sessionId = req.headers['x-session-id'] || undefined;
+    
+    const anonymousUser = await userSessionManager.getOrCreateAnonymousUser(
+      (Array.isArray(deviceFingerprint) ? deviceFingerprint[0] : deviceFingerprint) || 'unknown', 
+      Array.isArray(sessionId) ? sessionId[0] : sessionId
+    );
+    
+    console.log(`Updating journal entry ${entryId} for user ${anonymousUser.id}`);
+    
+    // Verify the entry exists and belongs to this user
+    const existingEntry = await storage.getJournalEntry(entryId);
+    if (!existingEntry) {
+      return res.status(404).json({ error: 'Journal entry not found' });
+    }
+    
+    if (existingEntry.userId !== anonymousUser.id) {
+      return res.status(403).json({ error: 'Not authorized to update this entry' });
+    }
+    
+    // Update the journal entry
+    const updatedEntry = await storage.updateJournalEntry(entryId, {
+      title: req.body.title,
+      content: req.body.content,
+      mood: req.body.mood,
+      moodIntensity: req.body.moodIntensity,
+      tags: req.body.tags,
+      isPrivate: req.body.isPrivate
+    });
+    
+    console.log(`✅ Journal entry ${entryId} updated successfully`);
+    res.json(updatedEntry);
+  } catch (error) {
+    console.error('Failed to update journal entry:', error);
+    res.status(500).json({ error: 'Failed to update journal entry' });
   }
 });
 
