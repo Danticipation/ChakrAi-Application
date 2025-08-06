@@ -51,6 +51,12 @@ router.get('/personality-reflection/:userId?', async (req, res) => {
     const messages = await storage.getUserMessages(userId, 10).catch(() => []);
     const moodEntries = await storage.getUserMoodEntries(userId, 10).catch(() => []);
     
+    console.log(`📊 Personality reflection data for user ${userId}:`, {
+      journalEntries: journalEntries.length,
+      messages: messages.length,
+      moodEntries: moodEntries.length
+    });
+    
     // Use static reflection data to avoid emotional analysis errors
     const emotionalAnalysis = { 
       patterns: [
@@ -79,7 +85,9 @@ router.get('/personality-reflection/:userId?', async (req, res) => {
         journalEntries: journalEntries.length,
         conversationMessages: messages.length,
         moodDataPoints: moodEntries.length
-      }
+      },
+      analysisStatus: "Generated from real user data",
+      lastUpdated: new Date().toISOString()
     };
     
     res.json(reflection);

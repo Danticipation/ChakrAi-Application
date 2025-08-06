@@ -4,13 +4,23 @@ import { RefreshCw, Brain, TrendingUp, User, RotateCcw } from 'lucide-react';
 import { getCurrentUserId } from '../utils/userSession';
 
 interface PersonalityReflectionData {
-  reflection: string;
-  lastUpdated: string;
-  dataPoints: {
-    conversations: number;
-    journalEntries: number;
-    moodEntries: number;
+  communicationStyle: string;
+  emotionalPatterns: string[];
+  strengths: string[];
+  growthOpportunities: string[];
+  personalityInsights: {
+    dominantTraits: string[];
+    communicationPreference: string;
+    emotionalProcessing: string;
   };
+  wellnessRecommendations: string[];
+  dataPoints: {
+    journalEntries: number;
+    conversationMessages: number;
+    moodDataPoints: number;
+  };
+  analysisStatus?: string;
+  lastUpdated?: string;
 }
 
 interface PersonalityReflectionProps {
@@ -33,7 +43,7 @@ const PersonalityReflection: React.FC<PersonalityReflectionProps> = ({ userId })
       localStorage.setItem('deviceFingerprint', deviceFingerprint);
       localStorage.setItem('sessionId', sessionId);
       
-      const response = await fetch('/api/personality-reflection', {
+      const response = await fetch(`/api/analytics/personality-reflection/${currentUserId}`, {
         headers: {
           'X-Device-Fingerprint': deviceFingerprint,
           'X-Session-ID': sessionId
@@ -170,7 +180,7 @@ const PersonalityReflection: React.FC<PersonalityReflectionProps> = ({ userId })
           <span className="block mb-2">Analysis based on:</span>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
             <div className="bg-white/10 rounded-lg px-3 py-2 text-center">
-              <div className="font-semibold text-lg text-white">{data?.dataPoints.conversations || 0}</div>
+              <div className="font-semibold text-lg text-white">{data?.dataPoints.conversationMessages || 0}</div>
               <div className="text-white/70">conversations</div>
             </div>
             <div className="bg-white/10 rounded-lg px-3 py-2 text-center">
@@ -178,7 +188,7 @@ const PersonalityReflection: React.FC<PersonalityReflectionProps> = ({ userId })
               <div className="text-white/70">journal entries</div>
             </div>
             <div className="bg-white/10 rounded-lg px-3 py-2 text-center">
-              <div className="font-semibold text-lg text-white">{data?.dataPoints.moodEntries || 0}</div>
+              <div className="font-semibold text-lg text-white">{data?.dataPoints.moodDataPoints || 0}</div>
               <div className="text-white/70">mood entries</div>
             </div>
           </div>
@@ -195,15 +205,60 @@ const PersonalityReflection: React.FC<PersonalityReflectionProps> = ({ userId })
           <h3 className="text-lg font-semibold text-white">AI Personality Analysis</h3>
         </div>
         
-        <div className="space-y-4">
-          {data?.reflection ? (
-            formatReflectionText(data.reflection)
-          ) : (
-            <p className="text-white/70 italic">
-              Continue engaging with TraI through conversations and journaling to build a more detailed personality profile. 
-              Your reflection will become more insightful as you share more about yourself.
-            </p>
-          )}
+        {/* Communication Style */}
+        <div className="mb-6">
+          <h4 className="text-lg font-medium text-white mb-2">Communication Style</h4>
+          <p className="text-white/90 leading-relaxed">{data.communicationStyle}</p>
+        </div>
+
+        {/* Emotional Patterns */}
+        <div className="mb-6">
+          <h4 className="text-lg font-medium text-white mb-2">Emotional Patterns</h4>
+          <ul className="space-y-2">
+            {data.emotionalPatterns.map((pattern, index) => (
+              <li key={index} className="text-white/90 flex items-start gap-2">
+                <span className="text-[#9fa8da] mt-1">•</span>
+                {pattern}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Strengths */}
+        <div className="mb-6">
+          <h4 className="text-lg font-medium text-white mb-2">Strengths</h4>
+          <div className="flex flex-wrap gap-2">
+            {data.strengths.map((strength, index) => (
+              <span key={index} className="bg-green-600/20 text-green-200 px-3 py-1 rounded-full text-sm">
+                {strength}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* Growth Opportunities */}
+        <div className="mb-6">
+          <h4 className="text-lg font-medium text-white mb-2">Growth Opportunities</h4>
+          <div className="flex flex-wrap gap-2">
+            {data.growthOpportunities.map((opportunity, index) => (
+              <span key={index} className="bg-blue-600/20 text-blue-200 px-3 py-1 rounded-full text-sm">
+                {opportunity}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* Wellness Recommendations */}
+        <div className="mb-6">
+          <h4 className="text-lg font-medium text-white mb-2">Wellness Recommendations</h4>
+          <ul className="space-y-2">
+            {data.wellnessRecommendations.map((recommendation, index) => (
+              <li key={index} className="text-white/90 flex items-start gap-2">
+                <span className="text-[#9fa8da] mt-1">→</span>
+                {recommendation}
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
 
