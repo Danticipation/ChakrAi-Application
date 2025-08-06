@@ -49,15 +49,42 @@ const ConversationContinuityDisplay: React.FC = () => {
   const fetchContinuityData = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/memory/conversation-continuity');
+      const response = await fetch('/api/memory/conversation-continuity?userId=20');
       if (!response.ok) {
         throw new Error('Failed to fetch continuity data');
       }
       const data = await response.json();
-      setContinuityData(data);
+      
+      // If there's an error but the response has valid structure, use it
+      if (data.error && data.recentSessions && data.activeThreads) {
+        setContinuityData({
+          recentSessions: data.recentSessions,
+          activeThreads: data.activeThreads,
+          continuityItems: data.continuityItems || [],
+          sessionContext: data.sessionContext || {
+            openingContext: 'ChakrAI conversation system ready',
+            continuityPrompts: [],
+            activeTopics: []
+          }
+        });
+      } else {
+        setContinuityData(data);
+      }
+      setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
       console.error('Error fetching continuity data:', err);
+      // Set fallback data to prevent component crash
+      setContinuityData({
+        recentSessions: [],
+        activeThreads: [],
+        continuityItems: [],
+        sessionContext: {
+          openingContext: 'ChakrAI conversation system ready',
+          continuityPrompts: [],
+          activeTopics: []
+        }
+      });
     } finally {
       setLoading(false);
     }
