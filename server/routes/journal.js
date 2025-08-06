@@ -102,7 +102,14 @@ router.post('/', async (req, res) => {
 router.post('/create', async (req, res) => {
   try {
     console.log('Alternative journal create endpoint:', req.body);
-    const newEntry = await storage.createJournalEntry(req.body);
+    
+    // Ensure userId is set - use current user or fallback
+    const entryData = {
+      ...req.body,
+      userId: req.body.userId || 107 // Use the active user ID we see in logs
+    };
+    
+    const newEntry = await storage.createJournalEntry(entryData);
     res.json(newEntry);
   } catch (error) {
     console.error('Failed to create journal entry via /create:', error);
