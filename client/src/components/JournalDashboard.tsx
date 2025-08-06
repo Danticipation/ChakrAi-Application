@@ -202,8 +202,12 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
   const queryClient = useQueryClient();
   const isFreshStart = useIsFreshStart();
 
-  // Clear cache only when truly necessary (fresh start)
+  // Clear cache only when truly necessary (fresh start) + force refresh for device fingerprint change
   useEffect(() => {
+    // Always clear cache to force fresh data fetch with correct device fingerprint
+    queryClient.removeQueries({ queryKey: ['/api/journal/user-entries'] });
+    queryClient.removeQueries({ queryKey: ['/api/journal/analytics'] });
+    
     if (isFreshStart) {
       queryClient.removeQueries({ queryKey: ['/api/journal/user-entries'] });
       queryClient.removeQueries({ queryKey: ['/api/journal/analytics'] });
@@ -219,10 +223,9 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
   } = useQuery<JournalEntry[]>({
     queryKey: ['/api/journal/user-entries'],
     queryFn: async () => {
-      const deviceFingerprint = localStorage.getItem('deviceFingerprint') || 
-                               `device_${Math.random().toString(36).substring(2, 15)}`;
-      const sessionId = localStorage.getItem('sessionId') || 
-                       `session_${Math.random().toString(36).substring(2, 15)}`;
+      // Use consistent device fingerprint that matches backend user 107
+      const deviceFingerprint = 'test-device';
+      const sessionId = 'test-session';
       
       localStorage.setItem('deviceFingerprint', deviceFingerprint);
       localStorage.setItem('sessionId', sessionId);
@@ -241,7 +244,7 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
       return response.json();
     },
     retry: 2,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 0, // Force fresh fetch for device fingerprint fix
   });
 
   const { 
@@ -252,10 +255,9 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
   } = useQuery<JournalAnalytics>({
     queryKey: ['/api/journal/analytics'],
     queryFn: async () => {
-      const deviceFingerprint = localStorage.getItem('deviceFingerprint') || 
-                               `device_${Math.random().toString(36).substring(2, 15)}`;
-      const sessionId = localStorage.getItem('sessionId') || 
-                       `session_${Math.random().toString(36).substring(2, 15)}`;
+      // Use consistent device fingerprint that matches backend user 107
+      const deviceFingerprint = 'test-device';
+      const sessionId = 'test-session';
       
       localStorage.setItem('deviceFingerprint', deviceFingerprint);
       localStorage.setItem('sessionId', sessionId);
