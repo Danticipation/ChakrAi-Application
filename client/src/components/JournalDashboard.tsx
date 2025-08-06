@@ -906,8 +906,12 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
 
               <div className="mt-6 flex justify-between">
                 <button
-                  onClick={() => handleDeleteEntry(selectedEntry.id)}
+                  onClick={() => {
+                    console.log('Delete button clicked for entry:', selectedEntry.id);
+                    handleDeleteEntry(selectedEntry.id);
+                  }}
                   className="flex items-center space-x-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-all"
+                  style={{ display: 'flex' }}
                 >
                   <Trash2 size={16} />
                   <span>Delete Entry</span>
