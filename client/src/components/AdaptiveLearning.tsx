@@ -271,7 +271,7 @@ export default function AdaptiveLearning() {
   const renderPatternsTab = useCallback(() => {
     if (patternsLoading) return <LoadingSpinner message="Loading conversation patterns..." />;
     if (patternsError) return <ErrorMessage error="Failed to load patterns" onRetry={refetchPatterns} />;
-    if (patterns.length === 0) {
+    if (!patterns || !Array.isArray(patterns) || patterns.length === 0) {
       return (
         <div className="text-center py-8">
           <MessageSquare className="w-12 h-12 mx-auto mb-3 text-gray-400" />
@@ -288,7 +288,7 @@ export default function AdaptiveLearning() {
           icon={<MessageSquare className="w-5 h-5" />}
         >
           <div className="space-y-4">
-            {patterns.map((pattern: ConversationPattern) => (
+            {(patterns || []).map((pattern: ConversationPattern) => (
               <div key={pattern.id} className="p-4 bg-gray-800 rounded-lg border border-gray-600 hover:border-blue-400 transition-colors shadow-lg">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-white font-medium capitalize">{pattern.type}</span>

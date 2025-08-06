@@ -700,7 +700,7 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
       <div className="h-full">
         <JournalEditor
           userId={userId}
-          entry={selectedEntry}
+          entry={selectedEntry || undefined}
           onSave={handleSaveEntry}
           onCancel={handleCancelEdit}
         />
