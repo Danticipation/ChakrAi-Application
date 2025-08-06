@@ -418,9 +418,17 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
     const wordCount = entry.content.split(/\s+/).filter(word => word.length > 0).length;
     
     return (
-      <div style={{ border: '2px solid lime', padding: 10, position: 'relative', overflow: 'visible', zIndex: 9999 }}>
+      <div
+        key={`entry-${entry.id}`}
+        style={{
+          border: '3px solid lime',
+          padding: 20,
+          position: 'relative',
+          overflow: 'visible',
+          zIndex: 1000,
+        }}
+      >
         <div
-          key={`entry-${entry.id}`}
           className="theme-card rounded-lg p-4 border border-[var(--theme-accent)]/30 hover:border-[var(--theme-accent)]/50 transition-all hover-lift"
         >
         <div className="flex items-start justify-between mb-3">
@@ -463,10 +471,19 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
               <Edit3 size={16} />
             </button>
             <button
-              onClick={() => console.log('delete click')}
-              style={{ background: 'red', color: 'white', padding: 10, zIndex: 9999999, position: 'relative' }}
+              onClick={() => alert("DELETE CLICKED")}
+              style={{
+                background: 'red',
+                color: 'white',
+                padding: '12px 24px',
+                fontWeight: 'bold',
+                fontSize: '16px',
+                zIndex: 10000,
+                position: 'relative',
+                border: '3px solid black'
+              }}
             >
-              DELETE
+              🗑️ DELETE
             </button>
           </div>
         </div>
@@ -493,8 +510,8 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
             )}
           </div>
         )}
-      </div>
-      </div>
+        </div> {/* inner theme-card */}
+      </div>   {/* lime wrapper */
     );
   }, [getMoodColor, getMoodEmoji, handleViewEntry, handleEditEntry, handleDeleteClick]);
 
