@@ -2,6 +2,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus, BookOpen, TrendingUp, Download, Calendar, Search, Filter, Edit3, Eye, Clock, BarChart3, Star, MessageCircle, Loader2, RefreshCw, AlertCircle, Trash2 } from 'lucide-react';
 import JournalEditor from './JournalEditor';
+import DeleteEntryModal from './DeleteEntryModal';
 import { format } from 'date-fns';
 
 // Types based on actual database schema
@@ -198,6 +199,8 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [entriesPerPage] = useState(10);
   const [showEntryModal, setShowEntryModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [entryToDelete, setEntryToDelete] = useState<JournalEntry | null>(null);
   
   const queryClient = useQueryClient();
   const isFreshStart = useIsFreshStart();
@@ -331,18 +334,17 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
     setSelectedEntry(null);
   }, []);
 
-  const handleDeleteEntry = useCallback(async (entryId: number) => {
-    if (!window.confirm('Are you sure you want to delete this journal entry? This action cannot be undone.')) {
-      return;
-    }
+  // NEW: Separate delete modal handlers
+  const handleDeleteClick = useCallback((entry: JournalEntry) => {
+    setEntryToDelete(entry);
+    setShowDeleteModal(true);
+  }, []);
+
+  const handleDeleteConfirm = useCallback(async () => {
+    if (!entryToDelete) return;
 
     try {
-      // Force healthcare-grade authentication - clear any random fingerprints
-      localStorage.removeItem('deviceFingerprint');
-      localStorage.removeItem('device-fingerprint');
-      localStorage.setItem('deviceFingerprint', 'healthcare-user-107');
-      
-      const response = await fetch(`/api/journal/${entryId}`, {
+      const response = await fetch(`/api/journal/${entryToDelete.id}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -355,17 +357,24 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
         throw new Error('Failed to delete journal entry');
       }
 
-      console.log(`Journal entry ${entryId} deleted with healthcare authentication`);
+      console.log(`✅ Journal entry ${entryToDelete.id} deleted successfully with healthcare authentication`);
 
-      // Close the modal and refresh the data
-      handleCloseModal();
+      // Close modals and refresh data
+      setShowDeleteModal(false);
+      setEntryToDelete(null);
+      setShowEntryModal(false);
       queryClient.invalidateQueries({ queryKey: ['/api/journal/user-entries'] });
       queryClient.invalidateQueries({ queryKey: ['/api/journal/analytics'] });
     } catch (error) {
-      console.error('Failed to delete journal entry:', error);
+      console.error('❌ Failed to delete journal entry:', error);
       alert('Failed to delete journal entry. Please try again.');
     }
-  }, [handleCloseModal, queryClient]);
+  }, [entryToDelete, queryClient]);
+
+  const handleDeleteCancel = useCallback(() => {
+    setShowDeleteModal(false);
+    setEntryToDelete(null);
+  }, []);
 
   // Mood utility functions (single implementation)
   const getMoodEmoji = useCallback((mood: string): string => {
@@ -448,6 +457,16 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
             >
               <Edit3 size={16} />
             </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDeleteClick(entry);
+              }}
+              className="p-1 rounded text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+              title="Delete entry"
+            >
+              <Trash2 size={16} />
+            </button>
           </div>
         </div>
         
@@ -475,7 +494,7 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
         )}
       </div>
     );
-  }, [getMoodColor, getMoodEmoji, handleViewEntry, handleEditEntry]);
+  }, [getMoodColor, getMoodEmoji, handleViewEntry, handleEditEntry, handleDeleteClick]);
 
   // Analytics View
   const renderAnalytics = () => {
@@ -950,6 +969,15 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
           </div>
         </div>
       )}
+
+      {/* DELETE CONFIRMATION MODAL */}
+      <DeleteEntryModal
+        isOpen={showDeleteModal}
+        entryId={entryToDelete?.id || 0}
+        entryTitle={entryToDelete?.title || 'Untitled Entry'}
+        onConfirm={handleDeleteConfirm}
+        onCancel={handleDeleteCancel}
+      />
     </div>
   );
 }
