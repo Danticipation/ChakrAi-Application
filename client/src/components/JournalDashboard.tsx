@@ -904,41 +904,46 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
                 </div>
               )}
 
-              {/* Action Buttons - Forced visibility */}
-              <div className="mt-6 flex justify-between items-center">
-                <button
-                  onClick={() => {
-                    console.log('DELETE BUTTON CLICKED for entry:', selectedEntry.id);
-                    handleDeleteEntry(selectedEntry.id);
-                  }}
-                  className="flex items-center space-x-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-all font-medium"
-                  style={{ 
-                    display: 'flex !important',
-                    visibility: 'visible !important',
-                    opacity: '1 !important',
-                    zIndex: '9999'
-                  }}
-                >
-                  <Trash2 size={16} />
-                  <span>Delete Entry</span>
-                </button>
-                <div className="flex gap-3">
+              {/* CRITICAL: Action Buttons Section */}
+              <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-4">
+                <div className="flex justify-between items-center">
+                  {/* DELETE BUTTON - LEFT SIDE */}
                   <button
-                    onClick={handleCloseModal}
-                    className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-all"
-                  >
-                    Close
-                  </button>
-                  <button
-                    onClick={() => {
-                      handleCloseModal();
-                      handleEditEntry(selectedEntry);
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      console.log('🗑️ DELETE BUTTON CLICKED for entry ID:', selectedEntry.id);
+                      alert(`About to delete entry: ${selectedEntry.title || 'Untitled'}`);
+                      handleDeleteEntry(selectedEntry.id);
                     }}
-                    className="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all"
+                    className="inline-flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-md shadow-sm transition-colors duration-200"
                   >
-                    <Edit3 size={16} />
-                    <span>Edit Entry</span>
+                    🗑️
+                    <span className="ml-2">Delete Entry</span>
                   </button>
+                  
+                  {/* EDIT/CLOSE BUTTONS - RIGHT SIDE */}
+                  <div className="flex space-x-3">
+                    <button
+                      type="button"
+                      onClick={handleCloseModal}
+                      className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-md border border-gray-300 transition-colors duration-200"
+                    >
+                      Close
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        handleCloseModal();
+                        handleEditEntry(selectedEntry);
+                      }}
+                      className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md shadow-sm transition-colors duration-200"
+                    >
+                      <Edit3 size={16} />
+                      <span className="ml-2">Edit Entry</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
