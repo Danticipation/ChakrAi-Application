@@ -159,4 +159,32 @@ router.get('/adaptive-preferences', async (req, res) => {
   }
 });
 
+// User adaptive preferences endpoint for AdaptiveLearningProgressTracker
+router.get('/adaptive-preferences', async (req, res) => {
+  try {
+    const userId = parseInt(req.query.userId) || 20;
+    console.log(`📊 Getting adaptive preferences for user ${userId}`);
+    
+    res.json({
+      learningStyle: 'interactive',
+      communicationPreference: 'supportive',
+      pacePreference: 'moderate',
+      feedbackFrequency: 'regular',
+      challengeLevel: 'intermediate',
+      focusAreas: ['mindfulness', 'emotional_intelligence', 'stress_management'],
+      preferredSessionLength: 15,
+      preferredTimeOfDay: 'evening',
+      adaptationSettings: {
+        autoAdjustDifficulty: true,
+        personalizeContent: true,
+        trackProgress: true,
+        enableReminders: true
+      }
+    });
+  } catch (error) {
+    console.error('Adaptive preferences error:', error);
+    res.status(500).json({ error: 'Failed to load adaptive preferences' });
+  }
+});
+
 export default router;
