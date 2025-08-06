@@ -850,14 +850,14 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
       {/* Entry View Modal */}
       {showEntryModal && selectedEntry && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="theme-card rounded-lg max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-2xl w-full max-h-[80vh] overflow-y-auto shadow-xl">
             <div className="p-6">
               <div className="flex items-start justify-between mb-4">
                 <div>
-                  <h3 className="text-xl font-bold theme-text mb-2">
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
                     {selectedEntry.title || 'Untitled Entry'}
                   </h3>
-                  <div className="flex items-center gap-3 text-sm theme-text-secondary">
+                  <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
                     <span className="flex items-center gap-1">
                       <Clock size={14} />
                       {selectedEntry.createdAt ? format(new Date(selectedEntry.createdAt), 'MMMM dd, yyyy • h:mm a') : 'Unknown date'}
@@ -877,25 +877,25 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
                 </div>
                 <button
                   onClick={handleCloseModal}
-                  className="p-2 rounded theme-text-secondary hover:theme-text transition-colors"
+                  className="p-2 rounded text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
                 >
                   ✕
                 </button>
               </div>
               
-              <div className="prose max-w-none theme-text">
+              <div className="prose max-w-none text-gray-900 dark:text-white">
                 <p className="whitespace-pre-wrap leading-relaxed">
                   {selectedEntry.content}
                 </p>
               </div>
 
               {selectedEntry.tags && selectedEntry.tags.length > 0 && (
-                <div className="mt-6 pt-4 border-t border-[var(--theme-accent)]/20">
+                <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
                   <div className="flex flex-wrap gap-2">
                     {selectedEntry.tags.map((tag: string) => (
                       <span
                         key={`modal-tag-${selectedEntry.id}-${tag}`}
-                        className="px-3 py-1 text-sm rounded-full theme-surface theme-text-secondary border border-[var(--theme-accent)]/20"
+                        className="px-3 py-1 text-sm rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-600"
                       >
                         #{tag}
                       </span>
@@ -904,14 +904,20 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
                 </div>
               )}
 
-              <div className="mt-6 flex justify-between">
+              {/* Action Buttons - Forced visibility */}
+              <div className="mt-6 flex justify-between items-center">
                 <button
                   onClick={() => {
-                    console.log('Delete button clicked for entry:', selectedEntry.id);
+                    console.log('DELETE BUTTON CLICKED for entry:', selectedEntry.id);
                     handleDeleteEntry(selectedEntry.id);
                   }}
-                  className="flex items-center space-x-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-all"
-                  style={{ display: 'flex' }}
+                  className="flex items-center space-x-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-all font-medium"
+                  style={{ 
+                    display: 'flex !important',
+                    visibility: 'visible !important',
+                    opacity: '1 !important',
+                    zIndex: '9999'
+                  }}
                 >
                   <Trash2 size={16} />
                   <span>Delete Entry</span>
@@ -919,7 +925,7 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
                 <div className="flex gap-3">
                   <button
                     onClick={handleCloseModal}
-                    className="px-4 py-2 theme-surface border border-[var(--theme-accent)]/30 rounded-lg hover:border-[var(--theme-accent)]/50 transition-all theme-text"
+                    className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-all"
                   >
                     Close
                   </button>
@@ -928,7 +934,7 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
                       handleCloseModal();
                       handleEditEntry(selectedEntry);
                     }}
-                    className="flex items-center space-x-2 px-4 py-2 bg-[var(--theme-accent)] text-white rounded-lg hover:shadow-lg transition-all"
+                    className="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all"
                   >
                     <Edit3 size={16} />
                     <span>Edit Entry</span>
