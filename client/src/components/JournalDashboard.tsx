@@ -468,7 +468,8 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
               }}
               className="p-1 bg-red-100 text-red-700 rounded"
             >
-              DELETE
+              <Trash2 size={20} color="red" strokeWidth={2.5} />
+              <span role="img" aria-label="trash">🗑️</span>
             </button>
           </div>
         </div>
