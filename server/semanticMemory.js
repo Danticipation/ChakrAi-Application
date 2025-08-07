@@ -429,20 +429,13 @@ BOT: ${botResponse}
 Extract only clear, factual statements that should be remembered long-term. Return JSON:
 {
   "facts": [
-    {
-      "fact": "User has a dog named Max",
-      "category": "personal_life"
-    },
-    {
-      "fact": "User works as a software engineer",
-      "category": "career"
-    }
+    // Only include facts explicitly mentioned by the user in the conversation above
   ]
 }
 
 Categories: personal_life, career, health, relationships, interests, preferences, challenges, goals
 
-Only include facts explicitly mentioned by the user. Do not infer or assume.`;
+CRITICAL: Only include facts explicitly mentioned by the user. Do not infer, assume, or use examples. If no facts are mentioned, return empty facts array.`;
 
     const response = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
