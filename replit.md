@@ -7,6 +7,8 @@ Chakrai is a professional mental wellness and therapy application designed for i
 **Date: August 6, 2025** - All core systems verified and functional for test user deployment.
 
 ## Recent Changes (August 2025)
+- **DATABASE SCHEMA FIXED (August 7, 2025)**: Resolved missing session_token column error that was breaking chat system - database now fully synchronized
+- **VOICE TRANSCRIPTION ENHANCED (August 7, 2025)**: Improved OpenAI Whisper integration with better audio quality settings, contextual prompts, and format consistency - transcription accuracy significantly improved
 - **MAJOR CLEANUP COMPLETED (August 6, 2025)**: Removed 600+ unused screenshot files, freed 112MB of space while preserving essential assets
 - **RENDERING PIPELINE DIAGNOSIS (August 6, 2025)**: Identified systematic button rendering issue - requires container-level DOM investigation
 - **JOURNAL DELETE FUNCTIONALITY FULLY OPERATIONAL (August 6, 2025)**: Complete delete functionality deployed with visible UI buttons and working confirmation dialogs
