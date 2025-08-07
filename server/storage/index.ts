@@ -433,11 +433,36 @@ export class ModularStorage implements IStorage {
   }
 
   async getMessagesByUserId(userId: number, limit?: number): Promise<any[]> {
-    return []; // Placeholder
+    const { messages } = await import('@shared/schema');
+    const { eq, desc } = await import('drizzle-orm');
+    const { db } = await import('../db.js');
+    
+    const result = await db.select()
+      .from(messages)
+      .where(eq(messages.userId, userId))
+      .orderBy(desc(messages.createdAt))
+      .limit(limit || 50);
+    
+    return result;
   }
 
   async createMessage(data: any): Promise<any> {
-    return data; // Placeholder
+    const { messages } = await import('@shared/schema');
+    const { db } = await import('../db.js');
+    
+    const messageData = {
+      userId: data.userId,
+      text: data.content || '', // Required field matching database schema
+      content: data.content || '', // Optional compatibility field  
+      isBot: data.isBot || false,
+      timestamp: new Date(),
+      createdAt: new Date(),
+      ...data
+    };
+    
+    const [message] = await db.insert(messages).values(messageData).returning();
+    console.log('✅ Message saved to database:', { id: message.id, userId: message.userId, isBot: message.isBot });
+    return message;
   }
 
   async migrateAnonymousUser(anonymousUserId: number, data: any): Promise<any> {
