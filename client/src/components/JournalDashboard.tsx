@@ -514,7 +514,7 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
         </div> {/* inner theme-card */}
       </div>   {/* lime wrapper */
     );
-  }, [getMoodColor, getMoodEmoji, handleViewEntry, handleEditEntry, handleDeleteClick]);
+  }, []);
 
   // Analytics View
   const renderAnalytics = () => {
