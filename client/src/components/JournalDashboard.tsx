@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus, BookOpen, TrendingUp, Download, Calendar, Search, Filter, Edit3, Eye, Clock, BarChart3, Star, MessageCircle, Loader2, RefreshCw, AlertCircle, Trash2 } from 'lucide-react';
 import JournalEditor from './JournalEditor';
 import DeleteEntryModal from './DeleteEntryModal';
-import ButtonTest from './ButtonTest';
+
 import { format } from 'date-fns';
 
 // Types based on actual database schema
@@ -774,7 +774,7 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
 
   return (
     <div className="h-full flex flex-col theme-background">
-      <ButtonTest />
+
       {/* Header */}
       <div className="p-6 border-b border-[var(--theme-accent)]/20">
         <div className="flex items-center justify-between mb-4">
