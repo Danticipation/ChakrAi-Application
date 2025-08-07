@@ -46,14 +46,27 @@ export class VoiceController {
           file: audioFile,
           model: 'whisper-1',
           response_format: 'verbose_json',
-          language: 'en'
+          language: 'en',
+          prompt: 'This is a clear spoken message from a user interacting with a mental wellness application. Please transcribe the complete sentence accurately.',
+          temperature: 0.1 // Lower temperature for more accurate transcription
         });
 
         console.log('✅ Transcription successful:', transcription.text);
         console.log('🔍 Full OpenAI response:', {
           text: transcription.text,
-          usage: transcription.duration ? { type: 'duration', seconds: transcription.duration } : undefined
+          duration: transcription.duration,
+          language: transcription.language,
+          segments: transcription.segments ? transcription.segments.length : 0
         });
+
+        // Quality check - warn if transcription is suspiciously short
+        if (transcription.text.trim().split(' ').length <= 2 && req.file.size > 100000) {
+          console.log('⚠️ WARNING: Short transcription for large audio file:', {
+            transcribedWords: transcription.text.trim().split(' ').length,
+            audioSizeKB: Math.round(req.file.size / 1024),
+            suggestion: 'Audio may have quality issues or be too quiet'
+          });
+        }
 
         ResponseService.sendSuccess(res, {
           text: transcription.text,
@@ -87,7 +100,7 @@ export class VoiceController {
       return ResponseService.sendError(res, 'Text is required', 400);
     }
 
-    if (!process.env.ELEVENLABS_API_KEY) {
+    if (!process.env['ELEVENLABS_API_KEY']) {
       return ResponseService.sendError(res, 'ElevenLabs API not configured', 503);
     }
 
@@ -110,7 +123,7 @@ export class VoiceController {
         headers: {
           'Accept': 'audio/mpeg',
           'Content-Type': 'application/json',
-          'xi-api-key': process.env.ELEVENLABS_API_KEY
+          'xi-api-key': process.env['ELEVENLABS_API_KEY']
         },
         body: JSON.stringify({
           text: cleanText,

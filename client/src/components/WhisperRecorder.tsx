@@ -14,19 +14,35 @@ export default function WhisperRecorder({ onTranscription, onResponse }: Whisper
   const chunks: BlobPart[] = [];
 
   const startRecording = async () => {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const stream = await navigator.mediaDevices.getUserMedia({ 
+      audio: {
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true,
+        sampleRate: 44100,
+        channelCount: 1
+      }
+    });
     
-    // CRITICAL FIX: Use MP4/WAV for better OpenAI Whisper compatibility
-    let mimeType = 'audio/mp4';
+    // CRITICAL FIX: Use WAV first for best Whisper compatibility
+    let mimeType = 'audio/wav';
+    let options: MediaRecorderOptions = { mimeType };
+    
     if (!MediaRecorder.isTypeSupported(mimeType)) {
-      mimeType = 'audio/wav';
-      if (!MediaRecorder.isTypeSupported(mimeType)) {
-        throw new Error('Browser does not support MP4 or WAV recording. WebM causes transcription failures.');
+      mimeType = 'audio/webm;codecs=opus';
+      if (MediaRecorder.isTypeSupported(mimeType)) {
+        options = { mimeType, audioBitsPerSecond: 128000 };
+      } else {
+        mimeType = 'audio/mp4';
+        options = { mimeType };
+        if (!MediaRecorder.isTypeSupported(mimeType)) {
+          throw new Error('Browser does not support WAV, WebM, or MP4 recording.');
+        }
       }
     }
     
-    console.log('🎵 WhisperRecorder using audio format:', mimeType);
-    const mediaRecorder = new MediaRecorder(stream, { mimeType });
+    console.log('🎵 WhisperRecorder using audio format:', mimeType, 'with options:', options);
+    const mediaRecorder = new MediaRecorder(stream, options);
     mediaRecorderRef.current = mediaRecorder;
     setRecording(true);
     chunks.length = 0;
@@ -36,19 +52,27 @@ export default function WhisperRecorder({ onTranscription, onResponse }: Whisper
     };
 
     mediaRecorder.onstop = async () => {
-      // CRITICAL FIX: Use MP4/WAV for better OpenAI Whisper compatibility
-      let mimeType = 'audio/mp4';
-      if (!MediaRecorder.isTypeSupported(mimeType)) {
-        mimeType = 'audio/wav';
-      }
-      
+      // Use the same mimeType that was used for recording
       const blob = new Blob(chunks, { type: mimeType });
       const audioUrl = URL.createObjectURL(blob);
       setAudioUrl(audioUrl);
       setProcessing(true);
 
       const formData = new FormData();
-      const fileName = mimeType.includes('wav') ? 'recording.wav' : 'recording.mp4';
+      let fileName = 'recording.wav';
+      if (mimeType.includes('mp4')) {
+        fileName = 'recording.mp4';
+      } else if (mimeType.includes('webm')) {
+        fileName = 'recording.webm';
+      }
+      
+      console.log('📤 Sending audio to transcription:', {
+        size: blob.size,
+        type: mimeType,
+        fileName: fileName,
+        sizeKB: Math.round(blob.size / 1024)
+      });
+      
       formData.append('audio', blob, fileName);
 
       try {
