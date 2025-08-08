@@ -4,113 +4,75 @@ import uuid
 import os
 import tempfile
 
-# Try to import whisper for local transcription
-try:
-    import whisper
-    WHISPER_AVAILABLE = True
-    print("Loading Whisper model for transcription...")
-    whisper_model = whisper.load_model("base")
-    print("Whisper model loaded successfully")
-except ImportError:
-    WHISPER_AVAILABLE = False
-    whisper_model = None
-    print("Whisper not available. Install with: pip install openai-whisper")
-
 app = Flask(__name__)
 
 # Load the Amy voice model
 print("Loading Piper voice model...")
-voice = PiperVoice.load(
-    model_path="C:/Piper/models/en_US-amy-medium/en_US-amy-medium.onnx",
-    config_path="C:/Piper/models/en_US-amy-medium/en_US-amy-medium.onnx.json"
-)
-print("Piper voice model loaded successfully")
+try:
+    voice = PiperVoice.load(
+        model_path="C:/Piper/models/en_US-amy-medium/en_US-amy-medium.onnx",
+        config_path="C:/Piper/models/en_US-amy-medium/en_US-amy-medium.onnx.json"
+    )
+    print("Piper voice model loaded successfully")
+except Exception as e:
+    print(f"Error loading Piper model: {e}")
+    print("Make sure the model files exist at the specified path")
+    voice = None
 
 @app.route('/speak', methods=['POST'])
 def speak():
+    if voice is None:
+        return jsonify({"error": "Piper voice model not loaded"}), 503
+    
     try:
         data = request.json
+        if not data:
+            return jsonify({"error": "No JSON data provided"}), 400
+            
         text = data.get("text", "")
         
         if not text:
-            return {"error": "Text is required"}, 400
+            return jsonify({"error": "Text is required"}), 400
+        
+        print(f"Synthesizing text: {text[:50]}...")
         
         # Generate unique filename in temp directory
         temp_dir = tempfile.gettempdir()
         filename = os.path.join(temp_dir, f"output_{uuid.uuid4().hex}.wav")
         
         # Synthesize speech with Piper
-        wav = voice.synthesize(text)
+        audio_data = voice.synthesize(text)
         
-        # Write to file
+        # Write audio data to file
         with open(filename, "wb") as f:
-            f.write(wav)
+            # Handle the audio data properly - convert to bytes
+            if hasattr(audio_data, '__iter__') and not isinstance(audio_data, (str, bytes)):
+                # If it's an iterable of chunks, combine them
+                for chunk in audio_data:
+                    f.write(bytes(chunk))
+            else:
+                # If it's already bytes, write directly
+                f.write(bytes(audio_data))
+        
+        print(f"Audio generated: {filename}")
         
         # Return the audio file
         return send_file(filename, mimetype="audio/wav", as_attachment=False)
         
     except Exception as e:
         print(f"Error in speech synthesis: {e}")
-        return {"error": "Failed to generate speech"}, 500
-
-@app.route('/transcribe', methods=['POST'])
-def transcribe():
-    if not WHISPER_AVAILABLE:
-        return jsonify({"error": "Whisper not available. Install with: pip install openai-whisper"}), 503
-    
-    try:
-        if 'audio' not in request.files:
-            return jsonify({"error": "No audio file provided"}), 400
-        
-        audio_file = request.files['audio']
-        if audio_file.filename == '':
-            return jsonify({"error": "No audio file selected"}), 400
-        
-        # Save uploaded file temporarily
-        temp_dir = tempfile.gettempdir()
-        temp_filename = os.path.join(temp_dir, f"audio_{uuid.uuid4().hex}.wav")
-        
-        audio_file.save(temp_filename)
-        
-        try:
-            # Transcribe with Whisper
-            result = whisper_model.transcribe(temp_filename)
-            transcription = result["text"].strip()
-            
-            # Clean up temp file
-            os.remove(temp_filename)
-            
-            return jsonify({
-                "text": transcription,
-                "language": result.get("language", "en")
-            })
-            
-        except Exception as e:
-            # Clean up temp file on error
-            if os.path.exists(temp_filename):
-                os.remove(temp_filename)
-            raise e
-            
-    except Exception as e:
-        print(f"Error in transcription: {e}")
-        return jsonify({"error": "Failed to transcribe audio"}), 500
+        return jsonify({"error": "Failed to generate speech"}), 500
 
 @app.route('/health', methods=['GET'])
 def health():
-    services = {
+    return jsonify({
         "status": "healthy",
         "services": {
-            "piper_tts": "available",
-            "whisper_transcription": "available" if WHISPER_AVAILABLE else "unavailable"
+            "piper_tts": "available" if voice is not None else "unavailable"
         }
-    }
-    return jsonify(services)
+    })
 
 if __name__ == '__main__':
-    print("Starting Piper TTS + Whisper server...")
-    print("Voice model: Amy (en_US-amy-medium)")
-    if WHISPER_AVAILABLE:
-        print("Transcription: Whisper (base model)")
-    else:
-        print("Transcription: Not available (install openai-whisper)")
+    print("Starting Piper TTS server...")
+    print("Voice model: Amy (en_US-amy-medium)" if voice else "Voice model: Not loaded")
     app.run(host='0.0.0.0', port=5005, debug=False)
