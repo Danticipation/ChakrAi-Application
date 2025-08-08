@@ -13,6 +13,7 @@ Chakrai is a professional mental wellness and therapy application designed to pr
 - Critical priority: Voice system and component errors causing significant user frustration - must maintain working state
 - Communication style: Direct, technical communication preferred - user extremely frustrated with app instability
 - User expectation: App should work consistently without breaking when attempting basic interactions like voice chat
+- Cost consideration: Using local Piper TTS instead of ElevenLabs to avoid $350 subscription costs - user will run Piper server locally
 - VOICE SYSTEM FIXED: Implemented Web Audio API-based recorder that creates proper WAV files - bypasses MediaRecorder WebM issues completely
 - PERSONALITY REFLECTION RESTORED: Reverted to working static analysis system that was functional 12 hours ago - provides comprehensive psychological insights without AI dependency
 - Identity reflection: Bot should reflect user's persona, identity, and mannerisms over time
@@ -33,7 +34,7 @@ The application is built with a React frontend (TypeScript, Tailwind CSS) and an
 - Accessible design with ARIA compliance, keyboard navigation, and screen reader support.
 
 **Technical Implementations & Feature Specifications:**
-- **Voice System:** Comprehensive voice interaction with ElevenLabs for synthesis and OpenAI Whisper for transcription, featuring manual recording control.
+- **Voice System:** Comprehensive voice interaction with local Piper TTS for synthesis and OpenAI Whisper for transcription, featuring manual recording control. Uses Amy voice model locally to avoid subscription costs.
 - **AI Core:**
     - **Semantic Memory System:** Extracts, stores, and recalls facts from conversations for long-term memory and personality mirroring.
     - **Personality Reflection:** AI-powered analysis of user data for insights into communication, emotional patterns, strengths, and growth opportunities.
@@ -53,7 +54,7 @@ The application is built with a React frontend (TypeScript, Tailwind CSS) and an
 - **Code Quality Overhaul:** Enterprise-grade security hardening, architectural refactoring (dedicated controllers, services layer), performance optimization, and code standardization.
 
 ## External Dependencies
-- **ElevenLabs API:** For high-quality voice synthesis.
+- **Local Piper TTS:** For cost-effective voice synthesis using Amy voice model (replaces ElevenLabs to avoid subscription costs).
 - **OpenAI API:** For GPT-4o powered chat responses, semantic memory extraction, personality analysis, adaptive learning, emotional intelligence, and crisis detection.
 - **Supabase:** For community features (forums, posts, replies, peer check-ins).
 - **PostgreSQL:** Primary database for core application functionality.
