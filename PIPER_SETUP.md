@@ -4,7 +4,11 @@
 
 ### 1. Install Python Dependencies
 ```bash
-pip install flask piper-tts
+pip install flask piper-tts openai-whisper torch numpy
+```
+Or install from the requirements file:
+```bash
+pip install -r piper_requirements.txt
 ```
 
 ### 2. Start the Piper TTS Server
@@ -12,12 +16,16 @@ pip install flask piper-tts
 python speak_server.py
 ```
 
-The server will start on port 5005 and load the Amy voice model.
+The server will start on port 5005 and load:
+- Amy voice model for TTS
+- Whisper base model for transcription (if available)
 
 ### 3. Test the Integration
-Your Node.js app will automatically use Piper TTS instead of ElevenLabs when you:
-- Send chat messages that generate TTS responses
+Your Node.js app will automatically use local models when you:
+- Send chat messages that generate TTS responses (uses Piper)
+- Record voice messages for transcription (tries local Whisper first, falls back to OpenAI)
 - The `/api/voice/text-to-speech` endpoint now calls the local Piper server
+- The `/api/voice/transcribe-enhanced` endpoint tries local Whisper first
 
 ## 🔧 Configuration
 
@@ -36,32 +44,52 @@ voice = PiperVoice.load(
 
 ## 🧪 Testing
 
-### Test the Piper server directly:
+### Test TTS directly:
 ```bash
 curl -X POST http://localhost:5005/speak \
   -H "Content-Type: application/json" \
   -d '{"text": "Hello from Piper TTS!"}'
 ```
 
+### Test transcription directly:
+```bash
+curl -X POST http://localhost:5005/transcribe \
+  -F "audio=@your_audio_file.wav"
+```
+
 ### Test through your Node.js app:
 ```bash
+# TTS
 curl -X POST http://localhost:5000/api/voice/text-to-speech \
   -H "Content-Type: application/json" \
   -d '{"text": "Hello from Chakrai using Piper!"}'
+
+# Transcription  
+curl -X POST http://localhost:5000/api/voice/transcribe-enhanced \
+  -F "audio=@your_audio_file.wav"
 ```
 
 ## 🔄 Integration Details
 
 ### What Changed:
-1. **Created**: `speak_server.py` - Python Flask server for Piper TTS
-2. **Modified**: `server/routes/voice.js` - Updated to call local Piper server instead of ElevenLabs
+1. **Created**: `speak_server.py` - Python Flask server with Piper TTS + Whisper transcription
+2. **Modified**: `server/routes/voice.js` - Updated TTS to use local Piper, transcription tries local Whisper first
 3. **Voice Mapping**: All voice requests now use Amy model (can be expanded later)
+4. **Transcription Fallback**: Local Whisper → OpenAI Whisper → Error
 
 ### API Flow:
+
+**Text-to-Speech:**
 1. Frontend sends text to `/api/voice/text-to-speech`
 2. Node.js server scrubs text and forwards to Piper server (port 5005)
 3. Piper generates WAV audio and returns it
 4. Node.js streams audio back to frontend
+
+**Speech-to-Text:**
+1. Frontend sends audio to `/api/voice/transcribe-enhanced`
+2. Node.js server tries local Whisper first (port 5005)
+3. If local fails, falls back to OpenAI Whisper API
+4. Returns transcription with source indicator
 
 ## 🆘 Troubleshooting
 

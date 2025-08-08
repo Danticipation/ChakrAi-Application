@@ -123,7 +123,7 @@ router.post('/text-to-speech', async (req, res) => {
   }
 });
 
-// Enhanced transcription endpoint with audio details
+// Enhanced transcription endpoint with local Whisper fallback
 router.post('/transcribe-enhanced', upload.single('audio'), async (req, res) => {
   try {
     console.log('🎯 Enhanced transcribe endpoint called');
@@ -139,10 +139,50 @@ router.post('/transcribe-enhanced', upload.single('audio'), async (req, res) => 
     console.log('  - Type:', req.file.mimetype);
     console.log('  - Buffer length:', req.file.buffer.length);
 
+    // Try local Whisper server first
+    try {
+      console.log('🚀 Trying local Whisper server...');
+      
+      const formData = new FormData();
+      const audioBlob = new Blob([req.file.buffer], { type: req.file.mimetype });
+      formData.append('audio', audioBlob, req.file.originalname || 'recording.wav');
+      
+      const localResponse = await fetch('http://localhost:5005/transcribe', {
+        method: 'POST',
+        body: formData
+      });
+      
+      if (localResponse.ok) {
+        const result = await localResponse.json();
+        console.log('✅ Local Whisper transcription successful:', result.text);
+        
+        const audioQualityScore = req.file.size > 10000 ? 'good' : 'fair';
+        const hasLowQuality = result.text.length < 10 && req.file.size < 5000;
+        
+        return res.json({ 
+          success: true, 
+          transcription: result.text,
+          text: result.text,
+          source: 'local_whisper',
+          warning: hasLowQuality ? 'Speech may have been unclear. Try speaking louder and more clearly.' : undefined,
+          audioDetails: {
+            size: req.file.buffer.length,
+            qualityScore: audioQualityScore,
+            mimeType: req.file.mimetype
+          }
+        });
+      } else {
+        console.log('❌ Local Whisper failed, trying OpenAI...');
+      }
+    } catch (localError) {
+      console.log('❌ Local Whisper unavailable, trying OpenAI...', localError.message);
+    }
+
+    // Fallback to OpenAI Whisper API
     if (!process.env.OPENAI_API_KEY) {
-      console.error('❌ No OpenAI API key found');
+      console.error('❌ No OpenAI API key found and local Whisper failed');
       return res.status(503).json({ 
-        error: 'Voice transcription temporarily unavailable',
+        error: 'Voice transcription unavailable. Install local Whisper or provide OpenAI API key.',
         errorType: 'auth_error'
       });
     }
@@ -176,36 +216,24 @@ router.post('/transcribe-enhanced', upload.single('audio'), async (req, res) => 
 
     const result = await response.json();
     const transcription = result.text;
-    console.log('✅ Transcription successful:', transcription);
+    console.log('✅ OpenAI transcription successful:', transcription);
 
     // Enhanced response with audio quality assessment
     const audioQualityScore = req.file.size > 10000 ? 'good' : 'fair';
     const hasLowQuality = transcription.length < 10 && req.file.size < 5000;
 
-    if (hasLowQuality) {
-      res.json({ 
-        success: true, 
-        transcription: transcription,
-        text: transcription,
-        warning: 'Speech may have been unclear. Try speaking louder and more clearly.',
-        audioDetails: {
-          size: req.file.buffer.length,
-          qualityScore: audioQualityScore,
-          mimeType: req.file.mimetype
-        }
-      });
-    } else {
-      res.json({ 
-        success: true, 
-        transcription: transcription,
-        text: transcription,
-        audioDetails: {
-          size: req.file.buffer.length,
-          qualityScore: audioQualityScore,
-          mimeType: req.file.mimetype
-        }
-      });
-    }
+    res.json({ 
+      success: true, 
+      transcription: transcription,
+      text: transcription,
+      source: 'openai_whisper',
+      warning: hasLowQuality ? 'Speech may have been unclear. Try speaking louder and more clearly.' : undefined,
+      audioDetails: {
+        size: req.file.buffer.length,
+        qualityScore: audioQualityScore,
+        mimeType: req.file.mimetype
+      }
+    });
 
   } catch (error) {
     console.error('❌ Enhanced transcription error:', error);
