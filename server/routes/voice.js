@@ -54,84 +54,71 @@ function scrubTextForTTS(text) {
     .replace(/\s+/g, ' ');            // Normalize all whitespace
 }
 
-// Text-to-speech endpoint with ElevenLabs integration
+// Text-to-speech endpoint with Piper TTS integration
 router.post('/text-to-speech', async (req, res) => {
   try {
-    const { text, voice = 'james', emotionalContext = 'neutral' } = req.body;
+    const { text, voice = 'amy', emotionalContext = 'neutral' } = req.body;
 
     if (!text) {
       return res.status(400).json({ error: 'Text is required' });
     }
 
-    const voiceMap = {
-      // Original voices
-      'james': 'EkK5I93UQWFDigLMpZcX',  // Male
-      'brian': 'nPczCjzI2devNBz1zQrb',  // Male
-      'alexandra': 'kdmDKE6EkgrWrrykO9Qt', // Female
-      'carla': 'l32B8XDoylOsZKiSdfhE',  // Female
-      // New voices added
-      'hope': 'iCrDUkL56s3C8sCRl7wb',   // Female
-      'charlotte': 'XB0fDUnXU5powFXDhCwa', // Female
-      'bronson': 'Yko7PKHZNXotIFUBG7I9', // Male
-      'marcus': 'y3kKRaK2dnn3OgKDBckk'   // Male
-    };
-
-    const voiceId = voiceMap[voice] || voiceMap['james'];
+    // For now, all voices map to Amy since that's the only Piper model loaded
+    // This can be expanded later when more Piper models are added
+    console.log(`Generating speech with Piper TTS for voice: ${voice}`);
+    
+    // Scrub text before sending to Piper
+    const scrubbedText = scrubTextForTTS(text);
+    console.log(`Original text: "${text.substring(0, 100)}..."`);
+    console.log(`Scrubbed text: "${scrubbedText.substring(0, 100)}..."`);
     
     try {
-      console.log(`Making ElevenLabs request for voice: ${voice} (ID: ${voiceId})`);
-      
-      // Scrub text before sending to ElevenLabs
-      const scrubbedText = scrubTextForTTS(text);
-      console.log(`Original text: "${text.substring(0, 100)}..."`);
-      console.log(`Scrubbed text: "${scrubbedText.substring(0, 100)}..."`);
-      
-      const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+      // Call local Piper server
+      const piperResponse = await fetch('http://localhost:5005/speak', {
         method: 'POST',
         headers: {
-          'Accept': 'audio/mpeg',
           'Content-Type': 'application/json',
-          'xi-api-key': process.env.ELEVENLABS_API_KEY || ''
         },
         body: JSON.stringify({
-          text: scrubbedText,
-          model_id: 'eleven_monolingual_v1',
-          voice_settings: {
-            stability: 0.5,
-            similarity_boost: 0.8,
-            style: 0.3,
-            use_speaker_boost: true
-          }
+          text: scrubbedText
         })
       });
 
-      if (response.ok) {
-        const audioBuffer = await response.arrayBuffer();
+      if (piperResponse.ok) {
+        const audioBuffer = await piperResponse.arrayBuffer();
         
-        console.log(`Generated audio for voice ${voice}: ${audioBuffer.byteLength} bytes`);
+        console.log(`Generated audio with Piper: ${audioBuffer.byteLength} bytes`);
         
-        // Return audio as blob instead of JSON with base64
+        // Return audio as WAV from Piper
         res.set({
-          'Content-Type': 'audio/mpeg',
+          'Content-Type': 'audio/wav',
           'Content-Length': audioBuffer.byteLength.toString(),
           'Cache-Control': 'no-cache'
         });
         
         res.send(Buffer.from(audioBuffer));
       } else {
-        const errorText = await response.text();
-        console.error('ElevenLabs API error:', response.status, errorText);
-        throw new Error(`ElevenLabs API error: ${response.status}`);
+        const errorText = await piperResponse.text();
+        console.error('Piper TTS server error:', piperResponse.status, errorText);
+        throw new Error(`Piper TTS server error: ${piperResponse.status}`);
       }
     } catch (error) {
-      console.error('TTS generation failed:', error);
+      console.error('Piper TTS generation failed:', error);
+      
+      // Check if Piper server is running
+      try {
+        await fetch('http://localhost:5005/health');
+      } catch (healthError) {
+        console.error('Piper server is not running. Start it with: python speak_server.py');
+      }
+      
       throw error;
     }
   } catch (error) {
     console.error('Text-to-speech error:', error);
     res.status(500).json({ 
-      error: 'Failed to generate speech',
-      fallback: 'Browser TTS will be used instead'
+      error: 'Failed to generate speech with Piper TTS',
+      fallback: 'Make sure Piper server is running on port 5005'
     });
   }
 });
