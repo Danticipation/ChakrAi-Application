@@ -112,16 +112,16 @@ export function MindfulnessExercise({
 
     try {
       const step = exercise.guidedSteps[stepIndex];
-      const response = await fetch('/api/voice/emotional-generate', {
+      console.log(`Playing audio for step ${stepIndex + 1}:`, step.audioText.substring(0, 50) + '...');
+      
+      // Use local Piper TTS server
+      const response = await fetch('http://localhost:5005/speak', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          text: step.audioText,
-          voice: selectedVoice,
-          emotionalContext: 'calming',
-          intensity: 0.8
+          text: step.audioText
         })
       });
 

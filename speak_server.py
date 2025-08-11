@@ -1,23 +1,49 @@
 from flask import Flask, request, send_file, jsonify
+from flask_cors import CORS
 from piper import PiperVoice
 import uuid
 import os
 import tempfile
 
 app = Flask(__name__)
+CORS(app, origins=["http://localhost:5000", "https://74ef77c6-9cc1-44da-9355-d282831fa46f-00-11sf8jkiimhyp.worf.replit.dev"])
 
 # Load the Amy voice model
 print("Loading Piper voice model...")
 try:
+    # Use a default en_US voice model that should be available
     voice = PiperVoice.load(
-        model_path="C:/Piper/models/en_US-amy-medium/en_US-amy-medium.onnx",
-        config_path="C:/Piper/models/en_US-amy-medium/en_US-amy-medium.onnx.json"
+        model_path="/usr/share/piper-voices/en/en_US/amy/medium/en_US-amy-medium.onnx", 
+        config_path="/usr/share/piper-voices/en/en_US/amy/medium/en_US-amy-medium.onnx.json"
     )
     print("Piper voice model loaded successfully")
 except Exception as e:
-    print(f"Error loading Piper model: {e}")
-    print("Make sure the model files exist at the specified path")
-    voice = None
+    print(f"Error loading Piper model from default path: {e}")
+    # Try alternative approach - download model if needed
+    try:
+        import subprocess
+        import os
+        
+        # Create models directory
+        os.makedirs("models", exist_ok=True)
+        
+        # Download Amy voice model if not exists
+        if not os.path.exists("models/en_US-amy-medium.onnx"):
+            print("Downloading Amy voice model...")
+            subprocess.run([
+                "wget", "-O", "models/en_US-amy-medium.onnx",
+                "https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/amy/medium/en_US-amy-medium.onnx"
+            ], check=True)
+            subprocess.run([
+                "wget", "-O", "models/en_US-amy-medium.onnx.json", 
+                "https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/amy/medium/en_US-amy-medium.onnx.json"
+            ], check=True)
+            
+        voice = PiperVoice.load("models/en_US-amy-medium.onnx", "models/en_US-amy-medium.onnx.json")
+        print("Piper voice model downloaded and loaded successfully")
+    except Exception as e2:
+        print(f"Failed to download/load voice model: {e2}")
+        voice = None
 
 @app.route('/speak', methods=['POST'])
 def speak():
