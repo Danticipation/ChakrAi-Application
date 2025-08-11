@@ -461,7 +461,7 @@ export class ModularStorage implements IStorage {
     };
     
     const [message] = await db.insert(messages).values(messageData).returning();
-    console.log('✅ Message saved to database:', { id: message.id, userId: message.userId, isBot: message.isBot });
+    console.log('✅ Message saved to database:', { id: message?.id, userId: message?.userId, isBot: message?.isBot });
     return message;
   }
 
