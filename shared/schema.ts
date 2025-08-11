@@ -112,6 +112,38 @@ export const userFacts = pgTable("user_facts", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Guided Meditation System
+export const meditationSessions = pgTable("meditation_sessions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  meditationType: text("meditation_type").notNull(), // guided, breathing, mindfulness, visualization, body_scan
+  duration: integer("duration").notNull(), // in seconds
+  completedDuration: integer("completed_duration").default(0),
+  isCompleted: boolean("is_completed").default(false),
+  rating: integer("rating"), // 1-5 user rating
+  notes: text("notes"),
+  ambientSound: text("ambient_sound"), // ocean, rain, forest, etc.
+  voiceEnabled: boolean("voice_enabled").default(true),
+  selectedVoice: text("selected_voice").default("amy"),
+  startedAt: timestamp("started_at").defaultNow(),
+  completedAt: timestamp("completed_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const meditationTemplates = pgTable("meditation_templates", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description").notNull(),
+  type: text("type").notNull(), // guided, breathing, mindfulness, visualization, body_scan
+  duration: integer("duration").notNull(),
+  difficulty: text("difficulty").notNull(), // beginner, intermediate, advanced
+  guidedSteps: jsonb("guided_steps").notNull(), // Array of step objects
+  breathingPattern: jsonb("breathing_pattern"), // Optional breathing pattern
+  isDefault: boolean("is_default").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Conversation Continuity Enhancer - Cross-Session Context Preservation
 export const conversationSessions = pgTable("conversation_sessions", {
   id: serial("id").primaryKey(),
@@ -515,6 +547,18 @@ export const insertUserFactSchema = createInsertSchema(userFacts).omit({
   createdAt: true,
 });
 
+export const insertMeditationSessionSchema = createInsertSchema(meditationSessions).omit({
+  id: true,
+  startedAt: true,
+  createdAt: true,
+});
+
+export const insertMeditationTemplateSchema = createInsertSchema(meditationTemplates).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export const insertJournalEntrySchema = createInsertSchema(journalEntries).omit({
   id: true,
   createdAt: true,
@@ -609,6 +653,8 @@ export type Message = typeof messages.$inferSelect;
 
 export type UserMemory = typeof userMemories.$inferSelect;
 export type UserFact = typeof userFacts.$inferSelect;
+export type MeditationSession = typeof meditationSessions.$inferSelect;
+export type MeditationTemplate = typeof meditationTemplates.$inferSelect;
 export type JournalEntry = typeof journalEntries.$inferSelect;
 export type JournalAnalytics = typeof journalAnalytics.$inferSelect;
 export type MoodEntry = typeof moodEntries.$inferSelect;

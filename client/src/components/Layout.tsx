@@ -30,6 +30,7 @@ import AgentSystem from '@/components/AgentSystem';
 import VRTherapy from '@/components/VRTherapy';
 import HealthIntegration from '@/components/HealthIntegration';
 import PrivacyCompliance from '@/components/PrivacyCompliance';
+import { GuidedMeditation } from '@/components/GuidedMeditation';
 import TherapistPortal from '@/components/TherapistPortal';
 import AiPerformanceMonitoringDashboard from '@/components/AiPerformanceMonitoringDashboard';
 import AdminFeedbackDashboard from '@/components/AdminFeedbackDashboard';
@@ -323,6 +324,8 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
         return <AdaptiveLearningProgressTracker />;
       case 'analytics':
         return <AnalyticsDashboard userId={currentUserId} onNavigate={setActiveSection} />;
+      case 'meditation':
+        return <GuidedMeditation />;
       case 'health':
         return <HealthIntegration />;
       case 'challenges':
@@ -633,6 +636,7 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
                 {!collapsedSections.guided && (
                   <div className="space-y-1">
                     {[
+                      { id: 'meditation', label: 'Guided Meditation' },
                       { id: 'agents', label: 'Reflective Allies' },
                       { id: 'vr', label: 'InnerScape' },
                       { id: 'therapy-plans', label: 'Therapy Plans' },

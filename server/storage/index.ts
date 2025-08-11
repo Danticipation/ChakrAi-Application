@@ -8,6 +8,9 @@ import { AnalyticsStorage, type IAnalyticsStorage } from './analyticsStorage.js'
 import { GamificationStorage, type IGamificationStorage } from './gamificationStorage.js';
 import { TherapeuticStorage, type ITherapeuticStorage } from './therapeuticStorage.js';
 import { HealthStorage, type IHealthStorage } from './healthStorage.js';
+import { meditationSessions, meditationTemplates } from '@shared/schema.js';
+import { db } from '../db.js';
+import { eq, desc } from 'drizzle-orm';
 
 // Re-export all storage interfaces for backward compatibility
 export type { IUserStorage, IMemoryStorage, IJournalStorage, IMoodStorage, ICommunityStorage, IAnalyticsStorage, IGamificationStorage, ITherapeuticStorage, IHealthStorage };
@@ -601,6 +604,98 @@ export class ModularStorage implements IStorage {
   async getConversationSessionHistory(sessionId: number, limit?: number): Promise<any[]> {
     // Return empty array for now
     return [];
+  }
+
+  // Meditation Session Management
+  async createMeditationSession(data: any) {
+    const [session] = await db.insert(meditationSessions).values(data).returning();
+    return session;
+  }
+
+  async updateMeditationSession(sessionId: number, updates: any) {
+    const [session] = await db.update(meditationSessions)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(meditationSessions.id, sessionId))
+      .returning();
+    return session;
+  }
+
+  async getUserMeditationSessions(userId: number, limit = 20) {
+    return await db.select()
+      .from(meditationSessions)
+      .where(eq(meditationSessions.userId, userId))
+      .orderBy(desc(meditationSessions.startedAt))
+      .limit(limit);
+  }
+
+  async getMeditationStats(userId: number) {
+    const sessions = await db.select()
+      .from(meditationSessions)
+      .where(eq(meditationSessions.userId, userId));
+    
+    const totalSessions = sessions.length;
+    const completedSessions = sessions.filter(s => s.isCompleted).length;
+    const totalMinutes = sessions.reduce((sum, s) => sum + Math.floor(s.completedDuration / 60), 0);
+    
+    const averageRating = sessions
+      .filter(s => s.rating)
+      .reduce((sum, s, _, arr) => sum + (s.rating || 0) / arr.length, 0);
+
+    const streak = await this.calculateMeditationStreak(userId);
+
+    return {
+      totalSessions,
+      completedSessions,
+      totalMinutes,
+      averageRating: Math.round(averageRating * 10) / 10,
+      currentStreak: streak,
+      favoriteType: this.getMostFrequentMeditationType(sessions)
+    };
+  }
+
+  private getMostFrequentMeditationType(sessions: any[]) {
+    const typeCounts = sessions.reduce((acc, session) => {
+      acc[session.meditationType] = (acc[session.meditationType] || 0) + 1;
+      return acc;
+    }, {});
+    
+    return Object.keys(typeCounts).reduce((a, b) => 
+      typeCounts[a] > typeCounts[b] ? a : b, 'breathing'
+    );
+  }
+
+  private async calculateMeditationStreak(userId: number) {
+    const sessions = await db.select({
+      completedAt: meditationSessions.completedAt
+    })
+    .from(meditationSessions)
+    .where(eq(meditationSessions.userId, userId))
+    .orderBy(desc(meditationSessions.completedAt));
+
+    let streak = 0;
+    let currentDate = new Date();
+    
+    for (const session of sessions) {
+      if (!session.completedAt) continue;
+      
+      const sessionDate = new Date(session.completedAt);
+      const daysDiff = Math.floor((currentDate.getTime() - sessionDate.getTime()) / (1000 * 60 * 60 * 24));
+      
+      if (daysDiff <= 1) {
+        streak++;
+        currentDate = sessionDate;
+      } else {
+        break;
+      }
+    }
+    
+    return streak;
+  }
+
+  async getMeditationTemplates() {
+    return await db.select()
+      .from(meditationTemplates)
+      .orderBy(meditationTemplates.difficulty, meditationTemplates.duration);
   }
 }
 
