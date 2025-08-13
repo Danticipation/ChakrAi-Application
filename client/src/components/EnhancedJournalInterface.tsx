@@ -49,6 +49,7 @@ const EnhancedJournalInterface: React.FC<EnhancedJournalInterfaceProps> = ({ use
   const [selectedEntry, setSelectedEntry] = useState<JournalEntry | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [moodFilter, setMoodFilter] = useState('all');
+  const [deletingEntryId, setDeletingEntryId] = useState<number | null>(null);
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -162,6 +163,40 @@ const EnhancedJournalInterface: React.FC<EnhancedJournalInterfaceProps> = ({ use
       console.error('Failed to save entry:', error);
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleDeleteEntry = async (entryId: number | undefined) => {
+    if (!entryId) return;
+    
+    setDeletingEntryId(entryId);
+    try {
+      const deviceFingerprint = 'healthcare-user-107';
+      const sessionId = 'healthcare-session-107';
+      
+      const response = await fetch(`/api/journal/${entryId}`, {
+        method: 'DELETE',
+        headers: {
+          'X-Device-Fingerprint': deviceFingerprint,
+          'X-Session-ID': sessionId
+        }
+      });
+
+      if (response.ok) {
+        // Remove from local state
+        setRecentEntries(prev => prev.filter(entry => entry.id !== entryId));
+        // Close modal if this entry was open
+        if (selectedEntry?.id === entryId) {
+          setSelectedEntry(null);
+        }
+      } else {
+        alert('Failed to delete entry. Please try again.');
+      }
+    } catch (error) {
+      console.error('Failed to delete entry:', error);
+      alert('Failed to delete entry. Please try again.');
+    } finally {
+      setDeletingEntryId(null);
     }
   };
 
@@ -411,8 +446,17 @@ const EnhancedJournalInterface: React.FC<EnhancedJournalInterfaceProps> = ({ use
                       </div>
                     </div>
                   </div>
-                  <button className="opacity-0 group-hover:opacity-100 p-2 hover:bg-slate-100 rounded-xl transition-all">
-                    <MoreHorizontal className="w-5 h-5 text-slate-400" />
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (window.confirm('Are you sure you want to delete this journal entry? This action cannot be undone.')) {
+                        handleDeleteEntry(journalEntry.id);
+                      }
+                    }}
+                    className="opacity-0 group-hover:opacity-100 p-2 hover:bg-red-50 rounded-xl transition-all text-red-600 hover:text-red-700"
+                    title="Delete entry"
+                  >
+                    <Trash2 className="w-5 h-5" />
                   </button>
                 </div>
                 
@@ -516,12 +560,31 @@ const EnhancedJournalInterface: React.FC<EnhancedJournalInterfaceProps> = ({ use
                     </p>
                   </div>
                 </div>
-                <button
-                  onClick={() => setSelectedEntry(null)}
-                  className="p-2 hover:bg-slate-100 rounded-xl transition-colors"
-                >
-                  ✕
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (window.confirm('Are you sure you want to delete this journal entry? This action cannot be undone.')) {
+                        handleDeleteEntry(selectedEntry.id);
+                      }
+                    }}
+                    disabled={deletingEntryId === selectedEntry.id}
+                    className="p-2 hover:bg-red-50 rounded-xl transition-colors text-red-600 hover:text-red-700 disabled:opacity-50"
+                    title="Delete entry"
+                  >
+                    {deletingEntryId === selectedEntry.id ? (
+                      <div className="w-5 h-5 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <Trash2 className="w-5 h-5" />
+                    )}
+                  </button>
+                  <button
+                    onClick={() => setSelectedEntry(null)}
+                    className="p-2 hover:bg-slate-100 rounded-xl transition-colors"
+                  >
+                    ✕
+                  </button>
+                </div>
               </div>
               
               <div className="prose prose-slate max-w-none mb-6">
