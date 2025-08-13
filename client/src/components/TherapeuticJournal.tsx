@@ -957,10 +957,11 @@ const TherapeuticJournal: React.FC<TherapeuticJournalProps> = ({ userId, onEntry
             <div className="bg-yellow-200 text-black p-3 mb-4 rounded text-sm font-bold">
               🔍 DEBUG: viewMode="{viewMode}", editingEntry={editingEntry ? `id:${editingEntry.id}` : 'null'}
               <br/>🔍 Also checking: entry.id exists = {entry.id ? 'YES' : 'NO'}
+              <br/>🔍 Current entry object: {JSON.stringify(entry)}
             </div>
             
-            {/* Delete Button - Show if we have editingEntry OR if entry has an ID (simpler approach) */}
-            {((viewMode === 'edit' && editingEntry && editingEntry.id) || (entry.id)) && (
+            {/* Delete Button - TEMPORARILY ALWAYS SHOW FOR TESTING */}
+            {true && (
               <button
                 onClick={() => {
                   const entryToDelete = editingEntry?.id || entry.id;
