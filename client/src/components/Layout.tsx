@@ -81,6 +81,7 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
   const [chatInput, setChatInput] = useState('');
   const [voiceStatus, setVoiceStatus] = useState<'idle' | 'recording' | 'processing'>('idle');
   const [messages, setMessages] = useState<Array<{sender: 'user' | 'bot', text: string, time: string}>>([]);
+  const [isAiTyping, setIsAiTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const voiceRecorderRef = useRef<VoiceRecorder | null>(null);
 
@@ -146,16 +147,19 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
   };
 
   // Send message functionality
-  const handleSendMessage = async () => {
-    if (!chatInput.trim()) return;
+  const handleSendMessage = async (message?: string) => {
+    const messageText = message || chatInput;
+    if (!messageText.trim()) return;
     
     const userMessage = {
       sender: 'user' as const,
-      text: chatInput,
+      text: messageText,
       time: new Date().toLocaleTimeString()
     };
     
     setMessages(prev => [...prev, userMessage]);
+    setChatInput('');
+    setIsAiTyping(true); // Show typing indicator
     
     // Send to AI API with device fingerprint headers and voice parameter
     try {
@@ -173,7 +177,7 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
           'X-Session-Id': sessionId
         },
         body: JSON.stringify({
-          message: chatInput,
+          message: messageText,
           voice: selectedVoice // Use the selected voice from state
         }),
         signal: controller.signal
@@ -190,15 +194,13 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
         console.log('🔍 Main Chat - response keys:', Object.keys(data));
         console.log('🔍 Main Chat - message content:', data.message);
         
-        // Clear input first
-        setChatInput('');
-        
         const botMessage = {
           sender: 'bot' as const,
           text: data.message || data.response || data.text || 'I received your message.',
           time: new Date().toLocaleTimeString()
         };
         setMessages(prev => [...prev, botMessage]);
+        setIsAiTyping(false); // Hide typing indicator
         
         // Play audio if available
         if (data.audioUrl) {
@@ -253,6 +255,7 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
           time: new Date().toLocaleTimeString()
         };
         setMessages(prev => [...prev, errorMessage]);
+        setIsAiTyping(false); // Hide typing indicator on error
       }
     } catch (error) {
       console.error('❌ Error sending message - Network/Parse error:', error);
@@ -270,6 +273,7 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
         time: new Date().toLocaleTimeString()
       };
       setMessages(prev => [...prev, errorMessage]);
+      setIsAiTyping(false); // Hide typing indicator on error
     }
   };
 
@@ -355,6 +359,7 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
             }))}
             chatInput={chatInput}
             setChatInput={setChatInput}
+            isAiTyping={isAiTyping}
           />
         );
       default:

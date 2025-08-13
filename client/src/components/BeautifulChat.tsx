@@ -20,6 +20,7 @@ interface BeautifulChatProps {
   messages: Message[];
   chatInput: string;
   setChatInput: (input: string) => void;
+  isAiTyping?: boolean;
 }
 
 const TypingIndicator = () => (
@@ -143,28 +144,22 @@ const BeautifulChat: React.FC<BeautifulChatProps> = ({
   onSendMessage,
   messages,
   chatInput,
-  setChatInput
+  setChatInput,
+  isAiTyping = false
 }) => {
-  const [isTyping, setIsTyping] = useState(false);
   const [showQuickActions, setShowQuickActions] = useState(messages.length === 0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  }, [messages, isAiTyping]);
 
   const handleSend = () => {
     if (!chatInput.trim()) return;
     
-    setIsTyping(true);
     setShowQuickActions(false);
     onSendMessage(chatInput);
     setChatInput('');
-    
-    // Simulate AI response delay
-    setTimeout(() => {
-      setIsTyping(false);
-    }, 2000);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -251,7 +246,7 @@ const BeautifulChat: React.FC<BeautifulChatProps> = ({
         ))}
 
         {/* Typing Indicator */}
-        {isTyping && (
+        {isAiTyping && (
           <div className="flex justify-start">
             <TypingIndicator />
           </div>
