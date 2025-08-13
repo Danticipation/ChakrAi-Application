@@ -207,29 +207,6 @@ app.use(errorHandler);
 // Setup Vite for frontend serving
 await setupVite(app, server);
 
-// Additional MIME type fix for Express middleware
-app.use((req, res, next) => {
-  // Override res.type method to ensure proper MIME types
-  const originalType = res.type;
-  res.type = function(type) {
-    if (type === 'js' || type === 'javascript') {
-      return originalType.call(this, 'application/javascript');
-    }
-    return originalType.call(this, type);
-  };
-  
-  // Override setHeader for any remaining cases
-  const originalSetHeader = res.setHeader;
-  res.setHeader = function(name, value) {
-    if (name.toLowerCase() === 'content-type' && value === 'text/javascript') {
-      return originalSetHeader.call(this, name, 'application/javascript; charset=utf-8');
-    }
-    return originalSetHeader.call(this, name, value);
-  };
-  
-  next();
-});
-
 // Start server
 server.listen(PORT, '0.0.0.0', () => {
   log(`Server running on port ${PORT}`);
