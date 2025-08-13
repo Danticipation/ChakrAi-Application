@@ -207,21 +207,7 @@ app.use(errorHandler);
 // Setup Vite for frontend serving
 await setupVite(app, server);
 
-// Override MIME types after Vite middleware to fix JavaScript loading errors
-app.use((req, res, next) => {
-  const originalSetHeader = res.setHeader;
-  
-  // Intercept setHeader calls to override MIME types
-  res.setHeader = function(name, value) {
-    if (name.toLowerCase() === 'content-type' && value === 'text/javascript') {
-      // Replace text/javascript with application/javascript
-      return originalSetHeader.call(this, name, 'application/javascript; charset=utf-8');
-    }
-    return originalSetHeader.call(this, name, value);
-  };
-  
-  next();
-});
+// MIME type fix will be handled by Vite plugin
 
 // Start server
 server.listen(PORT, '0.0.0.0', () => {
