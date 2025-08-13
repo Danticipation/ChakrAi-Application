@@ -151,6 +151,8 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
     const messageText = message || chatInput;
     if (!messageText.trim()) return;
     
+    console.log(`🎵 Frontend - Sending message with voice: ${selectedVoice}`);
+    
     const userMessage = {
       sender: 'user' as const,
       text: messageText,

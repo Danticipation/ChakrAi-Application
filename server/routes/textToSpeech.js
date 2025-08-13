@@ -13,12 +13,23 @@ const ttsRateLimit = rateLimit({
   legacyHeaders: false,
 });
 
-// Voice ID mapping for ElevenLabs
+// Voice ID mapping for ElevenLabs - Updated to match VoiceSelector
 const VOICE_MAPPING = {
-  'Rachel': 'AZnzlk1XvdvUeBnXmlld', // Rachel - Calm & Professional
-  'Bella': 'EXAVITQu4vr4xnSDxMaL',  // Bella - Warm & Caring  
-  'Josh': 'TxGEqnHWrfWFMLpK4Npl',   // Josh - Confident & Clear
-  'Arnold': 'VR6AewLTigWG4xSOukaG' // Arnold - Deep & Reassuring
+  // Original voices
+  'james': 'EkK5I93UQWFDigLMpZcX',     // James - Professional and calming
+  'brian': 'nPczCjzI2devNBz1zQrb',     // Brian - Deep and resonant
+  'alexandra': 'kdmDKE6EkgrWrrykO9Qt', // Alexandra - Clear and articulate
+  'carla': 'l32B8XDoylOsZKiSdfhE',     // Carla - Warm and empathetic
+  // New voices
+  'hope': 's3WpFb3KxhwHdqCNjxE1',     // Hope - Warm and encouraging
+  'charlotte': 'XB0fDUnXU5powFXDhCwa', // Charlotte - Gentle and empathetic
+  'bronson': 'Yko7PKHZNXotIFUBG7I9',  // Bronson - Confident and reassuring
+  'marcus': 'y3kKRaK2dnn3OgKDBckk',   // Marcus - Smooth and supportive
+  // Legacy compatibility
+  'Rachel': 'AZnzlk1XvdvUeBnXmlld',   // Rachel - Calm & Professional
+  'Bella': 'EXAVITQu4vr4xnSDxMaL',    // Bella - Warm & Caring  
+  'Josh': 'TxGEqnHWrfWFMLpK4Npl',     // Josh - Confident & Clear
+  'Arnold': 'VR6AewLTigWG4xSOukaG'    // Arnold - Deep & Reassuring
 };
 
 const ttsValidation = [
@@ -26,7 +37,7 @@ const ttsValidation = [
     .isLength({ min: 1, max: 5000 })
     .withMessage('Text must be between 1 and 5000 characters'),
   body('voice')
-    .isIn(['Rachel', 'Bella', 'Josh', 'Arnold'])
+    .isIn(['james', 'brian', 'alexandra', 'carla', 'hope', 'charlotte', 'bronson', 'marcus', 'Rachel', 'Bella', 'Josh', 'Arnold'])
     .withMessage('Invalid voice selection'),
   body('stability')
     .optional()

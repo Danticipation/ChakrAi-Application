@@ -364,14 +364,20 @@ Based only on the documented context above, respond authentically to: "${message
     let audioUrl = null;
     try {
       const voiceMap = {
-        'james': 'EkK5I93UQWFDigLMpZcX',  
-        'brian': 'nPczCjzI2devNBz1zQrb',  
-        'alexandra': 'kdmDKE6EkgrWrrykO9Qt', 
-        'carla': 'l32B8XDoylOsZKiSdfhE',  
+        'james': 'EkK5I93UQWFDigLMpZcX',     // James - Professional and calming
+        'brian': 'nPczCjzI2devNBz1zQrb',     // Brian - Deep and resonant
+        'alexandra': 'kdmDKE6EkgrWrrykO9Qt', // Alexandra - Clear and articulate
+        'carla': 'l32B8XDoylOsZKiSdfhE',     // Carla - Warm and empathetic
+        'hope': 's3WpFb3KxhwHdqCNjxE1',     // Hope - Warm and encouraging
+        'charlotte': 'XB0fDUnXU5powFXDhCwa', // Charlotte - Gentle and empathetic
+        'bronson': 'Yko7PKHZNXotIFUBG7I9',  // Bronson - Confident and reassuring
+        'marcus': 'y3kKRaK2dnn3OgKDBckk',   // Marcus - Smooth and supportive
       };
       
       const selectedVoice = voice || 'james';
       const voiceId = voiceMap[selectedVoice] || voiceMap['james'];
+      
+      console.log(`🎵 Voice selection - Selected: ${selectedVoice}, Voice ID: ${voiceId}`);
       
       // Scrub text for TTS
       const scrubbedText = aiResponse
