@@ -489,9 +489,9 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
                   <div className="space-y-1">
                     {[
                       { id: 'meditation', label: 'Guided Meditation' },
-                      { id: 'agents', label: 'AI Therapy Specialists' },
+                      { id: 'agents', label: 'AI Wellness Coaches' },
                       { id: 'vr', label: 'InnerScape' },
-                      { id: 'therapy-plans', label: 'Therapy Plans' },
+                      { id: 'therapy-plans', label: 'Wellness Plans' },
                       { id: 'community', label: 'Community' }
                     ].map((tab) => (
                       <button
@@ -748,9 +748,9 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
                     <h4 className="text-sm font-medium theme-text-secondary mb-2">🧘 Guided Support</h4>
                     <div className="space-y-1">
                       {[
-                        { id: 'agents', label: 'Reflective Allies', icon: '🤝' },
+                        { id: 'agents', label: 'AI Wellness Coaches', icon: '🤝' },
                         { id: 'vr', label: 'InnerScape', icon: '🌐' },
-                        { id: 'therapy-plans', label: 'Therapy Plans', icon: '📋' },
+                        { id: 'therapy-plans', label: 'Wellness Plans', icon: '📋' },
                         { id: 'community', label: 'Community', icon: '👥' }
                       ].map((item) => (
                         <button

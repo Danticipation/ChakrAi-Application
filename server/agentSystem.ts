@@ -11,16 +11,16 @@ import type {
 } from '../shared/agentSchema';
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: process.env['OPENAI_API_KEY'],
 });
 
 // Default Therapeutic Agents Configuration
 export const defaultAgents: Omit<TherapeuticAgent, 'id' | 'createdAt'>[] = [
   {
-    name: 'CBT Coach',
+    name: 'Mindset Coach',
     type: 'cbt',
-    description: 'Cognitive Behavioral Therapy specialist focused on identifying and restructuring cognitive distortions',
-    systemPrompt: `You are a specialized CBT (Cognitive Behavioral Therapy) therapeutic agent. Your expertise is in:
+    description: 'Cognitive wellness coach focused on identifying and reframing thought patterns',
+    systemPrompt: `You are a mindset coaching AI assistant focused on cognitive wellness techniques. Your expertise is in:
 
 1. IDENTIFYING COGNITIVE DISTORTIONS:
 - All-or-nothing thinking
@@ -45,7 +45,7 @@ export const defaultAgents: Omit<TherapeuticAgent, 'id' | 'createdAt'>[] = [
 - Exposure therapy planning
 - Problem-solving techniques
 
-Always maintain a gentle, collaborative approach. Ask permission before deep dives into sensitive topics. Focus on empowerment and skill-building.`,
+Always maintain a gentle, collaborative approach. Ask permission before deep dives into sensitive topics. Focus on empowerment and skill-building. Remember you are providing wellness coaching, not therapy.`,
     specializations: ['cognitive_distortions', 'thought_restructuring', 'behavioral_activation', 'exposure_therapy'],
     isActive: true,
   },
@@ -53,7 +53,7 @@ Always maintain a gentle, collaborative approach. Ask permission before deep div
     name: 'Mindfulness Guide',
     type: 'mindfulness',
     description: 'Meditation and mindfulness specialist for stress reduction and present-moment awareness',
-    systemPrompt: `You are a specialized Mindfulness therapeutic agent. Your expertise includes:
+    systemPrompt: `You are a mindfulness wellness guide AI assistant. Your expertise includes:
 
 1. MEDITATION GUIDANCE:
 - Breathing techniques (4-7-8, box breathing, natural breath awareness)
@@ -80,7 +80,7 @@ Always maintain a gentle, collaborative approach. Ask permission before deep div
 - Monitor progress in mindfulness skills
 - Identify optimal practice times
 
-Speak in a calm, centered tone. Offer gentle guidance without judgment. Always check in on the user's comfort level during exercises.`,
+Speak in a calm, centered tone. Offer gentle guidance without judgment. Always check in on the user's comfort level during exercises. Remember you are providing wellness coaching, not therapy.`,
     specializations: ['meditation', 'stress_reduction', 'breath_work', 'body_awareness', 'emotional_regulation'],
     isActive: true,
   },
@@ -88,7 +88,7 @@ Speak in a calm, centered tone. Offer gentle guidance without judgment. Always c
     name: 'Self-Compassion Coach',
     type: 'self_compassion',
     description: 'Specialist in developing self-kindness and reframing negative self-talk',
-    systemPrompt: `You are a specialized Self-Compassion therapeutic agent based on Kristin Neff's research. Your focus areas:
+    systemPrompt: `You are a self-compassion wellness coaching AI assistant based on Kristin Neff's research. Your focus areas:
 
 1. SELF-KINDNESS:
 - Identifying harsh self-criticism
@@ -114,15 +114,15 @@ Speak in a calm, centered tone. Offer gentle guidance without judgment. Always c
 - Develop personal self-compassion phrases
 - Write self-compassionate letters
 
-Use a warm, nurturing tone. Model self-compassion in your responses. Help users recognize their inner critic and develop a kinder internal dialogue.`,
+Use a warm, nurturing tone. Model self-compassion in your responses. Help users recognize their inner critic and develop a kinder internal dialogue. Remember you are providing wellness coaching, not therapy.`,
     specializations: ['self_criticism_reframing', 'emotional_self_care', 'shame_resilience', 'inner_voice_work'],
     isActive: true,
   },
   {
-    name: 'Anxiety Specialist',
+    name: 'Calm & Focus Guide',
     type: 'anxiety',
-    description: 'Expert in anxiety management, panic response, and exposure techniques',
-    systemPrompt: `You are a specialized Anxiety therapeutic agent. Your expertise covers:
+    description: 'Wellness coach specializing in stress management and calming techniques',
+    systemPrompt: `You are a stress and anxiety wellness coaching AI assistant. Your expertise covers:
 
 1. ANXIETY UNDERSTANDING:
 - Identify anxiety triggers and patterns
@@ -148,7 +148,7 @@ Use a warm, nurturing tone. Model self-compassion in your responses. Help users 
 - Managing anticipatory anxiety
 - Building confidence in coping abilities
 
-Maintain a calm, reassuring presence. Validate anxiety while building confidence in coping skills. Always prioritize safety and suggest professional help for severe symptoms.`,
+Maintain a calm, reassuring presence. Validate feelings while building confidence in coping skills. Always prioritize safety and recommend professional help for severe symptoms. Remember you are providing wellness coaching, not therapy.`,
     specializations: ['panic_attacks', 'social_anxiety', 'generalized_anxiety', 'phobias', 'exposure_therapy'],
     isActive: true,
   }
@@ -210,7 +210,7 @@ Only recommend handoff if there's clear benefit (confidence > 0.7).`;
         temperature: 0.3,
       });
 
-      const rawContent = response.choices[0].message.content || '{}';
+      const rawContent = response.choices[0]?.message?.content || '{}';
       // Strip markdown code blocks if present
       const cleanContent = rawContent.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
       const analysis = JSON.parse(cleanContent);
@@ -293,7 +293,7 @@ Only recommend handoff if there's clear benefit (confidence > 0.7).`;
         temperature: 0.7,
       });
 
-      const agentResponse = response.choices[0].message.content || '';
+      const agentResponse = response.choices[0]?.message?.content || '';
       
       // Update session history
       const updatedHistory = [
@@ -314,7 +314,7 @@ Only recommend handoff if there's clear benefit (confidence > 0.7).`;
         response: agentResponse,
         insights,
         shouldTransferBack: shouldComplete.shouldTransfer,
-        transferReason: shouldComplete.reason,
+        transferReason: shouldComplete.reason || '',
       };
     } catch (error) {
       console.error('Agent response generation error:', error);
@@ -351,7 +351,7 @@ Focus on meaningful therapeutic insights, not generic observations.`;
         temperature: 0.3,
       });
 
-      const insights = JSON.parse(response.choices[0].message.content || '[]');
+      const insights = JSON.parse(response.choices[0]?.message?.content || '[]');
       return insights.map((insight: any) => ({
         id: Date.now() + Math.random(),
         userId,
@@ -404,7 +404,7 @@ Transfer back if:
         temperature: 0.3,
       });
 
-      const rawContent = response.choices[0].message.content || '{}';
+      const rawContent = response.choices[0]?.message?.content || '{}';
       // Strip markdown code blocks if present
       const cleanContent = rawContent.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
       const analysis = JSON.parse(cleanContent);
