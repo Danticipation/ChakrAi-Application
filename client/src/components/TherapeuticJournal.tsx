@@ -949,6 +949,11 @@ const TherapeuticJournal: React.FC<TherapeuticJournalProps> = ({ userId, onEntry
               )}
             </button>
 
+            {/* Debug Info */}
+            <div className="text-xs text-gray-500 mb-2">
+              Debug: viewMode={viewMode}, editingEntry={editingEntry ? `id:${editingEntry.id}` : 'null'}
+            </div>
+            
             {/* Delete Button - Only show when editing existing entry */}
             {viewMode === 'edit' && editingEntry && editingEntry.id && (
               <button
