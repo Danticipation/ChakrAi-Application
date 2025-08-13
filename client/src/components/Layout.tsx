@@ -293,7 +293,7 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
       case 'questions':
         return <VoluntaryQuestionDeck />;
       case 'journal':
-        return <TherapeuticJournal userId={currentUserId} onEntryCreated={() => {}} />;
+        return <EnhancedJournalInterface userId={currentUserId} onEntryCreated={() => {}} />;
       case 'memory':
         return <MemoryDashboard />;
       case 'conversation-continuity':
