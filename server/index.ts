@@ -3,6 +3,7 @@ import { createServer } from "http";
 import path from "path";
 import { fileURLToPath } from 'url';
 import cors from 'cors';
+import mime from 'mime-types';
 import { setupVite, serveStatic, log } from "./vite.js";
 import routes from './routes.js';
 import { 
@@ -55,6 +56,19 @@ app.use(cors(corsConfig));
 // Body parsing with limits suitable for audio responses
 app.use(express.json({ limit: '50mb' })); // Restored original limit for audio functionality
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+
+// Fix MIME type issues for JavaScript and CSS files
+// Configure proper MIME types for static assets
+app.use((req, res, next) => {
+  if (req.url.endsWith('.js') || req.url.endsWith('.mjs')) {
+    res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+  } else if (req.url.endsWith('.css')) {
+    res.setHeader('Content-Type', 'text/css; charset=utf-8');
+  } else if (req.url.endsWith('.ts') || req.url.endsWith('.tsx')) {
+    res.setHeader('Content-Type', 'application/typescript; charset=utf-8');
+  }
+  next();
+});
 
 // Import and set up authentication middleware
 import { authenticateToken } from './routes/auth.js';
