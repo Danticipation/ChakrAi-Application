@@ -85,14 +85,14 @@ const WellnessDashboard: React.FC<WellnessDashboardProps> = ({ userId, onNavigat
     return () => clearInterval(timer);
   }, []);
 
-  // Fetch daily affirmation
+  // Fetch daily affirmation (force fresh on each page load)
   const { data: affirmationData } = useQuery({
     queryKey: ['daily-affirmation', new Date().toDateString()],
     queryFn: async () => {
-      const response = await axios.get('/api/daily-affirmation');
+      const response = await axios.get(`/api/daily-affirmation?t=${Date.now()}`);
       return response.data;
     },
-    staleTime: 24 * 60 * 60 * 1000, // Keep for 24 hours
+    staleTime: 30 * 60 * 1000, // Keep for 30 minutes instead of 24 hours
   });
 
   useEffect(() => {

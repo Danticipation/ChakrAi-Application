@@ -114,11 +114,7 @@ app.get('/api/bot-stats', (req, res) => {
 });
 
 // Direct daily affirmation endpoint
-app.get('/api/daily-affirmation', (req, res) => {
-  res.json({ 
-    affirmation: 'Today is a beautiful day to practice self-compassion and growth.' 
-  });
-});
+
 
 // Direct weekly summary endpoint
 app.get('/api/weekly-summary', (req, res) => {
