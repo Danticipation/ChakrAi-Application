@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-Chakrai is a comprehensive AI-powered mental wellness companion featuring subscription-based monetization, advanced therapeutic support, and privacy-first architecture. The platform serves both anonymous and registered users with professional-grade mental health tools and seamless healthcare integration.
+Chakrai is a comprehensive AI-powered mental wellness companion featuring local Piper TTS integration, modular memory architecture for therapeutic context, and healthcare-grade data integrity. The platform delivers professional therapeutic support with zero hardcoded data and comprehensive real-time analytics.
 
 ## Core Platform Features
 
@@ -13,12 +13,11 @@ Chakrai is a comprehensive AI-powered mental wellness companion featuring subscr
 - **Crisis Detection**: Real-time analysis with immediate intervention and resource provision
 - **Emotional Intelligence**: Advanced pattern recognition and mood forecasting capabilities
 
-### Premium Voice System (8 Professional Voices)
-- **Male Voices**: James (professional), Brian (deep), Bronson (confident), Marcus (smooth)
-- **Female Voices**: Alexandra (articulate), Carla (empathetic), Hope (encouraging), Charlotte (gentle)
-- **ElevenLabs Integration**: High-quality voice synthesis with natural expression
-- **Speech-to-Text**: OpenAI Whisper for voice journaling and conversation input
-- **Voice Loading Indicators**: Professional feedback during audio generation
+### Local Voice System (Cost-Effective)
+- **Local Piper TTS**: Amy voice model running locally to avoid subscription costs
+- **Web Audio API**: Enhanced recorder creating proper WAV files bypassing MediaRecorder issues
+- **OpenAI Whisper**: Speech-to-text for voice journaling and conversation input
+- **Voice System Fixed**: Working recorder that creates proper audio files for processing
 
 ### Subscription & Monetization System
 

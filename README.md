@@ -1,16 +1,16 @@
 # Chakrai - Mental Wellness & Therapy Application
 
-Chakrai is a comprehensive AI-powered mental wellness companion featuring subscription-based monetization, advanced therapeutic support, and privacy-first architecture for both anonymous and registered users.
+Chakrai is a comprehensive AI-powered mental wellness companion featuring local Piper TTS integration, modular memory architecture for therapeutic continuity, and healthcare-grade data integrity with zero hardcoded data throughout the platform.
 
 ## Features Overview
 
 ### Core Functionality
-- **AI Conversations**: OpenAI GPT-4o powered therapeutic conversations with personality mirroring
-- **8-Voice System**: Professional ElevenLabs voices (James, Brian, Alexandra, Carla, Hope, Charlotte, Bronson, Marcus)
-- **Subscription System**: Freemium model with device-based subscriptions for anonymous users
-- **Mood Tracking**: Comprehensive mood entries with intensity, tags, and AI analysis
-- **Therapeutic Journaling**: Private journaling with voice-to-text and AI insights
-- **Crisis Detection**: Real-time detection and intervention with professional support resources
+- **AI Conversations**: OpenAI GPT-4o with anti-hallucination system and therapeutic context memory
+- **Local Voice System**: Piper TTS (Amy voice) running locally to avoid subscription costs
+- **Modular Memory Architecture**: Comprehensive memory services for therapeutic continuity
+- **Authentic Analytics**: Real-time dashboard statistics calculated from actual database queries
+- **Enhanced Journal Interface**: Redesigned with engaging visuals and mood selection
+- **Data Integrity**: Zero hardcoded data - all functionality driven by authentic database content
 
 ### Premium Features (Subscription Required)
 - **Unlimited AI Conversations**: Remove 10/month limit for free users
@@ -33,9 +33,10 @@ Chakrai is a comprehensive AI-powered mental wellness companion featuring subscr
 - **Backend**: Express.js + TypeScript with comprehensive API endpoints
 - **Database**: PostgreSQL with Drizzle ORM and complete schema management
 - **Payments**: Stripe integration with subscription management and webhooks
-- **AI Services**: OpenAI GPT-4o, ElevenLabs TTS (8 voices), Whisper STT
-- **Authentication**: JWT tokens with anonymous user support and device fingerprinting
-- **State Management**: TanStack Query + Context providers for subscription state
+- **AI Services**: OpenAI GPT-4o with anti-hallucination system, Local Piper TTS (Amy voice), Whisper STT
+- **Authentication**: SecureAuthManager for consistent user identification across all endpoints
+- **Memory System**: Modular memory architecture with 5 specialized services for therapeutic continuity
+- **Data Integrity**: Zero hardcoded data with authentic analytics from database queries
 
 ## Quick Start
 
@@ -55,8 +56,8 @@ Chakrai is a comprehensive AI-powered mental wellness companion featuring subscr
    VITE_STRIPE_PUBLIC_KEY=pk_test_...
    STRIPE_WEBHOOK_SECRET=whsec_...
    
-   # Optional Voice Features
-   ELEVENLABS_API_KEY=your_elevenlabs_key
+   # Local Voice System
+   # Piper TTS runs locally - no external API key needed
    ```
 
 3. **Initialize Database**
@@ -69,7 +70,7 @@ Chakrai is a comprehensive AI-powered mental wellness companion featuring subscr
    npm run dev
    ```
 
-Visit `http://localhost:5000` to access TraI Mental Wellness Companion.
+Visit `http://localhost:5000` to access Chakrai Mental Wellness Companion.
 
 ## Monetization Model
 
@@ -91,6 +92,7 @@ Visit `http://localhost:5000` to access TraI Mental Wellness Companion.
 - **[PRODUCT_FEATURES.md](PRODUCT_FEATURES.md)**: Complete feature specifications and capabilities
 - **[TECH_DOCS.md](TECH_DOCS.md)**: Development guides, API reference, and architecture
 - **[SECURITY.md](SECURITY.md)**: Privacy compliance, security measures, and data protection
+- **[RECENT_UPDATES.md](RECENT_UPDATES.md)**: Latest system improvements and achievements
 
 ## Privacy & Compliance
 
