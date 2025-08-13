@@ -12,6 +12,8 @@ import MemoryDashboard from '@/components/MemoryDashboard';
 import ConversationContinuityDisplay from '@/components/ConversationContinuityDisplay';
 import VoiceSelector from '@/components/VoiceSelector';
 import ThemeSelector from '@/components/ThemeSelector';
+import AnimatedHero from '@/components/AnimatedHero';
+import FeatureCards from '@/components/FeatureCards';
 // import AuthModal from '@/components/AuthModal';
 
 import PersonalityQuiz from '@/components/PersonalityQuiz';
@@ -288,26 +290,12 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
     switch (activeSection) {
       case 'home':
         return (
-          <div className="p-6 space-y-6 max-h-full overflow-y-auto">
-            <div className="text-center space-y-4 mb-8">
-              <h1 className="text-4xl font-bold theme-text font-serif tracking-wide">
-                Welcome to <span className="font-samarkan">Chakrai</span>
-              </h1>
-              <p className="theme-text-secondary text-xl font-light max-w-2xl mx-auto leading-relaxed">
-                Your Personal AI Wellness Companion
-              </p>
-              <p className="theme-text text-lg max-w-3xl mx-auto leading-relaxed font-light opacity-90">
-                Connect with your inner wisdom through AI-powered reflection and growth. Click "Chat with Chakrai" to begin your wellness journey.
-              </p>
-            </div>
-            <div className="flex justify-center mb-8">
-              <button
-                onClick={() => setActiveSection('chat')}
-                className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold text-lg rounded-2xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 border-2 border-white/20"
-              >
-                🧘 Start Your Reflection Journey
-              </button>
-            </div>
+          <div className="h-full overflow-y-auto">
+            <AnimatedHero 
+              onStartJourney={() => setActiveSection('chat')}
+              onFeatureClick={setActiveSection}
+            />
+            <FeatureCards onFeatureClick={setActiveSection} />
           </div>
         );
       case 'questions':
