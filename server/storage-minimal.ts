@@ -447,6 +447,7 @@ export class MinimalStorage implements IStorage {
     try {
       const messageData = {
         userId: data.userId,
+        text: data.content || '', // Database expects 'text' field
         content: data.content || '',
         isBot: data.isBot || false,
         timestamp: new Date(),
