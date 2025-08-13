@@ -273,19 +273,26 @@ RESPONSE STYLE:
 
 Based on the comprehensive personal context above, respond with deep therapeutic understanding to: "${message}"`;
 
-    // Generate AI response with enhanced context - MEMORY FIX
-    const completion = await openai.chat.completions.create({
+    // Generate AI response with enhanced context and timeout protection
+    const completionPromise = openai.chat.completions.create({
       model: "gpt-4o",
       messages: [
         { role: "system", content: systemMessage },
-        ...conversationHistory.slice(-15), // Last 15 messages for extended context
+        ...conversationHistory.slice(-12), // Reduced for faster response
         { role: "user", content: message }
       ],
-      max_tokens: 600, // Increased for more detailed responses
+      max_tokens: 500, // Reduced for faster response
       temperature: 0.7,
       presence_penalty: 0.1,
       frequency_penalty: 0.1
     });
+
+    // Add timeout to prevent hanging
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('OpenAI request timeout')), 20000); // 20 second timeout
+    });
+
+    const completion = await Promise.race([completionPromise, timeoutPromise]);
 
     const aiResponse = completion.choices[0].message.content;
     console.log('AI response generated:', { length: aiResponse?.length, crisisDetected });
@@ -308,36 +315,29 @@ Based on the comprehensive personal context above, respond with deep therapeutic
       }
     });
 
-    // 🧠 COMPREHENSIVE MEMORY PROCESSING - Store conversation through enhanced memory system
-    try {
-      // Process through the comprehensive memory system
-      await enhancedStorage.createMessage({
-        userId,
-        content: message,
-        isFromUser: true,
-        emotionalState: emotionalAnalysis.currentState,
-        therapeuticGoals: comprehensiveContext.sessionContext?.keyTopics || [],
-        currentTopics: message.split(' ').slice(0, 5), // Extract key topics from message
-        metadata: {
-          hasMemoryContext: comprehensiveContext.recentMemories?.length > 0,
-          hasInsights: comprehensiveContext.relevantInsights?.length > 0,
-          sessionActive: !!comprehensiveContext.sessionContext
-        }
-      });
-      
-      console.log('🧠 Message processed through comprehensive memory system');
-    } catch (memoryError) {
-      console.error('🚨 Comprehensive memory processing failed:', memoryError);
-      
-      // Fallback to legacy memory processing
-      analyzeConversationForMemory(userId, message, aiResponse).catch(error => {
-        console.log('Background semantic memory analysis failed:', error);
-      });
-
-      extractAndStoreFacts(userId, message, aiResponse).catch(error => {
-        console.log('Background fact extraction failed:', error);
-      });
-    }
+    // 🧠 LIGHTWEIGHT MEMORY PROCESSING - Background processing to avoid timeouts
+    setImmediate(async () => {
+      try {
+        // Process through the comprehensive memory system in background
+        await enhancedStorage.createMessage({
+          userId,
+          content: message,
+          isFromUser: true,
+          emotionalState: emotionalAnalysis.currentState,
+          therapeuticGoals: comprehensiveContext.sessionContext?.keyTopics || [],
+          currentTopics: message.split(' ').slice(0, 3), // Reduced to prevent timeout
+          metadata: {
+            hasMemoryContext: comprehensiveContext.recentMemories?.length > 0,
+            hasInsights: comprehensiveContext.relevantInsights?.length > 0,
+            sessionActive: !!comprehensiveContext.sessionContext
+          }
+        });
+        
+        console.log('🧠 Message processed through comprehensive memory system');
+      } catch (memoryError) {
+        console.error('🚨 Background memory processing failed:', memoryError);
+      }
+    });
 
     // Update conversation continuity tracking (with proper error handling)
     try {

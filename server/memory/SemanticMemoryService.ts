@@ -61,7 +61,8 @@ export class SemanticMemoryService implements ISemanticMemoryService {
         relatedTopics: memory.relatedTopics || [],
         confidence: memory.confidence || '0.80',
         accessCount: 0,
-        sourceConversationId: memory.sourceConversationId,
+        sourceConversationId: typeof memory.sourceConversationId === 'string' ? 
+          parseInt(memory.sourceConversationId) || null : memory.sourceConversationId,
         isActiveMemory: memory.isActiveMemory !== false,
         createdAt: new Date()
       };
