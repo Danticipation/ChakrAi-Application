@@ -11,6 +11,7 @@ import voiceRoutes from './voice.js';
 import authRoutes from './auth.js';
 import journalRoutes from './journal.js';
 import meditationRoutes from './meditation.js';
+import comprehensiveAnalyticsRoutes from './comprehensiveAnalytics.js';
 
 const router = express.Router();
 
@@ -32,6 +33,7 @@ router.use('/voice', voiceRoutes);
 router.use('/auth', authRoutes);
 router.use('/journal', journalRoutes);
 router.use('/meditation', meditationRoutes);
+router.use('/analytics', comprehensiveAnalyticsRoutes);
 
 // Legacy endpoints for backward compatibility
 router.use('/', chatRoutes);
@@ -46,5 +48,6 @@ router.use('/', voiceRoutes);
 router.use('/', authRoutes);
 router.use('/', journalRoutes);
 router.use('/', meditationRoutes);
+router.use('/', comprehensiveAnalyticsRoutes);
 
 export default router;
