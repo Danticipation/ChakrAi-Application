@@ -82,6 +82,16 @@ const TherapeuticJournal: React.FC<TherapeuticJournalProps> = ({ userId, onEntry
     fetchRecentEntries();
   }, []);
 
+  // Debug: Track editingEntry changes
+  useEffect(() => {
+    console.log('🔵 editingEntry changed to:', editingEntry);
+  }, [editingEntry]);
+
+  // Debug: Track viewMode changes
+  useEffect(() => {
+    console.log('🟢 viewMode changed to:', viewMode);
+  }, [viewMode]);
+
   const fetchRecentEntries = async () => {
     console.log('fetchRecentEntries called with userId:', userId);
     
