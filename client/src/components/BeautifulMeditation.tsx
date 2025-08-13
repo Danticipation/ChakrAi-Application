@@ -28,6 +28,7 @@ const BeautifulMeditation: React.FC = () => {
   const [isLoadingAudio, setIsLoadingAudio] = useState(false);
   const [meditationScript, setMeditationScript] = useState<string>('');
   const [selectedVoice, setSelectedVoice] = useState<'natasha' | 'natasha_husband'>('natasha');
+  const [meditationTimer, setMeditationTimer] = useState<NodeJS.Timeout | null>(null);
 
   const meditationSessions: MeditationSession[] = [
     {
@@ -107,10 +108,10 @@ const BeautifulMeditation: React.FC = () => {
   // Generate meditation script based on session type
   const generateMeditationScript = (session: MeditationSession): string => {
     const scripts = {
-      mindfulness: `Welcome to your ${session.duration}-minute mindfulness meditation. Find a comfortable position and close your eyes. Take a deep breath in through your nose, and slowly exhale through your mouth. Feel your body settling into this moment. Notice any thoughts that arise, acknowledge them gently, and let them pass like clouds in the sky. Focus on your breath, the rise and fall of your chest, the sensation of air entering and leaving your body. You are present, you are grounded, you are at peace.`,
-      breathing: `Let's begin this ${session.duration}-minute breathing meditation. Settle comfortably and close your eyes. Place one hand on your chest and one on your belly. Breathe in slowly for 4 counts, feeling your belly rise. Hold for 4 counts. Exhale slowly for 6 counts, feeling your belly fall. This is your anchor, your safe harbor. With each breath, you release tension and stress. Inhale calm, exhale worry. You are creating space for peace within yourself.`,
-      guided: `Welcome to your ${session.duration}-minute guided meditation journey. Close your eyes and take three deep, cleansing breaths. Imagine yourself in a peaceful place - perhaps a serene forest, a quiet beach, or a comfortable room filled with soft light. You are safe here, you are loved here. Feel the warmth of compassion flowing through your body. With each breath, you are becoming more relaxed, more centered, more at peace with yourself and the world around you.`,
-      visualization: `Begin your ${session.duration}-minute visualization meditation. Close your eyes and breathe naturally. Visualize a warm, golden light above your head. This light represents peace, love, and healing. Watch as this light slowly descends, entering through the crown of your head, flowing through your entire body. Feel it warming every cell, healing every worry, dissolving every tension. You are filled with this beautiful, healing light. You are whole, you are peaceful, you are exactly where you need to be.`
+      mindfulness: `Welcome to your ${session.duration}-minute ${session.name} meditation. Find a comfortable position and close your eyes. Take a deep breath in through your nose, and slowly exhale through your mouth. Feel your body settling into this moment. Notice any thoughts that arise, acknowledge them gently, and let them pass like clouds in the sky. Focus on your breath, the rise and fall of your chest, the sensation of air entering and leaving your body. You are present, you are grounded, you are at peace.`,
+      breathing: `Let's begin this ${session.duration}-minute ${session.name} meditation. Settle comfortably and close your eyes. Place one hand on your chest and one on your belly. Breathe in slowly for 4 counts, feeling your belly rise. Hold for 4 counts. Exhale slowly for 6 counts, feeling your belly fall. This is your anchor, your safe harbor. With each breath, you release tension and stress. Inhale calm, exhale worry. You are creating space for peace within yourself.`,
+      guided: `Welcome to your ${session.duration}-minute ${session.name} meditation journey. Close your eyes and take three deep, cleansing breaths. Imagine yourself in a peaceful place - perhaps a serene forest, a quiet beach, or a comfortable room filled with soft light. You are safe here, you are loved here. Feel the warmth of compassion flowing through your body. With each breath, you are becoming more relaxed, more centered, more at peace with yourself and the world around you.`,
+      visualization: `Begin your ${session.duration}-minute ${session.name} meditation. Close your eyes and breathe naturally. Visualize a warm, golden light above your head. This light represents peace, love, and healing. Watch as this light slowly descends, entering through the crown of your head, flowing through your entire body. Feel it warming every cell, healing every worry, dissolving every tension. You are filled with this beautiful, healing light. You are whole, you are peaceful, you are exactly where you need to be.`
     };
     return scripts[session.type] || scripts.mindfulness;
   };
@@ -167,14 +168,12 @@ const BeautifulMeditation: React.FC = () => {
         });
         
         audio.addEventListener('ended', () => {
-          console.log('Meditation session completed');
-          setIsPlaying(false);
-          setCurrentTime(0);
+          console.log('Voice guidance completed, meditation continues...');
+          // Don't stop the meditation or reset timer - voice is just guidance
+          // The meditation timer continues independently
         });
         
-        audio.addEventListener('timeupdate', () => {
-          setCurrentTime(Math.floor(audio.currentTime));
-        });
+        // Remove timeupdate listener - we'll use independent timer instead
         
         audio.addEventListener('error', (e) => {
           console.error('Audio playback error:', e);
@@ -183,6 +182,9 @@ const BeautifulMeditation: React.FC = () => {
         });
         
         setAudioElement(audio);
+        
+        // Start independent meditation timer
+        startMeditationTimer(session);
         
         // Start playing
         await audio.play();
@@ -201,38 +203,81 @@ const BeautifulMeditation: React.FC = () => {
     }
   };
 
-  // Fallback ambient meditation without voice
-  const startAmbientMeditation = (session: MeditationSession) => {
-    console.log('Starting ambient meditation session:', session.name);
+  // Start independent meditation timer
+  const startMeditationTimer = (session: MeditationSession) => {
+    console.log(`Starting ${session.duration}-minute meditation timer for:`, session.name);
     setIsPlaying(true);
-    // Just run the timer without voice guidance
+    setCurrentTime(0);
+    
     const timer = setInterval(() => {
       setCurrentTime(prev => {
         const newTime = prev + 1;
         if (newTime >= session.duration * 60) {
+          console.log('Meditation session completed');
           setIsPlaying(false);
           clearInterval(timer);
-          return 0;
+          setMeditationTimer(null);
+          // Clean up audio if still playing
+          if (audioElement) {
+            audioElement.pause();
+          }
+          return session.duration * 60; // Keep final time displayed
         }
         return newTime;
       });
     }, 1000);
+    
+    setMeditationTimer(timer);
+  };
+
+  // Fallback ambient meditation without voice
+  const startAmbientMeditation = (session: MeditationSession) => {
+    console.log('Starting ambient meditation session:', session.name);
+    startMeditationTimer(session);
   };
 
   // Handle play/pause
   const togglePlayPause = async () => {
     if (!selectedSession) return;
 
-    if (audioElement) {
-      if (isPlaying) {
-        audioElement.pause();
-      } else {
-        await audioElement.play();
+    if (isPlaying) {
+      // Pause meditation
+      setIsPlaying(false);
+      if (meditationTimer) {
+        clearInterval(meditationTimer);
+        setMeditationTimer(null);
       }
-    } else if (!isPlaying) {
-      // Generate new meditation audio
-      await playMeditationAudio(selectedSession);
+      if (audioElement) {
+        audioElement.pause();
+      }
+    } else {
+      // Start or resume meditation
+      if (currentTime === 0 || currentTime >= selectedSession.duration * 60) {
+        // Start new session
+        await playMeditationAudio(selectedSession);
+      } else {
+        // Resume existing session
+        startMeditationTimer(selectedSession);
+        if (audioElement) {
+          await audioElement.play();
+        }
+      }
     }
+  };
+
+  // Reset meditation session
+  const resetMeditation = () => {
+    if (meditationTimer) {
+      clearInterval(meditationTimer);
+      setMeditationTimer(null);
+    }
+    if (audioElement) {
+      audioElement.pause();
+      audioElement.currentTime = 0;
+    }
+    setIsPlaying(false);
+    setCurrentTime(0);
+    console.log('Meditation session reset');
   };
 
   // Update audio volume when volume state changes
@@ -242,15 +287,18 @@ const BeautifulMeditation: React.FC = () => {
     }
   }, [volume, isMuted, audioElement]);
 
-  // Cleanup audio on unmount
+  // Cleanup audio and timer on unmount
   React.useEffect(() => {
     return () => {
       if (audioElement) {
         audioElement.pause();
         audioElement.src = '';
       }
+      if (meditationTimer) {
+        clearInterval(meditationTimer);
+      }
     };
-  }, [audioElement]);
+  }, [audioElement, meditationTimer]);
 
   const SessionCard = ({ session, isSelected, onClick }: {
     session: MeditationSession;
@@ -444,13 +492,9 @@ const BeautifulMeditation: React.FC = () => {
             {/* Controls */}
             <div className="flex items-center justify-center space-x-6 mb-6">
               <button
-                onClick={() => {
-                  setCurrentTime(0);
-                  if (audioElement) {
-                    audioElement.currentTime = 0;
-                  }
-                }}
+                onClick={resetMeditation}
                 className="p-3 rounded-full bg-white/10 hover:bg-white/20 transition-colors duration-300"
+                title="Reset meditation"
               >
                 <RotateCcw className="w-6 h-6 text-white" />
               </button>
