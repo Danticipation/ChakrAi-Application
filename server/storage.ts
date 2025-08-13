@@ -1,12 +1,12 @@
-// MEMORY SYSTEM FIXED - Using stable storage system with all semantic memory methods
-// This uses the stable old storage system that has all required methods implemented
+// MEMORY SYSTEM FIXED - Using minimal storage with semantic memory methods
+// This uses a clean minimal storage implementation focused on memory functionality
 
-// Import and use the working storage system with semantic memory methods
-import { DatabaseStorage, type IStorage } from './storage-old.js';
+// Import and use the working minimal storage system
+import { MinimalStorage, type IStorage } from './storage-minimal.js';
 
-// Create instance of working storage with all memory methods
-export const storage = new DatabaseStorage();
+// Create instance of working storage with semantic memory methods
+export const storage = new MinimalStorage();
 export type { IStorage };
 
 // Legacy export for complete backward compatibility
-export const DbStorage = DatabaseStorage;
+export const DbStorage = MinimalStorage;
