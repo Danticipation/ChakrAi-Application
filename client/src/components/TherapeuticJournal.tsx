@@ -621,9 +621,23 @@ const TherapeuticJournal: React.FC<TherapeuticJournalProps> = ({ userId, onEntry
                           </span>
                         ))}
                       </div>
-                      <span className="text-white/60 text-xs">
-                        {new Date(recentEntry.createdAt || '').toLocaleDateString()}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation(); // Prevent card click
+                            if (recentEntry.id && window.confirm('Are you sure you want to delete this journal entry? This action cannot be undone.')) {
+                              deleteEntry(recentEntry.id);
+                            }
+                          }}
+                          className="text-red-400 hover:text-red-300 transition-colors p-1"
+                          title="Delete entry"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                        <span className="text-white/60 text-xs">
+                          {new Date(recentEntry.createdAt || '').toLocaleDateString()}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 ))}
