@@ -39,6 +39,7 @@ import AdminFeedbackDashboard from '@/components/AdminFeedbackDashboard';
 import AdminPortal from '@/components/AdminPortal';
 import Horoscope from '@/components/Horoscope';
 import DailyAffirmation from '@/components/DailyAffirmation';
+import PilotAnalyticsDashboard from '@/components/PilotAnalyticsDashboard';
 // Removed duplicate chat components - using only main chat interface
 import ChallengeSystem from '@/components/ChallengeSystem';
 import SupabaseSetup from '@/components/SupabaseSetup';
@@ -348,6 +349,8 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
         return <Horoscope />;
       case 'affirmation':
         return <DailyAffirmation />;
+      case 'pilot-analytics':
+        return <PilotAnalyticsDashboard />;
       case 'chat':
         return (
           <BeautifulChat
@@ -585,6 +588,7 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
                 {!collapsedSections.settings && (
                   <div className="space-y-1">
                     {[
+                      { id: 'pilot-analytics', label: 'Pilot Analytics' },
                       { id: 'voice', label: 'Voice Settings' },
                       { id: 'themes', label: 'Themes' },
                       { id: 'feedback', label: 'Feedback' },
@@ -831,6 +835,7 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
                     <h4 className="text-sm font-medium theme-text-secondary mb-2">⚙️ Settings</h4>
                     <div className="space-y-1">
                       {[
+                        { id: 'pilot-analytics', label: 'Pilot Analytics', icon: '📊' },
                         { id: 'voice', label: 'Voice Settings', icon: '🎤' },
                         { id: 'themes', label: 'Themes', icon: '🎨' },
                         { id: 'feedback', label: 'Feedback', icon: '💬' },
