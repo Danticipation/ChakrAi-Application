@@ -69,7 +69,7 @@ export class MinimalStorage implements IStorage {
       };
       
       const [memory] = await db.insert(semanticMemories).values(memoryData).returning();
-      console.log(`💾 Created semantic memory: ${memory.id}`);
+      console.log(`💾 Created semantic memory: ${memory?.id}`);
       return memory;
     } catch (error) {
       console.error('Error creating semantic memory:', error);
