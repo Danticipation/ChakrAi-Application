@@ -37,6 +37,8 @@ export interface IStorage {
   createUser(data: any): Promise<any>;
   createJournalEntry(data: any): Promise<any>;
   getJournalEntries(userId: number, limit?: number): Promise<any[]>;
+  getJournalEntry(entryId: number): Promise<any>;
+  deleteJournalEntry(entryId: number): Promise<void>;
   getUserMessages(userId: number, limit?: number): Promise<any[]>;
   getUserMemories(userId: number): Promise<any[]>;
   getUserFacts(userId: number): Promise<any[]>;
@@ -317,6 +319,32 @@ export class MinimalStorage implements IStorage {
     } catch (error) {
       console.error('Error getting journal entries:', error);
       return [];
+    }
+  }
+
+  async getJournalEntry(entryId: number): Promise<any> {
+    try {
+      const result = await db.select()
+        .from(journalEntries)
+        .where(eq(journalEntries.id, entryId))
+        .limit(1);
+      
+      return result[0] || null;
+    } catch (error) {
+      console.error('Error getting journal entry:', error);
+      return null;
+    }
+  }
+
+  async deleteJournalEntry(entryId: number): Promise<void> {
+    try {
+      await db.delete(journalEntries)
+        .where(eq(journalEntries.id, entryId));
+      
+      console.log(`✅ Deleted journal entry: ${entryId}`);
+    } catch (error) {
+      console.error('Error deleting journal entry:', error);
+      throw error;
     }
   }
 
