@@ -693,11 +693,16 @@ const TherapeuticJournal: React.FC<TherapeuticJournalProps> = ({ userId, onEntry
                   {/* Action Buttons */}
                   <div className="flex gap-3 pt-4 border-t border-gray-200">
                     <button
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
                         console.log('🟦 Edit Entry button clicked!', selectedEntry);
-                        if (selectedEntry.id) {
+                        console.log('🟦 selectedEntry has ID?', selectedEntry?.id ? 'YES' : 'NO');
+                        
+                        if (selectedEntry?.id) {
+                          console.log('🟦 Setting entry state...');
                           setEntry({
-                            id: selectedEntry.id, // Only set ID if it exists
+                            id: selectedEntry.id,
                             title: selectedEntry.title || '',
                             content: selectedEntry.content,
                             mood: selectedEntry.mood || 'neutral',
@@ -705,11 +710,17 @@ const TherapeuticJournal: React.FC<TherapeuticJournalProps> = ({ userId, onEntry
                             tags: selectedEntry.tags || [],
                             isPrivate: selectedEntry.isPrivate ?? true
                           });
-                          setEditingEntry(selectedEntry); // Keep track of what we're editing
-                          console.log('🟦 Setting editingEntry to:', selectedEntry);
-                          console.log('🟦 Setting viewMode to: edit');
-                          setSelectedEntry(null);
+                          
+                          console.log('🟦 Setting editingEntry state...');
+                          setEditingEntry(selectedEntry);
+                          
+                          console.log('🟦 Setting viewMode to edit...');
                           setViewMode('edit');
+                          
+                          console.log('🟦 Clearing selectedEntry...');
+                          setSelectedEntry(null);
+                          
+                          console.log('🟦 All states set successfully!');
                         } else {
                           console.error('🔴 Cannot edit entry: no ID found', selectedEntry);
                         }
@@ -964,23 +975,38 @@ const TherapeuticJournal: React.FC<TherapeuticJournalProps> = ({ userId, onEntry
               <br/>🔍 Current entry object: {JSON.stringify(entry)}
             </div>
             
-            {/* Delete Button - TEMPORARILY ALWAYS SHOW FOR TESTING */}
-            {true && (
+            {/* Delete Button - Show if we're editing an existing entry */}
+            {(viewMode === 'edit' && editingEntry?.id) && (
               <button
-                onClick={() => {
-                  const entryToDelete = editingEntry?.id || entry.id;
-                  console.log('🔴 Delete button clicked! entryToDelete:', entryToDelete);
-                  if (entryToDelete && window.confirm('Are you sure you want to delete this journal entry? This action cannot be undone.')) {
-                    console.log('🔴 Calling deleteEntry with ID:', entryToDelete);
-                    deleteEntry(entryToDelete);
+                onClick={async () => {
+                  console.log('🔴 Delete button clicked! editingEntry:', editingEntry);
+                  if (editingEntry?.id && window.confirm('Are you sure you want to delete this journal entry? This action cannot be undone.')) {
+                    try {
+                      console.log('🔴 Calling deleteEntry with ID:', editingEntry.id);
+                      await deleteEntry(editingEntry.id);
+                      console.log('🔴 Delete successful, resetting states');
+                      // Reset states after successful delete
+                      setEditingEntry(null);
+                      setViewMode('create');
+                      setEntry({
+                        title: '',
+                        content: '',
+                        mood: 'neutral',
+                        moodIntensity: 5,
+                        tags: [],
+                        isPrivate: true
+                      });
+                    } catch (error) {
+                      console.error('🔴 Delete failed:', error);
+                    }
                   } else {
-                    console.log('🔴 No entry ID found to delete');
+                    console.log('🔴 Delete cancelled or no ID found');
                   }
                 }}
                 className="bg-red-500 hover:bg-red-600 text-white py-4 px-6 rounded-xl font-medium transition-all flex items-center justify-center shadow-lg hover:shadow-xl"
               >
                 <Trash2 className="w-5 h-5 mr-2" />
-                Delete
+                Delete Entry
               </button>
             )}
           </div>
