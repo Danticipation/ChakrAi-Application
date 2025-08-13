@@ -19,7 +19,7 @@ Chakrai is a comprehensive mental wellness platform built with modern web techno
 - **Database**: PostgreSQL with Drizzle ORM for type-safe queries
 - **Authentication**: JWT tokens with session management and device fingerprinting
 - **Payments**: Stripe webhooks and subscription lifecycle management
-- **AI Integration**: OpenAI GPT-4o for chat, Local Piper TTS (Amy voice), OpenAI Whisper STT
+- **AI Integration**: OpenAI GPT-4o for chat, ElevenLabs TTS (8 voices), OpenAI Whisper STT
 - **Memory Architecture**: Modular memory system with SemanticMemoryService, ConversationContinuityService, MemoryConnectionService, MemoryRetrievalService, MemoryAnalyticsService
 - **Security**: AES-256 encryption, healthcare-grade data integrity, anti-hallucination system
 
@@ -27,7 +27,7 @@ Chakrai is a comprehensive mental wellness platform built with modern web techno
 - **Development**: Vite dev server with MIME type resolution and HMR
 - **Database**: PostgreSQL with Drizzle ORM and authentic data enforcement
 - **Memory Architecture**: Comprehensive modular memory system for therapeutic context
-- **Voice System**: Local Piper TTS server for cost-effective voice synthesis
+- **Voice System**: ElevenLabs TTS with 8 professional voices for high-quality synthesis
 - **Monitoring**: Healthcare-grade security auditing and comprehensive logging
 
 ## Database Schema
@@ -321,9 +321,8 @@ STRIPE_WEBHOOK_SECRET=whsec_...
 STRIPE_MONTHLY_PRICE_ID=price_...
 STRIPE_YEARLY_PRICE_ID=price_...
 
-# Local Voice System - Piper TTS
-# Run Piper server locally: python speak_server.py
-# No external API keys required
+# Voice Features with ElevenLabs
+ELEVENLABS_API_KEY=your-elevenlabs-key
 
 # Development Settings
 NODE_ENV=development
@@ -381,26 +380,30 @@ npm run db:migrate
 
 ## Voice System Integration
 
-### Local Piper TTS Configuration
+### ElevenLabs TTS Configuration
 ```typescript
-// Local Piper TTS Configuration using Amy voice model
-const PIPER_VOICE_CONFIG = {
-  'Amy': 'amy',  // Cost-effective local voice synthesis
-  model: 'en_US-amy-medium',
-  sampleRate: 22050,
-  bitRate: 16
+// ElevenLabs voice mapping for 8 professional voices
+const VOICE_MAPPING = {
+  'James': 'AkChSigMDjW8pW5ESqn1',      // Professional/calming
+  'Brian': 'nPczCjzI2devNBz1zQrb',      // Deep/resonant  
+  'Alexandra': 'lokGPaxlzBSMvBpCu8QA',  // Clear/articulate
+  'Carla': 'l32B8XDoylOsZKiSdfhE',      // Warm/empathetic
+  'Hope': 'JL01Zqk8IjjVUKBsW3rR',       // Warm/encouraging
+  'Charlotte': 'XB0fDUnXU5powFXDhCwa',  // Gentle/empathetic
+  'Bronson': 'pMsXgVXv3BLzUgSXRplE',   // Confident/reassuring
+  'Marcus': 'VxNyRZ6lYqXPB7VFZSwa'     // Smooth/supportive
 };
 
-// Audio generation with local Piper TTS server
-async function generateSpeech(text: string): Promise<string> {
-  const response = await fetch('/api/voice/piper-tts', {
+// Audio generation with ElevenLabs
+async function generateSpeech(text: string, voice: string): Promise<string> {
+  const response = await fetch('/api/voice/tts', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ text: scrubTextForTTS(text), voice: 'amy' })
+    body: JSON.stringify({ text: scrubTextForTTS(text), voice })
   });
   
   const { audioData } = await response.json();
-  return audioData; // WAV audio file for local processing
+  return audioData; // Base64 encoded audio
 }
 
 // Web Audio API recorder (bypasses MediaRecorder WebM issues)

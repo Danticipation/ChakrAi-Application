@@ -6,7 +6,7 @@ Chakrai is a comprehensive AI-powered mental wellness companion featuring local 
 
 ### Core Functionality
 - **AI Conversations**: OpenAI GPT-4o with anti-hallucination system and therapeutic context memory
-- **Local Voice System**: Piper TTS (Amy voice) running locally to avoid subscription costs
+- **ElevenLabs Voice System**: 8 professional voices (James, Brian, Alexandra, Carla, Hope, Charlotte, Bronson, Marcus)
 - **Modular Memory Architecture**: Comprehensive memory services for therapeutic continuity
 - **Authentic Analytics**: Real-time dashboard statistics calculated from actual database queries
 - **Enhanced Journal Interface**: Redesigned with engaging visuals and mood selection
@@ -33,7 +33,7 @@ Chakrai is a comprehensive AI-powered mental wellness companion featuring local 
 - **Backend**: Express.js + TypeScript with comprehensive API endpoints
 - **Database**: PostgreSQL with Drizzle ORM and complete schema management
 - **Payments**: Stripe integration with subscription management and webhooks
-- **AI Services**: OpenAI GPT-4o with anti-hallucination system, Local Piper TTS (Amy voice), Whisper STT
+- **AI Services**: OpenAI GPT-4o with anti-hallucination system, ElevenLabs TTS (8 voices), Whisper STT
 - **Authentication**: SecureAuthManager for consistent user identification across all endpoints
 - **Memory System**: Modular memory architecture with 5 specialized services for therapeutic continuity
 - **Data Integrity**: Zero hardcoded data with authentic analytics from database queries
@@ -56,8 +56,8 @@ Chakrai is a comprehensive AI-powered mental wellness companion featuring local 
    VITE_STRIPE_PUBLIC_KEY=pk_test_...
    STRIPE_WEBHOOK_SECRET=whsec_...
    
-   # Local Voice System
-   # Piper TTS runs locally - no external API key needed
+   # Voice Features with ElevenLabs
+   ELEVENLABS_API_KEY=your_elevenlabs_key
    ```
 
 3. **Initialize Database**

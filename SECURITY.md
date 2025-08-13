@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-Chakrai implements healthcare-grade security architecture with zero hardcoded data policy, comprehensive user authentication via SecureAuthManager, and anti-hallucination systems. The platform ensures authentic data integrity throughout all endpoints while maintaining therapeutic conversation memory through modular architecture.
+Chakrai implements healthcare-grade security architecture with zero hardcoded data policy, comprehensive user authentication via SecureAuthManager, and anti-hallucination systems. The platform features ElevenLabs voice integration with 8 professional voices while ensuring authentic data integrity throughout all endpoints and maintaining therapeutic conversation memory through modular architecture.
 
 ## Privacy-First Architecture
 

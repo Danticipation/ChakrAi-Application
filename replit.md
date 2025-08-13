@@ -13,7 +13,7 @@ Chakrai is a professional mental wellness and therapy application designed to pr
 - Critical priority: Voice system and component errors causing significant user frustration - must maintain working state
 - Communication style: Direct, technical communication preferred - user extremely frustrated with app instability
 - User expectation: App should work consistently without breaking when attempting basic interactions like voice chat
-- Cost consideration: Using local Piper TTS instead of ElevenLabs to avoid $350 subscription costs - user will run Piper server locally
+- Voice system: Using ElevenLabs for high-quality text-to-speech with 8 professional voices
 - VOICE SYSTEM FIXED: Implemented Web Audio API-based recorder that creates proper WAV files - bypasses MediaRecorder WebM issues completely
 - PERSONALITY REFLECTION RESTORED: Reverted to working static analysis system that was functional 12 hours ago - provides comprehensive psychological insights without AI dependency
 - DELETE FUNCTIONALITY IMPLEMENTED: Added working red trash icon delete buttons directly to journal entry cards with confirmation dialogs - bypasses edit mode completely (August 13, 2025)
@@ -26,7 +26,7 @@ Chakrai is a professional mental wellness and therapy application designed to pr
 - **DASHBOARD STATISTICS FIX**: Replaced hardcoded placeholder values (7, 23, 47, 156) with authentic real-time data from user's actual journal entries, AI conversations, activity streaks, and mindful minutes calculated from database queries (August 13, 2025)
 - **COMPREHENSIVE FAKE DATA ELIMINATION**: Systematically removed ALL hardcoded, placeholder, test, and filler data throughout application. Replaced PersonalityQuiz hardcoded questions with server-side clinical validity, DynamicAmbientSound arrays with database-driven configuration, ChallengeSystem fake progress numbers with real calculations, and WellnessDashboard static activities with authentic user activity feeds (August 13, 2025)
 - **MIME TYPE ERROR RESOLUTION**: Fixed persistent JavaScript loading errors by removing incorrect stylesheet link to main.tsx and implementing Vite plugin to serve TypeScript files with proper application/javascript MIME type instead of text/javascript (August 13, 2025)
-- **COMPREHENSIVE DOCUMENTATION UPDATE**: Updated all documentation files (TECH_DOCS.md, SECURITY.md, PRODUCT_FEATURES.md, README.md) to reflect current system state with local Piper TTS, modular memory architecture, healthcare-grade data integrity, and zero hardcoded data policy (August 13, 2025)
+- **COMPREHENSIVE DOCUMENTATION UPDATE**: Updated all documentation files (TECH_DOCS.md, SECURITY.md, PRODUCT_FEATURES.md, README.md) to reflect current system state with ElevenLabs TTS integration, modular memory architecture, healthcare-grade data integrity, and zero hardcoded data policy (August 13, 2025)
 - Identity reflection: Bot should reflect user's persona, identity, and mannerisms over time
 - Color scheme preference: MUST maintain consistent blue therapeutic theme throughout - user strongly rejects colorful "rainbow" designs
 

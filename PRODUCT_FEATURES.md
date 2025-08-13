@@ -13,11 +13,12 @@ Chakrai is a comprehensive AI-powered mental wellness companion featuring local 
 - **Crisis Detection**: Real-time analysis with immediate intervention and resource provision
 - **Emotional Intelligence**: Advanced pattern recognition and mood forecasting capabilities
 
-### Local Voice System (Cost-Effective)
-- **Local Piper TTS**: Amy voice model running locally to avoid subscription costs
-- **Web Audio API**: Enhanced recorder creating proper WAV files bypassing MediaRecorder issues
-- **OpenAI Whisper**: Speech-to-text for voice journaling and conversation input
-- **Voice System Fixed**: Working recorder that creates proper audio files for processing
+### Premium Voice System (8 Professional Voices)
+- **Male Voices**: James (professional), Brian (deep), Bronson (confident), Marcus (smooth)
+- **Female Voices**: Alexandra (articulate), Carla (empathetic), Hope (encouraging), Charlotte (gentle)
+- **ElevenLabs Integration**: High-quality voice synthesis with natural expression
+- **Speech-to-Text**: OpenAI Whisper for voice journaling and conversation input
+- **Voice System Fixed**: Enhanced Web Audio API recorder creating proper WAV files
 
 ### Subscription & Monetization System
 
