@@ -342,6 +342,44 @@ const TherapeuticJournal: React.FC<TherapeuticJournalProps> = ({ userId, onEntry
     }
   };
 
+  const deleteEntry = async (entryId: number) => {
+    try {
+      // Get device fingerprint for user session consistency
+      const deviceFingerprint = localStorage.getItem('deviceFingerprint') || 
+                               `device_${Math.random().toString(36).substring(2, 15)}`;
+      const sessionId = localStorage.getItem('sessionId') || 
+                       `session_${Math.random().toString(36).substring(2, 15)}`;
+      
+      localStorage.setItem('deviceFingerprint', deviceFingerprint);
+      localStorage.setItem('sessionId', sessionId);
+      
+      const response = await fetch(`/api/journal/${entryId}`, {
+        method: 'DELETE',
+        headers: {
+          'X-Device-Fingerprint': deviceFingerprint,
+          'X-Session-ID': sessionId
+        }
+      });
+
+      if (response.ok) {
+        // Close the modal
+        setSelectedEntry(null);
+        
+        // Refresh recent entries
+        fetchRecentEntries();
+        
+        // Show success message (optional)
+        alert('Journal entry deleted successfully');
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to delete entry');
+      }
+    } catch (error) {
+      console.error('Error deleting entry:', error);
+      alert('Failed to delete your journal entry. Please try again.');
+    }
+  };
+
   const fetchAnalytics = async () => {
     try {
       // Use the same device fingerprint approach as other journal functions
@@ -629,11 +667,42 @@ const TherapeuticJournal: React.FC<TherapeuticJournalProps> = ({ userId, onEntry
 
                   {/* AI Analysis */}
                   {selectedEntry.aiAnalysis && (
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
                       <h4 className="text-sm font-medium text-blue-800 mb-2">AI Therapeutic Analysis</h4>
                       <p className="text-blue-700 text-sm">{selectedEntry.aiAnalysis.insights}</p>
                     </div>
                   )}
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-3 pt-4 border-t border-gray-200">
+                    <button
+                      onClick={() => {
+                        setEntry({
+                          title: selectedEntry.title || '',
+                          content: selectedEntry.content,
+                          mood: selectedEntry.mood || 'neutral',
+                          moodIntensity: selectedEntry.moodIntensity || 5,
+                          tags: selectedEntry.tags || [],
+                          isPrivate: selectedEntry.isPrivate ?? true
+                        });
+                        setSelectedEntry(null);
+                        setViewMode('edit');
+                      }}
+                      className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                    >
+                      Edit Entry
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (window.confirm('Are you sure you want to delete this journal entry? This action cannot be undone.')) {
+                          deleteEntry(selectedEntry.id);
+                        }
+                      }}
+                      className="flex-1 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors font-medium"
+                    >
+                      Delete Entry
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
