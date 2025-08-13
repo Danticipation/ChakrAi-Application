@@ -66,6 +66,7 @@ const QuickAction = ({ icon: Icon, label, description, color, onClick }: {
 const WellnessDashboard: React.FC<WellnessDashboardProps> = ({ userId, onNavigate }) => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [todaysMood, setTodaysMood] = useState<string | null>(null);
+  const [dailyAffirmation, setDailyAffirmation] = useState<string>('');
 
   // Fetch real dashboard statistics
   const { data: dashboardStats, isLoading } = useQuery({
@@ -83,6 +84,22 @@ const WellnessDashboard: React.FC<WellnessDashboardProps> = ({ userId, onNavigat
     const timer = setInterval(() => setCurrentTime(new Date()), 60000);
     return () => clearInterval(timer);
   }, []);
+
+  // Fetch daily affirmation
+  const { data: affirmationData } = useQuery({
+    queryKey: ['daily-affirmation', new Date().toDateString()],
+    queryFn: async () => {
+      const response = await axios.get('/api/daily-affirmation');
+      return response.data;
+    },
+    staleTime: 24 * 60 * 60 * 1000, // Keep for 24 hours
+  });
+
+  useEffect(() => {
+    if (affirmationData?.affirmation) {
+      setDailyAffirmation(affirmationData.affirmation);
+    }
+  }, [affirmationData]);
 
   const getGreeting = () => {
     const hour = currentTime.getHours();
@@ -150,6 +167,33 @@ const WellnessDashboard: React.FC<WellnessDashboardProps> = ({ userId, onNavigat
               day: 'numeric' 
             })}
           </p>
+        </div>
+
+        {/* Daily Affirmation */}
+        <div className="mb-8">
+          <div className="relative p-8 rounded-2xl bg-gradient-to-r from-blue-500/20 to-purple-600/20 backdrop-blur-sm border border-white/30 overflow-hidden">
+            {/* Background decoration */}
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-600/10 animate-pulse"></div>
+            <div className="absolute top-4 right-4 text-blue-300/30">
+              <Star className="w-8 h-8" />
+            </div>
+            <div className="absolute bottom-4 left-4 text-purple-300/30">
+              <Heart className="w-6 h-6" />
+            </div>
+            
+            {/* Content */}
+            <div className="relative z-10 text-center">
+              <h2 className="text-2xl font-bold text-white mb-4 flex items-center justify-center">
+                <Star className="w-6 h-6 mr-2 text-yellow-400" />
+                Today's Affirmation
+                <Star className="w-6 h-6 ml-2 text-yellow-400" />
+              </h2>
+              <blockquote className="text-xl text-white/90 font-medium italic leading-relaxed max-w-4xl mx-auto">
+                "{dailyAffirmation || 'I am worthy of love, peace, and happiness. Today I choose to be kind to myself and trust in my journey.'}"
+              </blockquote>
+              <div className="mt-4 w-20 h-1 bg-gradient-to-r from-blue-400 to-purple-500 mx-auto rounded-full"></div>
+            </div>
+          </div>
         </div>
 
         {/* Stats Overview */}
@@ -245,7 +289,7 @@ const WellnessDashboard: React.FC<WellnessDashboardProps> = ({ userId, onNavigat
           <div className="p-6 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20">
             <h3 className="text-xl font-semibold text-white mb-4">Recent Activity</h3>
             <div className="space-y-3">
-              {(recentActivities || []).map((activity, index) => {
+              {(recentActivities || []).map((activity: any, index: number) => {
                 const getIcon = () => {
                   switch(activity.type) {
                     case 'journal': return BookOpen;
