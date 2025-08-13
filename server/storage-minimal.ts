@@ -3,7 +3,7 @@
 
 import { db } from './db.js';
 import { 
-  semanticMemories, memoryConnections, 
+  semanticMemories, memoryConnections, users, journalEntries, messages, moodEntries, memoryInsights,
   type SemanticMemory, type MemoryConnection,
   type InsertSemanticMemory, type InsertMemoryConnection
 } from '@shared/schema';
@@ -30,6 +30,17 @@ export interface IStorage {
   createConversationThread(data: any): Promise<any>;
   updateConversationThread(id: number, data: any): Promise<any>;
   createSessionContinuity(data: any): Promise<any>;
+  
+  // Essential user management methods
+  getUserByDeviceFingerprint(deviceFingerprint: string): Promise<any>;
+  updateUserLastActive(userId: number): Promise<void>;
+  createUser(data: any): Promise<any>;
+  createJournalEntry(data: any): Promise<any>;
+  getUserMessages(userId: number, limit?: number): Promise<any[]>;
+  getUserMemories(userId: number): Promise<any[]>;
+  getUserFacts(userId: number): Promise<any[]>;
+  getMoodEntries(userId: number): Promise<any[]>;
+  getMemoryInsights(userId: number): Promise<any[]>;
 }
 
 export class MinimalStorage implements IStorage {
@@ -222,6 +233,152 @@ export class MinimalStorage implements IStorage {
 
   async createSessionContinuity(data: any): Promise<any> {
     return { ...data, id: Date.now(), createdAt: new Date() };
+  }
+
+  // ESSENTIAL USER MANAGEMENT METHODS
+  async getUserByDeviceFingerprint(deviceFingerprint: string): Promise<any> {
+    try {
+      const user = await db.select()
+        .from(users)
+        .where(eq(users.deviceFingerprint, deviceFingerprint))
+        .limit(1);
+      
+      return user[0] || null;
+    } catch (error) {
+      console.error('Error getting user by device fingerprint:', error);
+      return null;
+    }
+  }
+
+  async updateUserLastActive(userId: number): Promise<void> {
+    try {
+      await db.update(users)
+        .set({ lastActiveAt: new Date() })
+        .where(eq(users.id, userId));
+    } catch (error) {
+      console.error('Error updating user last active:', error);
+    }
+  }
+
+  async createUser(data: any): Promise<any> {
+    try {
+      const userData = {
+        username: data.username,
+        sessionId: data.sessionId,
+        deviceFingerprint: data.deviceFingerprint,
+        isAnonymous: data.isAnonymous || true,
+        createdAt: new Date(),
+        lastActiveAt: new Date()
+      };
+      
+      const [user] = await db.insert(users).values(userData).returning();
+      console.log(`👤 Created user: ${user?.id}`);
+      return user;
+    } catch (error) {
+      console.error('Error creating user:', error);
+      throw error;
+    }
+  }
+
+  async createJournalEntry(data: any): Promise<any> {
+    try {
+      const entryData = {
+        userId: data.userId,
+        title: data.title,
+        content: data.content,
+        mood: data.mood,
+        moodIntensity: data.moodIntensity,
+        tags: data.tags || [],
+        isPrivate: data.isPrivate !== false, // Default to private
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      
+      const [entry] = await db.insert(journalEntries).values(entryData).returning();
+      console.log(`📔 Created journal entry: ${entry?.id}`);
+      return entry;
+    } catch (error) {
+      console.error('Error creating journal entry:', error);
+      throw error;
+    }
+  }
+
+  async getUserMessages(userId: number, limit: number = 50): Promise<any[]> {
+    try {
+      const userMessages = await db.select()
+        .from(messages)
+        .where(eq(messages.userId, userId))
+        .orderBy(desc(messages.createdAt))
+        .limit(limit);
+      
+      return userMessages;
+    } catch (error) {
+      console.error('Error getting user messages:', error);
+      return [];
+    }
+  }
+
+  async getUserMemories(userId: number): Promise<any[]> {
+    try {
+      const memories = await db.select()
+        .from(semanticMemories)
+        .where(and(
+          eq(semanticMemories.userId, userId),
+          eq(semanticMemories.isActiveMemory, true)
+        ))
+        .orderBy(desc(semanticMemories.createdAt));
+      
+      return memories;
+    } catch (error) {
+      console.error('Error getting user memories:', error);
+      return [];
+    }
+  }
+
+  async getUserFacts(userId: number): Promise<any[]> {
+    try {
+      // Return semantic memories as facts for now
+      const userFacts = await db.select()
+        .from(semanticMemories)
+        .where(and(
+          eq(semanticMemories.userId, userId),
+          eq(semanticMemories.memoryType, 'fact')
+        ))
+        .orderBy(desc(semanticMemories.createdAt));
+      
+      return userFacts;
+    } catch (error) {
+      console.error('Error getting user facts:', error);
+      return [];
+    }
+  }
+
+  async getMoodEntries(userId: number): Promise<any[]> {
+    try {
+      const moods = await db.select()
+        .from(moodEntries)
+        .where(eq(moodEntries.userId, userId))
+        .orderBy(desc(moodEntries.createdAt));
+      
+      return moods;
+    } catch (error) {
+      console.error('Error getting mood entries:', error);
+      return [];
+    }
+  }
+
+  async getMemoryInsights(userId: number): Promise<any[]> {
+    try {
+      const insights = await db.select()
+        .from(memoryInsights)
+        .where(eq(memoryInsights.userId, userId))
+        .orderBy(desc(memoryInsights.createdAt));
+      
+      return insights;
+    } catch (error) {
+      console.error('Error getting memory insights:', error);
+      return [];
+    }
   }
 }
 
