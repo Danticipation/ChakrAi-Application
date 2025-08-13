@@ -63,17 +63,25 @@ router.post('/chat', async (req, res) => {
     // Get session opening context for continuity
     const sessionContext = await conversationContinuity.generateSessionOpening(userId);
     
-    // Get recent conversation history for context
-    const recentMessages = await storage.getUserMessages(userId, 20); // Get last 20 messages for better context
-    console.log(`Fetching messages for userId: ${userId} with limit: 20`);
+    // Get extensive conversation history for context - CRITICAL FOR MEMORY
+    const recentMessages = await storage.getUserMessages(userId, 50); // Get last 50 messages for extensive context
+    console.log(`Fetching messages for userId: ${userId} with limit: 50`);
     console.log(`Found ${recentMessages.length} messages for user ${userId}`);
     
-    // Get semantic context for intelligent recall
+    // Get semantic context for intelligent recall - Enhanced search
     const semanticContext = await getSemanticContext(userId, message);
     console.log('Semantic context loaded:', { 
       relevantMemories: semanticContext.relevantMemories.length,
       connectedMemories: semanticContext.connectedMemories.length 
     });
+
+    // MEMORY FIX: Get ALL recent semantic memories if search returns empty
+    if (semanticContext.relevantMemories.length === 0) {
+      console.log('🔍 No semantic memories found via search, loading recent memories directly...');
+      const fallbackMemories = await storage.getRecentSemanticMemories(userId, 10);
+      semanticContext.relevantMemories = fallbackMemories || [];
+      console.log(`📚 Loaded ${semanticContext.relevantMemories.length} fallback memories`);
+    }
 
     // Generate contextual references for past conversations
     const contextualReferences = await generateContextualReferences(userId, message, semanticContext);
@@ -158,14 +166,31 @@ Key Discussion Points: ${sessionContext.keyPoints.join(', ')}
       }
     });
 
-    // Build conversation history for OpenAI
+    // Build conversation history for OpenAI - ENHANCED FOR CONTEXT RETENTION
     const conversationHistory = recentMessages.map(msg => ({
       role: msg.isBot ? "assistant" : "user",
       content: msg.content
     }));
 
+    // MEMORY ENHANCEMENT: Build explicit conversation memory summary
+    let conversationMemorySummary = '';
+    if (recentMessages.length > 10) {
+      const recentConversation = recentMessages.slice(-10).map(msg => 
+        `${msg.isBot ? 'AI' : 'User'}: ${msg.content}`
+      ).join('\n');
+      
+      conversationMemorySummary = `
+RECENT CONVERSATION CONTEXT (Last 10 messages):
+${recentConversation}
+
+ONGOING CONVERSATION: We've been talking about ${message.split(' ').slice(0, 5).join(' ')}. Remember our previous discussion and maintain continuity.
+`;
+    }
+
     // Build comprehensive system message with all context
     const systemMessage = `You are Chakrai, a professional AI wellness companion specializing in mental health support, therapeutic conversations, and personality mirroring. You help users reflect on their thoughts, feelings, and experiences while maintaining strict therapeutic boundaries.
+
+CRITICAL MEMORY INSTRUCTION: You MUST maintain conversation continuity. Reference our previous discussions when relevant. This is essential for therapeutic effectiveness.
 
 CORE PRINCIPLES:
 - Provide therapeutic support through active listening and thoughtful questioning
@@ -173,12 +198,14 @@ CORE PRINCIPLES:
 - Maintain professional therapeutic boundaries while being warm and empathetic
 - Focus on self-reflection, emotional processing, and personal growth
 - Detect crisis situations and provide appropriate resources when needed
+- ALWAYS reference relevant past conversations to show you remember our discussions
 
 PERSONALITY MODE: ${personalityMode}
 VOICE: ${voice}
 EMOTIONAL STATE: ${emotionalAnalysis.currentState}
 CRISIS LEVEL: ${crisisData.riskLevel}
 
+${conversationMemorySummary}
 ${personalityContext}
 ${semanticMemoryContext}
 ${contextualReferenceText}
@@ -187,22 +214,25 @@ ${sessionContinuityText}
 CONVERSATION GUIDELINES:
 - Be conversational, warm, and professionally supportive
 - Ask thoughtful follow-up questions to encourage deeper reflection
-- Reference past conversations when relevant (shown above)
+- MANDATORY: Reference past conversations when relevant (shown above)
 - Adapt your communication style to mirror the user's personality
 - Provide gentle insights and observations about patterns you notice
+- Show that you remember what we've discussed before
 - If crisis signals detected (${crisisDetected ? 'YES - HIGH RISK' : 'no'}), prioritize safety and provide crisis resources
+
+CONTEXT AWARENESS: Based on our conversation history above, respond with awareness of what we've been discussing. Reference specific points from our previous messages when appropriate.
 
 Respond naturally and therapeutically to: "${message}"`;
 
-    // Generate AI response with enhanced context
+    // Generate AI response with enhanced context - MEMORY FIX
     const completion = await openai.chat.completions.create({
       model: "gpt-4o",
       messages: [
         { role: "system", content: systemMessage },
-        ...conversationHistory.slice(-10), // Last 10 messages for context
+        ...conversationHistory.slice(-15), // Last 15 messages for extended context
         { role: "user", content: message }
       ],
-      max_tokens: 500,
+      max_tokens: 600, // Increased for more detailed responses
       temperature: 0.7,
       presence_penalty: 0.1,
       frequency_penalty: 0.1
