@@ -154,8 +154,17 @@ router.get('/personality-reflection/:userId?', async (req, res) => {
       return `Date: ${entry.date}, Mood: ${entry.mood}, Level: ${entry.level}, Notes: ${entry.notes || 'None'}`;
     }).join('\n');
 
-    // Construct comprehensive analysis prompt
-    const analysisPrompt = `You are an expert clinical psychologist with extensive experience in personality assessment and therapeutic analysis. Conduct a comprehensive psychological evaluation based on the user's authentic data. This analysis will be used for therapeutic purposes and personal growth insights.
+    // Construct comprehensive analysis prompt for EXTREMELY DETAILED personal insights
+    const analysisPrompt = `You are an expert clinical psychologist with extensive experience in personality assessment and therapeutic analysis. Conduct an EXTRAORDINARILY DETAILED psychological evaluation based on the user's authentic data. This analysis must be HIGHLY SPECIFIC, DEEPLY PERSONAL, and never generic. Every insight must reference specific content from their data.
+
+CRITICAL INSTRUCTIONS:
+- Provide EXTREMELY detailed insights that are uniquely personal to this individual
+- Reference specific phrases, themes, and patterns from their actual journal entries
+- Make connections between their thoughts, emotions, and behavioral patterns
+- Include specific examples and quotes from their content
+- Be therapeutically insightful while maintaining warmth and understanding
+- Avoid any generic statements that could apply to anyone else
+- Focus on their unique psychological fingerprint and individual journey
 
 COMPLETE USER DATA FOR ANALYSIS:
 =================================
@@ -225,15 +234,16 @@ Required JSON structure with EXTENSIVE detail:
   "therapeuticInsights": "COMPREHENSIVE CLINICAL ASSESSMENT (200+ words): Provide an extensive professional evaluation including overall psychological wellbeing assessment, growth trajectory analysis, therapeutic prognosis, key therapeutic targets, recommended treatment modalities, long-term development predictions, resilience factors, risk factors, therapeutic alliance potential, and specific clinical recommendations. This should read like a professional clinical summary."
 }
 
-CRITICAL ANALYSIS STANDARDS:
-============================
-1. Each section must be EXTENSIVE and DETAILED - aim for clinical-level depth
-2. Base ALL insights on actual patterns observed in the provided journal entries, conversations, and mood data
-3. Reference specific examples and quotes from their actual content when possible
-4. Provide therapeutic-grade insights that demonstrate deep psychological understanding
-5. Maintain professional clinical language while being accessible and supportive
-6. Ensure each analysis point is substantiated by behavioral evidence from their data
-7. Focus on growth, resilience, and therapeutic potential while acknowledging challenges
+CRITICAL ANALYSIS STANDARDS FOR EXTREMELY PERSONAL INSIGHTS:
+===========================================================
+1. Each section must be EXTRAORDINARILY EXTENSIVE and DEEPLY DETAILED - clinical-level depth with 150+ words per section
+2. Base ALL insights on SPECIFIC patterns observed in the provided journal entries - quote exact phrases and reference specific dates
+3. ALWAYS reference specific examples and exact quotes from their actual content throughout the analysis
+4. Provide therapeutic-grade insights that demonstrate profound psychological understanding of THIS INDIVIDUAL
+5. Make every single insight uniquely personal - avoid ANY generic statements that could apply to others
+6. Connect patterns between different entries to show deep understanding of their individual psychological journey
+7. Focus on their specific growth, unique resilience factors, and individualized therapeutic potential
+8. CRITICAL: Quote specific words and phrases from their journal entries throughout the analysis to prove deep personalization
 8. Provide actionable, specific recommendations rather than generic advice
 9. Each section should be substantial enough to provide real therapeutic value
 10. The overall analysis should demonstrate comprehensive understanding of their psychological profile

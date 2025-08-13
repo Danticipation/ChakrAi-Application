@@ -43,6 +43,7 @@ export interface IStorage {
   getUserMemories(userId: number): Promise<any[]>;
   getUserFacts(userId: number): Promise<any[]>;
   getMoodEntries(userId: number): Promise<any[]>;
+  getUserMoodEntries(userId: number, limit?: number): Promise<any[]>;
   getMemoryInsights(userId: number): Promise<any[]>;
 }
 
@@ -394,6 +395,21 @@ export class MinimalStorage implements IStorage {
       return userFacts;
     } catch (error) {
       console.error('Error getting user facts:', error);
+      return [];
+    }
+  }
+
+  async getUserMoodEntries(userId: number, limit: number = 50): Promise<any[]> {
+    try {
+      const moods = await db.select()
+        .from(moodEntries)
+        .where(eq(moodEntries.userId, userId))
+        .orderBy(desc(moodEntries.createdAt))
+        .limit(limit);
+      
+      return moods;
+    } catch (error) {
+      console.error('Error getting user mood entries:', error);
       return [];
     }
   }
