@@ -20,7 +20,7 @@ export class EnhancedStorage extends MinimalStorage {
   public memory = memorySystem;
   
   // Override methods to integrate with memory system
-  async createMessage(data: any): Promise<any> {
+  override async createMessage(data: any): Promise<any> {
     const message = await super.createMessage?.(data) || data;
     
     // Process message through memory system if it's a user message
