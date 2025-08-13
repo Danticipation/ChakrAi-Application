@@ -1,6 +1,6 @@
 import express from 'express';
 import multer from 'multer';
-import { storage } from '../storage.js';
+import { storage, enhancedStorage } from '../storage.js';
 import { analyzeEmotionalState } from '../emotionalAnalysis.js';
 import { openai } from '../openaiRetry.js';
 import { userSessionManager } from '../userSession.js';
@@ -68,21 +68,21 @@ router.post('/chat', async (req, res) => {
     console.log(`Fetching messages for userId: ${userId} with limit: 50`);
     console.log(`Found ${recentMessages.length} messages for user ${userId}`);
     
-    // Get semantic context for intelligent recall - Enhanced search
-    const semanticContext = await getSemanticContext(userId, message);
-    console.log('Semantic context loaded:', { 
-      relevantMemories: semanticContext.relevantMemories.length,
-      connectedMemories: semanticContext.connectedMemories.length 
+    // 🧠 COMPREHENSIVE MEMORY SYSTEM - Get personalized therapeutic context
+    console.log('🧠 Loading comprehensive memory context for deeply personalized response...');
+    
+    // Get comprehensive memory context using the modular memory system
+    const comprehensiveContext = await enhancedStorage.getConversationContext(userId, message);
+    console.log('🧠 Comprehensive memory context loaded:', {
+      recentMemories: comprehensiveContext.recentMemories?.length || 0,
+      relevantInsights: comprehensiveContext.relevantInsights?.length || 0,
+      sessionActive: !!comprehensiveContext.sessionContext,
+      emotionalTrends: !!comprehensiveContext.emotionalContext?.emotionalTrends
     });
 
-    // MEMORY FIX: Get ALL recent semantic memories if search returns empty
-    if (semanticContext.relevantMemories.length === 0) {
-      console.log('🔍 No semantic memories found via search, loading recent memories directly...');
-      const fallbackMemories = await storage.getRecentSemanticMemories(userId, 10);
-      semanticContext.relevantMemories = fallbackMemories || [];
-      console.log(`📚 Loaded ${semanticContext.relevantMemories.length} fallback memories`);
-    }
-
+    // Get semantic context for intelligent recall (legacy support)
+    const semanticContext = await getSemanticContext(userId, message);
+    
     // Generate contextual references for past conversations
     const contextualReferences = await generateContextualReferences(userId, message, semanticContext);
     
@@ -107,14 +107,55 @@ User Facts: ${factText}
       console.log('Could not load personality data:', error);
     }
 
-    // Build semantic memory context for the AI
-    let semanticMemoryContext = '';
-    if (semanticContext.relevantMemories.length > 0) {
-      semanticMemoryContext = `
-SEMANTIC MEMORY CONTEXT:
-Past Conversations: ${semanticContext.relevantMemories.map(m => 
-  `${m.temporalContext}: ${m.content} [${m.emotionalContext}]`
+    // 🧠 BUILD COMPREHENSIVE THERAPEUTIC MEMORY CONTEXT
+    let comprehensiveMemoryContext = '';
+    let therapeuticInsightsContext = '';
+    let emotionalJourneyContext = '';
+    let personalPatternContext = '';
+
+    // Recent semantic memories with rich context
+    if (comprehensiveContext.recentMemories?.length > 0) {
+      comprehensiveMemoryContext = `
+PERSONALIZED MEMORY CONTEXT:
+Recent Therapeutic Conversations:
+${comprehensiveContext.recentMemories.slice(0, 10).map(m => 
+  `• ${m.temporalContext || 'Recently'}: ${m.content} [Emotional: ${m.emotionalContext}, Type: ${m.memoryType}, Confidence: ${m.confidence}]`
 ).join('\n')}
+`;
+    }
+
+    // Therapeutic insights for personalized responses
+    if (comprehensiveContext.relevantInsights?.length > 0) {
+      therapeuticInsightsContext = `
+THERAPEUTIC INSIGHTS (Your specific patterns and progress):
+${comprehensiveContext.relevantInsights.map(insight => 
+  `• ${insight.insightType.toUpperCase()}: ${insight.content} (Confidence: ${insight.confidence})`
+).join('\n')}
+Action Suggestions: ${comprehensiveContext.relevantInsights.flatMap(i => i.actionSuggestions || []).slice(0, 3).join(', ')}
+`;
+    }
+
+    // Current session emotional context
+    if (comprehensiveContext.sessionContext) {
+      const session = comprehensiveContext.sessionContext;
+      emotionalJourneyContext = `
+CURRENT SESSION CONTEXT:
+Session Focus: ${session.title}
+Key Topics: ${session.keyTopics?.join(', ') || 'General wellness discussion'}
+Emotional Tone: ${session.emotionalTone}
+Message Count: ${session.messageCount}
+Unresolved Threads: ${Object.keys(session.unresolvedThreads || {}).join(', ') || 'None'}
+`;
+    }
+
+    // Emotional trends and patterns
+    if (comprehensiveContext.emotionalContext?.emotionalTrends) {
+      const trends = comprehensiveContext.emotionalContext.emotionalTrends;
+      personalPatternContext = `
+PERSONAL EMOTIONAL PATTERNS:
+Current Emotional State: ${comprehensiveContext.emotionalContext.currentTone || 'Assessing...'}
+Recent Emotional Memories: ${comprehensiveContext.emotionalContext.recentEmotionalMemories?.length || 0} emotional touchpoints identified
+Emotional Journey Insights: ${trends.insights?.length || 0} trend patterns detected
 `;
     }
 
@@ -187,42 +228,50 @@ ONGOING CONVERSATION: We've been talking about ${message.split(' ').slice(0, 5).
 `;
     }
 
-    // Build comprehensive system message with all context
-    const systemMessage = `You are Chakrai, a professional AI wellness companion specializing in mental health support, therapeutic conversations, and personality mirroring. You help users reflect on their thoughts, feelings, and experiences while maintaining strict therapeutic boundaries.
+    // 🎯 BUILD HIGHLY PERSONALIZED THERAPEUTIC SYSTEM MESSAGE
+    const systemMessage = `You are Chakrai, a professional AI wellness companion with comprehensive memory of this user's therapeutic journey. You specialize in deeply personalized mental health support through advanced conversation continuity and pattern recognition.
 
-CRITICAL MEMORY INSTRUCTION: You MUST maintain conversation continuity. Reference our previous discussions when relevant. This is essential for therapeutic effectiveness.
+🧠 CRITICAL: You have access to this user's complete therapeutic memory system. Use this detailed personal context to provide HIGHLY SPECIFIC, PERSONALIZED responses that demonstrate deep understanding of their unique journey, patterns, and progress.
 
-CORE PRINCIPLES:
-- Provide therapeutic support through active listening and thoughtful questioning
-- Mirror the user's communication style and personality traits learned over time
-- Maintain professional therapeutic boundaries while being warm and empathetic
-- Focus on self-reflection, emotional processing, and personal growth
-- Detect crisis situations and provide appropriate resources when needed
-- ALWAYS reference relevant past conversations to show you remember our discussions
+THERAPEUTIC MANDATE:
+- Provide responses that are SO SPECIFIC to this user that they could NEVER apply to anyone else
+- Reference specific memories, insights, and patterns from their personal therapeutic history
+- Show detailed understanding of their emotional journey and growth patterns
+- Make connections between current statements and previous conversations/insights
+- Demonstrate that you truly know and understand this individual's unique therapeutic path
 
-PERSONALITY MODE: ${personalityMode}
-VOICE: ${voice}
-EMOTIONAL STATE: ${emotionalAnalysis.currentState}
-CRISIS LEVEL: ${crisisData.riskLevel}
+USER'S CURRENT STATE:
+Personality Mode: ${personalityMode}
+Voice Preference: ${voice}
+Current Emotional Analysis: ${emotionalAnalysis.currentState}
+Crisis Assessment: ${crisisData.riskLevel}
 
 ${conversationMemorySummary}
 ${personalityContext}
-${semanticMemoryContext}
+${comprehensiveMemoryContext}
+${therapeuticInsightsContext}
+${emotionalJourneyContext}
+${personalPatternContext}
 ${contextualReferenceText}
 ${sessionContinuityText}
 
-CONVERSATION GUIDELINES:
-- Be conversational, warm, and professionally supportive
-- Ask thoughtful follow-up questions to encourage deeper reflection
-- MANDATORY: Reference past conversations when relevant (shown above)
-- Adapt your communication style to mirror the user's personality
-- Provide gentle insights and observations about patterns you notice
-- Show that you remember what we've discussed before
-- If crisis signals detected (${crisisDetected ? 'YES - HIGH RISK' : 'no'}), prioritize safety and provide crisis resources
+🎯 PERSONALIZATION REQUIREMENTS:
+1. SPECIFIC MEMORY REFERENCES: Reference specific conversations, insights, or patterns from above
+2. PERSONAL PROGRESS TRACKING: Connect current message to their documented therapeutic progress
+3. INDIVIDUAL PATTERN RECOGNITION: Point out patterns specific to this user's journey
+4. TAILORED INSIGHTS: Provide observations that are uniquely relevant to their situation
+5. CONTEXTUAL CONTINUITY: Build on previous conversations in a way that shows deep understanding
 
-CONTEXT AWARENESS: Based on our conversation history above, respond with awareness of what we've been discussing. Reference specific points from our previous messages when appropriate.
+FORBIDDEN: Generic responses, one-size-fits-all advice, or anything that could apply to any random person. Every response must be deeply rooted in THIS USER'S specific therapeutic context and history.
 
-Respond naturally and therapeutically to: "${message}"`;
+RESPONSE STYLE:
+- Professional yet warm, adapted to their communication patterns
+- Include specific references to their documented memories/insights when relevant
+- Ask follow-up questions based on their specific therapeutic patterns
+- Provide insights that connect their current state to their documented journey
+- Crisis protocol: ${crisisDetected ? 'IMMEDIATE SAFETY FOCUS - Priority override' : 'Standard therapeutic support'}
+
+Based on the comprehensive personal context above, respond with deep therapeutic understanding to: "${message}"`;
 
     // Generate AI response with enhanced context - MEMORY FIX
     const completion = await openai.chat.completions.create({
@@ -252,19 +301,43 @@ Respond naturally and therapeutically to: "${message}"`;
         crisisLevel: crisisData.riskLevel,
         usedSemanticContext: semanticContext.relevantMemories.length > 0,
         usedContextualReferences: contextualReferences.hasReferences,
-        usedSessionContinuity: sessionContext.hasContext
+        usedSessionContinuity: sessionContext.hasContext,
+        usedComprehensiveMemory: comprehensiveContext.recentMemories?.length > 0,
+        usedTherapeuticInsights: comprehensiveContext.relevantInsights?.length > 0,
+        memoryPersonalizationLevel: 'comprehensive'
       }
     });
 
-    // Store conversation for semantic memory analysis (async)
-    analyzeConversationForMemory(userId, message, aiResponse).catch(error => {
-      console.log('Background semantic memory analysis failed:', error);
-    });
+    // 🧠 COMPREHENSIVE MEMORY PROCESSING - Store conversation through enhanced memory system
+    try {
+      // Process through the comprehensive memory system
+      await enhancedStorage.createMessage({
+        userId,
+        content: message,
+        isFromUser: true,
+        emotionalState: emotionalAnalysis.currentState,
+        therapeuticGoals: comprehensiveContext.sessionContext?.keyTopics || [],
+        currentTopics: message.split(' ').slice(0, 5), // Extract key topics from message
+        metadata: {
+          hasMemoryContext: comprehensiveContext.recentMemories?.length > 0,
+          hasInsights: comprehensiveContext.relevantInsights?.length > 0,
+          sessionActive: !!comprehensiveContext.sessionContext
+        }
+      });
+      
+      console.log('🧠 Message processed through comprehensive memory system');
+    } catch (memoryError) {
+      console.error('🚨 Comprehensive memory processing failed:', memoryError);
+      
+      // Fallback to legacy memory processing
+      analyzeConversationForMemory(userId, message, aiResponse).catch(error => {
+        console.log('Background semantic memory analysis failed:', error);
+      });
 
-    // Extract and store facts from the conversation (async)
-    extractAndStoreFacts(userId, message, aiResponse).catch(error => {
-      console.log('Background fact extraction failed:', error);
-    });
+      extractAndStoreFacts(userId, message, aiResponse).catch(error => {
+        console.log('Background fact extraction failed:', error);
+      });
+    }
 
     // Update conversation continuity tracking (with proper error handling)
     try {
