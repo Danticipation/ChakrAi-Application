@@ -54,6 +54,7 @@ const TherapeuticJournal: React.FC<TherapeuticJournalProps> = ({ userId, onEntry
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [aiInsights, setAiInsights] = useState<string>('');
   const [selectedEntry, setSelectedEntry] = useState<JournalEntry | null>(null);
+  const [editingEntry, setEditingEntry] = useState<JournalEntry | null>(null);
   const [viewMode, setViewMode] = useState<'view' | 'edit'>('view');
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -362,8 +363,20 @@ const TherapeuticJournal: React.FC<TherapeuticJournalProps> = ({ userId, onEntry
       });
 
       if (response.ok) {
-        // Close the modal
+        // Clear editing state and close any modals
+        setEditingEntry(null);
         setSelectedEntry(null);
+        setViewMode('view');
+        
+        // Reset form to create new entry
+        setEntry({
+          title: '',
+          content: '',
+          mood: 'neutral',
+          moodIntensity: 5,
+          tags: [],
+          isPrivate: true
+        });
         
         // Refresh recent entries
         fetchRecentEntries();
@@ -685,6 +698,7 @@ const TherapeuticJournal: React.FC<TherapeuticJournalProps> = ({ userId, onEntry
                           tags: selectedEntry.tags || [],
                           isPrivate: selectedEntry.isPrivate ?? true
                         });
+                        setEditingEntry(selectedEntry); // Keep track of what we're editing
                         setSelectedEntry(null);
                         setViewMode('edit');
                       }}
@@ -932,11 +946,11 @@ const TherapeuticJournal: React.FC<TherapeuticJournalProps> = ({ userId, onEntry
             </button>
 
             {/* Delete Button - Only show when editing existing entry */}
-            {viewMode === 'edit' && selectedEntry && selectedEntry.id && (
+            {viewMode === 'edit' && editingEntry && editingEntry.id && (
               <button
                 onClick={() => {
                   if (window.confirm('Are you sure you want to delete this journal entry? This action cannot be undone.')) {
-                    deleteEntry(selectedEntry.id);
+                    deleteEntry(editingEntry.id);
                   }
                 }}
                 className="bg-red-500 hover:bg-red-600 text-white py-4 px-6 rounded-xl font-medium transition-all flex items-center justify-center shadow-lg hover:shadow-xl"
