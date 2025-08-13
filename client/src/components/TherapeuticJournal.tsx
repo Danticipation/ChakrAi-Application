@@ -696,6 +696,7 @@ const TherapeuticJournal: React.FC<TherapeuticJournalProps> = ({ userId, onEntry
                       onClick={() => {
                         console.log('🟦 Edit Entry button clicked!', selectedEntry);
                         setEntry({
+                          id: selectedEntry.id, // ADD THE ID!
                           title: selectedEntry.title || '',
                           content: selectedEntry.content,
                           mood: selectedEntry.mood || 'neutral',
