@@ -24,6 +24,9 @@ const BeautifulMeditation: React.FC = () => {
   const [volume, setVolume] = useState(80);
   const [isMuted, setIsMuted] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
+  const [isLoadingAudio, setIsLoadingAudio] = useState(false);
+  const [meditationScript, setMeditationScript] = useState<string>('');
 
   const meditationSessions: MeditationSession[] = [
     {
@@ -99,6 +102,153 @@ const BeautifulMeditation: React.FC = () => {
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
+
+  // Generate meditation script based on session type
+  const generateMeditationScript = (session: MeditationSession): string => {
+    const scripts = {
+      mindfulness: `Welcome to your ${session.duration}-minute mindfulness meditation. Find a comfortable position and close your eyes. Take a deep breath in through your nose, and slowly exhale through your mouth. Feel your body settling into this moment. Notice any thoughts that arise, acknowledge them gently, and let them pass like clouds in the sky. Focus on your breath, the rise and fall of your chest, the sensation of air entering and leaving your body. You are present, you are grounded, you are at peace.`,
+      breathing: `Let's begin this ${session.duration}-minute breathing meditation. Settle comfortably and close your eyes. Place one hand on your chest and one on your belly. Breathe in slowly for 4 counts, feeling your belly rise. Hold for 4 counts. Exhale slowly for 6 counts, feeling your belly fall. This is your anchor, your safe harbor. With each breath, you release tension and stress. Inhale calm, exhale worry. You are creating space for peace within yourself.`,
+      guided: `Welcome to your ${session.duration}-minute guided meditation journey. Close your eyes and take three deep, cleansing breaths. Imagine yourself in a peaceful place - perhaps a serene forest, a quiet beach, or a comfortable room filled with soft light. You are safe here, you are loved here. Feel the warmth of compassion flowing through your body. With each breath, you are becoming more relaxed, more centered, more at peace with yourself and the world around you.`,
+      visualization: `Begin your ${session.duration}-minute visualization meditation. Close your eyes and breathe naturally. Visualize a warm, golden light above your head. This light represents peace, love, and healing. Watch as this light slowly descends, entering through the crown of your head, flowing through your entire body. Feel it warming every cell, healing every worry, dissolving every tension. You are filled with this beautiful, healing light. You are whole, you are peaceful, you are exactly where you need to be.`
+    };
+    return scripts[session.type] || scripts.mindfulness;
+  };
+
+  // Generate and play meditation audio
+  const playMeditationAudio = async (session: MeditationSession) => {
+    try {
+      setIsLoadingAudio(true);
+      console.log('Generating meditation audio for:', session.name);
+      
+      const script = generateMeditationScript(session);
+      setMeditationScript(script);
+
+      // Generate audio using ElevenLabs TTS
+      const response = await fetch('/api/text-to-speech', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          text: script,
+          voice: 'Alexandra', // Use Alexandra for meditation (calming voice)
+          language: 'en'
+        }),
+      });
+
+      if (response.ok) {
+        const audioBlob = await response.blob();
+        const audioUrl = URL.createObjectURL(audioBlob);
+        
+        // Create new audio element
+        const audio = new Audio(audioUrl);
+        audio.volume = (volume / 100) * (isMuted ? 0 : 1);
+        
+        // Set up audio event listeners
+        audio.addEventListener('loadstart', () => {
+          console.log('Audio loading started');
+        });
+        
+        audio.addEventListener('canplaythrough', () => {
+          console.log('Audio ready to play');
+          setIsLoadingAudio(false);
+        });
+        
+        audio.addEventListener('play', () => {
+          console.log('Audio started playing');
+          setIsPlaying(true);
+        });
+        
+        audio.addEventListener('pause', () => {
+          console.log('Audio paused');
+          setIsPlaying(false);
+        });
+        
+        audio.addEventListener('ended', () => {
+          console.log('Meditation session completed');
+          setIsPlaying(false);
+          setCurrentTime(0);
+        });
+        
+        audio.addEventListener('timeupdate', () => {
+          setCurrentTime(Math.floor(audio.currentTime));
+        });
+        
+        audio.addEventListener('error', (e) => {
+          console.error('Audio playback error:', e);
+          setIsPlaying(false);
+          setIsLoadingAudio(false);
+        });
+        
+        setAudioElement(audio);
+        
+        // Start playing
+        await audio.play();
+        
+      } else {
+        console.error('Failed to generate meditation audio');
+        setIsLoadingAudio(false);
+        // Fallback to ambient sound meditation
+        startAmbientMeditation(session);
+      }
+    } catch (error) {
+      console.error('Error playing meditation audio:', error);
+      setIsLoadingAudio(false);
+      // Fallback to ambient sound meditation
+      startAmbientMeditation(session);
+    }
+  };
+
+  // Fallback ambient meditation without voice
+  const startAmbientMeditation = (session: MeditationSession) => {
+    console.log('Starting ambient meditation session:', session.name);
+    setIsPlaying(true);
+    // Just run the timer without voice guidance
+    const timer = setInterval(() => {
+      setCurrentTime(prev => {
+        const newTime = prev + 1;
+        if (newTime >= session.duration * 60) {
+          setIsPlaying(false);
+          clearInterval(timer);
+          return 0;
+        }
+        return newTime;
+      });
+    }, 1000);
+  };
+
+  // Handle play/pause
+  const togglePlayPause = async () => {
+    if (!selectedSession) return;
+
+    if (audioElement) {
+      if (isPlaying) {
+        audioElement.pause();
+      } else {
+        await audioElement.play();
+      }
+    } else if (!isPlaying) {
+      // Generate new meditation audio
+      await playMeditationAudio(selectedSession);
+    }
+  };
+
+  // Update audio volume when volume state changes
+  React.useEffect(() => {
+    if (audioElement) {
+      audioElement.volume = (volume / 100) * (isMuted ? 0 : 1);
+    }
+  }, [volume, isMuted, audioElement]);
+
+  // Cleanup audio on unmount
+  React.useEffect(() => {
+    return () => {
+      if (audioElement) {
+        audioElement.pause();
+        audioElement.src = '';
+      }
+    };
+  }, [audioElement]);
 
   const SessionCard = ({ session, isSelected, onClick }: {
     session: MeditationSession;
@@ -289,24 +439,38 @@ const BeautifulMeditation: React.FC = () => {
             {/* Controls */}
             <div className="flex items-center justify-center space-x-6 mb-6">
               <button
-                onClick={() => setCurrentTime(0)}
+                onClick={() => {
+                  setCurrentTime(0);
+                  if (audioElement) {
+                    audioElement.currentTime = 0;
+                  }
+                }}
                 className="p-3 rounded-full bg-white/10 hover:bg-white/20 transition-colors duration-300"
               >
                 <RotateCcw className="w-6 h-6 text-white" />
               </button>
               
               <button
-                onClick={() => setCurrentTime(Math.max(0, currentTime - 10))}
+                onClick={() => {
+                  const newTime = Math.max(0, currentTime - 10);
+                  setCurrentTime(newTime);
+                  if (audioElement) {
+                    audioElement.currentTime = newTime;
+                  }
+                }}
                 className="p-3 rounded-full bg-white/10 hover:bg-white/20 transition-colors duration-300"
               >
                 <SkipForward className="w-6 h-6 text-white transform rotate-180" />
               </button>
 
               <button
-                onClick={() => setIsPlaying(!isPlaying)}
-                className={`p-6 rounded-full bg-gradient-to-r ${selectedSession.color} hover:shadow-2xl transition-all duration-300 transform hover:scale-105`}
+                onClick={togglePlayPause}
+                disabled={isLoadingAudio}
+                className={`p-6 rounded-full bg-gradient-to-r ${selectedSession.color} hover:shadow-2xl transition-all duration-300 transform hover:scale-105 ${isLoadingAudio ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
-                {isPlaying ? (
+                {isLoadingAudio ? (
+                  <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : isPlaying ? (
                   <Pause className="w-8 h-8 text-white" />
                 ) : (
                   <Play className="w-8 h-8 text-white ml-1" />
@@ -314,7 +478,13 @@ const BeautifulMeditation: React.FC = () => {
               </button>
 
               <button
-                onClick={() => setCurrentTime(Math.min(selectedSession.duration * 60, currentTime + 10))}
+                onClick={() => {
+                  const newTime = Math.min(selectedSession.duration * 60, currentTime + 10);
+                  setCurrentTime(newTime);
+                  if (audioElement) {
+                    audioElement.currentTime = newTime;
+                  }
+                }}
                 className="p-3 rounded-full bg-white/10 hover:bg-white/20 transition-colors duration-300"
               >
                 <SkipForward className="w-6 h-6 text-white" />
