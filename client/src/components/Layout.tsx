@@ -13,6 +13,7 @@ import ConversationContinuityDisplay from '@/components/ConversationContinuityDi
 import VoiceSelector from '@/components/VoiceSelector';
 import ThemeSelector from '@/components/ThemeSelector';
 import WellnessDashboard from '@/components/WellnessDashboard';
+import BeautifulChat from '@/components/BeautifulChat';
 // import AuthModal from '@/components/AuthModal';
 
 import PersonalityQuiz from '@/components/PersonalityQuiz';
@@ -343,153 +344,18 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
         return <DailyAffirmation />;
       case 'chat':
         return (
-          <div className="h-full flex flex-col relative overflow-hidden">
-            {/* AI Companion Header */}
-            <div className="flex-shrink-0 theme-card border-b border-white/10 p-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <div className="relative">
-                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-xl">
-                      <Brain className="w-8 h-8 text-white" />
-                    </div>
-                    <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white animate-pulse"></div>
-                  </div>
-                  <div>
-                    <h2 className="text-2xl font-bold theme-text font-serif">
-                      <span className="font-samarkan">Chakrai</span>
-                    </h2>
-                    <p className="theme-text-secondary text-sm">Your AI Wellness Companion</p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setActiveSection('home')}
-                  className="p-2 theme-text-secondary hover:theme-text rounded-lg transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-
-            {/* Chat Interface */}
-            <div className="flex-1 flex flex-col min-h-0">
-              {/* Chat Messages Area */}
-              <div className="flex-1 p-6 overflow-y-auto space-y-6">
-                {/* Welcome Message */}
-                <div className="flex items-start space-x-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center flex-shrink-0">
-                    <Brain className="w-5 h-5 text-white" />
-                  </div>
-                  <div className="theme-card max-w-2xl p-4 rounded-2xl rounded-tl-sm shadow-lg">
-                    <p className="theme-text leading-relaxed">
-                      🌟 Welcome to your reflection journey! I'm Chakrai, your personal AI wellness companion. 
-                      I'm here to support your mental wellness through thoughtful conversation, insights, and guidance.
-                    </p>
-                    <p className="theme-text leading-relaxed mt-3">
-                      How are you feeling today? What's on your mind? I'm here to listen and help you explore your thoughts and emotions.
-                    </p>
-                  </div>
-                </div>
-                
-                {/* Chat Messages */}
-                {messages.map((message, index) => (
-                  <div key={index} className={`flex items-start space-x-3 ${message.sender === 'user' ? 'flex-row-reverse space-x-reverse' : ''}`}>
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                      message.sender === 'user' 
-                        ? 'bg-gradient-to-br from-green-500 to-blue-500' 
-                        : 'bg-gradient-to-br from-blue-500 to-purple-600'
-                    }`}>
-                      {message.sender === 'user' ? (
-                        <User className="w-5 h-5 text-white" />
-                      ) : (
-                        <Brain className="w-5 h-5 text-white" />
-                      )}
-                    </div>
-                    <div className={`theme-card max-w-2xl p-4 rounded-2xl shadow-lg ${
-                      message.sender === 'user' ? 'rounded-tr-sm' : 'rounded-tl-sm'
-                    }`}>
-                      <p className="theme-text leading-relaxed">{message.text}</p>
-                      <p className="theme-text-secondary text-xs mt-2">{message.time}</p>
-                    </div>
-                  </div>
-                ))}
-                <div ref={messagesEndRef} />
-              </div>
-
-              {/* Chat Input Area */}
-              <div className="flex-shrink-0 theme-card border-t border-white/10 p-6">
-                <div className="max-w-4xl mx-auto">
-                  <div className="flex items-end space-x-4">
-                    <div className="flex-1">
-                      <div className="relative">
-                        <textarea
-                          value={chatInput}
-                          onChange={(e) => setChatInput(e.target.value)}
-                          onKeyPress={handleKeyPress}
-                          placeholder="Share your thoughts, feelings, or ask me anything..."
-                          className="w-full theme-input resize-none rounded-2xl pl-4 pr-12 py-4 min-h-[60px] max-h-32 focus:ring-2 focus:ring-blue-500/50 transition-all"
-                          rows={2}
-                        />
-                        <button 
-                          onClick={handleSendMessage}
-                          disabled={!chatInput.trim()}
-                          className="absolute right-3 bottom-3 p-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-full hover:shadow-lg transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          <Send className="w-5 h-5" />
-                        </button>
-                        {voiceStatus === 'recording' && (
-                          <div className="absolute top-2 left-3 flex items-center space-x-2 bg-red-500 text-white px-2 py-1 rounded-full text-xs">
-                            <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-                            <span>Recording...</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <button 
-                      onClick={handleVoiceToggle}
-                      disabled={voiceStatus === 'processing'}
-                      className={`p-3 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-                        voiceStatus === 'recording'
-                          ? 'bg-red-500 text-white animate-pulse' 
-                          : voiceStatus === 'processing'
-                          ? 'bg-yellow-500 text-white'
-                          : 'theme-text-secondary hover:theme-text'
-                      }`}
-                    >
-                      <Mic className="w-6 h-6" />
-                    </button>
-                  </div>
-                  
-                  {/* Quick Actions */}
-                  <div className="flex flex-wrap gap-2 mt-4">
-                    <button 
-                      onClick={() => setChatInput("I'm feeling a bit overwhelmed today")}
-                      className="px-4 py-2 theme-card-hover rounded-full text-sm theme-text-secondary hover:theme-text transition-colors border border-white/10"
-                    >
-                      💭 Share my feelings
-                    </button>
-                    <button 
-                      onClick={() => setChatInput("I want to set a wellness goal for myself")}
-                      className="px-4 py-2 theme-card-hover rounded-full text-sm theme-text-secondary hover:theme-text transition-colors border border-white/10"
-                    >
-                      🎯 Set a wellness goal
-                    </button>
-                    <button 
-                      onClick={() => setChatInput("I'd like to journal about what happened today")}
-                      className="px-4 py-2 theme-card-hover rounded-full text-sm theme-text-secondary hover:theme-text transition-colors border border-white/10"
-                    >
-                      📝 Journal my thoughts
-                    </button>
-                    <button 
-                      onClick={() => setChatInput("Can you guide me through a calming meditation?")}
-                      className="px-4 py-2 theme-card-hover rounded-full text-sm theme-text-secondary hover:theme-text transition-colors border border-white/10"
-                    >
-                      🧘 Guided meditation
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          <BeautifulChat
+            selectedVoice={selectedVoice}
+            voiceStatus={voiceStatus}
+            onVoiceToggle={handleVoiceToggle}
+            onSendMessage={handleSendMessage}
+            messages={messages.map((msg, index) => ({
+              ...msg,
+              id: `${msg.sender}-${index}-${msg.time}`
+            }))}
+            chatInput={chatInput}
+            setChatInput={setChatInput}
+          />
         );
       default:
         return (
