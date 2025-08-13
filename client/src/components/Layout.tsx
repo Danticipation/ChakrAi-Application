@@ -12,8 +12,7 @@ import MemoryDashboard from '@/components/MemoryDashboard';
 import ConversationContinuityDisplay from '@/components/ConversationContinuityDisplay';
 import VoiceSelector from '@/components/VoiceSelector';
 import ThemeSelector from '@/components/ThemeSelector';
-import AnimatedHero from '@/components/AnimatedHero';
-import FeatureCards from '@/components/FeatureCards';
+import WellnessDashboard from '@/components/WellnessDashboard';
 // import AuthModal from '@/components/AuthModal';
 
 import PersonalityQuiz from '@/components/PersonalityQuiz';
@@ -32,7 +31,7 @@ import AgentSystem from '@/components/AgentSystem';
 import VRTherapy from '@/components/VRTherapy';
 import HealthIntegration from '@/components/HealthIntegration';
 import PrivacyCompliance from '@/components/PrivacyCompliance';
-import { GuidedMeditation } from '@/components/GuidedMeditation';
+import BeautifulMeditation from '@/components/BeautifulMeditation';
 import TherapistPortal from '@/components/TherapistPortal';
 import AiPerformanceMonitoringDashboard from '@/components/AiPerformanceMonitoringDashboard';
 import AdminFeedbackDashboard from '@/components/AdminFeedbackDashboard';
@@ -289,15 +288,7 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
   const renderActiveSection = () => {
     switch (activeSection) {
       case 'home':
-        return (
-          <div className="h-full overflow-y-auto">
-            <AnimatedHero 
-              onStartJourney={() => setActiveSection('chat')}
-              onFeatureClick={setActiveSection}
-            />
-            <FeatureCards onFeatureClick={setActiveSection} />
-          </div>
-        );
+        return <WellnessDashboard userId={currentUserId} onNavigate={setActiveSection} />;
       case 'questions':
         return <VoluntaryQuestionDeck />;
       case 'journal':
@@ -313,7 +304,7 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
       case 'analytics':
         return <AnalyticsDashboard userId={currentUserId} onNavigate={setActiveSection} />;
       case 'meditation':
-        return <GuidedMeditation />;
+        return <BeautifulMeditation />;
       case 'health':
         return <HealthIntegration />;
       case 'challenges':
