@@ -695,20 +695,24 @@ const TherapeuticJournal: React.FC<TherapeuticJournalProps> = ({ userId, onEntry
                     <button
                       onClick={() => {
                         console.log('🟦 Edit Entry button clicked!', selectedEntry);
-                        setEntry({
-                          id: selectedEntry.id, // ADD THE ID!
-                          title: selectedEntry.title || '',
-                          content: selectedEntry.content,
-                          mood: selectedEntry.mood || 'neutral',
-                          moodIntensity: selectedEntry.moodIntensity || 5,
-                          tags: selectedEntry.tags || [],
-                          isPrivate: selectedEntry.isPrivate ?? true
-                        });
-                        setEditingEntry(selectedEntry); // Keep track of what we're editing
-                        console.log('🟦 Setting editingEntry to:', selectedEntry);
-                        console.log('🟦 Setting viewMode to: edit');
-                        setSelectedEntry(null);
-                        setViewMode('edit');
+                        if (selectedEntry.id) {
+                          setEntry({
+                            id: selectedEntry.id, // Only set ID if it exists
+                            title: selectedEntry.title || '',
+                            content: selectedEntry.content,
+                            mood: selectedEntry.mood || 'neutral',
+                            moodIntensity: selectedEntry.moodIntensity || 5,
+                            tags: selectedEntry.tags || [],
+                            isPrivate: selectedEntry.isPrivate ?? true
+                          });
+                          setEditingEntry(selectedEntry); // Keep track of what we're editing
+                          console.log('🟦 Setting editingEntry to:', selectedEntry);
+                          console.log('🟦 Setting viewMode to: edit');
+                          setSelectedEntry(null);
+                          setViewMode('edit');
+                        } else {
+                          console.error('🔴 Cannot edit entry: no ID found', selectedEntry);
+                        }
                       }}
                       className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium"
                     >
@@ -716,7 +720,7 @@ const TherapeuticJournal: React.FC<TherapeuticJournalProps> = ({ userId, onEntry
                     </button>
                     <button
                       onClick={() => {
-                        if (window.confirm('Are you sure you want to delete this journal entry? This action cannot be undone.')) {
+                        if (selectedEntry.id && window.confirm('Are you sure you want to delete this journal entry? This action cannot be undone.')) {
                           deleteEntry(selectedEntry.id);
                         }
                       }}
@@ -965,8 +969,12 @@ const TherapeuticJournal: React.FC<TherapeuticJournalProps> = ({ userId, onEntry
               <button
                 onClick={() => {
                   const entryToDelete = editingEntry?.id || entry.id;
+                  console.log('🔴 Delete button clicked! entryToDelete:', entryToDelete);
                   if (entryToDelete && window.confirm('Are you sure you want to delete this journal entry? This action cannot be undone.')) {
+                    console.log('🔴 Calling deleteEntry with ID:', entryToDelete);
                     deleteEntry(entryToDelete);
+                  } else {
+                    console.log('🔴 No entry ID found to delete');
                   }
                 }}
                 className="bg-red-500 hover:bg-red-600 text-white py-4 px-6 rounded-xl font-medium transition-all flex items-center justify-center shadow-lg hover:shadow-xl"
