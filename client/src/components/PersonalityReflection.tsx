@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { RefreshCw, Brain, TrendingUp, User, RotateCcw, Volume2, VolumeX, Play, Pause, Settings, Sparkles, Heart, Target } from 'lucide-react';
+import { RefreshCw, Brain, TrendingUp, User, RotateCcw, Volume2, VolumeX, Play, Pause, Settings, Sparkles, Heart, Target, BookOpen } from 'lucide-react';
 import { getCurrentUserId } from '../utils/userSession';
 
 interface PersonalityReflectionData {
@@ -32,12 +32,17 @@ const PersonalityReflection: React.FC<PersonalityReflectionProps> = ({ userId })
   const currentUserId = userId || getCurrentUserId();
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   
-  // Text-to-Speech state
+  // ElevenLabs Text-to-Speech state
   const [isPlaying, setIsPlaying] = useState(false);
-  const [selectedVoice, setSelectedVoice] = useState<string>('');
-  const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
-  const [currentUtterance, setCurrentUtterance] = useState<SpeechSynthesisUtterance | null>(null);
+  const [selectedVoice, setSelectedVoice] = useState<string>('Rachel'); // Default ElevenLabs voice
+  const [elevenLabsVoices] = useState([
+    { id: 'Rachel', name: 'Rachel - Calm & Professional' },
+    { id: 'Bella', name: 'Bella - Warm & Caring' },
+    { id: 'Josh', name: 'Josh - Confident & Clear' },
+    { id: 'Arnold', name: 'Arnold - Deep & Reassuring' }
+  ]);
   const [showVoiceSettings, setShowVoiceSettings] = useState(false);
+  const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['personality-reflection', refreshTrigger],
@@ -65,43 +70,23 @@ const PersonalityReflection: React.FC<PersonalityReflectionProps> = ({ userId })
     refetchInterval: 300000, // Refresh every 5 minutes
   });
 
-  // Initialize voices
+  // Cleanup audio on unmount
   useEffect(() => {
-    const loadVoices = () => {
-      const voices = speechSynthesis.getVoices();
-      setAvailableVoices(voices);
-      
-      // Set default voice preference (female voices for therapeutic feel)
-      const preferredVoices = voices.filter(voice => 
-        voice.name.toLowerCase().includes('female') || 
-        voice.name.toLowerCase().includes('samantha') ||
-        voice.name.toLowerCase().includes('alex') ||
-        voice.name.toLowerCase().includes('karen') ||
-        voice.name.toLowerCase().includes('susan')
-      );
-      
-      if (preferredVoices.length > 0) {
-        setSelectedVoice(preferredVoices[0]?.name || '');
-      } else if (voices.length > 0) {
-        setSelectedVoice(voices[0]?.name || '');
+    return () => {
+      if (audioElement) {
+        audioElement.pause();
+        audioElement.src = '';
       }
     };
-
-    loadVoices();
-    speechSynthesis.addEventListener('voiceschanged', loadVoices);
-    
-    return () => {
-      speechSynthesis.removeEventListener('voiceschanged', loadVoices);
-    };
-  }, []);
+  }, [audioElement]);
 
   const handleRefresh = () => {
     setRefreshTrigger(prev => prev + 1);
     refetch();
   };
 
-  // Text-to-Speech functions
-  const speakAnalysis = () => {
+  // ElevenLabs Text-to-Speech functions
+  const speakAnalysis = async () => {
     if (!data) return;
     
     if (isPlaying) {
@@ -109,57 +94,111 @@ const PersonalityReflection: React.FC<PersonalityReflectionProps> = ({ userId })
       return;
     }
 
+    try {
+      setIsPlaying(true);
+
+      const fullText = `
+Here is your comprehensive personality analysis.
+
+Communication Style: ${data.communicationStyle}
+
+Emotional Patterns: ${data.emotionalPatterns.join('. ')}
+
+Your Strengths: ${data.strengths.join('. ')}
+
+Growth Opportunities: ${data.growthOpportunities.join('. ')}
+
+Personality Insights: 
+Dominant Traits: ${data.personalityInsights.dominantTraits.join(', ')}.
+Communication Preference: ${data.personalityInsights.communicationPreference}
+Emotional Processing: ${data.personalityInsights.emotionalProcessing}
+
+Wellness Recommendations: ${data.wellnessRecommendations.join('. ')}
+
+This completes your personality analysis. Remember, this analysis is based on your unique journey and data.
+      `.trim();
+
+      const response = await fetch('/api/text-to-speech', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          text: fullText,
+          voice: selectedVoice,
+          stability: 0.5,
+          similarity_boost: 0.75
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate speech');
+      }
+
+      const audioBlob = await response.blob();
+      const audioUrl = URL.createObjectURL(audioBlob);
+      
+      const audio = new Audio(audioUrl);
+      setAudioElement(audio);
+
+      audio.onended = () => {
+        setIsPlaying(false);
+        URL.revokeObjectURL(audioUrl);
+      };
+
+      audio.onerror = () => {
+        setIsPlaying(false);
+        URL.revokeObjectURL(audioUrl);
+        console.error('Audio playback error');
+      };
+
+      await audio.play();
+
+    } catch (error) {
+      console.error('Text-to-speech error:', error);
+      setIsPlaying(false);
+      // Fallback to browser TTS if ElevenLabs fails
+      fallbackToNativeTTS();
+    }
+  };
+
+  const stopSpeaking = () => {
+    if (audioElement) {
+      audioElement.pause();
+      audioElement.src = '';
+      setAudioElement(null);
+    }
+    setIsPlaying(false);
+  };
+
+  // Fallback to native browser TTS
+  const fallbackToNativeTTS = () => {
+    if (!data) return;
+
     const fullText = `
-    Here is your comprehensive personality analysis.
-    
-    Communication Style: ${data.communicationStyle}
-    
-    Emotional Patterns: ${data.emotionalPatterns.join('. ')}
-    
-    Your Strengths: ${data.strengths.join('. ')}
-    
-    Growth Opportunities: ${data.growthOpportunities.join('. ')}
-    
-    Personality Insights: 
-    Dominant Traits: ${data.personalityInsights.dominantTraits.join(', ')}.
-    Communication Preference: ${data.personalityInsights.communicationPreference}
-    Emotional Processing: ${data.personalityInsights.emotionalProcessing}
-    
-    Wellness Recommendations: ${data.wellnessRecommendations.join('. ')}
-    
-    This completes your personality analysis. Remember, this analysis is based on your unique journey and data.
-    `;
+Here is your comprehensive personality analysis.
+
+Communication Style: ${data.communicationStyle}
+
+Emotional Patterns: ${data.emotionalPatterns.join('. ')}
+
+Your Strengths: ${data.strengths.join('. ')}
+
+Growth Opportunities: ${data.growthOpportunities.join('. ')}
+
+This completes your personality analysis.
+    `.trim();
 
     const utterance = new SpeechSynthesisUtterance(fullText);
-    
-    // Find and set the selected voice
-    const voice = availableVoices.find(v => v.name === selectedVoice);
-    if (voice) {
-      utterance.voice = voice;
-    }
-    
     utterance.rate = 0.9;
     utterance.pitch = 1.0;
     utterance.volume = 0.8;
 
     utterance.onstart = () => setIsPlaying(true);
-    utterance.onend = () => {
-      setIsPlaying(false);
-      setCurrentUtterance(null);
-    };
-    utterance.onerror = () => {
-      setIsPlaying(false);
-      setCurrentUtterance(null);
-    };
+    utterance.onend = () => setIsPlaying(false);
+    utterance.onerror = () => setIsPlaying(false);
 
-    setCurrentUtterance(utterance);
     speechSynthesis.speak(utterance);
-  };
-
-  const stopSpeaking = () => {
-    speechSynthesis.cancel();
-    setIsPlaying(false);
-    setCurrentUtterance(null);
   };
 
   if (isLoading) {
@@ -331,9 +370,9 @@ const PersonalityReflection: React.FC<PersonalityReflectionProps> = ({ userId })
               onChange={(e) => setSelectedVoice(e.target.value)}
               className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-purple-400"
             >
-              {availableVoices.map((voice) => (
-                <option key={voice.name} value={voice.name} className="bg-gray-800 text-white">
-                  {voice.name} ({voice.lang})
+              {elevenLabsVoices.map((voice) => (
+                <option key={voice.id} value={voice.id} className="bg-gray-800 text-white">
+                  {voice.name}
                 </option>
               ))}
             </select>
