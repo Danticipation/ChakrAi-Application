@@ -57,18 +57,7 @@ app.use(cors(corsConfig));
 app.use(express.json({ limit: '50mb' })); // Restored original limit for audio functionality
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-// Fix MIME type issues for JavaScript and CSS files
-// Configure proper MIME types for static assets
-app.use((req, res, next) => {
-  if (req.url.endsWith('.js') || req.url.endsWith('.mjs')) {
-    res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
-  } else if (req.url.endsWith('.css')) {
-    res.setHeader('Content-Type', 'text/css; charset=utf-8');
-  } else if (req.url.endsWith('.ts') || req.url.endsWith('.tsx')) {
-    res.setHeader('Content-Type', 'application/typescript; charset=utf-8');
-  }
-  next();
-});
+// Fix MIME type issues for JavaScript and CSS files - will be applied after Vite setup
 
 // Import and set up authentication middleware
 import { authenticateToken } from './routes/auth.js';
@@ -216,7 +205,23 @@ app.get('/health/detailed', healthEndpoints.detailed);
 app.use(errorHandler);
 
 // Setup Vite for frontend serving
-setupVite(app, server);
+await setupVite(app, server);
+
+// Override MIME types after Vite middleware to fix JavaScript loading errors
+app.use((req, res, next) => {
+  const originalSetHeader = res.setHeader;
+  
+  // Intercept setHeader calls to override MIME types
+  res.setHeader = function(name, value) {
+    if (name.toLowerCase() === 'content-type' && value === 'text/javascript') {
+      // Replace text/javascript with application/javascript
+      return originalSetHeader.call(this, name, 'application/javascript; charset=utf-8');
+    }
+    return originalSetHeader.call(this, name, value);
+  };
+  
+  next();
+});
 
 // Start server
 server.listen(PORT, '0.0.0.0', () => {
