@@ -133,9 +133,9 @@ export default function AnalyticsDashboard({ userId, onNavigate }: AnalyticsDash
     });
 
     const moodTrend = moodEntries.slice(-7).map(entry => ({
-      date: entry.createdAt ? new Date(entry.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-      value: entry.intensity || 5,
-      emotion: entry.mood || 'neutral'
+      date: (entry.createdAt ? new Date(entry.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]) as string,
+      value: (entry.intensity || 5) as number,
+      emotion: (entry.mood || 'neutral') as string
     }));
 
     return {
