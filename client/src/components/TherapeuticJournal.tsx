@@ -82,15 +82,7 @@ const TherapeuticJournal: React.FC<TherapeuticJournalProps> = ({ userId, onEntry
     fetchRecentEntries();
   }, []);
 
-  // Debug: Track editingEntry changes
-  useEffect(() => {
-    console.log('🔵 editingEntry changed to:', editingEntry);
-  }, [editingEntry]);
 
-  // Debug: Track viewMode changes
-  useEffect(() => {
-    console.log('🟢 viewMode changed to:', viewMode);
-  }, [viewMode]);
 
   const fetchRecentEntries = async () => {
     console.log('fetchRecentEntries called with userId:', userId);
@@ -602,6 +594,8 @@ const TherapeuticJournal: React.FC<TherapeuticJournalProps> = ({ userId, onEntry
                     key={recentEntry.id} 
                     className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20 hover:bg-white/20 transition-all cursor-pointer"
                     onClick={() => {
+                      // Don't interfere with edit mode
+                      if (viewMode === 'edit') return;
                       setSelectedEntry(recentEntry);
                       setViewMode('view');
                     }}
@@ -700,7 +694,6 @@ const TherapeuticJournal: React.FC<TherapeuticJournalProps> = ({ userId, onEntry
                   <div className="flex gap-3 pt-4 border-t border-gray-200">
                     <button
                       onClick={() => {
-                        console.log('Edit Entry clicked. selectedEntry:', selectedEntry);
                         setEntry({
                           title: selectedEntry.title || '',
                           content: selectedEntry.content,
@@ -710,8 +703,6 @@ const TherapeuticJournal: React.FC<TherapeuticJournalProps> = ({ userId, onEntry
                           isPrivate: selectedEntry.isPrivate ?? true
                         });
                         setEditingEntry(selectedEntry); // Keep track of what we're editing
-                        console.log('Setting editingEntry to:', selectedEntry);
-                        console.log('Setting viewMode to: edit');
                         setSelectedEntry(null);
                         setViewMode('edit');
                       }}
@@ -959,22 +950,17 @@ const TherapeuticJournal: React.FC<TherapeuticJournalProps> = ({ userId, onEntry
             </button>
 
             {/* Delete Button - Only show when editing existing entry */}
-            {(
+            {viewMode === 'edit' && editingEntry && editingEntry.id && (
               <button
                 onClick={() => {
-                  console.log('Delete button clicked. ViewMode:', viewMode, 'EditingEntry:', editingEntry);
-                  if (editingEntry && editingEntry.id) {
-                    if (window.confirm('Are you sure you want to delete this journal entry? This action cannot be undone.')) {
-                      deleteEntry(editingEntry.id);
-                    }
-                  } else {
-                    alert('Debug: No editing entry found. ViewMode: ' + viewMode + ', EditingEntry: ' + JSON.stringify(editingEntry));
+                  if (window.confirm('Are you sure you want to delete this journal entry? This action cannot be undone.')) {
+                    deleteEntry(editingEntry.id);
                   }
                 }}
                 className="bg-red-500 hover:bg-red-600 text-white py-4 px-6 rounded-xl font-medium transition-all flex items-center justify-center shadow-lg hover:shadow-xl"
               >
                 <Trash2 className="w-5 h-5 mr-2" />
-                Delete (Debug)
+                Delete
               </button>
             )}
           </div>
@@ -995,6 +981,8 @@ const TherapeuticJournal: React.FC<TherapeuticJournalProps> = ({ userId, onEntry
                   key={recentEntry.id || index} 
                   className="theme-primary/30 rounded-lg p-4 border border-[#000000]/30 cursor-pointer hover:bg-opacity-40 transition-all"
                   onClick={() => {
+                    // Don't interfere with edit mode
+                    if (viewMode === 'edit') return;
                     setSelectedEntry(recentEntry);
                     setViewMode('view');
                   }}
