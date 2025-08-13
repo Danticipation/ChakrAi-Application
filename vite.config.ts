@@ -5,6 +5,18 @@ import path from "path";
 export default defineConfig({
   plugins: [
     react(),
+    // Custom plugin to fix MIME type issues for JavaScript files
+    {
+      name: 'mime-type-fix',
+      configureServer(server) {
+        server.middlewares.use((req, res, next) => {
+          if (req.url && (req.url.includes('.tsx') || req.url.includes('.ts') || req.url.includes('.js'))) {
+            res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+          }
+          next();
+        });
+      }
+    },
     // Disabled runtime error overlay to prevent loading issues
     // runtimeErrorOverlay(),
   ],
