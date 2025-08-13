@@ -23,6 +23,7 @@ Chakrai is a professional mental wellness and therapy application designed to pr
 - **ENHANCED JOURNAL INTERFACE**: Completely redesigned journal interface with engaging visuals, proper tab separation for writing vs viewing entries, modern card layouts, mood selection with colorful icons, animated interactions, and improved user experience (August 13, 2025)
 - **ANTI-HALLUCINATION SYSTEM**: Implemented strict anti-hallucination rules in AI prompts to prevent fabricating user background information - AI now only references explicitly documented conversation history and admits when it lacks specific information (August 13, 2025)
 - **VOICE SELECTION SYSTEM FIX**: Fixed voice selection mapping to support all 8 available voices (James, Brian, Alexandra, Carla, Hope, Charlotte, Bronson, Marcus) in both chat API and text-to-speech service with proper ElevenLabs voice ID mapping (August 13, 2025)
+- **DASHBOARD STATISTICS FIX**: Replaced hardcoded placeholder values (7, 23, 47, 156) with authentic real-time data from user's actual journal entries, AI conversations, activity streaks, and mindful minutes calculated from database queries (August 13, 2025)
 - Identity reflection: Bot should reflect user's persona, identity, and mannerisms over time
 - Color scheme preference: MUST maintain consistent blue therapeutic theme throughout - user strongly rejects colorful "rainbow" designs
 

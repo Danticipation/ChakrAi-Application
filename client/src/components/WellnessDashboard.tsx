@@ -4,6 +4,8 @@ import {
   Clock, TrendingUp, Star, Flame, MessageCircle, Mic,
   CheckCircle, ArrowRight, Play, Pause, Users
 } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import axios from 'axios';
 
 interface WellnessDashboardProps {
   userId: number | null;
@@ -64,7 +66,18 @@ const QuickAction = ({ icon: Icon, label, description, color, onClick }: {
 const WellnessDashboard: React.FC<WellnessDashboardProps> = ({ userId, onNavigate }) => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [todaysMood, setTodaysMood] = useState<string | null>(null);
-  const [currentStreak, setCurrentStreak] = useState(7);
+
+  // Fetch real dashboard statistics
+  const { data: dashboardStats, isLoading } = useQuery({
+    queryKey: ['dashboard-stats', userId],
+    queryFn: async () => {
+      if (!userId) return null;
+      const response = await axios.get(`/api/dashboard/stats/${userId}`);
+      return response.data;
+    },
+    enabled: !!userId,
+    refetchInterval: 5 * 60 * 1000, // Refresh every 5 minutes
+  });
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 60000);
@@ -139,32 +152,32 @@ const WellnessDashboard: React.FC<WellnessDashboardProps> = ({ userId, onNavigat
           <StatCard
             icon={Flame}
             label="Current Streak"
-            value={`${currentStreak} days`}
-            change="+2"
+            value={isLoading ? "..." : `${dashboardStats?.currentStreak || 0} days`}
+            change={dashboardStats?.streakChange || null}
             color="from-orange-500 to-red-600"
             onClick={() => onNavigate('analytics')}
           />
           <StatCard
             icon={Brain}
             label="AI Conversations"
-            value="23"
-            change="+5"
+            value={isLoading ? "..." : dashboardStats?.aiConversations || 0}
+            change={dashboardStats?.conversationsChange || null}
             color="from-blue-500 to-purple-600"
             onClick={() => onNavigate('chat')}
           />
           <StatCard
             icon={BookOpen}
             label="Journal Entries"
-            value="47"
-            change="+3"
+            value={isLoading ? "..." : dashboardStats?.journalEntries || 0}
+            change={dashboardStats?.journalChange || null}
             color="from-green-500 to-teal-600"
             onClick={() => onNavigate('journal')}
           />
           <StatCard
             icon={Heart}
             label="Mindful Minutes"
-            value="156"
-            change="+12"
+            value={isLoading ? "..." : dashboardStats?.mindfulMinutes || 0}
+            change={dashboardStats?.mindfulChange || null}
             color="from-rose-500 to-pink-600"
             onClick={() => onNavigate('meditation')}
           />
