@@ -25,6 +25,9 @@ const VOICE_MAPPING = {
   'charlotte': 'XB0fDUnXU5powFXDhCwa', // Charlotte - Gentle and empathetic
   'bronson': 'Yko7PKHZNXotIFUBG7I9',  // Bronson - Confident and reassuring
   'marcus': 'y3kKRaK2dnn3OgKDBckk',   // Marcus - Smooth and supportive
+  // Meditation voices
+  'natasha': 'Atp5cNFg1Wj5gyKD7HWV',  // Natasha - Meditation female voice
+  'natasha_husband': 'HgyIHe81F3nXywNwkraY', // Natasha's Husband - Meditation male voice
   // Legacy compatibility
   'Rachel': 'AZnzlk1XvdvUeBnXmlld',   // Rachel - Calm & Professional
   'Bella': 'EXAVITQu4vr4xnSDxMaL',    // Bella - Warm & Caring  
@@ -37,7 +40,7 @@ const ttsValidation = [
     .isLength({ min: 1, max: 5000 })
     .withMessage('Text must be between 1 and 5000 characters'),
   body('voice')
-    .isIn(['james', 'brian', 'alexandra', 'carla', 'hope', 'charlotte', 'bronson', 'marcus', 'Rachel', 'Bella', 'Josh', 'Arnold'])
+    .isIn(['james', 'brian', 'alexandra', 'carla', 'hope', 'charlotte', 'bronson', 'marcus', 'natasha', 'natasha_husband', 'Rachel', 'Bella', 'Josh', 'Arnold'])
     .withMessage('Invalid voice selection'),
   body('stability')
     .optional()

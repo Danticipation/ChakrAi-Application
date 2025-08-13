@@ -27,6 +27,7 @@ const BeautifulMeditation: React.FC = () => {
   const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
   const [isLoadingAudio, setIsLoadingAudio] = useState(false);
   const [meditationScript, setMeditationScript] = useState<string>('');
+  const [selectedVoice, setSelectedVoice] = useState<'natasha' | 'natasha_husband'>('natasha');
 
   const meditationSessions: MeditationSession[] = [
     {
@@ -131,7 +132,7 @@ const BeautifulMeditation: React.FC = () => {
         },
         body: JSON.stringify({
           text: script,
-          voice: 'alexandra', // Use Alexandra for meditation (calming voice)
+          voice: selectedVoice, // Use selected meditation voice
           stability: 0.4, // More stable for meditation
           similarity_boost: 0.8 // Higher similarity for consistent voice
         }),
@@ -342,11 +343,14 @@ const BeautifulMeditation: React.FC = () => {
           {showSettings && (
             <div className="grid md:grid-cols-3 gap-6">
               <div>
-                <label className="block text-white/80 text-sm font-medium mb-2">Voice Guide</label>
-                <select className="w-full p-3 rounded-xl bg-white/10 border border-white/20 text-white">
-                  <option value="amy">Amy (Calm)</option>
-                  <option value="james">James (Deep)</option>
-                  <option value="sarah">Sarah (Gentle)</option>
+                <label className="block text-white/80 text-sm font-medium mb-2">Meditation Voice</label>
+                <select 
+                  className="w-full p-3 rounded-xl bg-white/10 border border-white/20 text-white"
+                  value={selectedVoice}
+                  onChange={(e) => setSelectedVoice(e.target.value as 'natasha' | 'natasha_husband')}
+                >
+                  <option value="natasha">Natasha (Female - Calming)</option>
+                  <option value="natasha_husband">Natasha's Husband (Male - Deep)</option>
                 </select>
               </div>
               <div>
