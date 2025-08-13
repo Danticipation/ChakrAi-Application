@@ -68,7 +68,7 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
   const [collapsedSections, setCollapsedSections] = useState({
     core: false,
     mirrors: true,
-    guided: true,
+    guided: false, // Show therapeutic agents by default
     healthcare: true,
     wellness: true,
     settings: true,
@@ -489,7 +489,7 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
                   <div className="space-y-1">
                     {[
                       { id: 'meditation', label: 'Guided Meditation' },
-                      { id: 'agents', label: 'Reflective Allies' },
+                      { id: 'agents', label: 'AI Therapy Specialists' },
                       { id: 'vr', label: 'InnerScape' },
                       { id: 'therapy-plans', label: 'Therapy Plans' },
                       { id: 'community', label: 'Community' }
