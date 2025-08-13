@@ -946,17 +946,22 @@ const TherapeuticJournal: React.FC<TherapeuticJournalProps> = ({ userId, onEntry
             </button>
 
             {/* Delete Button - Only show when editing existing entry */}
-            {viewMode === 'edit' && editingEntry && editingEntry.id && (
+            {(
               <button
                 onClick={() => {
-                  if (window.confirm('Are you sure you want to delete this journal entry? This action cannot be undone.')) {
-                    deleteEntry(editingEntry.id);
+                  console.log('Delete button clicked. ViewMode:', viewMode, 'EditingEntry:', editingEntry);
+                  if (editingEntry && editingEntry.id) {
+                    if (window.confirm('Are you sure you want to delete this journal entry? This action cannot be undone.')) {
+                      deleteEntry(editingEntry.id);
+                    }
+                  } else {
+                    alert('Debug: No editing entry found. ViewMode: ' + viewMode + ', EditingEntry: ' + JSON.stringify(editingEntry));
                   }
                 }}
                 className="bg-red-500 hover:bg-red-600 text-white py-4 px-6 rounded-xl font-medium transition-all flex items-center justify-center shadow-lg hover:shadow-xl"
               >
                 <Trash2 className="w-5 h-5 mr-2" />
-                Delete
+                Delete (Debug)
               </button>
             )}
           </div>
