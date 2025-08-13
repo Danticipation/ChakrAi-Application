@@ -690,6 +690,7 @@ const TherapeuticJournal: React.FC<TherapeuticJournalProps> = ({ userId, onEntry
                   <div className="flex gap-3 pt-4 border-t border-gray-200">
                     <button
                       onClick={() => {
+                        console.log('Edit Entry clicked. selectedEntry:', selectedEntry);
                         setEntry({
                           title: selectedEntry.title || '',
                           content: selectedEntry.content,
@@ -699,6 +700,8 @@ const TherapeuticJournal: React.FC<TherapeuticJournalProps> = ({ userId, onEntry
                           isPrivate: selectedEntry.isPrivate ?? true
                         });
                         setEditingEntry(selectedEntry); // Keep track of what we're editing
+                        console.log('Setting editingEntry to:', selectedEntry);
+                        console.log('Setting viewMode to: edit');
                         setSelectedEntry(null);
                         setViewMode('edit');
                       }}
