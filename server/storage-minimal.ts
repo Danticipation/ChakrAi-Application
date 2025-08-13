@@ -45,6 +45,7 @@ export interface IStorage {
   getMoodEntries(userId: number): Promise<any[]>;
   getUserMoodEntries(userId: number, limit?: number): Promise<any[]>;
   getMemoryInsights(userId: number): Promise<any[]>;
+  createMessage(data: any): Promise<any>;
 }
 
 export class MinimalStorage implements IStorage {
@@ -439,6 +440,26 @@ export class MinimalStorage implements IStorage {
     } catch (error) {
       console.error('Error getting memory insights:', error);
       return [];
+    }
+  }
+
+  async createMessage(data: any): Promise<any> {
+    try {
+      const messageData = {
+        userId: data.userId,
+        content: data.content || '',
+        isBot: data.isBot || false,
+        timestamp: new Date(),
+        metadata: data.metadata || {}
+      };
+      
+      console.log('💬 Saving message for user:', data.userId);
+      const [message] = await db.insert(messages).values(messageData).returning();
+      console.log('✅ Message saved successfully:', message.id);
+      return message;
+    } catch (error) {
+      console.error('❌ Error saving message:', error);
+      throw error;
     }
   }
 }
