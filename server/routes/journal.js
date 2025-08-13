@@ -102,36 +102,8 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Alternative create endpoint
-router.post('/create', async (req, res) => {
-  try {
-    console.log('Alternative journal create endpoint:', req.body);
-    
-    // Get user from device fingerprint instead of hardcoding
-    const { UserSessionManager } = await import('../userSession.js');
-    const userSessionManager = UserSessionManager.getInstance();
-    
-    const deviceFingerprint = req.headers['x-device-fingerprint'] || 
-                              userSessionManager.generateDeviceFingerprint(req);
-    const sessionId = req.headers['x-session-id'] || undefined;
-    
-    const anonymousUser = await userSessionManager.getOrCreateAnonymousUser(
-      (Array.isArray(deviceFingerprint) ? deviceFingerprint[0] : deviceFingerprint) || 'unknown', 
-      Array.isArray(sessionId) ? sessionId[0] : sessionId
-    );
-    
-    const entryData = {
-      ...req.body,
-      userId: anonymousUser.id // Use actual user ID from session
-    };
-    
-    const newEntry = await storage.createJournalEntry(entryData);
-    res.json(newEntry);
-  } catch (error) {
-    console.error('Failed to create journal entry via /create:', error);
-    res.status(500).json({ error: 'Failed to create journal entry' });
-  }
-});
+// REMOVED: Alternative create endpoint that caused user ID conflicts
+// All journal creation now uses healthcare-grade authentication via the main POST / endpoint
 
 // Journal analytics endpoint
 router.get('/analytics/:userId', async (req, res) => {
@@ -232,31 +204,9 @@ router.get('/analytics', async (req, res) => {
   }
 });
 
-// Generic entries endpoint for backward compatibility
-router.get('/entries', async (req, res) => {
-  try {
-    const { UserSessionManager } = await import('../userSession.js');
-    const userSessionManager = UserSessionManager.getInstance();
-    
-    // Get user from device fingerprint  
-    const deviceFingerprint = req.headers['x-device-fingerprint'] || 
-                              userSessionManager.generateDeviceFingerprint(req);
-    const sessionId = req.headers['x-session-id'] || undefined;
-    
-    const anonymousUser = await userSessionManager.getOrCreateAnonymousUser(
-      (Array.isArray(deviceFingerprint) ? deviceFingerprint[0] : deviceFingerprint) || 'unknown', 
-      Array.isArray(sessionId) ? sessionId[0] : sessionId
-    );
-    
-    console.log('Generic journal entries endpoint hit for user:', anonymousUser.id);
-    const entries = await storage.getJournalEntries(anonymousUser.id);
-    console.log('Retrieved entries via generic endpoint:', entries ? entries.length : 0);
-    res.json(entries || []);
-  } catch (error) {
-    console.error('Failed to fetch journal entries via generic endpoint:', error);
-    res.status(500).json({ error: 'Failed to fetch journal entries' });
-  }
-});
+// REMOVED: Conflicting authentication endpoint that caused user ID mismatches
+// All journal operations now use healthcare-grade authentication for data integrity
+// This endpoint caused catastrophic data integrity issues by using different user IDs
 
 // Delete journal entry endpoint
 router.delete('/:entryId', async (req, res) => {
@@ -305,34 +255,34 @@ router.delete('/:entryId', async (req, res) => {
   }
 });
 
-// Update journal entry endpoint
+// Update journal entry endpoint with healthcare-grade authentication
 router.put('/:entryId', async (req, res) => {
   try {
     const entryId = parseInt(req.params.entryId);
     
-    // Get user from device fingerprint to verify ownership
-    const { UserSessionManager } = await import('../userSession.js');
-    const userSessionManager = UserSessionManager.getInstance();
+    // CRITICAL: Use consistent healthcare authentication
+    const userId = req.userId; // From SecureAuthManager middleware
     
-    const deviceFingerprint = req.headers['x-device-fingerprint'] || 
-                              userSessionManager.generateDeviceFingerprint(req);
-    const sessionId = req.headers['x-session-id'] || undefined;
+    // Audit this update attempt
+    SecureAuthManager.auditUserAction(req, 'UPDATE_JOURNAL_ENTRY', entryId);
     
-    const anonymousUser = await userSessionManager.getOrCreateAnonymousUser(
-      (Array.isArray(deviceFingerprint) ? deviceFingerprint[0] : deviceFingerprint) || 'unknown', 
-      Array.isArray(sessionId) ? sessionId[0] : sessionId
-    );
+    console.log(`Healthcare-secure update: entry ${entryId} for user ${userId}`);
     
-    console.log(`Updating journal entry ${entryId} for user ${anonymousUser.id}`);
-    
-    // Verify the entry exists and belongs to this user
+    // Verify the entry exists and belongs to this user - HEALTHCARE SECURITY
     const existingEntry = await storage.getJournalEntry(entryId);
     if (!existingEntry) {
       return res.status(404).json({ error: 'Journal entry not found' });
     }
     
-    if (existingEntry.userId !== anonymousUser.id) {
-      return res.status(403).json({ error: 'Not authorized to update this entry' });
+    // Critical healthcare security check
+    SecureAuthManager.validateDataAccess(req, existingEntry.userId);
+    
+    if (existingEntry.userId !== userId) {
+      console.error(`[SECURITY VIOLATION] User ${userId} attempted to update entry ${entryId} belonging to user ${existingEntry.userId}`);
+      return res.status(403).json({ 
+        error: 'Unauthorized: Cannot update another user\'s entry',
+        code: 'HEALTHCARE_SECURITY_VIOLATION'
+      });
     }
     
     // Update the journal entry
@@ -345,7 +295,8 @@ router.put('/:entryId', async (req, res) => {
       isPrivate: req.body.isPrivate
     });
     
-    console.log(`✅ Journal entry ${entryId} updated successfully`);
+    console.log(`✅ Healthcare-secure update successful: entry ${entryId} for user ${userId}`);
+    SecureAuthManager.auditUserAction(req, 'UPDATE_SUCCESSFUL', entryId);
     res.json(updatedEntry);
   } catch (error) {
     console.error('Failed to update journal entry:', error);
