@@ -694,6 +694,7 @@ const TherapeuticJournal: React.FC<TherapeuticJournalProps> = ({ userId, onEntry
                   <div className="flex gap-3 pt-4 border-t border-gray-200">
                     <button
                       onClick={() => {
+                        console.log('🟦 Edit Entry button clicked!', selectedEntry);
                         setEntry({
                           title: selectedEntry.title || '',
                           content: selectedEntry.content,
@@ -703,6 +704,8 @@ const TherapeuticJournal: React.FC<TherapeuticJournalProps> = ({ userId, onEntry
                           isPrivate: selectedEntry.isPrivate ?? true
                         });
                         setEditingEntry(selectedEntry); // Keep track of what we're editing
+                        console.log('🟦 Setting editingEntry to:', selectedEntry);
+                        console.log('🟦 Setting viewMode to: edit');
                         setSelectedEntry(null);
                         setViewMode('edit');
                       }}
@@ -952,14 +955,16 @@ const TherapeuticJournal: React.FC<TherapeuticJournalProps> = ({ userId, onEntry
             {/* Debug Info - Make it prominent */}
             <div className="bg-yellow-200 text-black p-3 mb-4 rounded text-sm font-bold">
               🔍 DEBUG: viewMode="{viewMode}", editingEntry={editingEntry ? `id:${editingEntry.id}` : 'null'}
+              <br/>🔍 Also checking: entry.id exists = {entry.id ? 'YES' : 'NO'}
             </div>
             
-            {/* Delete Button - Only show when editing existing entry */}
-            {viewMode === 'edit' && editingEntry && editingEntry.id && (
+            {/* Delete Button - Show if we have editingEntry OR if entry has an ID (simpler approach) */}
+            {((viewMode === 'edit' && editingEntry && editingEntry.id) || (entry.id)) && (
               <button
                 onClick={() => {
-                  if (window.confirm('Are you sure you want to delete this journal entry? This action cannot be undone.')) {
-                    deleteEntry(editingEntry.id);
+                  const entryToDelete = editingEntry?.id || entry.id;
+                  if (entryToDelete && window.confirm('Are you sure you want to delete this journal entry? This action cannot be undone.')) {
+                    deleteEntry(entryToDelete);
                   }
                 }}
                 className="bg-red-500 hover:bg-red-600 text-white py-4 px-6 rounded-xl font-medium transition-all flex items-center justify-center shadow-lg hover:shadow-xl"
