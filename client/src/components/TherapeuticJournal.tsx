@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Mic, MicOff, Save, Plus, Calendar, Tag, Heart, Smile, Meh, Frown, AlertCircle, Send, Brain, BarChart3, Download, FileText } from 'lucide-react';
+import { Mic, MicOff, Save, Plus, Calendar, Tag, Heart, Smile, Meh, Frown, AlertCircle, Send, Brain, BarChart3, Download, FileText, Trash2 } from 'lucide-react';
 
 interface JournalEntry {
   id?: number;
@@ -906,28 +906,46 @@ const TherapeuticJournal: React.FC<TherapeuticJournalProps> = ({ userId, onEntry
             </label>
           </div>
 
-          {/* Save Button */}
-          <button
-            onClick={saveEntry}
-            disabled={isSaving || !entry.content.trim()}
-            className={`w-full py-4 rounded-xl font-medium transition-all flex items-center justify-center ${
-              isSaving || !entry.content.trim()
-                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                : 'bg-blue-500 hover:bg-blue-600 text-white shadow-lg hover:shadow-xl'
-            }`}
-          >
-            {isSaving ? (
-              <>
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                Saving...
-              </>
-            ) : (
-              <>
-                <Save className="w-5 h-5 mr-2" />
-                Save Journal Entry
-              </>
+          {/* Action Buttons */}
+          <div className="flex gap-3">
+            {/* Save Button */}
+            <button
+              onClick={saveEntry}
+              disabled={isSaving || !entry.content.trim()}
+              className={`flex-1 py-4 rounded-xl font-medium transition-all flex items-center justify-center ${
+                isSaving || !entry.content.trim()
+                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  : 'bg-blue-500 hover:bg-blue-600 text-white shadow-lg hover:shadow-xl'
+              }`}
+            >
+              {isSaving ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="w-5 h-5 mr-2" />
+                  Save Journal Entry
+                </>
+              )}
+            </button>
+
+            {/* Delete Button - Only show when editing existing entry */}
+            {viewMode === 'edit' && selectedEntry && selectedEntry.id && (
+              <button
+                onClick={() => {
+                  if (window.confirm('Are you sure you want to delete this journal entry? This action cannot be undone.')) {
+                    deleteEntry(selectedEntry.id);
+                  }
+                }}
+                className="bg-red-500 hover:bg-red-600 text-white py-4 px-6 rounded-xl font-medium transition-all flex items-center justify-center shadow-lg hover:shadow-xl"
+              >
+                <Trash2 className="w-5 h-5 mr-2" />
+                Delete
+              </button>
             )}
-          </button>
+          </div>
         </div>
         </>
         )}
