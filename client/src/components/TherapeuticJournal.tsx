@@ -696,6 +696,7 @@ const TherapeuticJournal: React.FC<TherapeuticJournalProps> = ({ userId, onEntry
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
+                        alert('🟦 Edit Entry button clicked!'); // SIMPLE TEST
                         console.log('🟦 Edit Entry button clicked!', selectedEntry);
                         console.log('🟦 selectedEntry has ID?', selectedEntry?.id ? 'YES' : 'NO');
                         
@@ -987,7 +988,7 @@ const TherapeuticJournal: React.FC<TherapeuticJournalProps> = ({ userId, onEntry
                       console.log('🔴 Delete successful, resetting states');
                       // Reset states after successful delete
                       setEditingEntry(null);
-                      setViewMode('create');
+                      setViewMode('view');
                       setEntry({
                         title: '',
                         content: '',
