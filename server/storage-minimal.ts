@@ -36,6 +36,7 @@ export interface IStorage {
   updateUserLastActive(userId: number): Promise<void>;
   createUser(data: any): Promise<any>;
   createJournalEntry(data: any): Promise<any>;
+  getJournalEntries(userId: number, limit?: number): Promise<any[]>;
   getUserMessages(userId: number, limit?: number): Promise<any[]>;
   getUserMemories(userId: number): Promise<any[]>;
   getUserFacts(userId: number): Promise<any[]>;
@@ -300,6 +301,22 @@ export class MinimalStorage implements IStorage {
     } catch (error) {
       console.error('Error creating journal entry:', error);
       throw error;
+    }
+  }
+
+  async getJournalEntries(userId: number, limit: number = 50): Promise<any[]> {
+    try {
+      const entries = await db.select()
+        .from(journalEntries)
+        .where(eq(journalEntries.userId, userId))
+        .orderBy(desc(journalEntries.createdAt))
+        .limit(limit);
+      
+      console.log(`📔 Retrieved ${entries.length} journal entries for user ${userId}`);
+      return entries;
+    } catch (error) {
+      console.error('Error getting journal entries:', error);
+      return [];
     }
   }
 
