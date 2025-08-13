@@ -4,12 +4,12 @@ import {
   therapists, therapistSessions, therapistSharedInsights, collaborationSettings,
   userAchievements, wellnessStreaks, dailyActivities,
   supportForums, forumPosts, forumReplies, peerCheckIns, peerSessions, communityModerations,
-  userPreferences, conversationPatterns, wellnessRecommendations, adaptationInsights, userFeedback, monthlyReports,
+  userPreferences, conversationPatterns, wellnessRecommendations, userFeedback, monthlyReports,
   wearableDevices, healthMetrics, healthCorrelations, syncLogs,
   vrEnvironments, vrSessions, vrProgressTracking, vrTherapeuticPlans, vrAccessibilityProfiles,
-  userWellnessPoints, rewardsShop, userRewards, communityChallengess, challengeParticipants, challengeActivities, emotionalAchievements, userEmotionalAchievements, pointsHistory,
+
   moodForecasts, emotionalContexts, predictiveInsights, emotionalResponseAdaptations,
-  aiPerformanceMetrics, aiResponseAnalysis, crisisDetectionLogs, therapeuticEffectivenessTracking, systemPerformanceDashboard,
+
   type User, type InsertUser, type Bot, type InsertBot,
   type Message, type InsertMessage, type LearnedWord, type InsertLearnedWord,
   type Milestone, type InsertMilestone, type UserMemory, type InsertUserMemory,
@@ -36,7 +36,7 @@ import {
   type UserPreferences, type InsertUserPreferences,
   type ConversationPattern, type InsertConversationPattern,
   type WellnessRecommendation, type InsertWellnessRecommendation,
-  type AdaptationInsight, type InsertAdaptationInsight,
+
   type UserFeedback, type InsertUserFeedback,
   type MonthlyReport, type InsertMonthlyReport,
   type WearableDevice, type InsertWearableDevice,
@@ -183,6 +183,27 @@ export interface IStorage {
   createUserFeedback(feedback: InsertUserFeedback): Promise<UserFeedback>;
   getConversationPatterns(userId: number): Promise<ConversationPattern[]>;
   createConversationPattern(pattern: InsertConversationPattern): Promise<ConversationPattern>;
+
+  // CRITICAL SEMANTIC MEMORY METHODS - MEMORY SYSTEM FIX  
+  getRecentSemanticMemories(userId: number, limit?: number): Promise<any[]>;
+  createSemanticMemory(data: any): Promise<any>;
+  searchSemanticMemories(userId: number, searchTerms: string[], limit?: number): Promise<any[]>;
+  getMemoryConnections(memoryId: number): Promise<any[]>;
+  createMemoryConnection(data: any): Promise<any>;
+  updateMemoryAccessCount(memoryId: number): Promise<void>;
+  getAllUserMemoryConnections(userId: number): Promise<any[]>;
+  getConversationSessionHistory(userId: number, limit?: number): Promise<any[]>;
+  getUnaddressedContinuity(userId: number): Promise<any[]>;
+  getActiveConversationThreads(userId: number): Promise<any[]>;
+  markContinuityAddressed(continuityId: number): Promise<void>;
+
+  // Conversation Continuity methods
+  getActiveConversationSession(userId: number): Promise<any>;
+  createConversationSession(data: any): Promise<any>;
+  updateConversationSession(id: number, data: any): Promise<any>;
+  createConversationThread(data: any): Promise<any>;
+  updateConversationThread(id: number, data: any): Promise<any>;
+  createSessionContinuity(data: any): Promise<any>;
   getMonthlyReport(userId: number, reportMonth: string): Promise<MonthlyReport | undefined>;
   saveMonthlyReport(report: InsertMonthlyReport): Promise<MonthlyReport>;
   getMonthlyReportById(reportId: number): Promise<MonthlyReport | undefined>;
@@ -1629,6 +1650,215 @@ export class DatabaseStorage implements IStorage {
       userSatisfactionAverage: Number(userSatisfactionMetrics[0]?.avg || 0),
       averageResponseTime: Number(responseTimeMetrics[0]?.avg || 0)
     };
+  }
+
+  // CRITICAL SEMANTIC MEMORY METHODS IMPLEMENTATION - MEMORY SYSTEM FIX
+  async getRecentSemanticMemories(userId: number, limit: number = 10): Promise<any[]> {
+    try {
+      const { semanticMemories } = await import('@shared/schema');
+      const { eq, desc } = await import('drizzle-orm');
+      
+      const memories = await db.select()
+        .from(semanticMemories)
+        .where(eq(semanticMemories.userId, userId))
+        .orderBy(desc(semanticMemories.createdAt))
+        .limit(limit);
+      
+      console.log(`📚 Retrieved ${memories.length} semantic memories for user ${userId}`);
+      return memories;
+    } catch (error) {
+      console.error('Error retrieving semantic memories:', error);
+      return [];
+    }
+  }
+
+  async createSemanticMemory(data: any): Promise<any> {
+    try {
+      const { semanticMemories } = await import('@shared/schema');
+      
+      const memoryData = {
+        userId: data.userId,
+        memoryType: data.memoryType || 'conversation',
+        content: data.content,
+        semanticTags: data.semanticTags || [],
+        emotionalContext: data.emotionalContext,
+        temporalContext: data.temporalContext,
+        relatedTopics: data.relatedTopics || [],
+        confidence: data.confidence || '0.85',
+        accessCount: 0,
+        sourceConversationId: data.sourceConversationId,
+        isActiveMemory: true,
+        createdAt: new Date()
+      };
+      
+      const [memory] = await db.insert(semanticMemories).values(memoryData).returning();
+      console.log(`💾 Created semantic memory: ${memory.id}`);
+      return memory;
+    } catch (error) {
+      console.error('Error creating semantic memory:', error);
+      throw error;
+    }
+  }
+
+  async searchSemanticMemories(userId: number, searchTerms: string[], limit: number = 5): Promise<any[]> {
+    try {
+      const { semanticMemories } = await import('@shared/schema');
+      const { eq, and, or, ilike, desc } = await import('drizzle-orm');
+      
+      if (!searchTerms || searchTerms.length === 0) {
+        return [];
+      }
+      
+      const searchConditions = searchTerms.map(term => 
+        or(
+          ilike(semanticMemories.content, `%${term}%`),
+          ilike(semanticMemories.emotionalContext, `%${term}%`)
+        )
+      );
+      
+      const memories = await db.select()
+        .from(semanticMemories)
+        .where(and(
+          eq(semanticMemories.userId, userId),
+          eq(semanticMemories.isActiveMemory, true),
+          or(...searchConditions)
+        ))
+        .orderBy(desc(semanticMemories.lastAccessedAt), desc(semanticMemories.createdAt))
+        .limit(limit);
+      
+      console.log(`🔍 Found ${memories.length} semantic memories for search: ${searchTerms.join(', ')}`);
+      return memories;
+    } catch (error) {
+      console.error('Error searching semantic memories:', error);
+      return [];
+    }
+  }
+
+  async getMemoryConnections(memoryId: number): Promise<any[]> {
+    try {
+      const { memoryConnections } = await import('@shared/schema');
+      const { eq, or } = await import('drizzle-orm');
+      
+      const connections = await db.select()
+        .from(memoryConnections)
+        .where(or(
+          eq(memoryConnections.fromMemoryId, memoryId),
+          eq(memoryConnections.toMemoryId, memoryId)
+        ));
+      
+      return connections;
+    } catch (error) {
+      console.error('Error getting memory connections:', error);
+      return [];
+    }
+  }
+
+  async createMemoryConnection(data: any): Promise<any> {
+    try {
+      const { memoryConnections } = await import('@shared/schema');
+      
+      const connectionData = {
+        userId: data.userId,
+        fromMemoryId: data.fromMemoryId,
+        toMemoryId: data.toMemoryId,
+        connectionType: data.connectionType || 'relates_to',
+        strength: data.strength || '0.50',
+        automaticConnection: data.automaticConnection !== false,
+        createdAt: new Date()
+      };
+      
+      const [connection] = await db.insert(memoryConnections).values(connectionData).returning();
+      return connection;
+    } catch (error) {
+      console.error('Error creating memory connection:', error);
+      throw error;
+    }
+  }
+
+  async updateMemoryAccessCount(memoryId: number): Promise<void> {
+    try {
+      const { semanticMemories } = await import('@shared/schema');
+      const { eq, sql } = await import('drizzle-orm');
+      
+      await db.update(semanticMemories)
+        .set({
+          accessCount: sql`${semanticMemories.accessCount} + 1`,
+          lastAccessedAt: new Date()
+        })
+        .where(eq(semanticMemories.id, memoryId));
+    } catch (error) {
+      console.error('Error updating memory access count:', error);
+    }
+  }
+
+  async getAllUserMemoryConnections(userId: number): Promise<any[]> {
+    try {
+      const { memoryConnections } = await import('@shared/schema');
+      const { eq } = await import('drizzle-orm');
+      
+      const connections = await db.select()
+        .from(memoryConnections)
+        .where(eq(memoryConnections.userId, userId));
+      
+      return connections;
+    } catch (error) {
+      console.error('Error getting user memory connections:', error);
+      return [];
+    }
+  }
+
+  // Basic implementations for conversation continuity
+  async getConversationSessionHistory(userId: number, limit: number = 3): Promise<any[]> {
+    return [];
+  }
+
+  async getUnaddressedContinuity(userId: number): Promise<any[]> {
+    return [];
+  }
+
+  async getActiveConversationThreads(userId: number): Promise<any[]> {
+    return [];
+  }
+
+  async markContinuityAddressed(continuityId: number): Promise<void> {
+    // Placeholder
+  }
+
+  async getActiveConversationSession(userId: number): Promise<any> {
+    return null;
+  }
+
+  async createConversationSession(data: any): Promise<any> {
+    return {
+      id: Date.now(),
+      userId: data.userId,
+      sessionKey: data.sessionKey,
+      title: data.title || "New Conversation",
+      keyTopics: data.keyTopics || [],
+      emotionalTone: data.emotionalTone || "neutral",
+      unresolvedThreads: data.unresolvedThreads || {},
+      contextCarryover: data.contextCarryover || {},
+      messageCount: data.messageCount || 0,
+      isActive: true,
+      lastActivity: new Date(),
+      createdAt: new Date()
+    };
+  }
+
+  async updateConversationSession(id: number, data: any): Promise<any> {
+    return { ...data, id, updatedAt: new Date() };
+  }
+
+  async createConversationThread(data: any): Promise<any> {
+    return { ...data, id: Date.now(), createdAt: new Date() };
+  }
+
+  async updateConversationThread(id: number, data: any): Promise<any> {
+    return { ...data, id, updatedAt: new Date() };
+  }
+
+  async createSessionContinuity(data: any): Promise<any> {
+    return { ...data, id: Date.now(), createdAt: new Date() };
   }
 }
 
