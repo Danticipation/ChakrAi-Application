@@ -2,7 +2,7 @@ import React, { lazy } from 'react';
 import { getCurrentUserId as fetchCurrentUserId } from '@/utils/userSession';
 
 const PersonalityReflection = lazy(() => import('@/components/PersonalityReflection'));
-const TherapeuticJournal = lazy(() => import('@/components/TherapeuticJournal'));
+const EnhancedJournalInterface = lazy(() => import('@/components/EnhancedJournalInterface'));
 const MemoryDashboard = lazy(() => import('@/components/MemoryDashboard'));
 const AnalyticsDashboard = lazy(() => import('@/components/AnalyticsDashboard'));
 const VoluntaryQuestionDeck = lazy(() => import('@/components/VoluntaryQuestionDeck'));
@@ -44,7 +44,7 @@ export const getSectionComponentMap = ({ fetchStreakStats, setActiveSection, han
 
   return {
     'daily': <PersonalityReflection userId={userId} />, 
-    'journal': <TherapeuticJournal userId={userId} onEntryCreated={fetchStreakStats} />, 
+    'journal': <EnhancedJournalInterface userId={userId} onEntryCreated={fetchStreakStats} />, 
     'memory': <MemoryDashboard />, 
     'analytics': <AnalyticsDashboard userId={userId} />, 
     'questions': <VoluntaryQuestionDeck />, 

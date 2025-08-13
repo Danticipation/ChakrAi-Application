@@ -19,7 +19,7 @@ import BeautifulChat from '@/components/BeautifulChat';
 import PersonalityQuiz from '@/components/PersonalityQuiz';
 import VoluntaryQuestionDeck from '@/components/VoluntaryQuestionDeck';
 import FeedbackSystem from '@/components/FeedbackSystem';
-import TherapeuticJournal from '@/components/TherapeuticJournal';
+import EnhancedJournalInterface from '@/components/EnhancedJournalInterface';
 import PersonalityReflection from '@/components/PersonalityReflection';
 import MicrophoneTest from '@/components/MicrophoneTest';
 import AnalyticsDashboard from '@/components/AnalyticsDashboard';
