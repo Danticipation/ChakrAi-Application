@@ -122,11 +122,16 @@ const WellnessDashboard: React.FC<WellnessDashboardProps> = ({ userId, onNavigat
     }
   ];
 
-  const recentActivities = [
-    { type: "journal", label: "Journal Entry", time: "2 hours ago", icon: BookOpen },
-    { type: "meditation", label: "Morning Meditation", time: "Yesterday", icon: Heart },
-    { type: "chat", label: "AI Conversation", time: "2 days ago", icon: MessageCircle }
-  ];
+  // Fetch real recent activities
+  const { data: recentActivities } = useQuery({
+    queryKey: ['recent-activities', userId],
+    queryFn: async () => {
+      if (!userId) return [];
+      const response = await axios.get(`/api/dashboard/recent-activities/${userId}`);
+      return response.data;
+    },
+    enabled: !!userId,
+  });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-purple-900 p-6">
@@ -240,16 +245,24 @@ const WellnessDashboard: React.FC<WellnessDashboardProps> = ({ userId, onNavigat
           <div className="p-6 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20">
             <h3 className="text-xl font-semibold text-white mb-4">Recent Activity</h3>
             <div className="space-y-3">
-              {recentActivities.map((activity, index) => {
-                const Icon = activity.icon;
+              {(recentActivities || []).map((activity, index) => {
+                const getIcon = () => {
+                  switch(activity.type) {
+                    case 'journal': return BookOpen;
+                    case 'meditation': return Heart;
+                    case 'chat': return MessageCircle;
+                    default: return Target;
+                  }
+                };
+                const Icon = getIcon();
                 return (
-                  <div key={index} className="flex items-center space-x-3 p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors duration-300">
+                  <div key={activity.id || index} className="flex items-center space-x-3 p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors duration-300">
                     <div className="p-2 rounded-lg bg-blue-500/20">
                       <Icon className="w-4 h-4 text-blue-300" />
                     </div>
                     <div className="flex-1">
-                      <div className="text-white text-sm font-medium">{activity.label}</div>
-                      <div className="text-white/60 text-xs">{activity.time}</div>
+                      <div className="text-white text-sm font-medium">{activity.label || activity.description}</div>
+                      <div className="text-white/60 text-xs">{activity.timeAgo || 'Recently'}</div>
                     </div>
                   </div>
                 );

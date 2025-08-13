@@ -14,6 +14,9 @@ import meditationRoutes from './meditation.js';
 import comprehensiveAnalyticsRoutes from './comprehensiveAnalytics.js';
 import textToSpeechRoutes from './textToSpeech.js';
 import dashboardRoutes from './dashboard.js';
+import dashboardActivitiesRoutes from './dashboardActivities.js';
+import personalityQuizRoutes from './personalityQuiz.js';
+import ambientSoundsRoutes from './ambientSounds.js';
 
 const router = express.Router();
 
@@ -37,6 +40,9 @@ router.use('/journal', journalRoutes);
 router.use('/meditation', meditationRoutes);
 router.use('/analytics', comprehensiveAnalyticsRoutes);
 router.use('/dashboard', dashboardRoutes);
+router.use('/dashboard', dashboardActivitiesRoutes);
+router.use('/personality-quiz', personalityQuizRoutes);
+router.use('/ambient-sounds', ambientSoundsRoutes);
 router.use('/', textToSpeechRoutes);
 
 // Legacy endpoints for backward compatibility
@@ -54,6 +60,9 @@ router.use('/', journalRoutes);
 router.use('/', meditationRoutes);
 router.use('/', comprehensiveAnalyticsRoutes);
 router.use('/', dashboardRoutes);
+router.use('/', dashboardActivitiesRoutes);
+router.use('/', personalityQuizRoutes);
+router.use('/', ambientSoundsRoutes);
 router.use('/', textToSpeechRoutes);
 
 export default router;
