@@ -131,8 +131,9 @@ const BeautifulMeditation: React.FC = () => {
         },
         body: JSON.stringify({
           text: script,
-          voice: 'Alexandra', // Use Alexandra for meditation (calming voice)
-          language: 'en'
+          voice: 'alexandra', // Use Alexandra for meditation (calming voice)
+          stability: 0.4, // More stable for meditation
+          similarity_boost: 0.8 // Higher similarity for consistent voice
         }),
       });
 
