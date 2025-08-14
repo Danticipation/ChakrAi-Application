@@ -45,6 +45,7 @@ import ChallengeSystem from '@/components/ChallengeSystem';
 import SupabaseSetup from '@/components/SupabaseSetup';
 import { VoiceRecorder } from '@/utils/voiceRecorder';
 import { getCurrentUserId, generateDeviceFingerprint } from '@/utils/userSession';
+import OnboardingTour from '@/components/OnboardingTour';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -651,7 +652,7 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
         <div className="fixed top-0 left-0 right-0 z-50 theme-card border-b border-white/10 p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <img src={chakraiLogo} alt="Chakrai" className="h-8 w-auto" />
+              <img src={chakraiLogo} alt="Chakrai" className="h-8 w-auto chakrai-logo" />
               <div>
                 <p className="text-white font-bold text-lg">Chakrai</p>
                 <p className="text-white/70 text-xs">Mental Wellness</p>
@@ -662,6 +663,7 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
                 onClick={() => setShowSettings(true)}
                 className="p-2 theme-text-secondary rounded-lg hover:bg-white/10 transition-colors"
                 title="Voice Settings"
+                data-tour="settings-button"
               >
                 <Settings className="w-5 h-5" />
               </button>
@@ -669,6 +671,7 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 className="p-2 theme-text rounded-lg hover:bg-white/10 transition-colors"
                 title="Menu"
+                data-tour="mobile-menu"
               >
                 <Menu className="w-6 h-6" />
               </button>
@@ -896,11 +899,11 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
         <div className="fixed bottom-0 left-0 right-0 z-50 theme-card border-t border-white/10">
           <div className="flex items-center justify-around py-2">
             {[
-              { id: 'home', label: 'Home', icon: Home },
-              { id: 'chat', label: 'Chat', icon: MessageCircle },
-              { id: 'journal', label: 'Journal', icon: BookOpen },
-              { id: 'meditation', label: 'Meditate', icon: Sparkles },
-              { id: 'analytics', label: 'Insights', icon: BarChart3 }
+              { id: 'home', label: 'Home', icon: Home, tourId: 'home-button' },
+              { id: 'chat', label: 'Chat', icon: MessageCircle, tourId: 'chat-button' },
+              { id: 'journal', label: 'Journal', icon: BookOpen, tourId: 'journal-button' },
+              { id: 'meditation', label: 'Meditate', icon: Sparkles, tourId: 'meditation-button' },
+              { id: 'analytics', label: 'Insights', icon: BarChart3, tourId: 'analytics-button' }
             ].map((item) => {
               const IconComponent = item.icon;
               return (
@@ -912,6 +915,7 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
                       ? 'theme-text bg-blue-500/20'
                       : 'theme-text-secondary hover:theme-text'
                   }`}
+                  data-tour={item.tourId}
                 >
                   <IconComponent className="w-5 h-5 mb-1" />
                   <span className="text-xs">{item.label}</span>
@@ -936,6 +940,8 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
         <ThemeSelector onClose={() => setShowThemeModal(false)} />
       )}
 
+
+
       {/* Removed duplicate chat components - using only main chat interface in "Chat with Chakrai" section */}
     </div>
   );
@@ -946,6 +952,7 @@ const AppWithOnboarding = () => {
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
   const [showPersonalityQuiz, setShowPersonalityQuiz] = useState(false);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+  const [showOnboardingTour, setShowOnboardingTour] = useState(false);
 
   // User session management
   useEffect(() => {
@@ -987,6 +994,15 @@ const AppWithOnboarding = () => {
         } catch (profileError) {
           console.warn('Profile check failed, defaulting to main app:', profileError);
           setShowPersonalityQuiz(false);
+        }
+
+        // Check if user needs onboarding tour
+        const tourCompleted = localStorage.getItem('chakrai_tour_completed');
+        if (!tourCompleted) {
+          // Small delay to ensure UI is fully loaded
+          setTimeout(() => {
+            setShowOnboardingTour(true);
+          }, 1000);
         }
       } catch (error) {
         console.error('Failed to initialize user:', error);
@@ -1064,7 +1080,23 @@ const AppWithOnboarding = () => {
     );
   }
 
-  return <AppLayout currentUserId={currentUserId} onDataReset={handleDataReset} />;
+  return (
+    <>
+      <AppLayout 
+        currentUserId={currentUserId} 
+        onDataReset={handleDataReset}
+      />
+      {/* Onboarding Tour at App Level */}
+      {showOnboardingTour && (
+        <OnboardingTour
+          onComplete={() => setShowOnboardingTour(false)}
+          onSkip={() => setShowOnboardingTour(false)}
+          currentSection="home"
+          onNavigate={() => {}}
+        />
+      )}
+    </>
+  );
 };
 
 export default function App() {
