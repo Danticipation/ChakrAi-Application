@@ -114,6 +114,8 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({
     
     // Find and highlight target element
     const findTargetElement = () => {
+      if (!currentStepData) return;
+      
       const element = document.querySelector(currentStepData.target) as HTMLElement;
       if (element) {
         setTargetElement(element);
@@ -205,7 +207,7 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({
       border: '3px solid #3B82F6',
       backgroundColor: 'rgba(59, 130, 246, 0.1)',
       boxShadow: '0 0 0 4px rgba(59, 130, 246, 0.3), 0 0 20px rgba(59, 130, 246, 0.5)',
-      animation: 'pulse 2s infinite',
+      animation: 'tourPulse 2s infinite',
       pointerEvents: 'none' as const,
       zIndex: 9999
     };
@@ -232,15 +234,15 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({
         <div 
           className="fixed z-[9999]"
           style={{
-            top: tooltipPosition.top,
-            left: tooltipPosition.left,
+            top: Math.max(20, Math.min(window.innerHeight - 200, tooltipPosition.top)),
+            left: Math.max(20, Math.min(window.innerWidth - 340, tooltipPosition.left)),
             transform: currentStepData.position === 'top' ? 'translate(-50%, -100%)' :
                       currentStepData.position === 'bottom' ? 'translate(-50%, 0)' :
                       currentStepData.position === 'left' ? 'translate(-100%, -50%)' :
                       'translate(0, -50%)'
           }}
         >
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl border border-gray-200 dark:border-gray-700 p-6 max-w-sm w-80 mx-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl border border-gray-200 dark:border-gray-700 p-4 sm:p-6 max-w-xs sm:max-w-sm w-72 sm:w-80 mx-2 sm:mx-4">
             {/* Arrow pointing to target */}
             <div 
               className={`absolute w-3 h-3 bg-white dark:bg-gray-800 border transform rotate-45 ${
@@ -328,17 +330,7 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({
         </div>
       </div>
       
-      {/* Add CSS keyframes for pulse animation */}
-      <style jsx>{`
-        @keyframes pulse {
-          0%, 100% {
-            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.3), 0 0 20px rgba(59, 130, 246, 0.5);
-          }
-          50% {
-            box-shadow: 0 0 0 8px rgba(59, 130, 246, 0.2), 0 0 30px rgba(59, 130, 246, 0.7);
-          }
-        }
-      `}</style>
+
     </>
   );
 };

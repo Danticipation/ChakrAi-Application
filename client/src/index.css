@@ -72,6 +72,22 @@ h1, h2, h3, h4, h5, h6 {
   --neon-cyan: #00ffff;
   --neon-cyan-glow: rgba(0, 255, 255, 0.8);
   --neon-cyan-dim: rgba(0, 255, 255, 0.4);
+
+  /* Layout dimensions */
+  --sidebar-width: 280px;
+  --sidebar-width-collapsed: 80px;
+}
+
+/* Onboarding Tour Animations */
+@keyframes tourPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.3), 0 0 20px rgba(59, 130, 246, 0.5);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(59, 130, 246, 0.2), 0 0 30px rgba(59, 130, 246, 0.7);
+    transform: scale(1.02);
+  }
 }
 
 /* Custom animations for enhanced UX */

@@ -667,6 +667,17 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
               >
                 <Settings className="w-5 h-5" />
               </button>
+              {/* Tour test button (dev only) */}
+              <button
+                onClick={() => {
+                  localStorage.removeItem('chakrai_tour_completed');
+                  setShowOnboardingTour(true);
+                }}
+                className="p-2 theme-text-secondary rounded-lg hover:bg-white/10 transition-colors text-xs"
+                title="Start Tour"
+              >
+                🎯
+              </button>
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 className="p-2 theme-text rounded-lg hover:bg-white/10 transition-colors"
@@ -1002,7 +1013,7 @@ const AppWithOnboarding = () => {
           // Small delay to ensure UI is fully loaded
           setTimeout(() => {
             setShowOnboardingTour(true);
-          }, 1000);
+          }, 2000);
         }
       } catch (error) {
         console.error('Failed to initialize user:', error);
