@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import NeonCursor from '@/components/neon-cursor';
 import { QueryClient, QueryClientProvider, useQuery, useQueryClient } from '@tanstack/react-query';
-import { MessageCircle, Brain, BookOpen, Mic, User, Square, Send, Target, RotateCcw, Sun, Star, Heart, BarChart3, Gift, Headphones, Shield, X, Palette, Settings, ChevronDown, ChevronRight } from 'lucide-react';
+import { MessageCircle, Brain, BookOpen, Mic, User, Square, Send, Target, RotateCcw, Sun, Star, Heart, BarChart3, Gift, Headphones, Shield, X, Palette, Settings, ChevronDown, ChevronRight, Menu, Home, Users, Sparkles } from 'lucide-react';
 import axios from 'axios';
 import { useTheme, ThemeProvider } from '@/contexts/ThemeContext';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
@@ -657,12 +657,22 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
                 <p className="text-white/70 text-xs">Mental Wellness</p>
               </div>
             </div>
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 theme-text rounded-lg hover:bg-white/10 transition-colors"
-            >
-              <Settings className="w-6 h-6" />
-            </button>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => setShowSettings(true)}
+                className="p-2 theme-text-secondary rounded-lg hover:bg-white/10 transition-colors"
+                title="Voice Settings"
+              >
+                <Settings className="w-5 h-5" />
+              </button>
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="p-2 theme-text rounded-lg hover:bg-white/10 transition-colors"
+                title="Menu"
+              >
+                <Menu className="w-6 h-6" />
+              </button>
+            </div>
           </div>
         </div>
 
@@ -673,7 +683,7 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
             <div className="fixed top-0 right-0 h-full w-80 theme-card border-l border-white/10 overflow-y-auto">
               <div className="p-4">
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold theme-text">Navigation</h3>
+                  <h3 className="text-lg font-semibold theme-text">Features & Tools</h3>
                   <button
                     onClick={() => setMobileMenuOpen(false)}
                     className="p-2 theme-text-secondary hover:theme-text rounded-lg"
@@ -874,11 +884,40 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
         )}
 
         {/* Mobile Content */}
-        <div className="pt-20 min-h-screen">
+        <div className="pt-20 pb-20 min-h-screen">
           <div className="p-4">
             <ErrorBoundary>
               {renderActiveSection()}
             </ErrorBoundary>
+          </div>
+        </div>
+
+        {/* Mobile Bottom Navigation */}
+        <div className="fixed bottom-0 left-0 right-0 z-50 theme-card border-t border-white/10">
+          <div className="flex items-center justify-around py-2">
+            {[
+              { id: 'home', label: 'Home', icon: Home },
+              { id: 'chat', label: 'Chat', icon: MessageCircle },
+              { id: 'journal', label: 'Journal', icon: BookOpen },
+              { id: 'meditation', label: 'Meditate', icon: Sparkles },
+              { id: 'analytics', label: 'Insights', icon: BarChart3 }
+            ].map((item) => {
+              const IconComponent = item.icon;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveSection(item.id)}
+                  className={`flex flex-col items-center justify-center p-2 rounded-lg transition-colors ${
+                    activeSection === item.id
+                      ? 'theme-text bg-blue-500/20'
+                      : 'theme-text-secondary hover:theme-text'
+                  }`}
+                >
+                  <IconComponent className="w-5 h-5 mb-1" />
+                  <span className="text-xs">{item.label}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>
