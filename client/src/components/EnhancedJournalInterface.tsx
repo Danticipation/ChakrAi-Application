@@ -109,6 +109,108 @@ const EnhancedJournalInterface: React.FC<EnhancedJournalInterfaceProps> = ({ use
     }
   };
 
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          sampleRate: 44100
+        } 
+      });
+      
+      // Use MP4/WAV for better OpenAI Whisper compatibility
+      let mimeType = 'audio/mp4';
+      if (!MediaRecorder.isTypeSupported(mimeType)) {
+        mimeType = 'audio/wav';
+        if (!MediaRecorder.isTypeSupported(mimeType)) {
+          throw new Error('Browser does not support MP4 or WAV recording. WebM causes transcription failures.');
+        }
+      }
+      
+      console.log('🎵 EnhancedJournalInterface using audio format:', mimeType);
+      const mediaRecorder = new MediaRecorder(stream, { mimeType });
+      
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+      
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+      
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
+        console.log('🎵 EnhancedJournalInterface audio blob type:', audioBlob.type);
+        await transcribeAudio(audioBlob);
+        stream.getTracks().forEach(track => track.stop());
+      };
+      
+      mediaRecorder.start();
+      setIsRecording(true);
+      
+      // Auto-stop after 2 minutes
+      setTimeout(() => {
+        if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+          stopRecording();
+        }
+      }, 120000);
+      
+    } catch (error) {
+      console.error('Error starting recording:', error);
+      alert('Could not access microphone. Please check permissions.');
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      setIsTranscribing(true);
+    }
+  };
+
+  const transcribeAudio = async (audioBlob: Blob) => {
+    try {
+      const formData = new FormData();
+      formData.append('audio', audioBlob, 'journal-recording.mp4');
+
+      const response = await fetch('/api/transcribe', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.text) {
+          // Append transcribed text to current content
+          setEntry(prev => ({
+            ...prev,
+            content: prev.content + (prev.content ? '\n\n' : '') + data.text
+          }));
+          
+          // Focus the textarea and move cursor to the end
+          if (textareaRef.current) {
+            textareaRef.current.focus();
+            textareaRef.current.setSelectionRange(
+              textareaRef.current.value.length,
+              textareaRef.current.value.length
+            );
+          }
+        }
+      } else {
+        console.error('Transcription failed:', response.statusText);
+        alert('Failed to transcribe audio. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error transcribing audio:', error);
+      alert('Error processing audio. Please try again.');
+    } finally {
+      setIsTranscribing(false);
+    }
+  };
+
   const getMoodEmoji = (mood: string) => {
     const moodOption = moodOptions.find(option => option.value === mood);
     return moodOption?.icon || '😐';
@@ -283,14 +385,30 @@ const EnhancedJournalInterface: React.FC<EnhancedJournalInterfaceProps> = ({ use
           </label>
           <div className="flex items-center gap-2">
             <button
-              onClick={() => {/* Voice recording logic */}}
-              className={`p-2 rounded-xl transition-all duration-200 ${
+              onClick={isRecording ? stopRecording : startRecording}
+              disabled={isTranscribing}
+              className={`p-2 rounded-xl transition-all duration-200 disabled:opacity-50 ${
                 isRecording 
                   ? 'bg-red-100 text-red-600 animate-pulse' 
+                  : isTranscribing
+                  ? 'bg-blue-100 text-blue-600'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
+              title={
+                isTranscribing 
+                  ? 'Converting speech to text...' 
+                  : isRecording 
+                  ? 'Stop recording' 
+                  : 'Start voice recording'
+              }
             >
-              {isRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+              {isTranscribing ? (
+                <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+              ) : isRecording ? (
+                <MicOff className="w-4 h-4" />
+              ) : (
+                <Mic className="w-4 h-4" />
+              )}
             </button>
           </div>
         </div>
