@@ -17,6 +17,7 @@ import dashboardRoutes from './dashboard.js';
 import dashboardActivitiesRoutes from './dashboardActivities.js';
 import personalityQuizRoutes from './personalityQuiz.js';
 import ambientSoundsRoutes from './ambientSounds.js';
+import adaptiveLearningRoutes from './adaptiveLearningRoutes.ts';
 
 const router = express.Router();
 
@@ -43,6 +44,7 @@ router.use('/dashboard', dashboardRoutes);
 router.use('/dashboard', dashboardActivitiesRoutes);
 router.use('/personality-quiz', personalityQuizRoutes);
 router.use('/ambient-sounds', ambientSoundsRoutes);
+router.use('/adaptive-learning', adaptiveLearningRoutes);
 router.use('/', textToSpeechRoutes);
 
 // Legacy endpoints for backward compatibility
@@ -63,6 +65,7 @@ router.use('/', dashboardRoutes);
 router.use('/', dashboardActivitiesRoutes);
 router.use('/', personalityQuizRoutes);
 router.use('/', ambientSoundsRoutes);
+router.use('/', adaptiveLearningRoutes);
 router.use('/', textToSpeechRoutes);
 
 export default router;
