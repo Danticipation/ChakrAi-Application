@@ -368,8 +368,8 @@ export function InteractiveDashboard({ userId }: InteractiveDashboardProps) {
                       from: dateRange.start,
                       to: dateRange.end,
                     }}
-                    onSelect={(range: { from?: Date; to?: Date } | undefined) => {
-                      if (range && typeof range === 'object' && 'from' in range && range.from && range.to) {
+                    onSelect={(range) => {
+                      if (range?.from && range?.to) {
                         handleDateRangeChange({ start: range.from, end: range.to });
                       }
                     }}

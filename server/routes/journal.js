@@ -1,43 +1,47 @@
 import express from 'express';
-import { storage } from '../storage.js';
-import { SecureAuthManager } from '../middleware/secureAuth.js';
+import { uidStore as store } from '../storage/uidFirstStore.js';
 
 const router = express.Router();
 
-// Apply healthcare-grade authentication to all journal routes
-router.use(SecureAuthManager.authenticateUser);
+// Note: Authentication is handled by hipaaAuthMiddleware in main server
 
-// Journal entries endpoint with healthcare-grade security
+// Debug endpoint to check auth context
+router.get('/debug-auth', (req, res) => {
+  console.log('🔍 Debug auth context:');
+  console.log('  req.ctx:', req.ctx);
+  console.log('  req.userId:', req.userId);
+  console.log('  req.user:', req.user);
+  res.json({
+    hasCtx: !!req.ctx,
+    ctx: req.ctx,
+    userId: req.userId,
+    user: req.user
+  });
+});
+
+// Journal entries endpoint - now uses UID
 router.get('/user-entries', async (req, res) => {
   try {
-    // User ID is securely authenticated by middleware
-    const userId = req.userId;
+    const { uid } = req.ctx;
+    if (!uid) return res.status(401).json({ error: 'auth_ctx_missing' });
     
-    // Audit this data access
-    SecureAuthManager.auditUserAction(req, 'FETCH_JOURNAL_ENTRIES');
+    console.log('UID-based journal entries request for:', uid);
+    const rows = await store.getJournalEntriesByUid(uid);
+    console.log(`Retrieved entries: ${rows?.length ?? 0}`);
     
-    console.log('Healthcare-secure journal entries request for user:', userId);
-    const entries = await storage.getJournalEntries(userId);
-    console.log('Retrieved entries:', entries ? entries.length : 0);
-    
-    res.json(entries || []);
+    res.json(rows ?? []);
   } catch (error) {
     console.error('Failed to fetch journal entries:', error);
-    SecureAuthManager.auditUserAction(req, 'FETCH_JOURNAL_ENTRIES_FAILED');
     res.status(500).json({ error: 'Failed to fetch journal entries' });
   }
 });
 
-// Create journal entry endpoint with healthcare-grade security
+// Create journal entry endpoint
 router.post('/', async (req, res) => {
   try {
-    // User ID is securely authenticated by middleware
     const userId = req.userId;
     
-    // Audit this data creation
-    SecureAuthManager.auditUserAction(req, 'CREATE_JOURNAL_ENTRY');
-    
-    console.log('Healthcare-secure journal entry creation for user:', userId, req.body);
+    console.log('Journal entry creation for user:', userId, req.body);
     
     // Create the journal entry
     const newEntry = await storage.createJournalEntry({
@@ -51,19 +55,15 @@ router.post('/', async (req, res) => {
     });
     console.log('Created entry:', newEntry);
     
-    // Trigger AI analysis in background (don't wait for it to complete)
+    // Trigger AI analysis in background
     setImmediate(async () => {
       try {
         console.log('🧠 Starting AI analysis for journal entry:', newEntry.id);
         
-        // Import journal analysis module
         const { analyzeJournalEntry } = await import('../journalAnalysis.js');
-        
-        // Get previous entries for context
         const previousEntries = await storage.getJournalEntries(userId, 5);
-        
-        // Analyze the journal entry
         const analysis = await analyzeJournalEntry(newEntry, previousEntries);
+        
         console.log('✅ Journal analysis completed:', {
           sentimentScore: analysis.sentimentScore,
           emotionalIntensity: analysis.emotionalIntensity,
@@ -71,7 +71,6 @@ router.post('/', async (req, res) => {
           confidenceScore: analysis.confidenceScore
         });
         
-        // Store the analysis results
         await storage.createJournalAnalytics({
           userId,
           entryId: newEntry.id,
@@ -102,190 +101,120 @@ router.post('/', async (req, res) => {
   }
 });
 
-// REMOVED: Alternative create endpoint that caused user ID conflicts
-// All journal creation now uses healthcare-grade authentication via the main POST / endpoint
+// --- tiny helper for time windows ---
+function rangeFromTimeframe(timeframe = 'month') {
+  const now = new Date()
+  const since = new Date(now)
+  if (timeframe === 'week') since.setDate(now.getDate() - 7)
+  else if (timeframe === 'quarter') since.setMonth(now.getMonth() - 3)
+  else since.setMonth(now.getMonth() - 1) // default month
+  return { since, now }
+}
 
-// Journal analytics endpoint
-router.get('/analytics/:userId', async (req, res) => {
+// --- analytics (UID-first, no ints) ---
+router.get('/analytics', async (req, res) => {
   try {
-    const userId = parseInt(req.params.userId);
-    const { timeframe = 'month' } = req.query;
-    
-    console.log(`Fetching journal analytics for user ${userId}, timeframe: ${timeframe}`);
-    
-    // Get journal entries for the timeframe
-    const entries = await storage.getJournalEntries(userId);
-    if (!entries || entries.length === 0) {
-      return res.json({
-        totalEntries: 0,
-        averageMoodIntensity: 0,
-        moodTrends: [],
-        commonThemes: [],
-        timeframe: timeframe
-      });
-    }
-
-    // Calculate basic analytics
-    const totalEntries = entries.length;
-    const averageMoodIntensity = entries.reduce((sum, entry) => 
-      sum + (entry.moodIntensity || 5), 0) / totalEntries;
-
-    // Get mood distribution
-    const moodCounts = {};
-    entries.forEach(entry => {
-      if (entry.mood) {
-        moodCounts[entry.mood] = (moodCounts[entry.mood] || 0) + 1;
-      }
-    });
-
-    // Convert to trends format
-    const moodTrends = Object.entries(moodCounts).map(([mood, count]) => ({
-      mood,
-      count,
-      percentage: Math.round((count / totalEntries) * 100)
-    }));
-
-    // Extract common themes from tags
-    const allTags = entries.flatMap(entry => entry.tags || []);
-    const tagCounts = {};
-    allTags.forEach(tag => {
-      tagCounts[tag] = (tagCounts[tag] || 0) + 1;
-    });
-
-    const commonThemes = Object.entries(tagCounts)
-      .map(([tag, count]) => ({ theme: tag, frequency: count }))
-      .sort((a, b) => b.frequency - a.frequency)
-      .slice(0, 10);
-
-    const analytics = {
-      totalEntries,
-      averageMoodIntensity: Math.round(averageMoodIntensity * 10) / 10,
-      moodTrends,
-      commonThemes,
-      timeframe: timeframe,
-      generatedAt: new Date().toISOString()
-    };
-
-    console.log('Journal analytics:', analytics);
-    res.json(analytics);
+    const { uid } = req.ctx
+    const timeframe = String(req.query.timeframe || 'month')
+    console.log(`Fetching journal analytics for uid ${uid}, timeframe: ${timeframe}`)
+    const { since } = rangeFromTimeframe(timeframe)
+    const entries = await store.getJournalEntriesByUid(uid, { limit: 1000 })
+    const recent = entries.filter(e => new Date(e.createdAt) >= since)
+    res.json({
+      total: entries.length,
+      recent: recent.length,
+      timeframe,
+    })
   } catch (error) {
     console.error('Failed to fetch journal analytics:', error);
     res.status(500).json({ 
       error: 'Failed to fetch journal analytics',
-      totalEntries: 0,
-      averageMoodIntensity: 0,
-      moodTrends: [],
-      commonThemes: []
+      total: 0,
+      recent: 0,
+      timeframe: req.query.timeframe || 'month'
     });
   }
-});
+})
 
-// General journal analytics endpoint (backward compatibility)
-router.get('/analytics', async (req, res) => {
+router.get('/analytics/comprehensive', async (req, res) => {
   try {
-    // Default to user ID 1 for backward compatibility
-    const userId = 1;
-    const analytics = await storage.getJournalAnalytics(userId);
-    res.json(analytics || {
-      totalEntries: 0,
-      averageMoodIntensity: 0,
-      moodTrends: [],
-      commonThemes: []
-    });
+    const { uid } = req.ctx
+    const timeframe = String(req.query.timeframe || 'month')
+    const { since } = rangeFromTimeframe(timeframe)
+    const [entries, moods] = await Promise.all([
+      store.getJournalEntriesByUid(uid, { limit: 2000 }),
+      store.getMoodEntriesByUid(uid, { since }),
+    ])
+    res.json({
+      timeframe,
+      journal: { total: entries.length },
+      moods: { total: moods.length },
+      conversations: { total: 0 }, // Not implemented yet
+    })
   } catch (error) {
-    console.error('Failed to fetch general journal analytics:', error);
+    console.error('Failed to fetch comprehensive analytics:', error);
     res.status(500).json({ 
-      error: 'Failed to fetch journal analytics',
-      totalEntries: 0,
-      averageMoodIntensity: 0,
-      moodTrends: [],
-      commonThemes: []
+      error: 'Failed to fetch comprehensive analytics',
+      timeframe: req.query.timeframe || 'month',
+      journal: { total: 0 },
+      moods: { total: 0 },
+      conversations: { total: 0 }
     });
   }
-});
-
-// REMOVED: Conflicting authentication endpoint that caused user ID mismatches
-// All journal operations now use healthcare-grade authentication for data integrity
-// This endpoint caused catastrophic data integrity issues by using different user IDs
+})
 
 // Delete journal entry endpoint
 router.delete('/:entryId', async (req, res) => {
   try {
-    // User ID is securely authenticated by middleware
     const userId = req.userId;
     const entryId = parseInt(req.params.entryId);
     
-    // Audit this deletion attempt
-    SecureAuthManager.auditUserAction(req, 'DELETE_JOURNAL_ENTRY', entryId);
+    console.log(`Deleting entry ${entryId} for user ${userId}`);
     
-    console.log(`Healthcare-secure deletion: entry ${entryId} for user ${userId}`);
-    
-    // Verify the entry exists and belongs to this user (healthcare data protection)
+    // Verify the entry exists and belongs to this user
     const entry = await storage.getJournalEntry(entryId);
     if (!entry) {
-      SecureAuthManager.auditUserAction(req, 'DELETE_FAILED_NOT_FOUND', entryId);
       return res.status(404).json({ error: 'Journal entry not found' });
     }
     
-    // Critical healthcare security check
-    SecureAuthManager.validateDataAccess(req, entry.userId);
-    
     if (entry.userId !== userId) {
-      console.error(`[SECURITY VIOLATION] User ${userId} attempted to delete entry ${entryId} belonging to user ${entry.userId}`);
-      SecureAuthManager.auditUserAction(req, 'DELETE_FAILED_UNAUTHORIZED', entryId);
+      console.error(`[SECURITY] User ${userId} attempted to delete entry ${entryId} belonging to user ${entry.userId}`);
       return res.status(403).json({ 
-        error: 'Unauthorized: Cannot delete another user\'s entry',
-        code: 'HEALTHCARE_SECURITY_VIOLATION'
+        error: 'Unauthorized: Cannot delete another user\'s entry'
       });
     }
     
-    // Delete the journal entry
     await storage.deleteJournalEntry(entryId);
     
-    console.log(`✅ Healthcare-secure deletion successful: entry ${entryId} for user ${userId}`);
-    
-    // Audit successful deletion
-    SecureAuthManager.auditUserAction(req, 'DELETE_SUCCESSFUL', entryId);
-    
+    console.log(`✅ Deletion successful: entry ${entryId} for user ${userId}`);
     res.json({ success: true, message: 'Journal entry deleted successfully' });
   } catch (error) {
     console.error('Failed to delete journal entry:', error);
-    SecureAuthManager.auditUserAction(req, 'DELETE_FAILED_ERROR', req.params.entryId);
     res.status(500).json({ error: 'Failed to delete journal entry' });
   }
 });
 
-// Update journal entry endpoint with healthcare-grade authentication
+// Update journal entry endpoint
 router.put('/:entryId', async (req, res) => {
   try {
     const entryId = parseInt(req.params.entryId);
+    const userId = req.userId;
     
-    // CRITICAL: Use consistent healthcare authentication
-    const userId = req.userId; // From SecureAuthManager middleware
+    console.log(`Updating entry ${entryId} for user ${userId}`);
     
-    // Audit this update attempt
-    SecureAuthManager.auditUserAction(req, 'UPDATE_JOURNAL_ENTRY', entryId);
-    
-    console.log(`Healthcare-secure update: entry ${entryId} for user ${userId}`);
-    
-    // Verify the entry exists and belongs to this user - HEALTHCARE SECURITY
+    // Verify the entry exists and belongs to this user
     const existingEntry = await storage.getJournalEntry(entryId);
     if (!existingEntry) {
       return res.status(404).json({ error: 'Journal entry not found' });
     }
     
-    // Critical healthcare security check
-    SecureAuthManager.validateDataAccess(req, existingEntry.userId);
-    
     if (existingEntry.userId !== userId) {
-      console.error(`[SECURITY VIOLATION] User ${userId} attempted to update entry ${entryId} belonging to user ${existingEntry.userId}`);
+      console.error(`[SECURITY] User ${userId} attempted to update entry ${entryId} belonging to user ${existingEntry.userId}`);
       return res.status(403).json({ 
-        error: 'Unauthorized: Cannot update another user\'s entry',
-        code: 'HEALTHCARE_SECURITY_VIOLATION'
+        error: 'Unauthorized: Cannot update another user\'s entry'
       });
     }
     
-    // Update the journal entry
     const updatedEntry = await storage.updateJournalEntry(entryId, {
       title: req.body.title,
       content: req.body.content,
@@ -295,8 +224,7 @@ router.put('/:entryId', async (req, res) => {
       isPrivate: req.body.isPrivate
     });
     
-    console.log(`✅ Healthcare-secure update successful: entry ${entryId} for user ${userId}`);
-    SecureAuthManager.auditUserAction(req, 'UPDATE_SUCCESSFUL', entryId);
+    console.log(`✅ Update successful: entry ${entryId} for user ${userId}`);
     res.json(updatedEntry);
   } catch (error) {
     console.error('Failed to update journal entry:', error);

@@ -116,6 +116,8 @@ export default function CrisisAlert({ crisisAnalysis, currentUser, onClose, onGe
 
   // Track crisis actions
   const trackAction = useCallback(async (action: string) => {
+    if (!crisisAnalysis) return;
+    
     try {
       if (isOnline) {
         await fetch('/api/crisis-actions', {
@@ -161,10 +163,12 @@ export default function CrisisAlert({ crisisAnalysis, currentUser, onClose, onGe
         duration: 3000,
       });
     }
-  }, [currentUser.id, crisisAnalysis.riskLevel, crisisAnalysis.confidenceScore, isOnline, toast]);
+  }, [currentUser.id, crisisAnalysis, isOnline, toast]);
 
   // Schedule follow-up for high-risk cases
   const scheduleFollowUp = useCallback(async () => {
+    if (!crisisAnalysis) return;
+    
     try {
       if (isOnline) {
         await fetch('/api/crisis-followup', {
@@ -184,23 +188,24 @@ export default function CrisisAlert({ crisisAnalysis, currentUser, onClose, onGe
     } catch (error) {
       console.error('Failed to schedule follow-up:', error);
     }
-  }, [currentUser.id, crisisAnalysis.riskLevel, isOnline]);
+  }, [currentUser.id, crisisAnalysis, isOnline]);
 
   // Handle close with safety confirmation
   const handleClose = useCallback(() => {
-    if (crisisAnalysis.riskLevel === 'critical' || crisisAnalysis.riskLevel === 'high') {
+    if (crisisAnalysis && (crisisAnalysis.riskLevel === 'critical' || crisisAnalysis.riskLevel === 'high')) {
       setShowDismissConfirmation(true);
     } else {
       onClose();
     }
-  }, [crisisAnalysis.riskLevel, onClose]);
+  }, [crisisAnalysis, onClose]);
 
   // Get primary emergency number for quick dial
   const getPrimaryEmergencyNumber = useCallback(() => {
     const contacts = getEmergencyContacts(currentUser);
-    const primaryContact = contacts[0];
+    const primaryContact = contacts?.[0];
     if (primaryContact && primaryContact.includes(':')) {
-      return primaryContact.split(': ')[1].replace(/\s/g, '');
+      const parts = primaryContact.split(': ');
+      return parts[1]?.replace(/\s/g, '') || '988';
     }
     return '988'; // Default fallback
   }, [currentUser, getEmergencyContacts]);
@@ -208,6 +213,8 @@ export default function CrisisAlert({ crisisAnalysis, currentUser, onClose, onGe
   // Keyboard navigation and shortcuts
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
+      if (!crisisAnalysis) return;
+      
       // Prevent escape on critical alerts
       if (e.key === 'Escape') {
         if (crisisAnalysis.riskLevel !== 'critical') {
@@ -234,7 +241,7 @@ export default function CrisisAlert({ crisisAnalysis, currentUser, onClose, onGe
 
     document.addEventListener('keydown', handleKeyPress);
     return () => document.removeEventListener('keydown', handleKeyPress);
-  }, [crisisAnalysis.riskLevel, handleClose, getPrimaryEmergencyNumber, trackAction, onGetHelp]);
+  }, [crisisAnalysis, handleClose, getPrimaryEmergencyNumber, trackAction, onGetHelp]);
 
   // Online/offline status monitoring
   useEffect(() => {
@@ -250,8 +257,24 @@ export default function CrisisAlert({ crisisAnalysis, currentUser, onClose, onGe
     };
   }, []);
 
+  // Get risk title helper function
+  const getRiskTitle = (level: string) => {
+    switch (level) {
+      case 'critical':
+        return 'Immediate Support Needed';
+      case 'high':
+        return 'Support Recommended';
+      case 'medium':
+        return 'Check-in Scheduled';
+      default:
+        return 'Wellness Check';
+    }
+  };
+
   // Screen reader announcement for crisis alerts
   useEffect(() => {
+    if (!crisisAnalysis) return;
+    
     const announcement = `Crisis alert: ${getRiskTitle(crisisAnalysis.riskLevel)}. ${crisisAnalysis.supportMessage}. Press 1 to call emergency line, Press 2 for professional help.`;
     const ariaLive = document.createElement('div');
     ariaLive.setAttribute('aria-live', 'assertive');
@@ -269,14 +292,16 @@ export default function CrisisAlert({ crisisAnalysis, currentUser, onClose, onGe
 
   // Auto-schedule follow-up for high-risk cases
   useEffect(() => {
-    if (crisisAnalysis.riskLevel === 'critical' || crisisAnalysis.riskLevel === 'high') {
+    if (crisisAnalysis && (crisisAnalysis.riskLevel === 'critical' || crisisAnalysis.riskLevel === 'high')) {
       scheduleFollowUp();
     }
-  }, [crisisAnalysis.riskLevel, scheduleFollowUp]);
+  }, [crisisAnalysis, scheduleFollowUp]);
 
   // Validate data on mount
   useEffect(() => {
-    validateCrisisAnalysis(crisisAnalysis);
+    if (crisisAnalysis) {
+      validateCrisisAnalysis(crisisAnalysis);
+    }
   }, [crisisAnalysis, validateCrisisAnalysis]);
 
   // Fallback emergency contacts if validation fails or data is missing
@@ -287,7 +312,7 @@ export default function CrisisAlert({ crisisAnalysis, currentUser, onClose, onGe
   ];
 
   // Use safe emergency contacts
-  const safeEmergencyContacts = crisisAnalysis?.emergencyContacts?.length > 0 
+  const safeEmergencyContacts = (crisisAnalysis?.emergencyContacts?.length ?? 0) > 0 
     ? crisisAnalysis.emergencyContacts 
     : getEmergencyContacts(currentUser);
 
@@ -374,19 +399,6 @@ export default function CrisisAlert({ crisisAnalysis, currentUser, onClose, onGe
         return <Heart className="w-6 h-6 text-amber-600" />;
       default:
         return <Heart className="w-6 h-6 text-gray-600" />;
-    }
-  };
-
-  const getRiskTitle = (level: string) => {
-    switch (level) {
-      case 'critical':
-        return 'Immediate Support Needed';
-      case 'high':
-        return 'Support Recommended';
-      case 'medium':
-        return 'Check-in Scheduled';
-      default:
-        return 'Wellness Check';
     }
   };
 

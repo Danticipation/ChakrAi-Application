@@ -1,45 +1,74 @@
+// vite.config.ts
 import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
-import path from "path";
+import path from "node:path";
 
-export default defineConfig({
-  plugins: [
-    react(),
-    // Custom plugin to fix MIME type issues for JavaScript files
-    {
-      name: 'mime-type-fix',
-      configureServer(server) {
-        server.middlewares.use((req, res, next) => {
-          // Store original setHeader method
-          const originalSetHeader = res.setHeader;
-
-          // Override setHeader to catch and modify MIME type
-          res.setHeader = function(name, value) {
-            if (name.toLowerCase() === 'content-type' && 
-                (req.url?.includes('.tsx') || req.url?.includes('.ts') || req.url?.includes('.js')) &&
-                value === 'text/javascript') {
-              return originalSetHeader.call(this, name, 'application/javascript; charset=utf-8');
-            }
-            return originalSetHeader.call(this, name, value);
-          };
-
-          next();
-        });
-      }
+// Optional React plugin loader: tries swc → classic → none
+async function loadReactPlugin() {
+  try {
+    const mod = await import("@vitejs/plugin-react-swc");
+    const react = (mod as any).default ?? mod;
+    return react();
+  } catch {
+    try {
+      const mod = await import("@vitejs/plugin-react");
+      const react = (mod as any).default ?? mod;
+      return react();
+    } catch {
+      console.warn("[vite] React plugin not found — starting without it.");
+      return undefined;
     }
-    // Disabled runtime error overlay to prevent loading issues
-    // runtimeErrorOverlay(),
-  ],
-  resolve: {
-    alias: {
-      "@": path.resolve(import.meta.dirname, "client", "src"),
-      "@shared": path.resolve(import.meta.dirname, "shared"),
-      "@assets": path.resolve(import.meta.dirname, "attached_assets"),
+  }
+}
+
+// Custom plugin to fix MIME type issues for JS/TS files
+function mimeTypeFix() {
+  return {
+    name: "mime-type-fix",
+    configureServer(server: any) {
+      const originalSetHeader = server.middlewares.setHeader;
+      server.middlewares.setHeader = function (name: string, value: string) {
+        const req = (this as any)?.req;
+        if (
+          name?.toLowerCase() === "content-type" &&
+          req?.url &&
+          (req.url.includes(".tsx") || req.url.includes(".ts") || req.url.includes(".js")) &&
+          value?.includes("text/javascript") === false
+        ) {
+          return originalSetHeader.call(this, name, "application/javascript; charset=utf-8");
+        }
+        return originalSetHeader.call(this, name, value);
+      };
     },
-  },
-  root: path.resolve(import.meta.dirname, "client"),
-  build: {
-    outDir: path.resolve(import.meta.dirname, "dist/public"),
-    emptyOutDir: true,
-  },
+  };
+}
+
+export default defineConfig(async () => {
+  const maybeReact = await loadReactPlugin();
+
+  return {
+    plugins: [maybeReact, mimeTypeFix()].filter(Boolean),
+    resolve: {
+      alias: {
+        "@": path.resolve(import.meta.dirname, "client", "src"),
+        "@shared": path.resolve(import.meta.dirname, "shared"),
+        "@assets": path.resolve(import.meta.dirname, "attached_assets"),
+      },
+    },
+    root: path.resolve(import.meta.dirname, "client"),
+    build: {
+      outDir: path.resolve(import.meta.dirname, "dist/public"),
+      emptyOutDir: true,
+    },
+    server: {
+      host: true,
+      port: 5173,
+      strictPort: false,
+      proxy: {
+        "/api": {
+          target: "http://localhost:5000",
+          changeOrigin: true,
+        },
+      },
+    },
+  };
 });

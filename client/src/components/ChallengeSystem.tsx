@@ -994,7 +994,7 @@ const ChallengeSystem: React.FC<ChallengeSystemProps> = ({ onNavigate, onMobileM
               <CardContent>
                 <div className="flex items-center justify-between mb-4">
                   <div className="text-lg font-bold theme-text">Collective Mindfulness Hours</div>
-                  <div className="text-2xl font-bold text-purple-600">{stats?.challengeProgress || 0} / 1000</div>
+                  <div className="text-2xl font-bold text-purple-600">847 / 1000</div>
                 </div>
                 <Progress value={84.7} className="h-3 mb-2" />
                 <div className="text-sm theme-text-secondary text-center">

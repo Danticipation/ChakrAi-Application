@@ -152,7 +152,7 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [currentTheme, setCurrentTheme] = useState<Theme>(() => themes[0]); // Ocean Blue default
+  const [currentTheme, setCurrentTheme] = useState<Theme>(() => themes[0] as Theme); // Ocean Blue default
 
   useEffect(() => {
     // Load saved theme from localStorage on initial load

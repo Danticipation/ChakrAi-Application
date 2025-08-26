@@ -1,5 +1,6 @@
-import { storage } from "./storage";
-import { openai, retryOpenAIRequest } from "./openaiRetry";
+import { storage } from "./storage.js";
+import { openai, retryOpenAIRequest } from "./openaiRetry.js";
+import type { UserMemory, UserFact } from "../shared/schema.ts";
 
 // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
 
@@ -103,7 +104,7 @@ Extract in JSON format:
       })
     );
 
-    const result = JSON.parse(response.choices[0].message.content || '{}');
+    const result = JSON.parse(response.choices[0]?.message?.content || '{}');
     
     // Merge with basic analysis
     return {
@@ -146,7 +147,7 @@ function extractBasicPersonalInfo(message: string): string[] {
   
   // Job extraction
   const jobMatch = message.match(/(?:work as|job as|i'm a|i am a)\s+([\w\s]+?)(?:\.|,|$)/i);
-  if (jobMatch) info.push(`Occupation: ${jobMatch[1].trim()}`);
+  if (jobMatch?.[1]) info.push(`Occupation: ${jobMatch[1].trim()}`);
   
   return info;
 }
@@ -170,8 +171,8 @@ export async function buildPersonalityProfile(userId: number): Promise<Personali
     const memories = await storage.getUserMemories(userId);
     const facts = await storage.getUserFacts(userId);
     
-    const memoryText = memories.map(m => m.memory).join('\n');
-    const factText = facts.map(f => f.fact).join('\n');
+    const memoryText = memories.map((m: UserMemory) => m.memory).join('\n');
+    const factText = facts.map((f: UserFact) => f.fact).join('\n');
     
     const prompt = `
 Based on this comprehensive user data, create a detailed personality profile that captures their essence, communication style, and core identity:
@@ -238,7 +239,11 @@ Respond with JSON in this exact format:
       })
     );
 
-    return JSON.parse(response.choices[0].message.content || '{}');
+    const content = response.choices?.[0]?.message?.content;
+    if (!content) {
+      throw new Error('No content received from OpenAI');
+    }
+    return JSON.parse(content);
   } catch (error) {
     console.error("Error building personality profile:", error);
     return {
@@ -313,7 +318,7 @@ Keep the response conversational and natural, as if it's coming from someone who
       })
     );
 
-    return response.choices[0].message.content || "I understand what you're saying, and I can see how that reflects who you are.";
+    return response.choices[0]?.message?.content || "I understand what you're saying, and I can see how that reflects who you are.";
   } catch (error) {
     console.error("Error generating mirrored response:", error);
     return "I hear you, and I can sense the depth of what you're sharing.";

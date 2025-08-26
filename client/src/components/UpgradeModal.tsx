@@ -3,8 +3,8 @@ import { X, Crown, Check, Zap, Star, Shield, Infinity } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
 import { useAuth } from '../contexts/AuthContext';
 
-const stripePromise = import.meta.env.VITE_STRIPE_PUBLIC_KEY ? 
-  loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY) : 
+const stripePromise = import.meta.env['VITE_STRIPE_PUBLIC_KEY'] ? 
+  loadStripe(import.meta.env['VITE_STRIPE_PUBLIC_KEY']) : 
   null;
 
 interface UpgradeModalProps {

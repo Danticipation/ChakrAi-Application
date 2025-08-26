@@ -107,7 +107,7 @@ export async function generateAdaptiveTherapeuticPlan(
   analytics?: CarePlanAnalytics
 ): Promise<TherapeuticPlan> {
   try {
-    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
+    const openai = new OpenAI({ apiKey: process.env['OPENAI_API_KEY']! });
 
     // Gather user data for analysis
     const userAnalytics = analytics || await analyzeUserTherapeuticNeeds(userId);
@@ -158,7 +158,7 @@ Provide a JSON response with the complete therapeutic plan structure including g
       max_tokens: 3000
     });
 
-    const planData = JSON.parse(response.choices[0].message.content || '{}');
+    const planData = JSON.parse(response.choices[0]?.message?.content || '{}');
     
     // Construct the therapeutic plan
     const therapeuticPlan: TherapeuticPlan = {
@@ -248,7 +248,7 @@ export async function adaptTherapeuticPlan(
   userFeedback?: any
 ): Promise<TherapeuticPlan> {
   try {
-    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
+    const openai = new OpenAI({ apiKey: process.env['OPENAI_API_KEY']! });
 
     const prompt = `Adapt an existing therapeutic plan based on user progress and trigger events.
 
@@ -293,7 +293,7 @@ Provide the adapted therapeutic plan as JSON.`;
       max_tokens: 2500
     });
 
-    const adaptedPlanData = JSON.parse(response.choices[0].message.content || '{}');
+    const adaptedPlanData = JSON.parse(response.choices[0]?.message?.content || '{}');
     
     const adaptedPlan: TherapeuticPlan = {
       ...currentPlan,
@@ -322,7 +322,7 @@ export async function generatePersonalizedCBTExercises(
   difficulty: 'beginner' | 'intermediate' | 'advanced'
 ): Promise<DailyActivity[]> {
   try {
-    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
+    const openai = new OpenAI({ apiKey: process.env['OPENAI_API_KEY']! });
 
     const prompt = `Generate personalized CBT (Cognitive Behavioral Therapy) exercises for a user's specific emotional patterns.
 
@@ -366,7 +366,7 @@ Provide JSON array of CBT exercises with detailed instructions and therapeutic r
       max_tokens: 2000
     });
 
-    const exerciseData = JSON.parse(response.choices[0].message.content || '{}');
+    const exerciseData = JSON.parse(response.choices[0]?.message?.content || '{}');
     return exerciseData.exercises || generateDefaultCBTExercises(emotionalPattern, difficulty);
   } catch (error) {
     console.error('Error generating personalized CBT exercises:', error);

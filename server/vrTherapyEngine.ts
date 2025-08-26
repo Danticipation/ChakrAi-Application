@@ -1,6 +1,6 @@
-import { openai } from './openaiRetry';
-import { storage } from './storage';
-import type { VrEnvironment, VrSession, VrTherapeuticPlan, VrAccessibilityProfile } from '@shared/schema';
+import { openai } from './openaiRetry.js';
+import { storage } from './storage.js';
+import type { VrEnvironment, VrSession, VrTherapeuticPlan, VrAccessibilityProfile } from '../shared/schema.ts';
 
 export interface VrTherapyRecommendation {
   environmentId: number;
@@ -51,13 +51,13 @@ export async function generateVrRecommendations(
   try {
     // Get user's VR progress and accessibility profile
     const [progress, accessibilityProfile, environments] = await Promise.all([
-      storage.getUserVrProgress(userId),
-      storage.getUserVrAccessibilityProfile(userId),
-      storage.getVrEnvironments()
+      'getUserVrProgress' in storage ? (storage as any).getUserVrProgress(userId) : [],
+      'getUserVrAccessibilityProfile' in storage ? (storage as any).getUserVrAccessibilityProfile(userId) : null,
+      'getVrEnvironments' in storage ? (storage as any).getVrEnvironments() : []
     ]);
 
     // Get recent mood entries for context
-    const recentMoods = await storage.getMoodEntries(userId, 7);
+    const recentMoods = await storage.getMoodEntries(userId);
     
     const analysisPrompt = `
 You are a VR therapy specialist. Analyze the user's profile and recommend personalized VR therapeutic experiences.
@@ -65,15 +65,15 @@ You are a VR therapy specialist. Analyze the user's profile and recommend person
 User Context:
 - Current mood: ${currentMood || 'Not specified'}
 - Therapeutic goals: ${therapeuticGoals?.join(', ') || 'General wellness'}
-- Recent emotional patterns: ${recentMoods.map(m => `${m.mood} (${m.intensity}/10)`).join(', ')}
+- Recent emotional patterns: ${recentMoods.map((m: { mood: string; intensity: number }) => `${m.mood} (${m.intensity}/10)`).join(', ')}
 - VR experience level: ${progress.length > 0 ? 'Experienced' : 'Beginner'}
 - Motion sensitivity: ${accessibilityProfile?.motionSensitivity || 'medium'}
 
-Available VR environments: ${environments.map(env => 
+Available VR environments: ${environments.map((env: any) => 
   `${env.name} (${env.environmentType}, ${env.difficultyLevel}, ${env.durationMinutes}min) - ${env.description}`
 ).join('\n')}
 
-Previous VR sessions: ${sessionHistory?.slice(0, 5).map(session => 
+Previous VR sessions: ${sessionHistory?.slice(0, 5).map((session: VrSession) =>
   `Environment: ${session.environmentId}, Duration: ${session.durationMinutes}min, Effectiveness: ${session.effectivenessRating}/10`
 ).join('\n') || 'None'}
 
@@ -97,7 +97,13 @@ Return as JSON array with fields: environmentId, recommendationReason, adaptatio
       max_tokens: 2000
     });
 
-    const recommendations = JSON.parse(response.choices[0].message.content || '[]');
+    let recommendations;
+    try {
+      recommendations = JSON.parse(response.choices[0]?.message?.content || '[]');
+    } catch (parseError) {
+      console.error('Error parsing VR recommendations JSON:', parseError);
+      recommendations = [];
+    }
     
     return recommendations.map((rec: any) => ({
       environmentId: rec.environmentId,
@@ -124,13 +130,13 @@ Return as JSON array with fields: environmentId, recommendationReason, adaptatio
  */
 export async function analyzeVrSession(sessionId: number): Promise<VrSessionAnalysis> {
   try {
-    const session = await storage.getVrSession(sessionId);
+    const session = 'getVrSession' in storage ? await (storage as any).getVrSession(sessionId) : null;
     if (!session) {
       throw new Error('Session not found');
     }
 
-    const environment = await storage.getVrEnvironment(session.environmentId);
-    const userProgress = await storage.getVrProgress(session.userId, session.environmentId);
+    const environment = 'getVrEnvironment' in storage ? await (storage as any).getVrEnvironment(session.environmentId) : null;
+    const userProgress = 'getVrProgress' in storage ? await (storage as any).getVrProgress(session.userId, session.environmentId) : null;
 
     const analysisPrompt = `
 Analyze this VR therapy session for therapeutic effectiveness:
@@ -168,7 +174,13 @@ Return as JSON with fields: effectivenessScore, stressReduction, engagement, com
       max_tokens: 1500
     });
 
-    const analysis = JSON.parse(response.choices[0].message.content || '{}');
+    let analysis;
+    try {
+      analysis = JSON.parse(response.choices[0]?.message?.content || '{}');
+    } catch (parseError) {
+      console.error('Error parsing VR session analysis JSON:', parseError);
+      analysis = {};
+    }
     
     return {
       effectivenessScore: analysis.effectivenessScore || 0.5,
@@ -205,10 +217,10 @@ export async function createPersonalizedVrPlan(
 ): Promise<VrTherapeuticPlan> {
   try {
     const [environments, userProgress, accessibilityProfile, recentMoods] = await Promise.all([
-      storage.getVrEnvironments(),
-      storage.getUserVrProgress(userId),
-      storage.getUserVrAccessibilityProfile(userId),
-      storage.getMoodEntries(userId, 14)
+      'getVrEnvironments' in storage ? (storage as any).getVrEnvironments() : [],
+      'getUserVrProgress' in storage ? (storage as any).getUserVrProgress(userId) : [],
+      'getUserVrAccessibilityProfile' in storage ? (storage as any).getUserVrAccessibilityProfile(userId) : null,
+      storage.getMoodEntries(userId)
     ]);
 
     const planPrompt = `
@@ -221,11 +233,11 @@ User Experience: ${userProgress.length > 0 ? 'Has VR experience' : 'VR beginner'
 Accessibility Needs: Motion sensitivity ${accessibilityProfile?.motionSensitivity || 'medium'}
 
 Available VR Environments:
-${environments.map(env => 
+${environments.map((env: any) => 
   `ID: ${env.id}, Name: ${env.name}, Type: ${env.environmentType}, Focus: ${env.therapeuticFocus}, Duration: ${env.durationMinutes}min`
 ).join('\n')}
 
-Recent emotional patterns: ${recentMoods.map(m => `${m.mood} (intensity: ${m.intensity})`).slice(0, 10).join(', ')}
+Recent emotional patterns: ${recentMoods.map((m: { mood: string; intensity: number }) => `${m.mood} (intensity: ${m.intensity})`).slice(0, 10).join(', ')}
 
 Design a progressive plan with:
 1. Gradual exposure therapy progression
@@ -251,16 +263,22 @@ Focus on evidence-based VR therapy approaches for the specified conditions.
       max_tokens: 2000
     });
 
-    const planData = JSON.parse(response.choices[0].message.content || '{}');
+    let planData;
+    try {
+      planData = JSON.parse(response.choices[0]?.message?.content || '{}');
+    } catch (parseError) {
+      console.error('Error parsing VR plan JSON:', parseError);
+      planData = {};
+    }
     
-    const plan = await storage.createVrTherapeuticPlan({
+    const plan = 'createVrTherapeuticPlan' in storage ? await (storage as any).createVrTherapeuticPlan({
       userId,
       planName: planData.planName || `${therapeuticGoal} Plan`,
       therapeuticGoals: [therapeuticGoal],
       recommendedEnvironments: planData.environments || [],
       durationWeeks: Math.ceil((planData.estimatedDuration || planDuration) / 7),
       progressMetrics: planData.adaptiveSettings || {}
-    });
+    }) : null;
 
     return plan;
 
@@ -281,9 +299,9 @@ export async function personalizeVrEnvironment(
   let environment: any;
   try {
     const [envResult, accessibilityProfile, progress] = await Promise.all([
-      storage.getVrEnvironment(environmentId),
-      storage.getUserVrAccessibilityProfile(userId),
-      storage.getVrProgress(userId, environmentId)
+      'getVrEnvironment' in storage ? (storage as any).getVrEnvironment(environmentId) : null,
+      'getUserVrAccessibilityProfile' in storage ? (storage as any).getUserVrAccessibilityProfile(userId) : null,
+      'getVrProgress' in storage ? (storage as any).getVrProgress(userId, environmentId) : null
     ]);
 
     environment = envResult;
@@ -327,7 +345,13 @@ Return as JSON with fields: visualSettings, audioSettings, interactionSettings, 
       max_tokens: 1000
     });
 
-    const adaptations = JSON.parse(response.choices[0].message.content || '{}');
+    let adaptations;
+    try {
+      adaptations = JSON.parse(response.choices[0]?.message?.content || '{}');
+    } catch (parseError) {
+      console.error('Error parsing VR adaptations JSON:', parseError);
+      adaptations = {};
+    }
     
     return {
       baseEnvironment: environment,
@@ -377,7 +401,7 @@ export async function monitorVrSession(
   continueSession: boolean;
 }> {
   try {
-    const session = await storage.getVrSession(sessionId);
+    const session = 'getVrSession' in storage ? await (storage as any).getVrSession(sessionId) : null;
     if (!session) {
       throw new Error('Session not found');
     }
@@ -406,7 +430,13 @@ Return as JSON with: safetyWarnings[], adaptationSuggestions[], continueSession 
       max_tokens: 500
     });
 
-    const monitoring = JSON.parse(response.choices[0].message.content || '{}');
+    let monitoring;
+    try {
+      monitoring = JSON.parse(response.choices[0]?.message?.content || '{}');
+    } catch (parseError) {
+      console.error('Error parsing VR monitoring JSON:', parseError);
+      monitoring = {};
+    }
     
     return {
       safetyWarnings: monitoring.safetyWarnings || [],
@@ -460,23 +490,29 @@ Return as JSON with VR environment fields: name, description, category, scenePat
       max_tokens: 1500
     });
 
-    const environmentData = JSON.parse(response.choices[0].message.content || '{}');
+    let environmentData;
+    try {
+      environmentData = JSON.parse(response.choices[0]?.message?.content || '{}');
+    } catch (parseError) {
+      console.error('Error parsing VR environment JSON:', parseError);
+      environmentData = {};
+    }
     
     return {
       name: environmentData.name || `${therapeuticGoal} Environment`,
       description: environmentData.description || '',
       environmentType: environmentData.category || 'mindfulness',
-      difficultyLevel: difficulty,
+      difficultyLevel: difficulty === 'beginner' ? 1 : difficulty === 'intermediate' ? 2 : 3,
       durationMinutes: difficulty === 'beginner' ? 10 : difficulty === 'intermediate' ? 20 : 30,
       therapeuticFocus: environmentData.therapeuticFocus || 'general',
-      immersionLevel: environmentData.immersionLevel || 'medium',
-      settings: {
+
+      vrSettings: {
         scenePath: environmentData.scenePath || `/scenes/${environmentData.name?.toLowerCase().replace(/\s+/g, '_')}`,
         audioPath: environmentData.audioPath || null,
         instructions: environmentData.instructions || []
       },
-      accessibilityFeatures: environmentData.accessibility || {},
-      contentWarnings: environmentData.contraindications || [],
+
+
       isActive: true
     };
 

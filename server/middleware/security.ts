@@ -11,8 +11,7 @@ export const authLimiter = rateLimit({
     error: 'Too many authentication attempts, please try again later.'
   },
   standardHeaders: true,
-  legacyHeaders: false,
-  trustProxy: 1, // Trust first proxy only for security
+  legacyHeaders: false
 });
 
 export const generalLimiter = rateLimit({
@@ -22,8 +21,7 @@ export const generalLimiter = rateLimit({
     error: 'Too many requests, please try again later.'
   },
   standardHeaders: true,
-  legacyHeaders: false,
-  trustProxy: 1, // Trust first proxy only for security
+  legacyHeaders: false
 });
 
 export const uploadLimiter = rateLimit({
@@ -33,13 +31,12 @@ export const uploadLimiter = rateLimit({
     error: 'Too many file uploads, please try again later.'
   },
   standardHeaders: true,
-  legacyHeaders: false,
-  trustProxy: 1, // Trust first proxy only for security
+  legacyHeaders: false
 });
 
 // Helmet configuration for security headers - Development friendly
 export const helmetConfig = helmet({
-  contentSecurityPolicy: process.env.NODE_ENV === 'development' ? false : {
+  contentSecurityPolicy: process.env['NODE_ENV'] === 'development' ? false : {
     directives: {
       defaultSrc: ["'self'"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
@@ -138,14 +135,14 @@ export const corsConfig = {
     if (!origin) return callback(null, true);
     
     // In development, be more permissive
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env['NODE_ENV'] === 'development') {
       console.log('CORS check - Origin:', origin);
       // Allow all localhost and replit domains in development
       return callback(null, true);
     }
     
     // In production, only allow specific domains
-    const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [];
+    const allowedOrigins = process.env['ALLOWED_ORIGINS']?.split(',') || [];
     if (allowedOrigins.includes(origin)) {
       return callback(null, true);
     }
@@ -168,7 +165,7 @@ export const corsConfig = {
 
 // HTTPS enforcement middleware
 export const enforceHTTPS = (req: Request, res: Response, next: NextFunction) => {
-  if (process.env.NODE_ENV === 'production' && req.header('x-forwarded-proto') !== 'https') {
+  if (process.env['NODE_ENV'] === 'production' && req.header('x-forwarded-proto') !== 'https') {
     return res.redirect(`https://${req.header('host')}${req.url}`);
   }
   next();

@@ -342,9 +342,9 @@ export class InsuranceService {
 
     const sessionCodes = codes[sessionType] || codes['individual'];
     
-    if (duration <= 37) return sessionCodes['30'] || '90834';
-    if (duration <= 52) return sessionCodes['45'] || '90837';
-    return sessionCodes['60'] || '90837';
+    if (duration <= 37) return sessionCodes?.['30'] || '90834';
+    if (duration <= 52) return sessionCodes?.['45'] || '90837';
+    return sessionCodes?.['60'] || '90837';
   }
 
   static calculateBillableAmount(cptCode: string, insuranceProvider: string): string {
@@ -359,7 +359,7 @@ export class InsuranceService {
     };
 
     const providerRates = rates[insuranceProvider] || rates['default'];
-    const amount = providerRates[cptCode] || 120.00;
+    const amount = providerRates?.[cptCode] || 120.00;
     
     return `$${amount.toFixed(2)}`;
   }

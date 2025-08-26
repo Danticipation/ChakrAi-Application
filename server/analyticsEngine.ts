@@ -216,7 +216,7 @@ async function generateReportNarrative(
 }> {
   
   try {
-    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
+    const openai = new OpenAI({ apiKey: process.env['OPENAI_API_KEY']! });
     
     const prompt = `Generate a comprehensive, encouraging monthly wellness report for a user's therapeutic journey.
 
@@ -263,7 +263,7 @@ Tone: Encouraging, supportive, professional therapeutic language. Focus on growt
       temperature: 0.4
     });
 
-    return JSON.parse(response.choices[0].message.content || '{}');
+    return JSON.parse(response.choices[0]?.message?.content || '{}');
   } catch (error) {
     console.error('Error generating report narrative:', error);
     return generateFallbackNarrative(month, year, metrics);
@@ -384,8 +384,8 @@ function calculateStreakDays(activities: any[]): number {
   if (sortedDates[0] !== today) return 0;
   
   for (let i = 1; i < sortedDates.length; i++) {
-    const currentDate = new Date(sortedDates[i]);
-    const previousDate = new Date(sortedDates[i - 1]);
+    const currentDate = new Date(sortedDates[i] || '');
+    const previousDate = new Date(sortedDates[i - 1] || '');
     const dayDiff = Math.floor((previousDate.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24));
     
     if (dayDiff === 1) {
@@ -497,7 +497,7 @@ function calculateEmotionalOverview(moodEntries: any[]) {
   
   // Calculate weekly trend (simplified)
   const weeklyTrend = moodEntries.slice(-7).map(entry => ({
-    date: format(new Date(entry.createdAt), 'MMM dd'),
+    date: format(new Date(entry.createdAt || new Date()), 'MMM dd'),
     valence: entry.valence || 0,
     arousal: entry.arousal || 0
   }));
@@ -593,8 +593,8 @@ function generateFallbackReport(userId: number, month: number, year: number): Mo
     generatedAt: new Date(),
     metrics: {
       period: 'monthly',
-      startDate: startOfMonth(new Date(year, month - 1)),
-      endDate: endOfMonth(new Date(year, month - 1)),
+      startDate: startOfMonth(new Date(year ?? new Date().getFullYear(), (month ?? 1) - 1)),
+      endDate: endOfMonth(new Date(year ?? new Date().getFullYear(), (month ?? 1) - 1)),
       emotionalTrends: {
         dominantEmotions: [],
         averageValence: 0,
@@ -634,7 +634,7 @@ function generateFallbackReport(userId: number, month: number, year: number): Mo
 }
 
 function generateFallbackNarrative(month: number, year: number, _metrics: WellnessMetrics) {
-  const monthName = format(new Date(year, month - 1), 'MMMM');
+  const monthName = format(new Date(year ?? new Date().getFullYear(), (month ?? 1) - 1), 'MMMM');
   return {
     summary: `${monthName} was a month of continued wellness journey engagement.`,
     keyHighlights: ['Maintained regular app usage', 'Continued self-reflection practice'],

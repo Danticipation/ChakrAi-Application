@@ -22,9 +22,22 @@ import axios from 'axios';
 interface AdminStats {
   feedback: {
     total: number;
-    byStatus: Record<string, number>;
-    byType: Record<string, number>;
-    byPriority: Record<string, number>;
+    byStatus: {
+      submitted: number;
+      reviewed: number;
+      in_progress: number;
+      resolved: number;
+    };
+    byType: {
+      bug: number;
+      feature: number;
+      general: number;
+    };
+    byPriority: {
+      low: number;
+      medium: number;
+      high: number;
+    };
   };
   system: {
     uptime: string;
@@ -56,29 +69,76 @@ const AdminPortal: React.FC = () => {
   const [adminResponse, setAdminResponse] = useState('');
   const [loading, setLoading] = useState(true);
   const [systemHealth, setSystemHealth] = useState<any>(null);
+  const [privacyData, setPrivacyData] = useState<any>(null);
+  const [pilotAnalytics, setPilotAnalytics] = useState<any>(null);
 
   const loadData = async () => {
     try {
       setLoading(true);
-      const [feedbackStatsRes, feedbackRes, systemStatsRes] = await Promise.all([
-        axios.get('/api/admin/feedback/stats'),
-        axios.get('/api/admin/feedback?limit=10'),
-        axios.get('/api/admin/system/stats').catch(() => ({ data: null }))
-      ]);
+      
+      // Make all requests and handle failures gracefully
+      const requests = [
+        axios.get('/api/admin/feedback/stats').catch(() => ({ data: null })),
+        axios.get('/api/admin/feedback?limit=10').catch(() => ({ data: { feedback: [] } })),
+        axios.get('/api/admin/system/stats').catch(() => ({ data: null })),
+        axios.get('/api/admin/privacy/compliance-report').catch(() => ({ data: null })),
+        axios.get('/api/admin/pilot-analytics').catch(() => ({ data: null }))
+      ];
+      
+      const [feedbackStatsRes, feedbackRes, systemStatsRes, privacyRes, analyticsRes] = await Promise.all(requests);
 
-      setStats({
-        feedback: feedbackStatsRes.data,
-        system: systemStatsRes.data || {
-          uptime: null,
-          memoryUsage: null,
-          activeUsers: null,
-          totalMessages: null
+      // Build stats object with proper fallbacks and null checks
+      const statsData = {
+        feedback: feedbackStatsRes?.data || {
+          total: 0,
+          byStatus: { submitted: 0, reviewed: 0, in_progress: 0, resolved: 0 },
+          byType: { bug: 0, feature: 0, general: 0 },
+          byPriority: { low: 0, medium: 0, high: 0 }
+        },
+        system: systemStatsRes?.data || {
+          uptime: 'Unknown',
+          memoryUsage: 'Unknown',
+          activeUsers: 0,
+          totalMessages: 0
         }
+      };
+      
+      setStats(statsData);
+      setFeedback(feedbackRes?.data?.feedback || []);
+      setSystemHealth(systemStatsRes?.data || null);
+      setPrivacyData(privacyRes?.data || null);
+      setPilotAnalytics(analyticsRes?.data || null);
+      
+      console.log('✅ Admin data loaded successfully:', {
+        hasStats: !!statsData,
+        feedbackCount: feedbackRes?.data?.feedback?.length || 0,
+        hasSystemHealth: !!systemStatsRes?.data,
+        hasPrivacyData: !!privacyRes?.data,
+        hasAnalytics: !!analyticsRes?.data
       });
-      setFeedback(feedbackRes.data.feedback);
-      setSystemHealth(systemStatsRes.data);
+      
     } catch (error) {
       console.error('Failed to load admin data:', error);
+      
+      // Set fallback data to prevent crashes
+      setStats({
+        feedback: {
+          total: 0,
+          byStatus: { submitted: 0, reviewed: 0, in_progress: 0, resolved: 0 },
+          byType: { bug: 0, feature: 0, general: 0 },
+          byPriority: { low: 0, medium: 0, high: 0 }
+        },
+        system: {
+          uptime: 'Unknown',
+          memoryUsage: 'Unknown', 
+          activeUsers: 0,
+          totalMessages: 0
+        }
+      });
+      setFeedback([]);
+      setSystemHealth(null);
+      setPrivacyData(null);
+      setPilotAnalytics(null);
     } finally {
       setLoading(false);
     }
@@ -154,7 +214,7 @@ const AdminPortal: React.FC = () => {
             <div>
               <p className="text-sm font-medium text-gray-400">Active Users</p>
               <p className="text-2xl font-bold text-white mt-1">
-                {stats?.system.activeUsers !== null ? stats.system.activeUsers : '—'}
+                {stats?.system?.activeUsers ?? '—'}
               </p>
             </div>
             <Users className="w-8 h-8 text-blue-400" />
@@ -166,7 +226,7 @@ const AdminPortal: React.FC = () => {
             <div>
               <p className="text-sm font-medium text-gray-400">Total Messages</p>
               <p className="text-2xl font-bold text-white mt-1">
-                {stats?.system.totalMessages !== null ? stats.system.totalMessages : '—'}
+                {stats?.system?.totalMessages ?? '—'}
               </p>
             </div>
             <MessageSquare className="w-8 h-8 text-purple-400" />
@@ -178,7 +238,7 @@ const AdminPortal: React.FC = () => {
             <div>
               <p className="text-sm font-medium text-gray-400">Memory Usage</p>
               <p className="text-2xl font-bold text-white mt-1">
-                {stats?.system.memoryUsage || '—'}
+                {stats?.system?.memoryUsage ?? '—'}
               </p>
             </div>
             <Server className="w-8 h-8 text-orange-400" />
@@ -195,7 +255,7 @@ const AdminPortal: React.FC = () => {
           </h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="text-center">
-              <p className="text-2xl font-bold text-white">{stats.feedback.total}</p>
+              <p className="text-2xl font-bold text-white">{stats.feedback.total || 0}</p>
               <p className="text-sm text-gray-400">Total Feedback</p>
             </div>
             <div className="text-center">
@@ -300,6 +360,297 @@ const AdminPortal: React.FC = () => {
           </div>
         ))}
       </div>
+    </div>
+  );
+
+  const renderPrivacyCompliance = () => (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold text-white flex items-center">
+          <Shield className="w-6 h-6 mr-3 text-blue-400" />
+          Privacy & Compliance
+        </h2>
+        <button
+          onClick={loadData}
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+        >
+          Refresh
+        </button>
+      </div>
+
+      {privacyData ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Data Retention */}
+          <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-700">
+            <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
+              <Database className="w-5 h-5 mr-2 text-green-400" />
+              Data Retention
+            </h3>
+            <div className="space-y-3">
+              <div className="flex justify-between">
+                <span className="text-gray-400">Total Users:</span>
+                <span className="text-white">{privacyData.userDataRetention?.totalUsers || 0}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Retention Period:</span>
+                <span className="text-green-400">{privacyData.userDataRetention?.dataRetentionPeriod || 'N/A'}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Purge Schedule:</span>
+                <span className="text-blue-400">{privacyData.userDataRetention?.purgeSchedule || 'N/A'}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Last Purge:</span>
+                <span className="text-yellow-400">{privacyData.userDataRetention?.lastPurge ? new Date(privacyData.userDataRetention.lastPurge).toLocaleDateString() : 'N/A'}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Data Encryption */}
+          <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-700">
+            <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
+              <Shield className="w-5 h-5 mr-2 text-blue-400" />
+              Data Encryption
+            </h3>
+            <div className="space-y-3">
+              <div className="flex justify-between">
+                <span className="text-gray-400">At Rest:</span>
+                <span className="text-green-400">{privacyData.dataEncryption?.atRest || 'N/A'}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">In Transit:</span>
+                <span className="text-green-400">{privacyData.dataEncryption?.inTransit || 'N/A'}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Key Rotation:</span>
+                <span className="text-blue-400">{privacyData.dataEncryption?.keyRotation || 'N/A'}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Compliance:</span>
+                <span className="text-purple-400">{privacyData.dataEncryption?.complianceLevel || 'N/A'}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Access Control */}
+          <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-700">
+            <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
+              <Users className="w-5 h-5 mr-2 text-purple-400" />
+              Access Control
+            </h3>
+            <div className="space-y-3">
+              <div className="flex justify-between">
+                <span className="text-gray-400">Anonymous Users:</span>
+                <span className="text-green-400">{privacyData.accessControl?.anonymousUsers || 'N/A'}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Data Isolation:</span>
+                <span className="text-green-400">{privacyData.accessControl?.dataIsolation || 'N/A'}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Cross Contamination:</span>
+                <span className="text-red-400">{privacyData.accessControl?.crossContamination || 'N/A'}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Session Management:</span>
+                <span className="text-blue-400">{privacyData.accessControl?.sessionManagement || 'N/A'}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Audit Log */}
+          <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-700">
+            <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
+              <Eye className="w-5 h-5 mr-2 text-orange-400" />
+              Audit Log
+            </h3>
+            <div className="space-y-3">
+              <div className="flex justify-between">
+                <span className="text-gray-400">Auth Attempts:</span>
+                <span className="text-green-400">{privacyData.auditLog?.authenticationAttempts || 'N/A'}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Data Access:</span>
+                <span className="text-blue-400">{privacyData.auditLog?.dataAccess || 'N/A'}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Privacy Choices:</span>
+                <span className="text-purple-400">{privacyData.auditLog?.privacyChoices || 'N/A'}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Retention Compliance:</span>
+                <span className="text-green-400">{privacyData.auditLog?.retentionCompliance || 'N/A'}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="bg-gray-800/50 rounded-lg p-8 border border-gray-700 text-center">
+          <Shield className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-white mb-2">Privacy Data Loading...</h3>
+          <p className="text-gray-400">Compliance information will appear here once loaded.</p>
+        </div>
+      )}
+    </div>
+  );
+
+  const renderPilotAnalytics = () => (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold text-white flex items-center">
+          <BarChart3 className="w-6 h-6 mr-3 text-purple-400" />
+          Pilot Analytics
+        </h2>
+        <button
+          onClick={loadData}
+          className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm"
+        >
+          Refresh
+        </button>
+      </div>
+
+      {pilotAnalytics ? (
+        <div className="space-y-6">
+          {/* User Engagement */}
+          <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-700">
+            <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
+              <Users className="w-5 h-5 mr-2 text-blue-400" />
+              User Engagement
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="text-center">
+                <p className="text-2xl font-bold text-blue-400">{pilotAnalytics.userEngagement?.dailyActiveUsers || 0}</p>
+                <p className="text-sm text-gray-400">Daily Active Users</p>
+              </div>
+              <div className="text-center">
+                <p className="text-2xl font-bold text-green-400">{pilotAnalytics.userEngagement?.averageSessionDuration || 'N/A'}</p>
+                <p className="text-sm text-gray-400">Avg Session</p>
+              </div>
+              <div className="text-center">
+                <p className="text-2xl font-bold text-purple-400">{pilotAnalytics.userEngagement?.retentionRate?.day7 || 'N/A'}</p>
+                <p className="text-sm text-gray-400">7-Day Retention</p>
+              </div>
+              <div className="text-center">
+                <p className="text-2xl font-bold text-orange-400">{pilotAnalytics.userEngagement?.retentionRate?.day30 || 'N/A'}</p>
+                <p className="text-sm text-gray-400">30-Day Retention</p>
+              </div>
+            </div>
+            
+            {/* Feature Usage */}
+            <div className="mt-6">
+              <h4 className="text-md font-semibold text-white mb-3">Feature Usage</h4>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {pilotAnalytics.userEngagement?.featureUsage && Object.entries(pilotAnalytics.userEngagement.featureUsage).map(([feature, usage]) => (
+                  <div key={feature} className="bg-gray-700/30 rounded-lg p-3 text-center">
+                    <p className="text-lg font-bold text-white">{String(usage)}</p>
+                    <p className="text-xs text-gray-400 capitalize">{feature.replace('_', ' ')}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* System Performance */}
+          <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-700">
+            <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
+              <Activity className="w-5 h-5 mr-2 text-green-400" />
+              System Performance
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <h4 className="text-md font-semibold text-white mb-3">API Response Times</h4>
+                <div className="space-y-2">
+                  {pilotAnalytics.systemPerformance?.apiResponseTime && Object.entries(pilotAnalytics.systemPerformance.apiResponseTime).map(([api, time]) => (
+                    <div key={api} className="flex justify-between">
+                      <span className="text-gray-400 capitalize">{api}:</span>
+                      <span className="text-green-400">{String(time)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <h4 className="text-md font-semibold text-white mb-3">Error Rates</h4>
+                <div className="space-y-2">
+                  {pilotAnalytics.systemPerformance?.errorRates && Object.entries(pilotAnalytics.systemPerformance.errorRates).map(([service, rate]) => (
+                    <div key={service} className="flex justify-between">
+                      <span className="text-gray-400 capitalize">{service.replace(/([A-Z])/g, ' $1')}:</span>
+                      <span className="text-yellow-400">{String(rate)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <h4 className="text-md font-semibold text-white mb-3">System Health</h4>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Uptime:</span>
+                    <span className="text-green-400">{pilotAnalytics.systemPerformance?.uptime || 'N/A'}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* User Feedback & Privacy Compliance */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-700">
+              <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
+                <MessageSquare className="w-5 h-5 mr-2 text-yellow-400" />
+                User Feedback
+              </h3>
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Satisfaction Score:</span>
+                  <span className="text-green-400">{pilotAnalytics.userFeedback?.satisfactionScore || 'N/A'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Critical Issues:</span>
+                  <span className="text-red-400">{pilotAnalytics.userFeedback?.criticalIssues || 0}</span>
+                </div>
+                <div>
+                  <p className="text-gray-400 text-sm mb-2">Common Requests:</p>
+                  <div className="space-y-1">
+                    {pilotAnalytics.userFeedback?.commonRequests?.map((request: string, index: number) => (
+                      <p key={index} className="text-blue-400 text-sm">• {request}</p>
+                    )) || <p className="text-gray-500 text-sm">No requests logged</p>}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-700">
+              <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
+                <Shield className="w-5 h-5 mr-2 text-blue-400" />
+                Privacy Compliance
+              </h3>
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Data Retention:</span>
+                  <span className="text-green-400">{pilotAnalytics.privacyCompliance?.dataRetentionCompliance || 'N/A'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">User Consent:</span>
+                  <span className="text-green-400">{pilotAnalytics.privacyCompliance?.userConsentRate || 'N/A'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Data Breaches:</span>
+                  <span className="text-green-400">{pilotAnalytics.privacyCompliance?.dataBreaches || 0}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Privacy Audits:</span>
+                  <span className="text-green-400">{pilotAnalytics.privacyCompliance?.privacyAudits || 'N/A'}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="bg-gray-800/50 rounded-lg p-8 border border-gray-700 text-center">
+          <BarChart3 className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-white mb-2">Analytics Loading...</h3>
+          <p className="text-gray-400">Pilot analytics data will appear here once loaded.</p>
+        </div>
+      )}
     </div>
   );
 
@@ -423,6 +774,8 @@ const AdminPortal: React.FC = () => {
         <nav className="flex space-x-8">
           {[
             { id: 'overview', label: 'Overview', icon: BarChart3 },
+            { id: 'privacy-compliance', label: 'Privacy & Compliance', icon: Shield },
+            { id: 'pilot-analytics', label: 'Pilot Analytics', icon: BarChart3 },
             { id: 'feedback', label: 'Feedback', icon: MessageSquare },
             { id: 'tools', label: 'System Tools', icon: Settings },
             { id: 'ai-monitoring', label: 'AI Monitoring', icon: Monitor },
@@ -451,6 +804,8 @@ const AdminPortal: React.FC = () => {
       {/* Tab Content */}
       <div className="mt-6">
         {activeTab === 'overview' && renderOverview()}
+        {activeTab === 'privacy-compliance' && renderPrivacyCompliance()}
+        {activeTab === 'pilot-analytics' && renderPilotAnalytics()}
         {activeTab === 'feedback' && renderFeedbackManagement()}
         {activeTab === 'tools' && renderSystemTools()}
         {activeTab === 'ai-monitoring' && (

@@ -1,8 +1,8 @@
 // SEMANTIC MEMORY SERVICE - Handles extraction, storage, and retrieval of semantic memories
 // Core component for preserving therapeutic conversation insights
 
-import { db } from '../db.js';
-import { semanticMemories } from '@shared/schema';
+import { db } from '../db.ts';
+import { semanticMemories } from '../../shared/schema.ts';
 import { eq, desc, and, or, ilike, sql } from 'drizzle-orm';
 import type { ISemanticMemoryService, SemanticMemory, MemoryContext } from './types.js';
 
@@ -26,11 +26,11 @@ export class SemanticMemoryService implements ISemanticMemoryService {
           memoryType: memoryData.type,
           content: memoryData.content,
           semanticTags: memoryData.tags,
-          emotionalContext: context.emotionalState,
-          temporalContext: context.timeContext?.toISOString(),
+          emotionalContext: context.emotionalState || null,
+          temporalContext: context.timeContext?.toISOString() || null,
           relatedTopics: context.currentTopics || [],
           confidence: memoryData.confidence,
-          sourceConversationId: context.sessionId,
+          sourceConversationId: context.sessionId ? parseInt(context.sessionId) || null : null,
           isActiveMemory: true
         });
         
@@ -200,10 +200,10 @@ export class SemanticMemoryService implements ISemanticMemoryService {
 
       // Find memories with overlapping tags or topics
       const relatedConditions = [
-        ...sourceMemory.semanticTags.map(tag => 
+        ...(sourceMemory.semanticTags ?? []).map(tag =>
           ilike(semanticMemories.semanticTags, `%${tag}%`)
         ),
-        ...sourceMemory.relatedTopics.map(topic => 
+        ...(sourceMemory.relatedTopics ?? []).map(topic =>
           ilike(semanticMemories.relatedTopics, `%${topic}%`)
         )
       ];
@@ -364,7 +364,7 @@ export class SemanticMemoryService implements ISemanticMemoryService {
       }
     });
 
-    return [...new Set(tags)]; // Remove duplicates
+    return Array.from(new Set(tags)); // Remove duplicates
   }
 
   private async incrementAccessCount(memoryId: number): Promise<void> {

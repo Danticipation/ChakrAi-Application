@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { RefreshCw, Brain, TrendingUp, User, RotateCcw, Volume2, VolumeX, Play, Pause, Settings, Sparkles, Heart, Target, BookOpen } from 'lucide-react';
-import { getCurrentUserId } from '../utils/userSession';
+import { getCurrentUserId, getAuthHeaders } from '../utils/unifiedUserSession';
 
 interface PersonalityReflectionData {
   communicationStyle: string;
@@ -28,9 +28,23 @@ interface PersonalityReflectionProps {
 }
 
 const PersonalityReflection: React.FC<PersonalityReflectionProps> = ({ userId }) => {
-  // Get current user ID from session context
-  const currentUserId = userId || getCurrentUserId();
+  // Use unified user session system
+  const [currentUserId, setCurrentUserId] = useState<number>(0);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  
+  // Get authenticated user ID on component mount
+  useEffect(() => {
+    const getUser = async () => {
+      try {
+        const authenticatedUserId = await getCurrentUserId();
+        setCurrentUserId(authenticatedUserId);
+        console.log('🔐 PersonalityReflection: Using authenticated user ID:', authenticatedUserId);
+      } catch (error) {
+        console.error('❌ PersonalityReflection: Failed to get user ID:', error);
+      }
+    };
+    getUser();
+  }, []);
   
   // ElevenLabs Text-to-Speech state
   const [isPlaying, setIsPlaying] = useState(false);
@@ -45,28 +59,29 @@ const PersonalityReflection: React.FC<PersonalityReflectionProps> = ({ userId })
   const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
 
   const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ['personality-reflection', refreshTrigger],
+    queryKey: ['personality-reflection', currentUserId, refreshTrigger],
     queryFn: async (): Promise<PersonalityReflectionData> => {
-      const deviceFingerprint = localStorage.getItem('deviceFingerprint') || 
-                               `device_${Math.random().toString(36).substring(2, 15)}`;
-      const sessionId = localStorage.getItem('sessionId') || 
-                       `session_${Math.random().toString(36).substring(2, 15)}`;
+      console.log('🧠 PersonalityReflection: Fetching for authenticated user:', currentUserId);
       
-      localStorage.setItem('deviceFingerprint', deviceFingerprint);
-      localStorage.setItem('sessionId', sessionId);
+      // Use unified authentication headers (includes X-User-ID)
+      const authHeaders = await getAuthHeaders();
+      console.log('🔐 PersonalityReflection: Using auth headers:', authHeaders);
       
-      const response = await fetch(`/api/analytics/personality-reflection/${currentUserId}`, {
+      const response = await fetch(`/api/personality-insights`, {
         headers: {
-          'X-Device-Fingerprint': deviceFingerprint,
-          'X-Session-ID': sessionId
+          ...authHeaders
+          // Note: UID is handled by the HIPAA auth system automatically
         }
       });
       
       if (!response.ok) {
-        throw new Error('Failed to fetch personality reflection');
+        const errorText = await response.text();
+        console.error('❌ PersonalityReflection: Fetch failed:', response.status, errorText);
+        throw new Error(`Failed to fetch personality reflection: ${response.status}`);
       }
       return response.json();
     },
+    enabled: currentUserId > 0, // Only run query when we have a valid user ID
     refetchInterval: 300000, // Refresh every 5 minutes
   });
 
@@ -201,7 +216,7 @@ This completes your personality analysis.
     speechSynthesis.speak(utterance);
   };
 
-  if (isLoading) {
+  if (isLoading || currentUserId === 0) {
     return (
       <div className="p-6 h-full theme-primary">
         <div className="flex items-center justify-between mb-4">
@@ -216,6 +231,9 @@ This completes your personality analysis.
             <div className="h-4 bg-white/30 rounded w-1/2"></div>
             <div className="h-4 bg-white/30 rounded w-5/6"></div>
             <div className="h-4 bg-white/30 rounded w-2/3"></div>
+          </div>
+          <div className="text-center mt-4 text-white/60">
+            {currentUserId === 0 ? 'Authenticating...' : 'Loading personality analysis...'}
           </div>
         </div>
       </div>

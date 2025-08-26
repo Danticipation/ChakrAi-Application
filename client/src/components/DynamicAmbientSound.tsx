@@ -140,6 +140,8 @@ const DynamicAmbientSound: React.FC<DynamicAmbientSoundProps> = ({
     initializeAudio(sound);
     
     const audio = audioRefs.current[sound.id];
+    if (!audio) return;
+    
     const playing = isPlaying[sound.id];
     
     if (playing) {
@@ -149,8 +151,11 @@ const DynamicAmbientSound: React.FC<DynamicAmbientSoundProps> = ({
       // Stop other sounds when starting a new one
       Object.keys(audioRefs.current).forEach(soundId => {
         if (soundId !== sound.id && isPlaying[soundId]) {
-          audioRefs.current[soundId].pause();
-          setIsPlaying(prev => ({ ...prev, [soundId]: false }));
+          const otherAudio = audioRefs.current[soundId];
+          if (otherAudio) {
+            otherAudio.pause();
+            setIsPlaying(prev => ({ ...prev, [soundId]: false }));
+          }
         }
       });
       
@@ -171,7 +176,7 @@ const DynamicAmbientSound: React.FC<DynamicAmbientSoundProps> = ({
     const audio = audioRefs.current[soundId];
     if (audio) {
       const muted = isMuted[soundId];
-      audio.volume = muted ? volume[soundId] : 0;
+      audio.volume = muted ? (volume[soundId] || 0.5) : 0;
       setIsMuted(prev => ({ ...prev, [soundId]: !muted }));
     }
   };

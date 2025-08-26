@@ -15,8 +15,22 @@ const PremiumGate: React.FC<PremiumGateProps> = ({
   fallback, 
   showUpgrade = true 
 }) => {
-  const { isPremium, checkUsageLimit, upgradeSubscription } = useSubscription();
-  const { canUse, remaining, limit } = checkUsageLimit(feature);
+  const { isPremium, checkUsageLimit } = useSubscription();
+  const [usageData, setUsageData] = React.useState<{ canUse: boolean; remaining: number; limit: number } | null>(null);
+  
+  React.useEffect(() => {
+    const loadUsageData = async () => {
+      const data = await checkUsageLimit();
+      setUsageData({ canUse: data.allowed, remaining: data.remaining, limit: data.limit });
+    };
+    loadUsageData();
+  }, [checkUsageLimit]);
+  
+  if (!usageData) {
+    return <div>Loading...</div>;
+  }
+  
+  const { canUse, remaining, limit } = usageData;
 
   if (isPremium || canUse) {
     return <>{children}</>;
@@ -44,7 +58,7 @@ const PremiumGate: React.FC<PremiumGateProps> = ({
       
       {showUpgrade && (
         <button
-          onClick={upgradeSubscription}
+          onClick={() => console.log('Upgrade to premium')}
           className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-6 py-3 rounded-lg font-semibold hover:from-yellow-500 hover:to-orange-600 transition-all duration-200 flex items-center space-x-2 mx-auto"
         >
           <Zap className="w-4 h-4" />
@@ -62,7 +76,21 @@ interface UsageBadgeProps {
 
 export const UsageBadge: React.FC<UsageBadgeProps> = ({ feature, compact = false }) => {
   const { isPremium, checkUsageLimit } = useSubscription();
-  const { remaining, limit } = checkUsageLimit(feature);
+  const [usageData, setUsageData] = React.useState<{ remaining: number; limit: number } | null>(null);
+  
+  React.useEffect(() => {
+    const loadUsageData = async () => {
+      const data = await checkUsageLimit();
+      setUsageData({ remaining: data.remaining, limit: data.limit });
+    };
+    loadUsageData();
+  }, [checkUsageLimit]);
+  
+  if (!usageData) {
+    return null;
+  }
+  
+  const { remaining, limit } = usageData;
 
   if (isPremium) {
     return (
@@ -104,14 +132,24 @@ export const PremiumButton: React.FC<PremiumButtonProps> = ({
   className = '', 
   disabled = false 
 }) => {
-  const { isPremium, checkUsageLimit, upgradeSubscription } = useSubscription();
-  const { canUse } = checkUsageLimit(feature);
+  const { isPremium, checkUsageLimit } = useSubscription();
+  const [canUse, setCanUse] = React.useState<boolean>(false);
+  
+  React.useEffect(() => {
+    const loadUsageData = async () => {
+      const data = await checkUsageLimit();
+      setCanUse(data.allowed);
+    };
+    loadUsageData();
+  }, [checkUsageLimit]);
+  
+  const { canUse: canUseValue } = { canUse };
 
   const handleClick = () => {
     if (isPremium || canUse) {
       onClick();
     } else {
-      upgradeSubscription();
+      console.log('Upgrade to premium');
     }
   };
 

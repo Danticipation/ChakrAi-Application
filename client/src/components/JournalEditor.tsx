@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { Save, Trash2, Eye, EyeOff, Brain, TrendingUp, FileText, Mic, Square, AlertCircle } from 'lucide-react';
-import type { JournalEntry, JournalAnalytics } from '@shared/schema';
+import type { JournalEntry, JournalAnalytics } from '../../../shared/schema';
 
 interface JournalEditorProps {
   entry?: JournalEntry;
@@ -40,10 +40,10 @@ export default function JournalEditor({ entry, onSave, onCancel, userId }: Journ
   const [title, setTitle] = useState(entry?.title || '');
   const [content, setContent] = useState(entry?.content || '');
   const [mood, setMood] = useState(entry?.mood || '');
-  const [selectedTags, setSelectedTags] = useState<string[]>(entry?.emotionalTags || []);
-  const [triggers, setTriggers] = useState<string[]>(entry?.triggers || []);
-  const [gratitude, setGratitude] = useState<string[]>(entry?.gratitude || []);
-  const [goals, setGoals] = useState<string[]>(entry?.goals || []);
+  const [selectedTags, setSelectedTags] = useState<string[]>(entry?.tags || []);
+  const [triggers, setTriggers] = useState<string[]>([]);
+  const [gratitude, setGratitude] = useState<string[]>([]);
+  const [goals, setGoals] = useState<string[]>([]);
   const [newTrigger, setNewTrigger] = useState('');
   const [newGratitude, setNewGratitude] = useState('');
   const [newGoal, setNewGoal] = useState('');
@@ -131,17 +131,18 @@ export default function JournalEditor({ entry, onSave, onCancel, userId }: Journ
       let errorMessage = 'Voice transcription failed. Please try again or use text input.';
       
       // Check if it's an axios error with response
-      if (error?.response?.data) {
-        if (error.response.data.errorType === 'quota_exceeded') {
+      if (axios.isAxiosError(error) && error.response?.data) {
+        const responseData = error.response.data as any;
+        if (responseData.errorType === 'quota_exceeded') {
           errorMessage = 'Voice transcription temporarily unavailable due to high demand. Please try again later or type your entry manually.';
-        } else if (error.response.data.errorType === 'auth_error') {
+        } else if (responseData.errorType === 'auth_error') {
           errorMessage = 'Voice transcription service configuration error. Please use text input for now.';
-        } else if (error.response.data.error) {
-          errorMessage = error.response.data.error;
+        } else if (responseData.error) {
+          errorMessage = responseData.error;
         }
-      } else if (error?.response?.status === 503) {
+      } else if (axios.isAxiosError(error) && error.response?.status === 503) {
         errorMessage = 'Voice transcription service is temporarily unavailable. Please try again later or type your entry manually.';
-      } else if (error?.response?.status === 429) {
+      } else if (axios.isAxiosError(error) && error.response?.status === 429) {
         errorMessage = 'Voice transcription temporarily unavailable due to high demand. Please try again later or type your entry manually.';
       }
       
@@ -242,7 +243,7 @@ export default function JournalEditor({ entry, onSave, onCancel, userId }: Journ
       return;
     }
 
-    const wordCount = content.split(/\s+/).filter(word => word.length > 0).length;
+    const wordCount = content.split(/\s+/).filter((word) => word.length > 0).length;
     const readingTime = Math.ceil(wordCount / 200);
 
     const journalData = {
@@ -433,11 +434,11 @@ export default function JournalEditor({ entry, onSave, onCancel, userId }: Journ
             </button>
           </div>
           <div className="flex justify-between items-center mt-2 text-xs" style={{ color: 'var(--text-secondary)' }}>
-            <span>{content.split(/\s+/).filter(word => word.length > 0).length} words</span>
+            <span>{content.split(/\s+/).filter((word) => word.length > 0).length} words</span>
             <div className="flex items-center gap-2">
               {isTranscribing && <span className="text-blue-500">Transcribing...</span>}
               {isRecording && <span className="text-red-500">Recording...</span>}
-              <span>~{Math.ceil(content.split(/\s+/).filter(word => word.length > 0).length / 200)} min read</span>
+              <span>~{Math.ceil(content.split(/\s+/).filter((word) => word.length > 0).length / 200)} min read</span>
             </div>
           </div>
         </div>
@@ -490,7 +491,7 @@ export default function JournalEditor({ entry, onSave, onCancel, userId }: Journ
               <div className="grid grid-cols-2 gap-3">
                 <div className="text-center p-3 rounded-lg" style={{ backgroundColor: 'var(--gentle-lavender)' }}>
                   <div className="text-lg font-bold" style={{ color: 'var(--soft-blue-dark)' }}>
-                    {((analytics.sentimentScore || 0) * 100).toFixed(0)}%
+                    {analytics.sentimentScore ? `${(parseFloat(analytics.sentimentScore) * 100).toFixed(0)}%` : '0%'}
                   </div>
                   <div className="text-xs" style={{ color: 'var(--text-secondary)' }}>Sentiment</div>
                 </div>
@@ -503,26 +504,22 @@ export default function JournalEditor({ entry, onSave, onCancel, userId }: Journ
               </div>
 
               {/* Key Insights */}
-              {analytics.keyInsights && analytics.keyInsights.length > 0 && (
+              {analytics.insights && (
                 <div>
                   <h4 className="font-medium mb-2" style={{ color: 'var(--text-primary)' }}>Key Insights</h4>
-                  <ul className="space-y-1">
-                    {analytics.keyInsights.slice(0, 3).map((insight, index) => (
-                      <li key={index} className="text-xs flex items-start gap-2" style={{ color: 'var(--text-secondary)' }}>
-                        <TrendingUp className="w-3 h-3 mt-0.5 flex-shrink-0" />
-                        {insight}
-                      </li>
-                    ))}
-                  </ul>
+                  <div className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+                    <TrendingUp className="w-3 h-3 inline mr-2" />
+                    {analytics.insights}
+                  </div>
                 </div>
               )}
 
               {/* Recommended Actions */}
-              {analytics.recommendedActions && analytics.recommendedActions.length > 0 && (
+              {analytics.recommendations && analytics.recommendations.length > 0 && (
                 <div>
                   <h4 className="font-medium mb-2" style={{ color: 'var(--text-primary)' }}>Suggestions</h4>
                   <ul className="space-y-1">
-                    {analytics.recommendedActions.slice(0, 2).map((action, index) => (
+                    {analytics.recommendations.slice(0, 2).map((action: string, index: number) => (
                       <li key={index} className="text-xs flex items-start gap-2" style={{ color: 'var(--text-secondary)' }}>
                         <FileText className="w-3 h-3 mt-0.5 flex-shrink-0" />
                         {action}

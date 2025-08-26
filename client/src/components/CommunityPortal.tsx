@@ -588,12 +588,17 @@ export default function CommunityPortal({ userId }: CommunityPortalProps) {
       }
       
       // Submit post
-      createPostMutation.mutate({
+      const postData: { title: string; content: string; isAnonymous: boolean; anonymousName?: string } = {
         title: title.trim(),
         content: content.trim(),
         isAnonymous: anonymousMode,
-        anonymousName: anonymousMode ? generateAnonymousName() : undefined,
-      });
+      };
+      
+      if (anonymousMode) {
+        postData.anonymousName = generateAnonymousName();
+      }
+      
+      createPostMutation.mutate(postData);
       
       // Reset form
       setTitle('');

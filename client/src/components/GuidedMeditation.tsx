@@ -320,9 +320,9 @@ export function GuidedMeditation() {
             name: selectedMeditation.name,
             description: selectedMeditation.description,
             duration: selectedMeditation.duration,
-            type: selectedMeditation.type,
+            type: selectedMeditation.type === 'guided' || selectedMeditation.type === 'body_scan' ? 'mindfulness' : selectedMeditation.type,
             guidedSteps: selectedMeditation.guidedSteps,
-            breathingPattern: selectedMeditation.breathingPattern
+            ...(selectedMeditation.breathingPattern && { breathingPattern: selectedMeditation.breathingPattern })
           }}
           onComplete={handleMeditationComplete}
           onClose={handleMeditationClose}
@@ -331,10 +331,7 @@ export function GuidedMeditation() {
         />
         {selectedAmbientSound && (
           <DynamicAmbientSound
-            soundId={selectedAmbientSound}
-            isPlaying={true}
-            volume={0.3}
-            onStop={() => setSelectedAmbientSound(null)}
+            adaptiveMode={true}
           />
         )}
       </>

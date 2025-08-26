@@ -21,6 +21,8 @@ interface BeautifulChatProps {
   chatInput: string;
   setChatInput: (input: string) => void;
   isAiTyping?: boolean;
+  isTtsEnabled: boolean;
+  onTtsToggle: () => void;
 }
 
 const TypingIndicator = () => (
@@ -36,11 +38,21 @@ const TypingIndicator = () => (
   </div>
 );
 
-const MessageBubble = ({ message, isUser }: { message: Message; isUser: boolean }) => {
+const MessageBubble = ({ message, isUser, onSpeakMessage }: { 
+  message: Message; 
+  isUser: boolean;
+  onSpeakMessage?: (text: string) => void;
+}) => {
   const [showActions, setShowActions] = useState(false);
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(message.text);
+  };
+
+  const speakMessage = () => {
+    if (onSpeakMessage) {
+      onSpeakMessage(message.text);
+    }
   };
 
   return (
@@ -92,9 +104,19 @@ const MessageBubble = ({ message, isUser }: { message: Message; isUser: boolean 
                   <button
                     onClick={copyToClipboard}
                     className="p-1 rounded-lg bg-black/20 hover:bg-black/40 transition-colors duration-200"
+                    title="Copy message"
                   >
                     <Copy className="w-3 h-3 text-white/80" />
                   </button>
+                  {!isUser && onSpeakMessage && (
+                    <button
+                      onClick={speakMessage}
+                      className="p-1 rounded-lg bg-black/20 hover:bg-black/40 transition-colors duration-200"
+                      title="Speak message"
+                    >
+                      <Volume2 className="w-3 h-3 text-white/80" />
+                    </button>
+                  )}
                   <button className="p-1 rounded-lg bg-black/20 hover:bg-black/40 transition-colors duration-200">
                     <MoreVertical className="w-3 h-3 text-white/80" />
                   </button>
@@ -145,14 +167,95 @@ const BeautifulChat: React.FC<BeautifulChatProps> = ({
   messages,
   chatInput,
   setChatInput,
-  isAiTyping = false
+  isAiTyping = false,
+  isTtsEnabled,
+  onTtsToggle
 }) => {
   const [showQuickActions, setShowQuickActions] = useState(messages.length === 0);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const lastBotMessageRef = useRef<string>('');
+
+  // Function to play text-to-speech
+  const playTTS = async (text: string) => {
+    if (!isTtsEnabled || !text.trim()) return;
+    
+    try {
+      setIsPlaying(true);
+      
+      // Stop any currently playing audio
+      if (currentAudio) {
+        currentAudio.pause();
+        currentAudio.currentTime = 0;
+      }
+      
+      const response = await fetch('/api/text-to-speech', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          text: text,
+          voice: selectedVoice
+        }),
+      });
+
+      if (response.ok) {
+        const audioBlob = await response.blob();
+        const audioUrl = URL.createObjectURL(audioBlob);
+        const audio = new Audio(audioUrl);
+        
+        setCurrentAudio(audio);
+        
+        audio.addEventListener('ended', () => {
+          setIsPlaying(false);
+          setCurrentAudio(null);
+          URL.revokeObjectURL(audioUrl);
+        });
+        
+        audio.addEventListener('error', () => {
+          console.error('Audio playback failed');
+          setIsPlaying(false);
+          setCurrentAudio(null);
+          URL.revokeObjectURL(audioUrl);
+        });
+        
+        await audio.play();
+      } else {
+        console.error('TTS request failed:', response.statusText);
+        setIsPlaying(false);
+      }
+    } catch (error) {
+      console.error('TTS error:', error);
+      setIsPlaying(false);
+    }
+  };
+
+  // Function to stop TTS
+  const stopTTS = () => {
+    if (currentAudio) {
+      currentAudio.pause();
+      currentAudio.currentTime = 0;
+      setCurrentAudio(null);
+    }
+    setIsPlaying(false);
+  };
+
+  // Function to toggle TTS on/off
+  const toggleTTS = () => {
+    if (isPlaying) {
+      stopTTS();
+    }
+    onTtsToggle();
+  };
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isAiTyping]);
+
+  // Removed auto-play TTS to prevent duplication with Layout.tsx
+  // The main chat system already handles auto-play via API audioUrl response
 
   const handleSend = () => {
     if (!chatInput.trim()) return;
@@ -210,8 +313,20 @@ const BeautifulChat: React.FC<BeautifulChatProps> = ({
           </div>
           
           <div className="flex items-center space-x-3">
-            <button className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-colors duration-300">
-              <Volume2 className="w-5 h-5 text-white" />
+            <button 
+              onClick={toggleTTS}
+              className={`p-2 rounded-xl transition-colors duration-300 ${
+                isTtsEnabled ? 'bg-blue-500/20 hover:bg-blue-500/30' : 'bg-red-500/20 hover:bg-red-500/30'
+              }`}
+              title={isTtsEnabled ? 'Disable voice' : 'Enable voice'}
+            >
+              {isPlaying ? (
+                <Volume2 className="w-5 h-5 text-blue-400 animate-pulse" />
+              ) : isTtsEnabled ? (
+                <Volume2 className="w-5 h-5 text-white" />
+              ) : (
+                <VolumeX className="w-5 h-5 text-red-400" />
+              )}
             </button>
             <button className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-colors duration-300">
               <Settings className="w-5 h-5 text-white" />
@@ -242,6 +357,7 @@ const BeautifulChat: React.FC<BeautifulChatProps> = ({
             key={message.id || `${message.sender}-${message.time}`}
             message={message}
             isUser={message.sender === 'user'}
+            onSpeakMessage={playTTS}
           />
         ))}
 

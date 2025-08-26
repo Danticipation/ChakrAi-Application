@@ -12,8 +12,11 @@ import MemoryDashboard from '@/components/MemoryDashboard';
 import ConversationContinuityDisplay from '@/components/ConversationContinuityDisplay';
 import VoiceSelector from '@/components/VoiceSelector';
 import ThemeSelector from '@/components/ThemeSelector';
-import WellnessDashboard from '@/components/WellnessDashboard';
+// Import comprehensive engaging components
+import EnhancedDashboard from '@/components/EnhancedDashboard';
 import BeautifulChat from '@/components/BeautifulChat';
+import ChakraiPlans from '@/components/ChakraiPlans';
+
 // import AuthModal from '@/components/AuthModal';
 
 import PersonalityQuiz from '@/components/PersonalityQuiz';
@@ -40,11 +43,14 @@ import AdminPortal from '@/components/AdminPortal';
 import Horoscope from '@/components/Horoscope';
 import DailyAffirmation from '@/components/DailyAffirmation';
 import PilotAnalyticsDashboard from '@/components/PilotAnalyticsDashboard';
+import StarsAndStudiesPage from '@/components/StarsAndStudiesPage';
+import SubscriptionTierDemo from '@/components/SubscriptionTierDemo';
 // Removed duplicate chat components - using only main chat interface
 import ChallengeSystem from '@/components/ChallengeSystem';
 import SupabaseSetup from '@/components/SupabaseSetup';
 import { VoiceRecorder } from '@/utils/voiceRecorder';
-import { getCurrentUserId, generateDeviceFingerprint } from '@/utils/userSession';
+import { getCurrentUserId, getAuthHeaders, validateUserSession } from '../utils/unifiedUserSession';
+import PrivacyControl from '@/components/PrivacyControl';
 import OnboardingTour from '@/components/OnboardingTour';
 
 const queryClient = new QueryClient({
@@ -84,6 +90,7 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
   const [voiceStatus, setVoiceStatus] = useState<'idle' | 'recording' | 'processing'>('idle');
   const [messages, setMessages] = useState<Array<{sender: 'user' | 'bot', text: string, time: string}>>([]);
   const [isAiTyping, setIsAiTyping] = useState(false);
+  const [isTtsEnabled, setIsTtsEnabled] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const voiceRecorderRef = useRef<VoiceRecorder | null>(null);
 
@@ -129,24 +136,49 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
     }
   };
 
-  // Device fingerprint generation
-  const generateDeviceFingerprint = () => {
-    const stored = localStorage.getItem('chakrai_device_fingerprint');
-    if (stored) return stored;
-    
-    const fingerprint = `device_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
-    localStorage.setItem('chakrai_device_fingerprint', fingerprint);
-    return fingerprint;
+  // Async TTS generation function (non-blocking)
+  const generateAndPlayTTS = async (text: string, voice: string) => {
+    try {
+      const startTime = Date.now();
+      console.log('🔊 Starting TTS generation...');
+      
+      const ttsResponse = await fetch('/api/text-to-speech', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ text, voice }),
+      });
+
+      if (ttsResponse.ok) {
+        const audioBlob = await ttsResponse.blob();
+        const audioUrl = URL.createObjectURL(audioBlob);
+        const audio = new Audio(audioUrl);
+        
+        const generationTime = Date.now() - startTime;
+        console.log(`🔊 TTS generated in ${generationTime}ms`);
+        
+        audio.addEventListener('ended', () => {
+          URL.revokeObjectURL(audioUrl);
+        });
+        
+        audio.addEventListener('error', (e) => {
+          console.error('🔊 TTS playback error:', e);
+          URL.revokeObjectURL(audioUrl);
+        });
+        
+        audio.volume = 0.8;
+        await audio.play();
+        console.log('🔊 TTS playback started');
+      } else {
+        console.error('🔊 TTS request failed:', ttsResponse.statusText);
+      }
+    } catch (error) {
+      console.error('🔊 TTS generation failed:', error);
+    }
   };
 
-  const generateSessionId = () => {
-    const stored = sessionStorage.getItem('chakrai_session_id');
-    if (stored) return stored;
-    
-    const sessionId = `session_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
-    sessionStorage.setItem('chakrai_session_id', sessionId);
-    return sessionId;
-  };
+
 
   // Send message functionality
   const handleSendMessage = async (message?: string) => {
@@ -154,6 +186,8 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
     if (!messageText.trim()) return;
     
     console.log(`🎵 Frontend - Sending message with voice: ${selectedVoice}`);
+    
+    // Validate session before sending (note: unified system handles this internally)
     
     const userMessage = {
       sender: 'user' as const,
@@ -165,21 +199,17 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
     setChatInput('');
     setIsAiTyping(true); // Show typing indicator
     
-    // Send to AI API with device fingerprint headers and voice parameter
+    // Send to AI API with authenticated headers and voice parameter
     try {
-      const deviceFingerprint = generateDeviceFingerprint();
-      const sessionId = generateSessionId();
+      const headers = await getAuthHeaders();
+      console.log('🔒 Sending chat message with authenticated headers');
       
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout for audio responses
       
       const response = await fetch('/api/chat', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Device-Fingerprint': deviceFingerprint,
-          'X-Session-Id': sessionId
-        },
+        headers,
         body: JSON.stringify({
           message: messageText,
           voice: selectedVoice // Use the selected voice from state
@@ -206,47 +236,11 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
         setMessages(prev => [...prev, botMessage]);
         setIsAiTyping(false); // Hide typing indicator
         
-        // Play audio if available
-        if (data.audioUrl) {
-          console.log('🔊 Main Chat - Playing audio response...');
-          console.log('🔊 Audio data length:', data.audioUrl.length);
-          try {
-            // Convert base64 to audio blob and play
-            const binaryString = atob(data.audioUrl);
-            const bytes = new Uint8Array(binaryString.length);
-            for (let i = 0; i < binaryString.length; i++) {
-              bytes[i] = binaryString.charCodeAt(i);
-            }
-            const audioBlob = new Blob([bytes], { type: 'audio/mpeg' });
-            const audioUrl = URL.createObjectURL(audioBlob);
-            const audio = new Audio(audioUrl);
-            
-            // Add event listeners for debugging
-            audio.addEventListener('loadstart', () => console.log('🔊 Audio loading started'));
-            audio.addEventListener('canplay', () => console.log('🔊 Audio can play'));
-            audio.addEventListener('playing', () => console.log('🔊 Audio is playing'));
-            audio.addEventListener('ended', () => console.log('🔊 Audio playback ended'));
-            audio.addEventListener('error', (e) => console.error('🔊 Audio error event:', e));
-            
-            // Set volume and attempt to play
-            audio.volume = 0.8;
-            const playPromise = audio.play();
-            
-            if (playPromise) {
-              playPromise
-                .then(() => {
-                  console.log('🔊 Audio playback started successfully');
-                })
-                .catch(error => {
-                  console.error('🔊 Audio playback failed:', error);
-                  console.error('🔊 Error details:', error.name, error.message);
-                });
-            }
-          } catch (audioError) {
-            console.error('🔊 Audio processing failed:', audioError);
-          }
-        } else {
-          console.log('🔇 Main Chat - No audio in response');
+        // Start TTS generation immediately (don't await)
+        if (isTtsEnabled && botMessage.text) {
+          console.log('🔊 Generating TTS for bot response...');
+          // Fire and forget - don't block UI
+          generateAndPlayTTS(botMessage.text, selectedVoice);
         }
       } else {
         console.error('❌ Chat API error - Status:', response.status, response.statusText);
@@ -295,9 +289,13 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
 
   // Component rendering function
   const renderActiveSection = () => {
+    console.log('🔍 Rendering section:', activeSection); // Debug log
     switch (activeSection) {
       case 'home':
-        return <WellnessDashboard userId={currentUserId} onNavigate={setActiveSection} />;
+        console.log('🏠 Rendering EnhancedDashboard with userId:', currentUserId); // Debug log
+        return <EnhancedDashboard userId={currentUserId} onNavigate={setActiveSection} />;
+      case 'pricing':
+        return <ChakraiPlans />;
       case 'questions':
         return <VoluntaryQuestionDeck />;
       case 'journal':
@@ -311,7 +309,7 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
       case 'progress-tracker':
         return <AdaptiveLearningProgressTracker />;
       case 'analytics':
-        return <AnalyticsDashboard userId={currentUserId} onNavigate={setActiveSection} />;
+        return <AnalyticsDashboard onNavigate={setActiveSection} />;
       case 'meditation':
         return <BeautifulMeditation />;
       case 'health':
@@ -352,6 +350,10 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
         return <DailyAffirmation />;
       case 'pilot-analytics':
         return <PilotAnalyticsDashboard />;
+      case 'stars-studies':
+        return <StarsAndStudiesPage onBack={() => setActiveSection('home')} />;
+      case 'subscription-demo':
+        return <SubscriptionTierDemo />;
       case 'chat':
         return (
           <BeautifulChat
@@ -366,9 +368,12 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
             chatInput={chatInput}
             setChatInput={setChatInput}
             isAiTyping={isAiTyping}
+            isTtsEnabled={isTtsEnabled}
+            onTtsToggle={() => setIsTtsEnabled(!isTtsEnabled)}
           />
         );
       default:
+        console.log('❌ DEFAULT CASE - activeSection:', activeSection); // Debug log
         return (
           <div className="p-6 space-y-6 max-h-full overflow-y-auto">
             <div className="text-center space-y-4 mb-8">
@@ -378,6 +383,16 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
               <p className="theme-text-secondary text-xl font-light max-w-2xl mx-auto leading-relaxed">
                 Your Personal AI Wellness Companion
               </p>
+              <div className="mt-8">
+                <p className="text-sm theme-text-secondary">Debug: activeSection = {activeSection}</p>
+                <p className="text-sm theme-text-secondary">Debug: currentUserId = {currentUserId}</p>
+                <button 
+                  onClick={() => setActiveSection('home')} 
+                  className="mt-4 px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                >
+                  🏠 Go to Dashboard
+                </button>
+              </div>
             </div>
           </div>
         );
@@ -589,7 +604,10 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
                 {!collapsedSections.settings && (
                   <div className="space-y-1">
                     {[
+                      { id: 'meditation', label: 'Guided Meditation' },
                       { id: 'pilot-analytics', label: 'Pilot Analytics' },
+                      { id: 'subscription-demo', label: '💎 Subscription Demo' },
+                      { id: 'pricing', label: 'Plans & Pricing' },
                       { id: 'voice', label: 'Voice Settings' },
                       { id: 'themes', label: 'Themes' },
                       { id: 'feedback', label: 'Feedback' },
@@ -631,12 +649,6 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
 
           {/* Main Content Area */}
           <div className="ml-72 flex-1 min-h-screen">
-            <div className="theme-card backdrop-blur-sm rounded-xl p-6 border border-[var(--theme-accent)]/30 shadow-lg m-6">
-              <h2 className="text-2xl font-bold theme-text text-center mb-4">
-                Chakrai Mental Wellness Platform
-              </h2>
-            </div>
-            
             <div className="p-6">
               <ErrorBoundary>
                 {renderActiveSection()}
@@ -667,17 +679,7 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
               >
                 <Settings className="w-5 h-5" />
               </button>
-              {/* Tour test button (dev only) */}
-              <button
-                onClick={() => {
-                  localStorage.removeItem('chakrai_tour_completed');
-                  setShowOnboardingTour(true);
-                }}
-                className="p-2 theme-text-secondary rounded-lg hover:bg-white/10 transition-colors text-xs"
-                title="Start Tour"
-              >
-                🎯
-              </button>
+
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 className="p-2 theme-text rounded-lg hover:bg-white/10 transition-colors"
@@ -776,6 +778,7 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
                     <h4 className="text-sm font-medium theme-text-secondary mb-2">🧘 Guided Support</h4>
                     <div className="space-y-1">
                       {[
+                        { id: 'meditation', label: 'Guided Meditation', icon: '🧘' },
                         { id: 'agents', label: 'AI Wellness Coaches', icon: '🤝' },
                         { id: 'vr', label: 'InnerScape', icon: '🌐' },
                         { id: 'therapy-plans', label: 'Wellness Plans', icon: '📋' },
@@ -854,12 +857,38 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
                     </div>
                   </div>
 
+                  {/* Plans & Pricing */}
+                  {[
+                  { id: 'home', label: 'Home', icon: '🏠' },
+                  { id: 'chat', label: 'Chat with Chakrai', icon: '💬' },
+                  { id: 'challenges', label: 'Reflection Goals', icon: '🎯' },
+                  { id: 'rewards', label: 'Reflection Rewards', icon: '🎁' },
+                  { id: 'pricing', label: 'Plans & Pricing', icon: '💳' } // ← add this
+                ].map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => {
+                      setActiveSection(item.id);
+                      setMobileMenuOpen(false);
+                    }}
+                    className={`w-full flex items-center space-x-3 p-2 rounded-lg text-left transition-colors ${
+                      activeSection === item.id
+                        ? 'bg-blue-500/20 border border-blue-500/30 theme-text'
+                        : 'theme-text hover:bg-white/5'
+                    }`}
+                  >
+                    <span>{item.icon}</span>
+                    <span className="text-sm">{item.label}</span>
+                  </button>
+                ))}
+
                   {/* Settings */}
                   <div>
                     <h4 className="text-sm font-medium theme-text-secondary mb-2">⚙️ Settings</h4>
                     <div className="space-y-1">
                       {[
                         { id: 'pilot-analytics', label: 'Pilot Analytics', icon: '📊' },
+                        { id: 'subscription-demo', label: 'Subscription Demo', icon: '💎' },
                         { id: 'voice', label: 'Voice Settings', icon: '🎤' },
                         { id: 'themes', label: 'Themes', icon: '🎨' },
                         { id: 'feedback', label: 'Feedback', icon: '💬' },
@@ -964,43 +993,66 @@ const AppWithOnboarding = () => {
   const [showPersonalityQuiz, setShowPersonalityQuiz] = useState(false);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [showOnboardingTour, setShowOnboardingTour] = useState(false);
+  
+  // Privacy control handler
+  const handleUserIdChange = (newUserId: number) => {
+    console.log('🔄 Privacy Control: User ID changed to', newUserId);
+    // Could trigger data refresh here if needed
+  };
 
   // User session management
   useEffect(() => {
     const initializeUser = async () => {
       try {
-        // Use the robust user identification system from userSession.ts
-        const userId = getCurrentUserId();
-        const deviceFingerprint = generateDeviceFingerprint();
-
-        console.log('Using device fingerprint:', deviceFingerprint);
-        console.log('Calculated user ID:', userId);
+        console.log('🔒 Initializing bulletproof user session...');
+        
+        // Get authenticated user session
+        const userId = await getCurrentUserId();
+        if (userId === 0) {
+          console.error('❌ User authentication failed during initialization');
+          setCurrentUserId(null);
+          setIsLoadingProfile(false);
+          return;
+        }
+        
+        const headers = await getAuthHeaders();
+        
+        console.log('✅ User authentication successful. User ID:', userId);
+        
         setCurrentUserId(userId);
 
         // Check if user exists in backend or create anonymous user
         try {
-          const response = await axios.post('/api/users/anonymous', {
-            deviceFingerprint
+          const response = await fetch('/api/users/anonymous', {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({})
           });
           
-          // Verify backend user ID matches our calculation
-          if (response.data.user && response.data.user.id) {
-            console.log('Backend confirmed user ID:', response.data.user.id);
+          if (response.ok) {
+            const userData = await response.json();
+            console.log('✅ Backend user verified:', userData.user?.id);
+          } else {
+            console.warn('⚠️ Backend user creation failed, continuing with calculated ID');
           }
         } catch (backendError) {
-          console.warn('Backend user creation failed, continuing with calculated ID:', backendError);
+          console.warn('⚠️ Backend user creation failed, continuing with calculated ID:', backendError);
         }
 
         // Check if this specific user needs personality quiz
         try {
-          const profileResponse = await axios.get(`/api/user-profile-check/${userId}`);
-          console.log('Profile check response:', profileResponse.data);
+          const profileHeaders = await getAuthHeaders();
+          const profileResponse = await fetch(`/api/user-profile-check/${userId}`, { headers: profileHeaders });
+          console.log('Profile check response:', profileResponse.status);
 
-          if (profileResponse.data.needsQuiz) {
-            console.log('User needs personality quiz');
-            setShowPersonalityQuiz(false); // Bypass quiz for main app access
-          } else {
-            console.log('User has completed personality quiz');
+          if (profileResponse.ok) {
+            const profileData = await profileResponse.json();
+            if (profileData.needsQuiz) {
+              console.log('User needs personality quiz');
+              setShowPersonalityQuiz(false); // Bypass quiz for main app access
+            } else {
+              console.log('User has completed personality quiz');
+            }
           }
         } catch (profileError) {
           console.warn('Profile check failed, defaulting to main app:', profileError);
@@ -1018,7 +1070,7 @@ const AppWithOnboarding = () => {
       } catch (error) {
         console.error('Failed to initialize user:', error);
         // Robust fallback using getCurrentUserId which never fails
-        const fallbackUserId = getCurrentUserId();
+        const fallbackUserId = await getCurrentUserId();
         console.log('Using fallback user ID:', fallbackUserId);
         setCurrentUserId(fallbackUserId);
         setShowPersonalityQuiz(false); // Go directly to main app on errors
@@ -1097,6 +1149,10 @@ const AppWithOnboarding = () => {
         currentUserId={currentUserId} 
         onDataReset={handleDataReset}
       />
+      
+      {/* Privacy Control - Shows in top-right corner */}
+      <PrivacyControl onUserIdChange={handleUserIdChange} />
+      
       {/* Onboarding Tour at App Level */}
       {showOnboardingTour && (
         <OnboardingTour

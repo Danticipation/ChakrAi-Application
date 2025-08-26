@@ -1,0 +1,1 @@
+const App = () =, { style: { fontFamily: "system-ui, Segoe UI, Arial", padding: 20 } }, 'Chakrai Dev is up (OK)');

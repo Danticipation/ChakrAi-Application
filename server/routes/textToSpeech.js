@@ -13,18 +13,17 @@ const ttsRateLimit = rateLimit({
   legacyHeaders: false,
 });
 
-// Voice ID mapping for ElevenLabs - Updated to match VoiceSelector
+// Voice ID mapping for ElevenLabs - Updated with correct voice IDs
 const VOICE_MAPPING = {
-  // Original voices
-  'james': 'EkK5I93UQWFDigLMpZcX',     // James - Professional and calming
+  // Core voices - Updated with working IDs
+  'james': 'c6SfcYrb2t09NHXiT80T',     // Jonathan (replacing James)
   'brian': 'nPczCjzI2devNBz1zQrb',     // Brian - Deep and resonant
   'alexandra': 'kdmDKE6EkgrWrrykO9Qt', // Alexandra - Clear and articulate
   'carla': 'l32B8XDoylOsZKiSdfhE',     // Carla - Warm and empathetic
-  // New voices
-  'hope': 's3WpFb3KxhwHdqCNjxE1',     // Hope - Warm and encouraging
+  'hope': 'rSZFtT0J8GtnLqoDoFAp',     // Nova (replacing Hope)
   'charlotte': 'XB0fDUnXU5powFXDhCwa', // Charlotte - Gentle and empathetic
   'bronson': 'Yko7PKHZNXotIFUBG7I9',  // Bronson - Confident and reassuring
-  'marcus': 'y3kKRaK2dnn3OgKDBckk',   // Marcus - Smooth and supportive
+  'marcus': 'ZthjuvLPty3kTMaNKVKb',   // Peter (replacing Marcus)
   // Meditation voices
   'natasha': 'Atp5cNFg1Wj5gyKD7HWV',  // Natasha - Meditation female voice
   'natasha_husband': 'HgyIHe81F3nXywNwkraY', // Natasha's Husband - Meditation male voice
@@ -93,10 +92,10 @@ router.post('/text-to-speech', ttsRateLimit, ttsValidation, validateRequest, asy
         },
         body: JSON.stringify({
           text: text,
-          model_id: 'eleven_monolingual_v1',
+          model_id: 'eleven_turbo_v2', // Much faster model
           voice_settings: {
-            stability: stability,
-            similarity_boost: similarity_boost,
+            stability: Math.min(stability, 0.4), // Lower for speed
+            similarity_boost: Math.min(similarity_boost, 0.6), // Lower for speed
             style: 0.0,
             use_speaker_boost: true
           }

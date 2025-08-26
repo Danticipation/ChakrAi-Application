@@ -1,4 +1,4 @@
-import { ElevenLabs } from 'elevenlabs';
+const { ElevenLabs } = require('elevenlabs');
 
 // Advanced emotional voice system for contextual voice modulation
 export interface EmotionalVoiceProfile {
@@ -139,7 +139,7 @@ export function detectEmotionalContext(message: string, userEmotion?: string): E
 export async function generateEmotionalVoice(options: VoiceGenerationOptions): Promise<Buffer> {
   const { text, voiceProfile, emotionalContext, intensity = 1.0 } = options;
   
-  if (!process.env.ELEVENLABS_API_KEY) {
+  if (!process.env['ELEVENLABS_API_KEY']) {
     throw new Error('ElevenLabs API key not configured');
   }
   
@@ -166,7 +166,7 @@ export async function generateEmotionalVoice(options: VoiceGenerationOptions): P
   
   try {
     const client = new ElevenLabs({
-      apiKey: process.env.ELEVENLABS_API_KEY!
+      apiKey: process.env['ELEVENLABS_API_KEY']!
     });
     
     const audioStream = await client.textToSpeech.convert({

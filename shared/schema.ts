@@ -1,4 +1,4 @@
-import { pgTable, serial, text, integer, boolean, timestamp, jsonb, decimal } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, integer, boolean, timestamp, jsonb, decimal, uuid as uuidCol, real, primaryKey } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -253,7 +253,7 @@ export const memoryConnections = pgTable("memory_connections", {
   userId: integer("user_id").notNull(),
   fromMemoryId: integer("from_memory_id").notNull(),
   toMemoryId: integer("to_memory_id").notNull(),
-  connectionType: text("connection_type").notNull(), // "follows_up", "contradicts", "reinforces", "relates_to"
+  connectionType: text("connection_type").notNull(), // "relates_to", "contradicts", "builds_on", "resolves", "triggers"
   strength: decimal("strength", { precision: 3, scale: 2 }).default("0.50"), // Connection strength 0-1
   automaticConnection: boolean("automatic_connection").default(true), // AI-detected vs manual
   createdAt: timestamp("created_at").defaultNow(),
@@ -275,6 +275,7 @@ export const memoryInsights = pgTable("memory_insights", {
 // Therapeutic features - Journal
 export const journalEntries = pgTable("journal_entries", {
   id: serial("id").primaryKey(),
+  uid: text("uid"), // Added for UID-first system
   userId: integer("user_id").notNull(),
   title: text("title"),
   content: text("content").notNull(),
@@ -302,6 +303,7 @@ export const journalAnalytics = pgTable("journal_analytics", {
 // Therapeutic features - Mood tracking
 export const moodEntries = pgTable("mood_entries", {
   id: serial("id").primaryKey(),
+  uid: text("uid"), // Added for UID-first system
   userId: integer("user_id").notNull(),
   mood: text("mood").notNull(),
   intensity: integer("intensity").notNull(),
@@ -1179,6 +1181,50 @@ export const alarms = pgTable("alarms", {
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
+
+// HIPAA-compliant identity tables
+export const installs = pgTable('installs', {
+  adid: text('adid').primaryKey(),
+  didHash: text('did_hash').notNull(),
+  platform: text('platform').notNull(),
+  attested: boolean('attested').default(false),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+})
+
+export const sessions = pgTable('sessions', {
+  sid: uuidCol('sid').primaryKey(),
+  adid: text('adid').notNull().references(() => installs.adid),
+  uid: text('uid'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  revoked: boolean('revoked').default(false),
+})
+
+export const userDevices = pgTable('user_devices', {
+  uid: text('uid').notNull(),
+  adid: text('adid').notNull().references(() => installs.adid),
+  udid: text('udid').notNull().unique(),
+  firstSeen: timestamp('first_seen', { withTimezone: true }).defaultNow(),
+  lastSeen: timestamp('last_seen', { withTimezone: true }).defaultNow(),
+}, (t) => ({ pk: primaryKey({ columns: [t.uid, t.adid] }) }))
+
+export const agentMemoryFacts = pgTable('agent_memory_facts', {
+  uid: text('uid').notNull(),
+  factId: text('fact_id').notNull(),
+  type: text('type').notNull(),
+  value: jsonb('value').notNull(),
+  source: text('source').notNull(),
+  confidence: real('confidence').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+}, (t) => ({ pk: primaryKey({ columns: [t.uid, t.factId] }) }))
+
+export const agentMemorySummaries = pgTable('agent_memory_summaries', {
+  uid: text('uid').notNull(),
+  period: text('period').notNull(),
+  version: text('version').notNull(),
+  text: text('text').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+}, (t) => ({ pk: primaryKey({ columns: [t.uid, t.period, t.version] }) }))
 
 // Create Zod schemas for alarms
 export const insertAlarmSchema = createInsertSchema(alarms).omit({

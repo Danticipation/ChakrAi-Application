@@ -1,8 +1,8 @@
 // MEMORY RETRIEVAL SERVICE - Intelligent retrieval of contextually relevant memories
 // Provides sophisticated memory search for therapeutic conversation enhancement
 
-import { db } from '../db.js';
-import { semanticMemories, memoryInsights } from '@shared/schema';
+import { db } from '../db.ts';
+import { semanticMemories, memoryInsights } from '../../shared/schema.ts';
 import { eq, and, or, ilike, desc, sql } from 'drizzle-orm';
 import type { 
   IMemoryRetrievalService, 
@@ -199,7 +199,7 @@ export class MemoryRetrievalService implements IMemoryRetrievalService {
             insightType: 'pattern',
             content: `Recurring pattern identified: "${tag}" appears frequently in your reflections (${frequency} times)`,
             relatedMemoryIds: patternMemories
-              .filter(m => m.semanticTags.includes(tag))
+              .filter(m => m.semanticTags && m.semanticTags.includes(tag))
               .map(m => m.id),
             confidence: this.calculatePatternConfidence(frequency),
             therapeuticRelevance: this.assessTherapeuticRelevance(tag),
@@ -335,7 +335,7 @@ export class MemoryRetrievalService implements IMemoryRetrievalService {
       .filter(word => word.length > 3)
       .filter(word => !this.isStopWord(word));
 
-    return [...new Set(words)].slice(0, 10); // Limit and deduplicate
+    return Array.from(new Set(words)).slice(0, 10); // Limit and deduplicate
   }
 
   private isStopWord(word: string): boolean {
@@ -371,17 +371,19 @@ export class MemoryRetrievalService implements IMemoryRetrievalService {
     score += keywordMatches * 2;
 
     // Tag matches
-    const tagMatches = keywords.filter(keyword => 
-      memory.semanticTags.some(tag => tag.toLowerCase().includes(keyword))
+    const tagMatches = keywords.filter(keyword =>
+      memory.semanticTags?.some(tag => tag.toLowerCase().includes(keyword))
     ).length;
     score += tagMatches * 3;
 
     // Access count boost
-    score += Math.min(memory.accessCount * 0.1, 2);
+    score += Math.min((memory.accessCount ?? 0) * 0.1, 2);
 
     // Recency boost
-    const daysSinceCreated = (Date.now() - new Date(memory.createdAt).getTime()) / (1000 * 60 * 60 * 24);
-    score += Math.max(0, 2 - daysSinceCreated * 0.1);
+    if (memory.createdAt) {
+      const daysSinceCreated = (Date.now() - new Date(memory.createdAt).getTime()) / (1000 * 60 * 60 * 24);
+      score += Math.max(0, 2 - daysSinceCreated * 0.1);
+    }
 
     return score;
   }
@@ -394,8 +396,10 @@ export class MemoryRetrievalService implements IMemoryRetrievalService {
 
     // Simple ranking by access count and recency
     return unique.sort((a, b) => {
-      const scoreA = a.accessCount + (Date.now() - new Date(a.createdAt).getTime()) / (1000 * 60 * 60 * 24 * -1);
-      const scoreB = b.accessCount + (Date.now() - new Date(b.createdAt).getTime()) / (1000 * 60 * 60 * 24 * -1);
+      const timeScoreA = a.createdAt ? (Date.now() - new Date(a.createdAt).getTime()) / (1000 * 60 * 60 * 24 * -1) : 0;
+      const timeScoreB = b.createdAt ? (Date.now() - new Date(b.createdAt).getTime()) / (1000 * 60 * 60 * 24 * -1) : 0;
+      const scoreA = (a.accessCount ?? 0) + timeScoreA;
+      const scoreB = (b.accessCount ?? 0) + timeScoreB;
       return scoreB - scoreA;
     });
   }
@@ -417,7 +421,7 @@ export class MemoryRetrievalService implements IMemoryRetrievalService {
     const frequency: Record<string, number> = {};
     
     memories.forEach(memory => {
-      memory.semanticTags.forEach(tag => {
+      memory.semanticTags?.forEach(tag => {
         frequency[tag] = (frequency[tag] || 0) + 1;
       });
     });

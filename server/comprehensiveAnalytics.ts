@@ -226,7 +226,7 @@ Respond with comprehensive JSON:`;
       })
     );
 
-    const profileData = JSON.parse(response.choices[0].message.content || '{}');
+    const profileData = JSON.parse(response.choices[0]?.message?.content || '{}');
     console.log(`🧠 Generated comprehensive personality profile with ${Object.keys(profileData).length} dimensions`);
     
     return profileData as ComprehensivePersonalityProfile;
@@ -318,7 +318,7 @@ Return comprehensive JSON with specific numerical and qualitative data.`;
       })
     );
 
-    const statisticsData = JSON.parse(response.choices[0].message.content || '{}');
+    const statisticsData = JSON.parse(response.choices[0]?.message?.content || '{}');
     console.log(`📊 Generated comprehensive statistics with detailed analytics`);
     
     return statisticsData as ComprehensiveStatistics;
@@ -392,7 +392,7 @@ Return comprehensive JSON format.`;
       })
     );
 
-    return JSON.parse(response.choices[0].message.content || '{}');
+    return JSON.parse(response.choices[0]?.message?.content || '{}');
 
   } catch (error) {
     console.error('Error generating detailed reflection summary:', error);

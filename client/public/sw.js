@@ -1,46 +1,17 @@
-const CACHE_NAME = 'Chakrai-wellness-v3-new-logo';
-const urlsToCache = [
-  '/',
-  '/static/js/bundle.js',
-  '/static/css/main.css',
-  '/manifest.webmanifest',
-  '/pwa-192x192.png',
-  '/pwa-512x512.png',
-  '/apple-touch-icon.png'
-];
+// Disabled service worker to prevent fetch errors
+// This placeholder prevents registration errors
 
-// Install service worker
+console.log('Service worker disabled to prevent fetch issues');
+
+// Skip waiting and claim clients immediately
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => {
-        return cache.addAll(urlsToCache);
-      })
-  );
+  console.log('SW: Service worker installing (disabled)');
+  self.skipWaiting();
 });
 
-// Fetch event
-self.addEventListener('fetch', (event) => {
-  event.respondWith(
-    caches.match(event.request)
-      .then((response) => {
-        // Return cached version or fetch from network
-        return response || fetch(event.request);
-      })
-  );
-});
-
-// Activate service worker
 self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    })
-  );
+  console.log('SW: Service worker activating (disabled)');
+  event.waitUntil(self.clients.claim());
 });
+
+// No fetch event handling to prevent errors

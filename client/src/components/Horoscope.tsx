@@ -208,6 +208,7 @@ export default function Horoscope({ onBack }: HoroscopeProps) {
         {pattern.length > 1 && pattern.map((star, index) => {
           if (index === pattern.length - 1) return null;
           const nextStar = pattern[index + 1];
+          if (!nextStar) return null;
           return (
             <line
               key={`line-${index}`}

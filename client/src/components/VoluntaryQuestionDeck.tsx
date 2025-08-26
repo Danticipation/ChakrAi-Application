@@ -1307,14 +1307,14 @@ export default function VoluntaryQuestionDeck() {
               </button>
 
               <div className="flex space-x-2">
-                {currentCategory.questions.map((_, index) => (
+                {currentCategory?.questions.map((_, index) => (
                   <button
                     key={index}
                     onClick={() => setCurrentQuestionIndex(index)}
                     className={`w-2 h-2 rounded-full transition-all duration-200 ${
                       index === currentQuestionIndex
                         ? 'bg-blue-500 scale-125'
-                        : answeredQuestions.has(currentCategory.questions[index].id)
+                        : answeredQuestions.has(currentCategory?.questions[index]?.id || '')
                         ? 'bg-green-400'
                         : 'bg-gray-300'
                     }`}
@@ -1322,10 +1322,10 @@ export default function VoluntaryQuestionDeck() {
                 ))}
               </div>
 
-{currentQuestionIndex === currentCategory.questions.length - 1 ? (
+{currentQuestionIndex === (currentCategory?.questions.length || 0) - 1 ? (
                 <button
                   onClick={() => {
-                    setCompletedCategoryName(currentCategory.name);
+                    setCompletedCategoryName(currentCategory?.name || '');
                     setShowCompletionModal(true);
                   }}
                   className="flex items-center px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-semibold shadow-lg"
@@ -1335,7 +1335,7 @@ export default function VoluntaryQuestionDeck() {
                 </button>
               ) : (
                 <button
-                  onClick={() => setCurrentQuestionIndex(Math.min(currentCategory.questions.length - 1, currentQuestionIndex + 1))}
+                  onClick={() => setCurrentQuestionIndex(Math.min((currentCategory?.questions.length || 0) - 1, currentQuestionIndex + 1))}
                   className="flex items-center px-4 py-2 theme-secondary rounded-lg hover:bg-gray-100 transition-colors"
                 >
                   Next

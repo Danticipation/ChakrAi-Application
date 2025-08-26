@@ -46,7 +46,7 @@ export default function DailyAffirmation({ onBack, currentUser }: DailyAffirmati
 
   // Get today's date as cache key
   const getTodayKey = useCallback(() => {
-    return new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+    return new Date().toISOString().split('T')[0] ?? ''; // YYYY-MM-DD format
   }, []);
 
   // Load cached affirmations on mount
@@ -81,9 +81,10 @@ export default function DailyAffirmation({ onBack, currentUser }: DailyAffirmati
         return;
       }
 
+      const authToken = localStorage.getItem('authToken') ?? '';
       const response = await fetch('/api/user/voice-preferences', {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+          'Authorization': `Bearer ${authToken}`
         }
       });
       
@@ -149,10 +150,12 @@ export default function DailyAffirmation({ onBack, currentUser }: DailyAffirmati
               // Clean old entries (keep last 7 days)
               const sevenDaysAgo = new Date();
               sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-              const cleanupDate = sevenDaysAgo.toISOString().split('T')[0];
+              const cleanupDate = sevenDaysAgo.toISOString().split('T')[0] ?? '';
               
-              const keysToDelete = Array.from(newCache.keys()).filter(key => key < cleanupDate);
-              keysToDelete.forEach(key => newCache.delete(key));
+              if (cleanupDate) {
+                const keysToDelete = Array.from(newCache.keys()).filter(key => key < cleanupDate);
+                keysToDelete.forEach(key => newCache.delete(key));
+              }
               
               // Save to localStorage
               try {
@@ -177,7 +180,7 @@ export default function DailyAffirmation({ onBack, currentUser }: DailyAffirmati
           console.error('Failed to fetch daily affirmation:', fetchError);
           
           // Try to use yesterday's affirmation as fallback
-          const yesterdayKey = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+          const yesterdayKey = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0] ?? '';
           const fallback = currentCache.get(yesterdayKey);
           
           if (fallback) {
@@ -376,11 +379,12 @@ export default function DailyAffirmation({ onBack, currentUser }: DailyAffirmati
     
     try {
       // Try with user's preferred voice first
+      const authToken = localStorage.getItem('authToken') ?? '';
       const response = await fetch('/api/text-to-speech', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+          'Authorization': `Bearer ${authToken}`
         },
         body: JSON.stringify({
           text: affirmationData.affirmation,
@@ -524,13 +528,17 @@ export default function DailyAffirmation({ onBack, currentUser }: DailyAffirmati
 
   // Debug function to clear cache
   const clearCache = useCallback(() => {
-    localStorage.removeItem('daily-affirmations');
-    setCachedAffirmations(new Map());
-    toast({
-      title: "Cache Cleared",
-      description: "All cached affirmations have been cleared.",
-      duration: 2000,
-    });
+    try {
+      localStorage.removeItem('daily-affirmations');
+      setCachedAffirmations(new Map());
+      toast({
+        title: "Cache Cleared",
+        description: "All cached affirmations have been cleared.",
+        duration: 2000,
+      });
+    } catch (error) {
+      console.error('Failed to clear cache:', error);
+    }
   }, [toast]);
 
   return (

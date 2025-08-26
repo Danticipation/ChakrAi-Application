@@ -25,6 +25,7 @@ const BeautifulMeditation: React.FC = () => {
   const [isMuted, setIsMuted] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
+  const [ambientAudioElement, setAmbientAudioElement] = useState<HTMLAudioElement | null>(null);
   const [isLoadingAudio, setIsLoadingAudio] = useState(false);
   const [meditationScript, setMeditationScript] = useState<string>('');
   const [selectedVoice, setSelectedVoice] = useState<'natasha' | 'natasha_husband'>('natasha');
@@ -105,7 +106,47 @@ const BeautifulMeditation: React.FC = () => {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Generate meditation script based on session type
+  // Start ambient sound playback
+  const startAmbientSound = async (session: MeditationSession) => {
+    try {
+      console.log(`🎵 Starting ambient sound: ${session.backgroundSound}`);
+      
+      // Stop any existing ambient audio
+      if (ambientAudioElement) {
+        ambientAudioElement.pause();
+        ambientAudioElement.src = '';
+      }
+      
+      // Create new ambient audio element
+      const ambientAudio = new Audio(`/api/ambient-sounds/${session.backgroundSound}`);
+      ambientAudio.loop = true; // Loop ambient sounds
+      ambientAudio.volume = 0.3 * (volume / 100) * (isMuted ? 0 : 1); // Lower volume for background
+      
+      ambientAudio.addEventListener('canplaythrough', () => {
+        console.log(`✅ Ambient sound ready: ${session.backgroundSound}`);
+      });
+      
+      ambientAudio.addEventListener('error', (e) => {
+        console.error('Ambient sound playback error:', e);
+      });
+      
+      setAmbientAudioElement(ambientAudio);
+      await ambientAudio.play();
+      
+    } catch (error) {
+      console.error('Error starting ambient sound:', error);
+    }
+  };
+
+  // Stop ambient sound
+  const stopAmbientSound = () => {
+    if (ambientAudioElement) {
+      ambientAudioElement.pause();
+      ambientAudioElement.src = '';
+      setAmbientAudioElement(null);
+      console.log('🎵 Ambient sound stopped');
+    }
+  };
   const generateMeditationScript = (session: MeditationSession): string => {
     const scripts = {
       mindfulness: `Welcome to your ${session.duration}-minute ${session.name} meditation. Find a comfortable position and close your eyes. Take a deep breath in through your nose, and slowly exhale through your mouth. Feel your body settling into this moment. Notice any thoughts that arise, acknowledge them gently, and let them pass like clouds in the sky. Focus on your breath, the rise and fall of your chest, the sensation of air entering and leaving your body. You are present, you are grounded, you are at peace.`,
@@ -183,6 +224,9 @@ const BeautifulMeditation: React.FC = () => {
         
         setAudioElement(audio);
         
+        // Start ambient sound alongside voice guidance
+        await startAmbientSound(session);
+        
         // Start independent meditation timer
         startMeditationTimer(session);
         
@@ -231,8 +275,9 @@ const BeautifulMeditation: React.FC = () => {
   };
 
   // Fallback ambient meditation without voice
-  const startAmbientMeditation = (session: MeditationSession) => {
+  const startAmbientMeditation = async (session: MeditationSession) => {
     console.log('Starting ambient meditation session:', session.name);
+    await startAmbientSound(session);
     startMeditationTimer(session);
   };
 
@@ -250,6 +295,9 @@ const BeautifulMeditation: React.FC = () => {
       if (audioElement) {
         audioElement.pause();
       }
+      if (ambientAudioElement) {
+        ambientAudioElement.pause();
+      }
     } else {
       // Start or resume meditation
       if (currentTime === 0 || currentTime >= selectedSession.duration * 60) {
@@ -260,6 +308,9 @@ const BeautifulMeditation: React.FC = () => {
         startMeditationTimer(selectedSession);
         if (audioElement) {
           await audioElement.play();
+        }
+        if (ambientAudioElement) {
+          await ambientAudioElement.play();
         }
       }
     }
@@ -275,6 +326,7 @@ const BeautifulMeditation: React.FC = () => {
       audioElement.pause();
       audioElement.currentTime = 0;
     }
+    stopAmbientSound();
     setIsPlaying(false);
     setCurrentTime(0);
     console.log('Meditation session reset');
@@ -285,7 +337,10 @@ const BeautifulMeditation: React.FC = () => {
     if (audioElement) {
       audioElement.volume = (volume / 100) * (isMuted ? 0 : 1);
     }
-  }, [volume, isMuted, audioElement]);
+    if (ambientAudioElement) {
+      ambientAudioElement.volume = 0.3 * (volume / 100) * (isMuted ? 0 : 1);
+    }
+  }, [volume, isMuted, audioElement, ambientAudioElement]);
 
   // Cleanup audio and timer on unmount
   React.useEffect(() => {
@@ -294,11 +349,15 @@ const BeautifulMeditation: React.FC = () => {
         audioElement.pause();
         audioElement.src = '';
       }
+      if (ambientAudioElement) {
+        ambientAudioElement.pause();
+        ambientAudioElement.src = '';
+      }
       if (meditationTimer) {
         clearInterval(meditationTimer);
       }
     };
-  }, [audioElement, meditationTimer]);
+  }, [audioElement, ambientAudioElement, meditationTimer]);
 
   const SessionCard = ({ session, isSelected, onClick }: {
     session: MeditationSession;

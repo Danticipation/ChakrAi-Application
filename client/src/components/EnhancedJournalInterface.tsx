@@ -5,6 +5,7 @@ import {
   Edit3, BookOpen, TrendingUp, Eye, EyeOff, Clock, User, Sparkles,
   PenTool, Library, Star, Filter, Search, MoreHorizontal
 } from 'lucide-react';
+import { getAuthHeaders } from '../utils/unifiedUserSession';
 
 interface JournalEntry {
   id?: number;
@@ -89,15 +90,12 @@ const EnhancedJournalInterface: React.FC<EnhancedJournalInterfaceProps> = ({ use
 
   const fetchRecentEntries = async () => {
     try {
-      const deviceFingerprint = 'healthcare-user-107';
-      const sessionId = 'healthcare-session-107';
+      // User authentication is handled by getAuthHeaders()
       
-      const response = await fetch('/api/journal/user-entries', {
-        headers: {
-          'X-Device-Fingerprint': deviceFingerprint,
-          'X-Session-ID': sessionId
-        }
-      });
+      const headers = await getAuthHeaders();
+      console.log('📝 Fetching journal entries with bulletproof headers');
+      
+      const response = await fetch('/api/journal/user-entries', { headers });
       
       if (response.ok) {
         const entries = await response.json();
@@ -226,16 +224,14 @@ const EnhancedJournalInterface: React.FC<EnhancedJournalInterfaceProps> = ({ use
     
     setIsSaving(true);
     try {
-      const deviceFingerprint = 'healthcare-user-107';
-      const sessionId = 'healthcare-session-107';
+      // User authentication is handled by getAuthHeaders()
+      
+      const headers = await getAuthHeaders();
+      console.log('💾 Saving journal entry with bulletproof headers');
       
       const response = await fetch('/api/journal', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Device-Fingerprint': deviceFingerprint,
-          'X-Session-ID': sessionId
-        },
+        headers,
         body: JSON.stringify(entry)
       });
 
@@ -273,15 +269,14 @@ const EnhancedJournalInterface: React.FC<EnhancedJournalInterfaceProps> = ({ use
     
     setDeletingEntryId(entryId);
     try {
-      const deviceFingerprint = 'healthcare-user-107';
-      const sessionId = 'healthcare-session-107';
+      // User authentication is handled by getAuthHeaders()
+      
+      const headers = await getAuthHeaders();
+      console.log('🗑️ Deleting journal entry with bulletproof headers');
       
       const response = await fetch(`/api/journal/${entryId}`, {
         method: 'DELETE',
-        headers: {
-          'X-Device-Fingerprint': deviceFingerprint,
-          'X-Session-ID': sessionId
-        }
+        headers
       });
 
       if (response.ok) {

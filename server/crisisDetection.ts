@@ -1,7 +1,7 @@
 import OpenAI from "openai";
 import { retryOpenAIRequest } from "./openaiRetry";
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const openai = new OpenAI({ apiKey: process.env['OPENAI_API_KEY'] });
 
 export interface CrisisAnalysis {
   riskLevel: 'none' | 'low' | 'medium' | 'high' | 'critical';
@@ -119,7 +119,7 @@ User context: ${JSON.stringify(userContext)}`
         temperature: 0.1 // Low temperature for consistent crisis detection
       });
 
-      return JSON.parse(response.choices[0].message.content || '{}');
+      return JSON.parse(response.choices[0]?.message?.content || '{}');
     });
 
     // Combine AI analysis with pattern matching

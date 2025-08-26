@@ -102,7 +102,20 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({
   useEffect(() => {
     // Small delay to ensure DOM elements are rendered
     const timer = setTimeout(() => setIsVisible(true), 500);
-    return () => clearTimeout(timer);
+    
+    // Add keyboard escape handler
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        handleSkip();
+      }
+    };
+    
+    document.addEventListener('keydown', handleKeyDown);
+    
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
   }, []);
 
   useEffect(() => {
@@ -112,25 +125,81 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({
       currentStepData.action();
     }
     
+    // Use closure variable for retry count to avoid state timing issues
+    let localRetryCount = 0;
+    
     // Find and highlight target element
     const findTargetElement = () => {
       if (!currentStepData) return;
       
+      localRetryCount++;
+      console.log(`🔍 Looking for target: ${currentStepData.target} (attempt ${localRetryCount})`);
       const element = document.querySelector(currentStepData.target) as HTMLElement;
+      
       if (element) {
-        setTargetElement(element);
-        calculateTooltipPosition(element, currentStepData.position);
-        // Scroll element into view
-        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      } else if (currentStepData.waitForElement) {
-        // Retry finding element after a short delay
-        setTimeout(findTargetElement, 200);
+        console.log('✅ Target element found:', element);
+        
+        // Check if element is actually visible
+        const rect = element.getBoundingClientRect();
+        console.log('Element rect:', rect);
+        
+        const isVisible = rect.width > 0 && rect.height > 0 && 
+                         getComputedStyle(element).visibility !== 'hidden' &&
+                         getComputedStyle(element).display !== 'none';
+        
+        console.log('Element is visible:', isVisible);
+        
+        if (isVisible) {
+          setTargetElement(element);
+          
+          // Simple positioning: always put tooltip to the right and down from element
+          const simpleTop = rect.bottom + window.scrollY + 20;
+          const simpleLeft = Math.max(20, rect.left + window.scrollX);
+          
+          console.log('Setting tooltip position to:', { top: simpleTop, left: simpleLeft });
+          setTooltipPosition({ top: simpleTop, left: simpleLeft });
+          
+          // Scroll element into view
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } else {
+          console.log('⚠️ Element found but not visible, retrying...');
+          
+          // After 3 retries, give up and position tooltip in a safe location
+          if (localRetryCount >= 3) {
+            console.log('🚫 Max retries reached, using fallback positioning');
+            setTargetElement(null);
+            
+            // Position tooltip in a predictable location based on step
+            const stepOffset = currentStep * 80;
+            const fallbackTop = 200 + stepOffset;
+            const fallbackLeft = 100;
+            
+            console.log('Using fallback position:', { top: fallbackTop, left: fallbackLeft });
+            setTooltipPosition({ top: fallbackTop, left: fallbackLeft });
+          } else {
+            // Element exists but not visible yet, retry with longer delay
+            setTimeout(findTargetElement, 1000);
+          }
+        }
+      } else {
+        console.log(`❌ Tour target not found: ${currentStepData.target}`);
+        
+        if (localRetryCount >= 2) {
+          console.log('🚫 Element not found after retries, using center position');
+          // Fallback: center tooltip
+          const centerTop = window.innerHeight / 2 + window.scrollY;
+          const centerLeft = window.innerWidth / 2 - 160; // Account for tooltip width
+          console.log('Using center position:', { top: centerTop, left: centerLeft });
+          setTooltipPosition({ top: centerTop, left: centerLeft });
+        } else if (currentStepData.waitForElement) {
+          setTimeout(findTargetElement, 1000);
+        }
       }
     };
 
     if (currentStepData) {
-      // Small delay to allow navigation to complete
-      setTimeout(findTargetElement, 100);
+      // Longer delay to allow navigation and UI to complete
+      setTimeout(findTargetElement, 500);
     }
   }, [currentStep]);
 
@@ -139,27 +208,46 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({
     const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
     const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
     
-    let top = 0;
-    let left = 0;
+    // Get viewport dimensions
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    const tooltipWidth = 320;
+    const tooltipHeight = 300;
     
-    switch (position) {
-      case 'top':
-        top = rect.top + scrollTop - 10;
-        left = rect.left + scrollLeft + rect.width / 2;
-        break;
-      case 'bottom':
-        top = rect.bottom + scrollTop + 10;
-        left = rect.left + scrollLeft + rect.width / 2;
-        break;
-      case 'left':
-        top = rect.top + scrollTop + rect.height / 2;
-        left = rect.left + scrollLeft - 10;
-        break;
-      case 'right':
-        top = rect.top + scrollTop + rect.height / 2;
-        left = rect.right + scrollLeft + 10;
-        break;
+    // Get element's absolute position on page
+    const elementTop = rect.top + scrollTop;
+    const elementLeft = rect.left + scrollLeft;
+    const elementRight = elementLeft + rect.width;
+    const elementBottom = elementTop + rect.height;
+    const elementCenterX = elementLeft + rect.width / 2;
+    const elementCenterY = elementTop + rect.height / 2;
+    
+    let top = elementBottom + 20; // Default: below element
+    let left = elementCenterX - tooltipWidth / 2; // Default: centered horizontally
+    
+    // Keep tooltip on screen horizontally
+    if (left < 20) {
+      left = 20;
+    } else if (left + tooltipWidth > viewportWidth - 20) {
+      left = viewportWidth - tooltipWidth - 20;
     }
+    
+    // Keep tooltip on screen vertically
+    if (top + tooltipHeight > viewportHeight + scrollTop - 20) {
+      // If no room below, put above
+      top = elementTop - tooltipHeight - 20;
+      
+      // If still no room, force it to fit
+      if (top < scrollTop + 20) {
+        top = scrollTop + 20;
+      }
+    }
+    
+    console.log('Tooltip positioning:', {
+      element: { top: elementTop, left: elementLeft, width: rect.width, height: rect.height },
+      tooltip: { top, left, width: tooltipWidth, height: tooltipHeight },
+      viewport: { width: viewportWidth, height: viewportHeight }
+    });
     
     setTooltipPosition({ top, left });
   };
@@ -191,7 +279,7 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({
   };
 
   const getSpotlightStyle = () => {
-    if (!targetElement) return {};
+    if (!targetElement) return { display: 'none' };
     
     const rect = targetElement.getBoundingClientRect();
     const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
@@ -222,36 +310,38 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({
       {/* Semi-transparent overlay */}
       <div 
         ref={overlayRef}
-        className="fixed inset-0 bg-black/60 z-[9998] pointer-events-auto"
+        className="fixed inset-0 bg-black/60 z-[9998] pointer-events-auto cursor-pointer"
         style={{ backdropFilter: 'blur(2px)' }}
+        onClick={handleSkip}
+        title="Click anywhere to skip tour or press ESC"
       >
         {/* Spotlight highlight */}
         {targetElement && (
           <div style={getSpotlightStyle()} />
         )}
         
-        {/* Tooltip positioned relative to target */}
+        {/* Tooltip positioned relative to target - IMPROVED POSITIONING */}
         <div 
           className="fixed z-[9999]"
           style={{
-            top: Math.max(20, Math.min(window.innerHeight - 200, tooltipPosition.top)),
-            left: Math.max(20, Math.min(window.innerWidth - 340, tooltipPosition.left)),
-            transform: currentStepData.position === 'top' ? 'translate(-50%, -100%)' :
-                      currentStepData.position === 'bottom' ? 'translate(-50%, 0)' :
-                      currentStepData.position === 'left' ? 'translate(-100%, -50%)' :
-                      'translate(0, -50%)'
+            // Use the calculated position directly
+            top: tooltipPosition.top,
+            left: tooltipPosition.left
           }}
+          onClick={(e) => e.stopPropagation()} // Prevent closing when clicking tooltip
         >
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl border border-gray-200 dark:border-gray-700 p-4 sm:p-6 max-w-xs sm:max-w-sm w-72 sm:w-80 mx-2 sm:mx-4">
-            {/* Arrow pointing to target */}
-            <div 
-              className={`absolute w-3 h-3 bg-white dark:bg-gray-800 border transform rotate-45 ${
-                currentStepData.position === 'top' ? 'bottom-[-6px] left-1/2 -translate-x-1/2 border-b border-r border-gray-200 dark:border-gray-700' :
-                currentStepData.position === 'bottom' ? 'top-[-6px] left-1/2 -translate-x-1/2 border-t border-l border-gray-200 dark:border-gray-700' :
-                currentStepData.position === 'left' ? 'right-[-6px] top-1/2 -translate-y-1/2 border-t border-r border-gray-200 dark:border-gray-700' :
-                'left-[-6px] top-1/2 -translate-y-1/2 border-b border-l border-gray-200 dark:border-gray-700'
-              }`}
-            />
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl border border-gray-200 dark:border-gray-700 p-4 sm:p-6 max-w-xs sm:max-w-sm w-72 sm:w-80 mx-2 sm:mx-4 relative">
+            {/* Simple arrow pointing up to target element */}
+            <div className="absolute w-3 h-3 bg-white dark:bg-gray-800 border transform rotate-45 -top-1.5 left-1/2 -translate-x-1/2 border-t border-l border-gray-200 dark:border-gray-700" />
+            
+            {/* Emergency close button - always visible */}
+            <button
+              onClick={handleSkip}
+              className="absolute -top-2 -right-2 w-8 h-8 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center shadow-lg z-10 transition-colors"
+              title="Close tour (or press ESC)"
+            >
+              <X className="w-4 h-4" />
+            </button>
             
             {/* Header */}
             <div className="flex items-center justify-between mb-4">
@@ -267,9 +357,14 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({
             </div>
 
             {/* Content */}
-            <p className="text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
+            <p className="text-gray-600 dark:text-gray-300 mb-4 leading-relaxed">
               {currentStepData.description}
             </p>
+            
+            {/* Help text */}
+            <div className="text-xs text-gray-500 dark:text-gray-400 mb-4 p-2 bg-gray-50 dark:bg-gray-700 rounded">
+              💡 Tip: Press ESC or click anywhere outside this box to skip the tour
+            </div>
 
             {/* Progress */}
             <div className="flex items-center justify-between mb-4">

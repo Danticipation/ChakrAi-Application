@@ -1,6 +1,6 @@
 # Chakrai - Mental Wellness & Therapy Application
 
-Chakrai is a comprehensive AI-powered mental wellness companion featuring local Piper TTS integration, modular memory architecture for therapeutic continuity, and healthcare-grade data integrity with zero hardcoded data throughout the platform.
+Chakrai is a comprehensive AI-powered mental wellness companion featuring ElevenLabs voice integration, modular memory architecture for therapeutic continuity, and healthcare-grade data integrity with zero hardcoded data throughout the platform.
 
 ## Features Overview
 

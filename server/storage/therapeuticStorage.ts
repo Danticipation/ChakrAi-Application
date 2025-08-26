@@ -19,6 +19,11 @@ export class TherapeuticStorage implements ITherapeuticStorage {
       ...data,
       createdAt: new Date(),
     }).returning();
+    
+    if (!result[0]) {
+      throw new Error('Failed to create therapeutic goal');
+    }
+    
     return result[0];
   }
 
@@ -30,12 +35,14 @@ export class TherapeuticStorage implements ITherapeuticStorage {
 
   async updateGoalProgress(goalId: number, currentValue: number): Promise<TherapeuticGoal> {
     const result = await db.update(therapeuticGoals)
-      .set({ 
-        currentValue,
-        updatedAt: new Date(),
-      })
+      .set({ currentValue })
       .where(eq(therapeuticGoals.id, goalId))
       .returning();
+    
+    if (!result[0]) {
+      throw new Error('Failed to update goal progress');
+    }
+    
     return result[0];
   }
 

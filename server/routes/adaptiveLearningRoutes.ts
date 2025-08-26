@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import { storage } from '../storage';
-import { insertLearningMilestoneSchema, insertProgressMetricSchema, insertAdaptiveLearningInsightSchema, insertWellnessJourneyEventSchema } from '@shared/schema';
+import { storage } from '../storage.js';
+import { insertLearningMilestoneSchema, insertProgressMetricSchema, insertAdaptiveLearningInsightSchema, insertWellnessJourneyEventSchema } from '../../shared/schema.ts';
 // Remove auth middleware for now to avoid import errors
 // import { authMiddleware } from '../middleware/security';
 
@@ -97,10 +97,10 @@ router.post('/milestones/:id/complete', async (req, res) => {
       userId,
       eventType: 'milestone',
       title: `Milestone Achieved: ${milestone.title}`,
-      description: `You've successfully completed the "${milestone.title}" milestone in your ${milestone.category.replace('_', ' ')} journey.`,
+      description: `You've successfully completed the "${milestone.title}" milestone in your ${milestone.category?.replace('_', ' ') || 'wellness'} journey.`,
       significance: milestone.priority || 5,
       celebrationLevel: 'standard',
-      relatedMilestones: [milestone.id.toString()]
+      relatedMilestones: [milestone.id?.toString() || '']
     });
 
     res.json(milestone);
@@ -117,10 +117,13 @@ router.get('/metrics', async (req, res) => {
     const userId = 1;
 
     const { timeframe, metricType } = req.query;
+    const validTimeframe = typeof timeframe === 'string' ? timeframe : undefined;
+    const validMetricType = typeof metricType === 'string' ? metricType : undefined;
+    
     const metrics = await storage.getProgressMetrics(
-      userId, 
-      timeframe as string, 
-      metricType as string
+      userId,
+      validTimeframe,
+      validMetricType
     );
     res.json(metrics);
   } catch (error) {
@@ -199,8 +202,8 @@ router.post('/insights/:id/feedback', async (req, res) => {
     }
 
     const { feedback } = req.body;
-    if (!feedback || typeof feedback !== 'string') {
-      return res.status(400).json({ error: 'Feedback is required' });
+    if (!feedback || typeof feedback !== 'string' || feedback.trim().length === 0) {
+      return res.status(400).json({ error: 'Feedback is required and must be a non-empty string' });
     }
 
     const insight = await storage.updateInsightFeedback(insightId, feedback);

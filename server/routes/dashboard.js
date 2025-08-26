@@ -1,5 +1,5 @@
 import express from 'express';
-import { storage } from '../storage-minimal.ts';
+import { storage } from '../storage/storage-minimal.js';
 
 const router = express.Router();
 

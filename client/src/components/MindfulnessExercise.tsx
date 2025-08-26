@@ -92,10 +92,13 @@ export function MindfulnessExercise({
     let newStep = 0;
 
     for (let i = 0; i < exercise.guidedSteps.length; i++) {
-      cumulativeTime += exercise.guidedSteps[i].duration;
-      if (elapsed < cumulativeTime) {
-        newStep = i;
-        break;
+      const step = exercise.guidedSteps[i];
+      if (step) {
+        cumulativeTime += step.duration;
+        if (elapsed < cumulativeTime) {
+          newStep = i;
+          break;
+        }
       }
     }
 
@@ -112,6 +115,8 @@ export function MindfulnessExercise({
 
     try {
       const step = exercise.guidedSteps[stepIndex];
+      if (!step) return;
+      
       console.log(`Playing audio for step ${stepIndex + 1}:`, step.audioText.substring(0, 50) + '...');
       
       // Use local Piper TTS server
@@ -281,7 +286,7 @@ export function MindfulnessExercise({
           <div className="flex justify-center">
             <Button
               onClick={onClose}
-              variant="ghost"
+              variant="outline"
               className="text-gray-500 hover:text-gray-700"
             >
               Close Exercise

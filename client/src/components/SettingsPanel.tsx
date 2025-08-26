@@ -362,7 +362,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
         <AuthModal
           isOpen={showAuthModal}
           onClose={() => setShowAuthModal(false)}
-          mode={authMode}
+          onAuthSuccess={() => setShowAuthModal(false)}
         />
       )}
     </div>

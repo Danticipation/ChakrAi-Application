@@ -1,4 +1,4 @@
-import { getCurrentUserId } from '@/utils/userSession';
+import { getCurrentUserId, getAuthHeaders } from './unifiedUserSession';
 import { updateUserActivity } from '@/utils/activity';
 import { playElevenLabsAudio } from '@/utils/audio';
 
@@ -40,21 +40,12 @@ export const sendMessage = async ({
   setLoading(true);
 
   try {
-    const deviceFingerprintValue = `browser_${navigator.userAgent.slice(0, 50)}_${screen.width}x${screen.height}_${new Date().getTimezoneOffset()}`;
-
-    let sessionId = localStorage.getItem('chakrai_session_id');
-    if (!sessionId) {
-      sessionId = `session_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
-      localStorage.setItem('chakrai_session_id', sessionId);
-    }
+    // Use proper authenticated headers
+    const authHeaders = await getAuthHeaders();
 
     const response = await fetch('/api/chat', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Device-Fingerprint': deviceFingerprintValue,
-        'X-Session-Id': sessionId
-      },
+      headers: authHeaders,
       body: JSON.stringify({
         message: input,
         voice: selectedVoice
@@ -71,7 +62,7 @@ export const sendMessage = async ({
 
       setMessages(prev => [...prev, botMessage]);
 
-      await updateUserActivity(getCurrentUserId(), 'chat_session');
+      await updateUserActivity(await getCurrentUserId(), 'chat_session');
 
       // Track tone analytics
       try {
@@ -79,7 +70,7 @@ export const sendMessage = async ({
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            userId: getCurrentUserId(),
+            userId: await getCurrentUserId(),
             message: input,
             sessionId: Date.now().toString()
           })
@@ -94,7 +85,7 @@ export const sendMessage = async ({
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            userId: getCurrentUserId(),
+            userId: await getCurrentUserId(),
             message: input,
             conversationHistory: messages.slice(-5)
           })

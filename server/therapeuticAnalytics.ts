@@ -10,7 +10,7 @@ import {
 import { eq, gte, lte, sql, desc, asc, and } from 'drizzle-orm';
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: process.env['OPENAI_API_KEY'],
 });
 
 interface EmotionalAnalysis {
@@ -62,7 +62,7 @@ export class TherapeuticAnalyticsSystem {
         temperature: 0.2,
       });
 
-      const rawContent = response.choices[0].message.content || '{}';
+      const rawContent = response.choices[0]?.message?.content || '{}';
       const cleanContent = rawContent.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
       const analysis = JSON.parse(cleanContent);
 
@@ -124,7 +124,7 @@ export class TherapeuticAnalyticsSystem {
         temperature: 0.2,
       });
 
-      const rawContent = response.choices[0].message.content || '{}';
+      const rawContent = response.choices[0]?.message?.content || '{}';
       const cleanContent = rawContent.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
       const analysis = JSON.parse(cleanContent);
 
@@ -196,7 +196,7 @@ export class TherapeuticAnalyticsSystem {
             lastUpdated: new Date(),
             completedAt: completionRate >= 100 ? new Date() : null,
           })
-          .where(eq(wellnessGoalMetrics.id, existingGoal[0].id));
+          .where(eq(wellnessGoalMetrics.id, existingGoal[0]!.id));
       } else {
         // Create new goal tracking
         await db.insert(wellnessGoalMetrics).values({

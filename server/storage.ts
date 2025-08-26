@@ -3,7 +3,7 @@
 
 // Import the modular memory system
 import { MemoryManager } from './memory/MemoryManager.js';
-import { MinimalStorage, type IStorage } from './storage-minimal.js';
+import { MinimalStorage, type IStorage } from './storage/storage-minimal.js';
 
 // Create instances of both systems
 export const storage = new MinimalStorage(); // Basic storage operations

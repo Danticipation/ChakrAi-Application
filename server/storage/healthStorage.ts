@@ -5,7 +5,7 @@ import {
   type RiskAssessment, type InsertRiskAssessment,
   type CrisisDetectionLog, type InsertCrisisDetectionLog,
 } from "@shared/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
 
 export interface IHealthStorage {
   createRiskAssessment(data: InsertRiskAssessment): Promise<RiskAssessment>;
@@ -30,6 +30,11 @@ export class HealthStorage implements IHealthStorage {
       ...data,
       createdAt: new Date(),
     }).returning();
+    
+    if (!result[0]) {
+      throw new Error('Failed to create risk assessment');
+    }
+    
     return result[0];
   }
 
@@ -53,6 +58,11 @@ export class HealthStorage implements IHealthStorage {
       ...data,
       createdAt: new Date(),
     }).returning();
+    
+    if (!result[0]) {
+      throw new Error('Failed to create crisis detection log');
+    }
+    
     return result[0];
   }
 
@@ -68,15 +78,24 @@ export class HealthStorage implements IHealthStorage {
       ...data,
       createdAt: new Date(),
     }).returning();
+    
+    if (!result[0]) {
+      throw new Error('Failed to create longitudinal trend');
+    }
+    
     return result[0];
   }
 
   async getLongitudinalTrends(userId: number, trendType?: string, timeframe?: string): Promise<LongitudinalTrend[]> {
-    let query = db.select().from(longitudinalTrends).where(eq(longitudinalTrends.userId, userId));
+    const conditions = [eq(longitudinalTrends.userId, userId)];
+    
     if (trendType) {
-      query = query.where(eq(longitudinalTrends.trendType, trendType));
+      conditions.push(eq(longitudinalTrends.trendType, trendType));
     }
-    return await query.orderBy(desc(longitudinalTrends.createdAt));
+    
+    return await db.select().from(longitudinalTrends)
+      .where(and(...conditions))
+      .orderBy(desc(longitudinalTrends.createdAt));
   }
 
   async calculateUserWellnessMetrics(userId: number): Promise<any> {

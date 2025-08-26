@@ -28,6 +28,11 @@ export class CommunityStorage implements ICommunityStorage {
       ...data,
       createdAt: new Date(),
     }).returning();
+    
+    if (!result[0]) {
+      throw new Error('Failed to create forum post');
+    }
+    
     return result[0];
   }
 }

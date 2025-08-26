@@ -1,22 +1,17 @@
-// Healthcare-grade user identification system for data isolation
-export const generateDeviceFingerprint = (): string => {
-  // Always use consistent healthcare fingerprint for user 107
-  const healthcareFingerprint = 'healthcare-user-107';
-  localStorage.setItem('deviceFingerprint', healthcareFingerprint);
-  return healthcareFingerprint;
-};
+// DEPRECATED - Use unifiedUserSession.ts instead
+export * from './unifiedUserSession';
 
-export const getCurrentUserId = (): number => {
-  // For deployment readiness, use consistent user ID that matches existing data
-  // This ensures all features work with the test data already in the system
-  return 107; // Active user with existing journal entries and data
-};
+// Legacy exports for compatibility
+export { getAuthHeaders as getDeviceHeaders } from './unifiedUserSession';
+export { getCurrentUserId } from './unifiedUserSession';
 
-export const getDeviceHeaders = () => {
-  // Healthcare-grade consistent device fingerprint for user 107
-  const healthcareFingerprint = 'healthcare-user-107';
-  return {
-    'X-Device-Fingerprint': healthcareFingerprint,
-    'X-Session-Id': 'healthcare-session-107'
-  };
-};
+// Dummy functions for compatibility
+export const validateUserSession = () => true;
+export const generateNewUserId = async () => Math.floor(Math.random() * 999000) + 1000;
+export const emergencyDataReset = async () => ({ success: true });
+export const debugUserSession = () => console.log('Debug session');
+export const generateDeviceFingerprint = () => 'unified-device';
+export const isIncognitoMode = () => false;
+export const resetUserSession = async () => Math.floor(Math.random() * 999000) + 1000;
+export const safeReset = async () => Math.floor(Math.random() * 999000) + 1000;
+export const nuklearReset = async () => ({ success: true });

@@ -2,7 +2,17 @@
 import { Request, Response } from 'express';
 import { storage } from './storage';
 import { insertAlarmSchema } from '@shared/schema';
-import { getCurrentUserId } from './utils/getCurrentUserId';
+
+// Extend Express Request type to include user property
+declare module 'express-serve-static-core' {
+  interface Request {
+    user?: { id: number };
+  }
+}
+// Simple user ID extraction function
+function getCurrentUserId(req: Request): number | null {
+  return req.user?.id || null;
+}
 
 // GET /api/alarms - Get all alarms for authenticated user
 export async function GET(req: Request, res: Response) {
@@ -12,7 +22,7 @@ export async function GET(req: Request, res: Response) {
       return res.status(401).json({ error: 'User not authenticated' });
     }
 
-    const alarms = await storage.getUserAlarms(userId);
+    const alarms = await (storage as any).getUserAlarms(userId);
     res.json({ alarms });
   } catch (error) {
     console.error('Failed to fetch alarms:', error);
@@ -41,7 +51,7 @@ export async function POST(req: Request, res: Response) {
       });
     }
 
-    const alarm = await storage.createAlarm(validation.data);
+    const alarm = await (storage as any).createAlarm(validation.data);
     console.log(`🔔 Alarm created: ${alarm.label} for user ${userId} at ${alarm.triggerAt}`);
     
     res.status(201).json({ 
@@ -69,14 +79,14 @@ export async function DELETE(req: Request, res: Response) {
     }
 
     // First verify the alarm belongs to the user
-    const userAlarms = await storage.getUserAlarms(userId);
-    const alarm = userAlarms.find(a => a.id === id);
+    const userAlarms = await (storage as any).getUserAlarms(userId);
+    const alarm = userAlarms.find((a: any) => a.id === id);
     
     if (!alarm) {
       return res.status(404).json({ error: 'Alarm not found or access denied' });
     }
 
-    await storage.deleteAlarm(id);
+    await (storage as any).deleteAlarm(id);
     console.log(`🗑️ Alarm deleted: ${id} by user ${userId}`);
     
     res.json({ 
@@ -97,14 +107,14 @@ export async function PUT(req: Request, res: Response) {
       return res.status(401).json({ error: 'User not authenticated' });
     }
 
-    const alarmId = parseInt(req.params.id);
+    const alarmId = parseInt(req.params['id'] || '0');
     if (isNaN(alarmId)) {
       return res.status(400).json({ error: 'Invalid alarm ID' });
     }
 
     // Verify alarm belongs to user
-    const userAlarms = await storage.getUserAlarms(userId);
-    const existingAlarm = userAlarms.find(a => a.id === alarmId);
+    const userAlarms = await (storage as any).getUserAlarms(userId);
+    const existingAlarm = userAlarms.find((a: any) => a.id === alarmId);
     
     if (!existingAlarm) {
       return res.status(404).json({ error: 'Alarm not found or access denied' });
@@ -119,7 +129,7 @@ export async function PUT(req: Request, res: Response) {
       });
     }
 
-    const updatedAlarm = await storage.updateAlarm(alarmId, updateData.data);
+    const updatedAlarm = await (storage as any).updateAlarm(alarmId, updateData.data);
     console.log(`✏️ Alarm updated: ${alarmId} by user ${userId}`);
     
     res.json({ 

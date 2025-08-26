@@ -1,8 +1,8 @@
 // MEMORY ANALYTICS SERVICE - Advanced analysis and insights from therapeutic memories
 // Provides deep insights into therapeutic progress and patterns
 
-import { db } from '../db.js';
-import { semanticMemories, memoryInsights } from '@shared/schema';
+import { db } from '../db.ts';
+import { semanticMemories, memoryInsights } from '../../shared/schema.ts';
 import { eq, and, desc, sql, count } from 'drizzle-orm';
 import type { 
   IMemoryAnalyticsService, 
@@ -55,21 +55,21 @@ export class MemoryAnalyticsService implements IMemoryAnalyticsService {
     
     try {
       // Get total memory count
-      const [totalResult] = await db.select({ count: count() })
+      const totalResults = await db.select({ count: count() })
         .from(semanticMemories)
         .where(and(
           eq(semanticMemories.userId, userId),
           eq(semanticMemories.isActiveMemory, true)
         ));
 
-      const totalMemories = totalResult.count;
+      const totalMemories = totalResults[0]?.count ?? 0;
 
       // Calculate growth rate (memories created in last 7 days vs previous 7 days)
       const now = new Date();
       const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
       const fourteenDaysAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
 
-      const [recentResult] = await db.select({ count: count() })
+      const recentResults = await db.select({ count: count() })
         .from(semanticMemories)
         .where(and(
           eq(semanticMemories.userId, userId),
@@ -77,7 +77,7 @@ export class MemoryAnalyticsService implements IMemoryAnalyticsService {
           sql`${semanticMemories.createdAt} >= ${sevenDaysAgo}`
         ));
 
-      const [previousResult] = await db.select({ count: count() })
+      const previousResults = await db.select({ count: count() })
         .from(semanticMemories)
         .where(and(
           eq(semanticMemories.userId, userId),
@@ -85,8 +85,8 @@ export class MemoryAnalyticsService implements IMemoryAnalyticsService {
           sql`${semanticMemories.createdAt} >= ${fourteenDaysAgo} AND ${semanticMemories.createdAt} < ${sevenDaysAgo}`
         ));
 
-      const recentCount = recentResult.count;
-      const previousCount = previousResult.count;
+      const recentCount = recentResults[0]?.count ?? 0;
+      const previousCount = previousResults[0]?.count ?? 0;
       const growthRate = previousCount > 0 ? (recentCount - previousCount) / previousCount : 0;
 
       // Analyze categories
@@ -140,8 +140,8 @@ export class MemoryAnalyticsService implements IMemoryAnalyticsService {
       // Check for emotional coverage gaps
       const emotionalStates = memories
         .map(m => m.emotionalContext)
-        .filter(Boolean)
-        .map(e => e!.toLowerCase());
+        .filter((e): e is string => Boolean(e))
+        .map(e => e.toLowerCase());
       
       const expectedEmotions = ['happy', 'sad', 'anxious', 'calm', 'frustrated', 'excited'];
       expectedEmotions.forEach(emotion => {
@@ -151,7 +151,9 @@ export class MemoryAnalyticsService implements IMemoryAnalyticsService {
       });
 
       // Check for topic coverage gaps
-      const topics = memories.flatMap(m => m.relatedTopics);
+      const topics = memories
+        .flatMap(m => m.relatedTopics || [])
+        .filter((t): t is string => t != null && typeof t === 'string' && t.trim() !== '');
       const importantTopics = ['work', 'relationships', 'family', 'health', 'goals', 'stress'];
       
       importantTopics.forEach(topic => {
@@ -238,18 +240,19 @@ export class MemoryAnalyticsService implements IMemoryAnalyticsService {
         ))
         .orderBy(desc(semanticMemories.createdAt));
 
-      const potentialBreakthroughs = insightMemories.filter(memory => 
-        this.isLikelyBreakthrough(memory)
+      const potentialBreakthroughs = insightMemories.filter(memory =>
+        this.isLikelyBreakthrough(this.transformDatabaseMemory(memory))
       );
 
       const allBreakthroughs = [...breakthroughMemories, ...potentialBreakthroughs];
       
       // Remove duplicates and sort by significance
       const uniqueBreakthroughs = allBreakthroughs
-        .filter((memory, index, self) => 
+        .filter((memory, index, self) =>
           self.findIndex(m => m.id === memory.id) === index
         )
-        .sort((a, b) => parseFloat(b.confidence) - parseFloat(a.confidence));
+        .map(memory => this.transformDatabaseMemory(memory))
+        .sort((a, b) => parseFloat(b.confidence || '0') - parseFloat(a.confidence || '0'));
 
       console.log(`💡 Identified ${uniqueBreakthroughs.length} breakthrough moments`);
       return uniqueBreakthroughs;
@@ -288,11 +291,12 @@ export class MemoryAnalyticsService implements IMemoryAnalyticsService {
         emotion: memory.emotionalContext,
         content: memory.content.substring(0, 100) + '...',
         memoryType: memory.memoryType,
-        confidence: parseFloat(memory.confidence)
+        confidence: parseFloat(memory.confidence || '0')
       }));
 
       // Generate insights from emotional patterns
-      const insights = await this.generateEmotionalInsights(memoriesWithEmotions);
+      const transformedMemories = memoriesWithEmotions.map(memory => this.transformDatabaseMemory(memory));
+      const insights = await this.generateEmotionalInsights(transformedMemories);
 
       console.log(`📈 Emotional journey: ${timeline.length} emotional entries, ${insights.length} insights`);
       return { timeline, insights };
@@ -345,7 +349,8 @@ export class MemoryAnalyticsService implements IMemoryAnalyticsService {
     if (insightMemories.length < 2) return [];
 
     const recentInsights = insightMemories.filter(memory => {
-      const daysSinceCreated = (Date.now() - new Date(memory.createdAt).getTime()) / (1000 * 60 * 60 * 24);
+      const createdAt = memory.createdAt || new Date();
+      const daysSinceCreated = (Date.now() - new Date(createdAt).getTime()) / (1000 * 60 * 60 * 24);
       return daysSinceCreated <= 30;
     });
 
@@ -424,7 +429,7 @@ export class MemoryAnalyticsService implements IMemoryAnalyticsService {
     
     const content = memory.content.toLowerCase();
     return breakthroughKeywords.some(keyword => content.includes(keyword)) &&
-           parseFloat(memory.confidence) > 0.8;
+           parseFloat(memory.confidence || '0') > 0.8;
   }
 
   private async generateEmotionalInsights(memories: SemanticMemory[]): Promise<MemoryInsight[]> {
@@ -444,17 +449,38 @@ export class MemoryAnalyticsService implements IMemoryAnalyticsService {
     return descriptions[type] || type;
   }
 
+  /**
+   * Transform database memory result to SemanticMemory interface
+   */
+  private transformDatabaseMemory(dbMemory: any): SemanticMemory {
+    return {
+      id: dbMemory.id,
+      userId: dbMemory.userId,
+      memoryType: dbMemory.memoryType,
+      content: dbMemory.content,
+      semanticTags: dbMemory.semanticTags,
+      emotionalContext: dbMemory.emotionalContext,
+      temporalContext: dbMemory.temporalContext,
+      relatedTopics: dbMemory.relatedTopics,
+      confidence: dbMemory.confidence,
+      accessCount: dbMemory.accessCount,
+      sourceConversationId: dbMemory.sourceConversationId,
+      isActiveMemory: dbMemory.isActiveMemory,
+      lastAccessedAt: dbMemory.lastAccessedAt,
+      createdAt: dbMemory.createdAt
+    };
+  }
+
   private async storeInsight(insight: MemoryInsight): Promise<void> {
     try {
       await db.insert(memoryInsights).values({
         userId: insight.userId,
         insightType: insight.insightType,
-        content: insight.content,
-        relatedMemoryIds: insight.relatedMemoryIds,
+        insight: insight.content,
+        supportingMemories: insight.relatedMemoryIds?.map(id => String(id)) || [],
         confidence: insight.confidence,
-        therapeuticRelevance: insight.therapeuticRelevance,
-        actionSuggestions: insight.actionSuggestions || [],
-        createdAt: new Date()
+        isSharedWithUser: false,
+        generatedAt: new Date()
       });
     } catch (error) {
       console.error('Error storing insight:', error);

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
-import type { Alarm, InsertAlarm } from '@shared/schema';
+import type { Alarm, InsertAlarm } from '../../../shared/schema.ts';
 
 interface AlarmResponse {
   alarms: Alarm[];

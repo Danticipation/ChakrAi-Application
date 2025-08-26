@@ -1,8 +1,8 @@
 // MEMORY CONNECTION SERVICE - Manages relationships between semantic memories
 // Creates intelligent connections for better therapeutic context retrieval
 
-import { db } from '../db.js';
-import { memoryConnections, semanticMemories } from '@shared/schema';
+import { db } from '../db.ts';
+import { memoryConnections, semanticMemories } from '../../shared/schema.ts';
 import { eq, and, or, desc } from 'drizzle-orm';
 import type { 
   IMemoryConnectionService, 
@@ -31,7 +31,7 @@ export class MemoryConnectionService implements IMemoryConnectionService {
 
       const [createdConnection] = await db.insert(memoryConnections).values(connectionData).returning();
       console.log(`✅ Created connection ${createdConnection?.id}`);
-      return createdConnection!;
+      return createdConnection as MemoryConnection;
 
     } catch (error) {
       console.error('Error creating memory connection:', error);
@@ -229,34 +229,34 @@ export class MemoryConnectionService implements IMemoryConnectionService {
    * Analyze connection between two memories
    */
   private analyzeConnection(memory1: SemanticMemory, memory2: SemanticMemory): {
-    type: MemoryConnection['connectionType'];
+    type: string;
     strength: number;
   } {
     let strength = 0;
-    let connectionType: MemoryConnection['connectionType'] = 'relates_to';
+    let connectionType: string = 'relates_to';
 
     // Check semantic tag overlap
-    const sharedTags = memory1.semanticTags.filter(tag => 
-      memory2.semanticTags.includes(tag)
-    );
+    const memory1Tags = memory1.semanticTags || [];
+    const memory2Tags = memory2.semanticTags || [];
+    const sharedTags = memory1Tags.filter(tag => memory2Tags.includes(tag));
     strength += sharedTags.length * 0.2;
 
     // Check topic overlap
-    const sharedTopics = memory1.relatedTopics.filter(topic => 
-      memory2.relatedTopics.includes(topic)
-    );
+    const memory1Topics = memory1.relatedTopics || [];
+    const memory2Topics = memory2.relatedTopics || [];
+    const sharedTopics = memory1Topics.filter(topic => memory2Topics.includes(topic));
     strength += sharedTopics.length * 0.15;
 
     // Check emotional context similarity
-    if (memory1.emotionalContext && memory2.emotionalContext && 
+    if (memory1.emotionalContext && memory2.emotionalContext &&
         memory1.emotionalContext === memory2.emotionalContext) {
       strength += 0.1;
     }
 
     // Check content similarity (simple keyword matching)
-    const content1Words = memory1.content.toLowerCase().split(' ');
-    const content2Words = memory2.content.toLowerCase().split(' ');
-    const sharedWords = content1Words.filter(word => 
+    const content1Words = (memory1.content || '').toLowerCase().split(' ');
+    const content2Words = (memory2.content || '').toLowerCase().split(' ');
+    const sharedWords = content1Words.filter(word =>
       word.length > 3 && content2Words.includes(word)
     );
     strength += Math.min(sharedWords.length * 0.05, 0.3);
@@ -271,15 +271,17 @@ export class MemoryConnectionService implements IMemoryConnectionService {
     }
 
     // Check temporal proximity
-    const timeDiff = Math.abs(
-      new Date(memory1.createdAt).getTime() - new Date(memory2.createdAt).getTime()
-    );
-    const daysDiff = timeDiff / (1000 * 60 * 60 * 24);
-    
-    if (daysDiff < 1) {
-      strength += 0.1; // Same day bonus
-    } else if (daysDiff < 7) {
-      strength += 0.05; // Same week bonus
+    if (memory1.createdAt && memory2.createdAt) {
+      const timeDiff = Math.abs(
+        new Date(memory1.createdAt).getTime() - new Date(memory2.createdAt).getTime()
+      );
+      const daysDiff = timeDiff / (1000 * 60 * 60 * 24);
+      
+      if (daysDiff < 1) {
+        strength += 0.1; // Same day bonus
+      } else if (daysDiff < 7) {
+        strength += 0.05; // Same week bonus
+      }
     }
 
     return { type: connectionType, strength: Math.min(strength, 1.0) };

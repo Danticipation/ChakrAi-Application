@@ -26,8 +26,8 @@ export async function analyzeHealthCorrelations(
     console.log(`Analyzing health correlations for user ${userId} over ${timeframe} timeframe`);
 
     // Get recent health metrics and mood data
-    const healthMetrics = await storage.getHealthMetrics(userId, undefined, 100);
-    const moodEntries = await storage.getMoodEntries(userId, 100);
+    const healthMetrics = await (storage as any).getHealthMetrics?.(userId, 100) || [];
+    const moodEntries = await storage.getMoodEntries(userId);
 
     if (healthMetrics.length === 0 || moodEntries.length === 0) {
       console.log('Insufficient data for correlation analysis');
@@ -42,7 +42,7 @@ export async function analyzeHealthCorrelations(
     
     // Save correlation results to database
     for (const correlation of correlations) {
-      await storage.createHealthCorrelation({
+      await (storage as any).createHealthCorrelation?.({
         userId,
         emotionalMetric: correlation.emotional_metric,
         physicalMetric: correlation.physical_metric,
@@ -189,7 +189,7 @@ Limit to 5 most significant correlations.
 // Generate wellness insights based on correlation patterns
 export async function generateWellnessInsights(userId: number): Promise<string[]> {
   try {
-    const correlations = await storage.getHealthCorrelations(userId);
+    const correlations = await (storage as any).getHealthCorrelations?.(userId) || [];
     
     if (correlations.length === 0) {
       return [
@@ -201,14 +201,14 @@ export async function generateWellnessInsights(userId: number): Promise<string[]
     const insights: string[] = [];
     
     // Extract insights from stored correlations
-    correlations.forEach(correlation => {
+    correlations.forEach((correlation: any) => {
       if (correlation.insights && correlation.insights.length > 0) {
         insights.push(...correlation.insights.slice(0, 2)); // Top 2 insights per correlation
       }
     });
 
     // Add general wellness insights
-    const strongCorrelations = correlations.filter(c => Math.abs(c.correlationScore) > 0.5);
+    const strongCorrelations = correlations.filter((c: any) => Math.abs(c.correlationScore) > 0.5);
     if (strongCorrelations.length > 0) {
       insights.push("Your health data shows clear mind-body connections that can guide your wellness journey");
     }

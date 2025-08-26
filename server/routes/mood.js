@@ -1,19 +1,24 @@
 import express from 'express';
-import { storage } from '../storage.js';
+import { uidStore as store } from '../storage/uidFirstStore.js';
 
 const router = express.Router();
 
-// Mood tracking endpoint
+// Note: Authentication is handled by hipaaAuthMiddleware in main server
+
+// Mood tracking endpoint - UID-first
 router.post('/', async (req, res) => {
   try {
-    const { userId, mood, intensity, triggers, notes } = req.body;
+    const { uid } = req.ctx;
+    if (!uid) return res.status(401).json({ error: 'auth_ctx_missing' });
     
-    if (!userId || !mood || intensity === undefined) {
-      return res.status(400).json({ error: 'userId, mood, and intensity are required' });
+    const { mood, intensity, triggers, notes } = req.body;
+    
+    if (!mood || intensity === undefined) {
+      return res.status(400).json({ error: 'mood and intensity are required' });
     }
 
-    const moodEntry = await storage.createMoodEntry({
-      userId: parseInt(userId),
+    console.log(`🎭 Creating mood entry for uid: ${uid}`);
+    const moodEntry = await store.createMoodEntryByUid(uid, {
       mood,
       intensity: parseInt(intensity),
       triggers: triggers || [],
@@ -31,13 +36,57 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Get mood history for a user
-router.get('/history/:userId', async (req, res) => {
+// Today's mood endpoint - UID-first
+router.get('/today', async (req, res) => {
   try {
-    const userId = parseInt(req.params.userId);
-    const limit = parseInt(req.query.limit) || 30;
+    const { uid } = req.ctx;
+    if (!uid) return res.status(401).json({ error: 'auth_ctx_missing' });
     
-    const moodEntries = await storage.getUserMoodEntries(userId, limit);
+    console.log(`📊 Getting today's mood for uid: ${uid}`);
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const moodEntries = await store.getMoodEntriesByUid(uid, { limit: 10 });
+    
+    // Find mood entries from today
+    const todaysMoods = moodEntries.filter(entry => {
+      const entryDate = new Date(entry.createdAt || entry.date);
+      entryDate.setHours(0, 0, 0, 0);
+      return entryDate.getTime() === today.getTime();
+    });
+    
+    if (todaysMoods.length > 0) {
+      const latestMood = todaysMoods[0];
+      res.json({
+        hasMoodToday: true,
+        mood: latestMood.mood,
+        intensity: latestMood.intensity || 5,
+        notes: latestMood.notes || '',
+        timestamp: latestMood.createdAt || latestMood.date
+      });
+    } else {
+      res.json({
+        hasMoodToday: false,
+        message: 'No mood logged today yet'
+      });
+    }
+  } catch (error) {
+    console.error('Error fetching today\'s mood:', error);
+    res.status(500).json({ error: 'Failed to fetch today\'s mood' });
+  }
+});
+
+// Get mood history - UID-first
+router.get('/history', async (req, res) => {
+  try {
+    const { uid } = req.ctx;
+    if (!uid) return res.status(401).json({ error: 'auth_ctx_missing' });
+    
+    const limit = parseInt(req.query.limit) || 30;
+    console.log(`📈 Getting mood history for uid: ${uid}, limit: ${limit}`);
+    
+    const moodEntries = await store.getMoodEntriesByUid(uid, { limit });
     res.json({ moodEntries, count: moodEntries.length });
   } catch (error) {
     console.error('Error fetching mood history:', error);
@@ -45,13 +94,15 @@ router.get('/history/:userId', async (req, res) => {
   }
 });
 
-// Get mood analytics for a user
-router.get('/analytics/:userId', async (req, res) => {
+// Get mood analytics - UID-first
+router.get('/analytics', async (req, res) => {
   try {
-    const userId = parseInt(req.params.userId);
-    const days = parseInt(req.query.days) || 30;
+    const { uid } = req.ctx;
+    if (!uid) return res.status(401).json({ error: 'auth_ctx_missing' });
     
-    const moodEntries = await storage.getUserMoodEntries(userId, 100);
+    console.log(`📊 Getting mood analytics for uid: ${uid}`);
+    
+    const moodEntries = await store.getMoodEntriesByUid(uid, { limit: 100 });
     
     // Calculate mood analytics
     const analytics = {
@@ -63,7 +114,7 @@ router.get('/analytics/:userId', async (req, res) => {
     
     if (moodEntries.length > 0) {
       // Calculate average intensity
-      analytics.averageIntensity = moodEntries.reduce((sum, entry) => sum + entry.intensity, 0) / moodEntries.length;
+      analytics.averageIntensity = moodEntries.reduce((sum, entry) => sum + (entry.intensity || 5), 0) / moodEntries.length;
       
       // Calculate mood frequency
       moodEntries.forEach(entry => {
@@ -71,14 +122,16 @@ router.get('/analytics/:userId', async (req, res) => {
       });
       
       // Find dominant mood
-      analytics.dominantMood = Object.keys(analytics.moodFrequency).reduce((a, b) => 
-        analytics.moodFrequency[a] > analytics.moodFrequency[b] ? a : b
-      );
+      if (Object.keys(analytics.moodFrequency).length > 0) {
+        analytics.dominantMood = Object.keys(analytics.moodFrequency).reduce((a, b) => 
+          analytics.moodFrequency[a] > analytics.moodFrequency[b] ? a : b
+        );
+      }
       
       // Simple trend analysis (last 7 vs previous 7 entries)
       if (moodEntries.length >= 14) {
-        const recent = moodEntries.slice(0, 7).reduce((sum, entry) => sum + entry.intensity, 0) / 7;
-        const previous = moodEntries.slice(7, 14).reduce((sum, entry) => sum + entry.intensity, 0) / 7;
+        const recent = moodEntries.slice(0, 7).reduce((sum, entry) => sum + (entry.intensity || 5), 0) / 7;
+        const previous = moodEntries.slice(7, 14).reduce((sum, entry) => sum + (entry.intensity || 5), 0) / 7;
         
         if (recent > previous + 0.5) analytics.recentTrend = 'improving';
         else if (recent < previous - 0.5) analytics.recentTrend = 'declining';
@@ -92,34 +145,17 @@ router.get('/analytics/:userId', async (req, res) => {
   }
 });
 
-// Legacy endpoint
-router.post('/mood', async (req, res) => {
-  req.url = '/';
-  return router.handle(req, res);
-});
-
-// Generic entries endpoint for backward compatibility  
+// Get mood entries for backward compatibility
 router.get('/entries', async (req, res) => {
   try {
-    const { UserSessionManager } = await import('../userSession.js');
-    const userSessionManager = UserSessionManager.getInstance();
+    const { uid } = req.ctx;
+    if (!uid) return res.status(401).json({ error: 'auth_ctx_missing' });
     
-    // Get user from device fingerprint
-    const deviceFingerprint = req.headers['x-device-fingerprint'] || 
-                              userSessionManager.generateDeviceFingerprint(req);
-    const sessionId = req.headers['x-session-id'] || undefined;
-    
-    const anonymousUser = await userSessionManager.getOrCreateAnonymousUser(
-      (Array.isArray(deviceFingerprint) ? deviceFingerprint[0] : deviceFingerprint) || 'unknown', 
-      Array.isArray(sessionId) ? sessionId[0] : sessionId
-    );
-    
-    console.log('Generic mood entries endpoint hit for user:', anonymousUser.id);
-    const entries = await storage.getMoodEntries(anonymousUser.id);
-    console.log('Retrieved mood entries via generic endpoint:', entries ? entries.length : 0);
+    console.log(`📂 Getting mood entries for uid: ${uid}`);
+    const entries = await store.getMoodEntriesByUid(uid, { limit: 50 });
     res.json(entries || []);
   } catch (error) {
-    console.error('Failed to fetch mood entries via generic endpoint:', error);
+    console.error('Failed to fetch mood entries:', error);
     res.status(500).json({ error: 'Failed to fetch mood entries' });
   }
 });

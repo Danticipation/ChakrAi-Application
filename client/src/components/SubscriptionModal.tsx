@@ -9,7 +9,7 @@ interface SubscriptionModalProps {
   onClose: () => void;
 }
 
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
+const stripePromise = loadStripe(import.meta.env['VITE_STRIPE_PUBLIC_KEY']);
 
 export function SubscriptionModal({ isOpen, onClose }: SubscriptionModalProps) {
   const { createCheckout, subscription } = useSubscription();
@@ -68,7 +68,7 @@ export function SubscriptionModal({ isOpen, onClose }: SubscriptionModalProps) {
             </h2>
           </div>
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700"
@@ -81,9 +81,9 @@ export function SubscriptionModal({ isOpen, onClose }: SubscriptionModalProps) {
         <div className="p-6 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
           <div className="text-center">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-              Current Plan: {subscription?.status === 'free' ? 'Free Tier' : 'Premium'}
+              Current Plan: {!subscription?.status || subscription.status === 'cancelled' || subscription.status === 'expired' ? 'Free Tier' : 'Premium'}
             </h3>
-            {subscription?.status === 'free' && (
+            {(!subscription?.status || subscription.status === 'cancelled' || subscription.status === 'expired') && subscription && (
               <div className="text-gray-600 dark:text-gray-400">
                 <p>Monthly Usage: {subscription.monthlyUsage}/100 interactions</p>
                 <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mt-2">

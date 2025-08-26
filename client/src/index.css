@@ -1,6 +1,12 @@
 /* Import luxury fonts with clear character distinction */
 @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
 
+/* Import Inter font for modern professional look */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+/* Import modern professional styles */
+@import './styles/modern-professional.css';
+
 /* Load Samarkan Normal font */
 @font-face {
   font-family: 'Samarkan Normal';
@@ -44,6 +50,33 @@ h1, h2, h3, h4, h5, h6 {
   --theme-text: #f0f0f0;
   --theme-text-secondary: #ffffff99;
   --theme-surface-light: #2c3e8a;
+  
+  /* NEW: PREMIUM GRADIENT SYSTEM */
+  /* Primary Gradients */
+  --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --gradient-therapy: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  --gradient-wellness: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+  --gradient-journal: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+  --gradient-mood: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+  --gradient-insights: linear-gradient(135deg, #d299c2 0%, #fef9d7 100%);
+  
+  /* Background Gradients */
+  --gradient-bg-light: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  --gradient-bg-dark: linear-gradient(135deg, #0c0c0c 0%, #1a1a1a 100%);
+  --gradient-bg-wellness: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  
+  /* Button Gradients */
+  --gradient-button-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --gradient-button-success: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
+  --gradient-button-warning: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+  --gradient-button-therapy: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  --gradient-button-mood: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+  
+  /* Card Gradients */
+  --gradient-card-primary: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+  --gradient-card-therapy: linear-gradient(135deg, rgba(79, 172, 254, 0.1) 0%, rgba(0, 242, 254, 0.1) 100%);
+  --gradient-card-wellness: linear-gradient(135deg, rgba(67, 233, 123, 0.1) 0%, rgba(56, 249, 215, 0.1) 100%);
+  --gradient-card-journal: linear-gradient(135deg, rgba(250, 112, 154, 0.1) 0%, rgba(254, 225, 64, 0.1) 100%);
   
   /* Progress bars - red to yellow to green */
   --progress-start: #ef4444;
@@ -535,6 +568,146 @@ h1, h2, h3, h4, h5, h6 {
 .animate-gradient { animation: gradient-shift 3s ease infinite; background-size: 200% 200%; }
 .animate-sparkle { animation: sparkle 1.5s ease-in-out infinite; }
 
+/* PREMIUM GRADIENT BUTTON SYSTEM */
+.btn-primary {
+  background: var(--gradient-button-primary);
+  border: none;
+  box-shadow: 0 4px 15px 0 rgba(102, 126, 234, 0.4);
+  transition: all 0.3s ease;
+  color: white;
+  font-weight: 600;
+  border-radius: 8px;
+  padding: 12px 24px;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px 0 rgba(102, 126, 234, 0.6);
+}
+
+.btn-therapy {
+  background: var(--gradient-button-therapy);
+  border: none;
+  box-shadow: 0 4px 15px 0 rgba(79, 172, 254, 0.4);
+  transition: all 0.3s ease;
+  color: white;
+  font-weight: 600;
+  border-radius: 8px;
+  padding: 12px 24px;
+}
+
+.btn-therapy:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px 0 rgba(79, 172, 254, 0.6);
+}
+
+.btn-wellness {
+  background: var(--gradient-button-success);
+  border: none;
+  box-shadow: 0 4px 15px 0 rgba(86, 171, 47, 0.4);
+  transition: all 0.3s ease;
+  color: white;
+  font-weight: 600;
+  border-radius: 8px;
+  padding: 12px 24px;
+}
+
+.btn-wellness:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px 0 rgba(86, 171, 47, 0.6);
+}
+
+.btn-mood {
+  background: var(--gradient-button-mood);
+  border: none;
+  box-shadow: 0 4px 15px 0 rgba(250, 112, 154, 0.4);
+  transition: all 0.3s ease;
+  color: white;
+  font-weight: 600;
+  border-radius: 8px;
+  padding: 12px 24px;
+}
+
+.btn-mood:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px 0 rgba(250, 112, 154, 0.6);
+}
+
+/* PREMIUM GRADIENT CARDS */
+.dashboard-card {
+  background: white;
+  border: none;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  overflow: hidden;
+  position: relative;
+}
+
+.dashboard-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 50px rgba(0,0,0,0.15);
+}
+
+.gradient-card-primary {
+  background: var(--gradient-card-primary);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 20px;
+  transition: all 0.3s ease;
+}
+
+.gradient-card-therapy {
+  background: var(--gradient-card-therapy);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 20px;
+  transition: all 0.3s ease;
+}
+
+.gradient-card-wellness {
+  background: var(--gradient-card-wellness);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 20px;
+  transition: all 0.3s ease;
+}
+
+.gradient-card-journal {
+  background: var(--gradient-card-journal);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 20px;
+  transition: all 0.3s ease;
+}
+
+/* MAIN HEADER GRADIENTS */
+.main-header {
+  background: var(--gradient-primary);
+  color: white;
+}
+
+/* PAGE TITLE GRADIENTS */
+.page-title {
+  font-size: 2.5rem;
+  font-weight: 600;
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.card-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 0.5rem;
+}
+
 /* Enhanced card hover effects */
 .card-hover {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -562,6 +735,47 @@ h1, h2, h3, h4, h5, h6 {
   transform: translate(-50%, -50%);
   animation: pulse 2s infinite;
   opacity: 0.6;
+}
+
+/* UTILITY CLASSES FOR GRADIENTS */
+.bg-gradient-primary { background: var(--gradient-primary); }
+.bg-gradient-therapy { background: var(--gradient-therapy); }
+.bg-gradient-wellness { background: var(--gradient-wellness); }
+.bg-gradient-journal { background: var(--gradient-journal); }
+.bg-gradient-mood { background: var(--gradient-mood); }
+.bg-gradient-insights { background: var(--gradient-insights); }
+
+/* Gradient text utilities */
+.text-gradient-primary {
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gradient-therapy {
+  background: var(--gradient-therapy);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gradient-wellness {
+  background: var(--gradient-wellness);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Enhanced hover effects for gradient elements */
+.gradient-hover {
+  transition: all 0.3s ease;
+}
+
+.gradient-hover:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.1);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
 }
 
 /* Universal gradient button styling with silver shimmering borders */

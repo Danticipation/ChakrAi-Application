@@ -86,7 +86,7 @@ export async function generateMoodForecast(userId: number, storage: any): Promis
       temperature: 0.3
     });
 
-    const forecastData = JSON.parse(response.choices[0].message.content || '{}');
+    const forecastData = JSON.parse(response.choices[0]?.message?.content || '{}');
     
     const moodForecast: MoodForecast = {
       userId,
@@ -178,11 +178,17 @@ export function identifyTemporalPatterns(moodEntries: any[]) {
   // Calculate averages
   Object.keys(dayOfWeekPatterns).forEach(day => {
     const dayKey = parseInt(day);
-    dayOfWeekPatterns[dayKey].average = dayOfWeekPatterns[dayKey].total / dayOfWeekPatterns[dayKey].count;
+    const pattern = dayOfWeekPatterns[dayKey];
+    if (pattern) {
+      pattern.average = pattern.total / pattern.count;
+    }
   });
   
   Object.keys(timeOfDayPatterns).forEach(time => {
-    timeOfDayPatterns[time].average = timeOfDayPatterns[time].total / timeOfDayPatterns[time].count;
+    const pattern = timeOfDayPatterns[time];
+    if (pattern) {
+      pattern.average = pattern.total / pattern.count;
+    }
   });
   
   return { dayOfWeek: dayOfWeekPatterns, timeOfDay: timeOfDayPatterns };
@@ -233,7 +239,7 @@ export async function analyzeTextForTriggers(text: string): Promise<string[]> {
       temperature: 0.3
     });
 
-    const result = JSON.parse(response.choices[0].message.content || '{"triggers": []}');
+    const result = JSON.parse(response.choices[0]?.message?.content || '{"triggers": []}');
     return result.triggers || [];
   } catch (error) {
     console.error('Error analyzing text for triggers:', error);
@@ -405,7 +411,7 @@ export async function generateContextualResponse(
       temperature: 0.3
     });
 
-    const contextData = JSON.parse(response.choices[0].message.content || '{}');
+    const contextData = JSON.parse(response.choices[0]?.message?.content || '{}');
     
     const contextualResponse: ContextualResponse = {
       tone: contextData.tone || 'supportive',
@@ -552,7 +558,7 @@ export async function generateEmotionallyIntelligentResponse(
       max_tokens: getMaxTokensForLength(responseContext.responseLength)
     });
 
-    return response.choices[0].message.content || "I'm here to support you. How are you feeling right now?";
+    return response.choices[0]?.message?.content || "I'm here to support you. How are you feeling right now?";
 
   } catch (error) {
     console.error('Error generating emotionally intelligent response:', error);

@@ -28,18 +28,18 @@ export interface ConversationSession {
 export interface SemanticMemory {
   id: number;
   userId: number;
-  memoryType: 'conversation' | 'insight' | 'pattern' | 'goal' | 'breakthrough';
+  memoryType: string; // 'conversation' | 'insight' | 'pattern' | 'goal' | 'breakthrough' but database returns string
   content: string;
-  semanticTags: string[];
-  emotionalContext?: string;
-  temporalContext?: string;
-  relatedTopics: string[];
-  confidence: string;
-  accessCount: number;
-  sourceConversationId?: string;
-  isActiveMemory: boolean;
-  lastAccessedAt?: Date;
-  createdAt: Date;
+  semanticTags: string[] | null;
+  emotionalContext: string | null;
+  temporalContext: string | null;
+  relatedTopics: string[] | null;
+  confidence: string | null;
+  accessCount: number | null;
+  sourceConversationId: number | null;
+  isActiveMemory: boolean | null;
+  lastAccessedAt: Date | null;
+  createdAt: Date | null;
 }
 
 export interface MemoryConnection {
@@ -47,10 +47,10 @@ export interface MemoryConnection {
   userId: number;
   fromMemoryId: number;
   toMemoryId: number;
-  connectionType: 'relates_to' | 'contradicts' | 'builds_on' | 'resolves' | 'triggers';
-  strength: string;
-  automaticConnection: boolean;
-  createdAt: Date;
+  connectionType: string; // Database returns string, should be one of: 'relates_to' | 'contradicts' | 'builds_on' | 'resolves' | 'triggers'
+  strength: string | null;
+  automaticConnection: boolean | null;
+  createdAt: Date | null;
 }
 
 export interface MemoryInsight {

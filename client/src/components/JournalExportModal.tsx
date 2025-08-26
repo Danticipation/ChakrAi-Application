@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { Download, FileText, Users, Calendar, X, Check } from 'lucide-react';
-import type { JournalEntry } from '@shared/schema';
+import type { JournalEntry } from '../../../shared/schema';
 import { format, subDays, subMonths } from 'date-fns';
 
 interface JournalExportModalProps {
@@ -35,13 +34,15 @@ export default function JournalExportModal({ userId, entries, onClose }: Journal
 
   const exportMutation = useMutation({
     mutationFn: async (exportConfig: ExportConfig) => {
-      return await apiRequest('/api/journal/export', {
+      const response = await fetch('/api/journal/export', {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           userId,
           ...exportConfig
         })
       });
+      return await response.json();
     },
     onSuccess: (data) => {
       setExportData(data);
@@ -58,7 +59,8 @@ export default function JournalExportModal({ userId, entries, onClose }: Journal
 
   const downloadMutation = useMutation({
     mutationFn: async () => {
-      return await apiRequest(`/api/journal/export/${exportData.id}/download`);
+      const response = await fetch(`/api/journal/export/${exportData.id}/download`);
+      return await response.json();
     },
     onSuccess: (response) => {
       // Create download link

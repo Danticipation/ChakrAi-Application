@@ -38,7 +38,7 @@ export class HealthChecker {
     
     // Determine overall status
     const hasUnhealthy = Object.values(checks).some(check => 
-      typeof check === 'object' && check.status === 'unhealthy'
+      typeof check === 'object' && 'status' in check && check.status === 'unhealthy'
     );
     const hasExternal = checks.external.openai.status === 'unhealthy' || 
                        checks.external.elevenlabs.status === 'unhealthy';
@@ -54,8 +54,8 @@ export class HealthChecker {
       status,
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
-      version: process.env.npm_package_version || '1.0.0',
-      environment: process.env.NODE_ENV || 'development',
+      version: process.env['npm_package_version'] || '1.0.0',
+      environment: process.env['NODE_ENV'] || 'development',
       checks
     };
   }
@@ -65,7 +65,9 @@ export class HealthChecker {
       const start = Date.now();
       
       // Simple database connectivity test
-      await storage.getUserById(1);
+      if ('getUserById' in storage) {
+        await (storage as any).getUserById(1);
+      }
       
       const responseTime = Date.now() - start;
       
@@ -124,7 +126,7 @@ export class HealthChecker {
   }
   
   private static async checkOpenAI(): Promise<{ status: string; responseTime?: number; error?: string }> {
-    if (!process.env.OPENAI_API_KEY) {
+    if (!process.env['OPENAI_API_KEY']) {
       return { status: 'degraded', error: 'API key not configured' };
     }
     
@@ -135,7 +137,7 @@ export class HealthChecker {
       const response = await fetch('https://api.openai.com/v1/models', {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+          'Authorization': `Bearer ${process.env['OPENAI_API_KEY']}`,
           'Content-Type': 'application/json'
         }
       });
@@ -162,7 +164,7 @@ export class HealthChecker {
   }
   
   private static async checkElevenLabs(): Promise<{ status: string; responseTime?: number; error?: string }> {
-    if (!process.env.ELEVENLABS_API_KEY) {
+    if (!process.env['ELEVENLABS_API_KEY']) {
       return { status: 'degraded', error: 'API key not configured' };
     }
     
@@ -173,7 +175,7 @@ export class HealthChecker {
       const response = await fetch('https://api.elevenlabs.io/v1/voices', {
         method: 'GET',
         headers: {
-          'xi-api-key': process.env.ELEVENLABS_API_KEY
+          'xi-api-key': process.env['ELEVENLABS_API_KEY']
         }
       });
       

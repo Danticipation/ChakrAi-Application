@@ -1,4 +1,4 @@
-import { getCurrentUserId } from "../utils/userSession";
+import { getCurrentUserId, getAuthHeaders } from "../utils/unifiedUserSession";
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -58,15 +58,34 @@ interface EfficacyReport {
 }
 
 interface TherapeuticAnalyticsProps {
-  userId?: number;
+  // No props needed - uses unified auth
 }
 
-export default function TherapeuticAnalytics({ userId = getCurrentUserId() }: TherapeuticAnalyticsProps) {
+export default function TherapeuticAnalytics({}: TherapeuticAnalyticsProps) {
+  const [userId, setUserId] = useState<number>(0);
   const [dashboard, setDashboard] = useState<AnalyticsDashboard | null>(null);
   const [efficacyReport, setEfficacyReport] = useState<EfficacyReport | null>(null);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'reports' | 'trends' | 'optimization'>('dashboard');
   const [loading, setLoading] = useState(false);
   const [reportPeriod, setReportPeriod] = useState<'weekly' | 'monthly' | 'quarterly'>('monthly');
+
+  // Get authenticated user ID
+  useEffect(() => {
+    const getUser = async () => {
+      try {
+        const authenticatedUserId = await getCurrentUserId();
+        if (authenticatedUserId === 0) {
+          console.error('❌ TherapeuticAnalytics: Authentication failed');
+          return;
+        }
+        setUserId(authenticatedUserId);
+        console.log('🔐 TherapeuticAnalytics: Using authenticated user:', authenticatedUserId);
+      } catch (error) {
+        console.error('❌ TherapeuticAnalytics: Auth failed:', error);
+      }
+    };
+    getUser();
+  }, []);
 
   useEffect(() => {
     loadDashboard();
@@ -147,8 +166,8 @@ export default function TherapeuticAnalytics({ userId = getCurrentUserId() }: Th
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-white">
-              {dashboard?.summary.weeklyEmotionalImprovement > 0 ? '+' : ''}
-              {((dashboard?.summary.weeklyEmotionalImprovement || 0) * 100).toFixed(1)}%
+              {(dashboard?.summary?.weeklyEmotionalImprovement || 0) > 0 ? '+' : ''}
+              {((dashboard?.summary?.weeklyEmotionalImprovement || 0) * 100).toFixed(1)}%
             </div>
             <p className="text-xs text-white/70 mt-1">Last 7 days</p>
           </CardContent>

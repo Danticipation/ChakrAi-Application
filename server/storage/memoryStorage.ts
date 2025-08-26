@@ -36,6 +36,11 @@ export class MemoryStorage implements IMemoryStorage {
       ...data,
       createdAt: new Date(),
     }).returning();
+    
+    if (!result[0]) {
+      throw new Error('Failed to create user memory');
+    }
+    
     return result[0];
   }
 
@@ -50,6 +55,11 @@ export class MemoryStorage implements IMemoryStorage {
       ...data,
       createdAt: new Date(),
     }).returning();
+    
+    if (!result[0]) {
+      throw new Error('Failed to create user fact');
+    }
+    
     return result[0];
   }
 

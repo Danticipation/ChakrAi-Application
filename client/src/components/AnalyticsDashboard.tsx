@@ -5,6 +5,7 @@ import {
   Zap, Moon, Settings, AlertCircle, CheckCircle,
   ArrowUpRight, ArrowDownRight, Minus, Sparkles
 } from 'lucide-react';
+import { getCurrentUserId, getAuthHeaders } from '../utils/unifiedUserSession';
 
 interface WellnessMetrics {
   currentWellnessScore: number;
@@ -29,32 +30,59 @@ interface DashboardData {
 }
 
 interface AnalyticsDashboardProps {
-  userId: number | null;
   onNavigate?: (section: string) => void;
 }
 
-export default function AnalyticsDashboard({ userId, onNavigate }: AnalyticsDashboardProps) {
+export default function AnalyticsDashboard({ onNavigate }: AnalyticsDashboardProps) {
+  const [userId, setUserId] = useState<number>(0);
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeView, setActiveView] = useState<'overview' | 'detailed'>('overview');
 
-  // Fetch dashboard data with multiple fallback strategies
+  // Get authenticated user ID
+  useEffect(() => {
+    const getUser = async () => {
+      try {
+        const authenticatedUserId = await getCurrentUserId();
+        if (authenticatedUserId === 0) {
+          setError('Authentication failed. Please refresh the page.');
+          return;
+        }
+        setUserId(authenticatedUserId);
+        console.log('🔐 AnalyticsDashboard: Using authenticated user:', authenticatedUserId);
+      } catch (error) {
+        console.error('❌ AnalyticsDashboard: Auth failed:', error);
+        setError('Authentication failed. Please refresh the page.');
+      }
+    };
+    getUser();
+  }, []);
+
+  // Fetch dashboard data with unified auth
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      if (!userId) {
-        setDashboardData(createFallbackData());
+      if (userId === 0) {
+        setError('Authentication required');
         setLoading(false);
         return;
       }
 
-      let response = await fetch(`/api/analytics/simple/${userId}`);
+      // Use unified auth headers
+      const authHeaders = await getAuthHeaders();
+      console.log('🔐 AnalyticsDashboard: Using auth headers for user:', userId);
+
+      let response = await fetch(`/api/analytics/simple/${userId}`, {
+        headers: authHeaders
+      });
       
       if (!response.ok) {
-        response = await fetch(`/api/analytics/dashboard/${userId}`);
+        response = await fetch(`/api/analytics/dashboard/${userId}`, {
+          headers: authHeaders
+        });
       }
 
       if (!response.ok) {
@@ -138,10 +166,19 @@ export default function AnalyticsDashboard({ userId, onNavigate }: AnalyticsDash
       emotion: (entry.mood || 'neutral') as string
     }));
 
+    // Calculate emotional volatility from actual mood data
+    const emotionalVolatility = moodEntries.length > 1 
+      ? Math.round(Math.abs(moodEntries.reduce((acc, entry, index) => {
+          if (index === 0) return 0;
+          const previous = moodEntries[index - 1];
+          return acc + Math.abs((entry.intensity || 5) - (previous.intensity || 5));
+        }, 0) / (moodEntries.length - 1)) * 10)
+      : 0;
+
     return {
       overview: {
         currentWellnessScore: wellnessScore,
-        emotionalVolatility: Math.round(Math.random() * 30 + 10),
+        emotionalVolatility: Math.min(100, emotionalVolatility),
         therapeuticEngagement: engagementScore,
         totalJournalEntries,
         totalMoodEntries,
@@ -186,12 +223,12 @@ export default function AnalyticsDashboard({ userId, onNavigate }: AnalyticsDash
 
   const createFallbackData = (): DashboardData => ({
     overview: {
-      currentWellnessScore: 75,
-      emotionalVolatility: 25,
-      therapeuticEngagement: 60,
+      currentWellnessScore: 0,
+      emotionalVolatility: 0,
+      therapeuticEngagement: 0,
       totalJournalEntries: 0,
       totalMoodEntries: 0,
-      averageMood: 7.0
+      averageMood: 0
     },
     charts: {
       moodTrend: [],
@@ -205,12 +242,12 @@ export default function AnalyticsDashboard({ userId, onNavigate }: AnalyticsDash
   const transformDataFormat = (data: any): DashboardData => {
     return {
       overview: {
-        currentWellnessScore: data.wellnessScore || data.currentWellnessScore || 50,
-        emotionalVolatility: data.volatility || data.emotionalVolatility || 20,
-        therapeuticEngagement: data.engagement || data.therapeuticEngagement || 40,
+        currentWellnessScore: data.wellnessScore || data.currentWellnessScore || 0,
+        emotionalVolatility: data.volatility || data.emotionalVolatility || 0,
+        therapeuticEngagement: data.engagement || data.therapeuticEngagement || 0,
         totalJournalEntries: data.journalEntries || data.totalJournalEntries || 0,
         totalMoodEntries: data.moodEntries || data.totalMoodEntries || 0,
-        averageMood: data.averageMood || 5.0
+        averageMood: data.averageMood || 0
       },
       charts: {
         moodTrend: data.moodTrend || [],
@@ -223,7 +260,9 @@ export default function AnalyticsDashboard({ userId, onNavigate }: AnalyticsDash
   };
 
   useEffect(() => {
-    fetchDashboardData();
+    if (userId > 0) {
+      fetchDashboardData();
+    }
   }, [userId]);
 
   const getMoodColor = (score: number) => {

@@ -23,14 +23,14 @@ export class PaginationHelper {
   static readonly MAX_LIMIT = 100;
 
   static parseParams(req: Request): PaginationParams {
-    const page = Math.max(1, parseInt(req.query.page as string) || 1);
+    const page = Math.max(1, parseInt(req.query['page'] as string) || 1);
     const limit = Math.min(
       this.MAX_LIMIT, 
-      Math.max(1, parseInt(req.query.limit as string) || this.DEFAULT_LIMIT)
+      Math.max(1, parseInt(req.query['limit'] as string) || this.DEFAULT_LIMIT)
     );
     const offset = (page - 1) * limit;
-    const sortBy = (req.query.sortBy as string) || 'createdAt';
-    const sortOrder = ((req.query.sortOrder as string)?.toLowerCase() === 'asc') ? 'asc' : 'desc';
+    const sortBy = (req.query['sortBy'] as string) || 'createdAt';
+    const sortOrder = ((req.query['sortOrder'] as string)?.toLowerCase() === 'asc') ? 'asc' : 'desc';
 
     return { page, limit, offset, sortBy, sortOrder };
   }

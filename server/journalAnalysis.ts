@@ -1,8 +1,8 @@
 import OpenAI from "openai";
-import { retryOpenAIRequest } from "./openaiRetry";
-import type { JournalEntry, JournalAnalytics, InsertJournalAnalytics } from "@shared/schema";
+import { retryOpenAIRequest } from "./openaiRetry.js";
+import type { JournalEntry, JournalAnalytics } from "../shared/schema.ts";
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const openai = new OpenAI({ apiKey: process.env['OPENAI_API_KEY'] });
 
 export interface JournalAnalysisResult {
   emotionalThemes: Record<string, number>;
@@ -41,19 +41,19 @@ export async function analyzeJournalEntry(
     const quickAnalysis = performQuickJournalAnalysis(entry);
     
     // AI analysis - Use Ollama in development, OpenAI in production
-    const isDevelopment = process.env.NODE_ENV === 'development';
+    const isDevelopment = process.env['NODE_ENV'] === 'development';
     let aiAnalysis: any = {};
     
     if (isDevelopment) {
       try {
         console.log('🦙 Using Ollama for journal analysis in development mode');
-        const { analyzeJournalWithOllama, isOllamaAvailable } = await import('./ollamaIntegration');
+        const { analyzeJournalWithOllama, isOllamaAvailable } = await import('./ollamaIntegration.js');
         
         if (await isOllamaAvailable()) {
           const previousContents = previousEntries.slice(0, 3).map(e => e.content);
           aiAnalysis = await analyzeJournalWithOllama(
             entry.content, 
-            entry.title, 
+            entry.title || '', 
             entry.mood || 'neutral',
             previousContents
           );
@@ -62,8 +62,8 @@ export async function analyzeJournalEntry(
           console.log('⚠️ Ollama not available, falling back to OpenAI');
           throw new Error('Ollama not available');
         }
-      } catch (ollamaError) {
-        console.log('❌ Ollama journal analysis failed, using OpenAI fallback:', ollamaError.message);
+      } catch (ollamaError: any) {
+        console.log('❌ Ollama journal analysis failed, using OpenAI fallback:', ollamaError?.message);
         // Fallback to OpenAI
         aiAnalysis = await retryOpenAIRequest(async () => {
           const prompt = constructJournalAnalysisPrompt(entry, previousEntries);
@@ -84,7 +84,7 @@ export async function analyzeJournalEntry(
             temperature: 0.3
           });
 
-          return JSON.parse(response.choices[0].message.content || '{}');
+          return JSON.parse(response.choices[0]?.message?.content || '{}');
         });
       }
     } else {
@@ -109,7 +109,7 @@ export async function analyzeJournalEntry(
           temperature: 0.3
         });
 
-        return JSON.parse(response.choices[0].message.content || '{}');
+        return JSON.parse(response.choices[0]?.message?.content || '{}');
       });
     }
 
@@ -159,7 +159,7 @@ Current Entry:
 Title: ${entry.title || 'Untitled'}
 Content: ${entry.content}
 Mood: ${entry.mood || 'Not specified'}
-Emotional Tags: ${entry.emotionalTags?.join(', ') || 'None'}
+Emotional Tags: ${(entry as any).emotionalTags?.join(', ') || 'None'}
 Date: ${entry.createdAt}
 
 ${recentEntries.length > 0 ? `
@@ -278,7 +278,7 @@ export async function analyzeJournalPatterns(
         temperature: 0.2
       });
 
-      return JSON.parse(response.choices[0].message.content || '{}');
+      return JSON.parse(response.choices[0]?.message?.content || '{}');
     });
 
     return aiAnalysis;
@@ -301,7 +301,7 @@ ${entries.map((entry, i) => `
 Entry ${i + 1} (${entry.createdAt}):
 Mood: ${entry.mood || 'Not specified'}
 Content Sample: ${entry.content.substring(0, 150)}...
-Emotional Tags: ${entry.emotionalTags?.join(', ') || 'None'}
+Emotional Tags: ${(entry as any).emotionalTags?.join(', ') || 'None'}
 `).join('')}
 
 Analytics Summary:
@@ -309,8 +309,8 @@ ${analytics.map((analysis, i) => `
 Analysis ${i + 1}:
 Sentiment: ${analysis.sentimentScore}
 Intensity: ${analysis.emotionalIntensity}
-Key Insights: ${analysis.keyInsights?.join(', ') || 'None'}
-Concern Areas: ${analysis.concernAreas?.join(', ') || 'None'}
+Key Insights: ${analysis.insights || 'None'}
+Concern Areas: ${(analysis as any).concernAreas?.join(', ') || 'None'}
 `).join('')}
 
 Provide comprehensive pattern analysis in this JSON structure:
@@ -346,8 +346,8 @@ function generateBasicPatternAnalysis(
   const triggers = new Set<string>();
   
   entries.forEach(entry => {
-    entry.emotionalTags?.forEach(tag => themes.add(tag));
-    entry.triggers?.forEach(trigger => triggers.add(trigger));
+    (entry as any).emotionalTags?.forEach((tag: string) => themes.add(tag));
+    (entry as any).triggers?.forEach((trigger: string) => triggers.add(trigger));
   });
   
   return {

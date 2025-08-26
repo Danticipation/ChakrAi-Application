@@ -148,7 +148,7 @@ const AdminFeedbackDashboard: React.FC = () => {
               <Clock className="w-8 h-8 text-yellow-400" />
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-400">Pending</p>
-                <p className="text-2xl font-bold text-white">{stats.byStatus.submitted || 0}</p>
+                <p className="text-2xl font-bold text-white">{stats.byStatus['submitted'] || 0}</p>
               </div>
             </div>
           </div>
@@ -158,7 +158,7 @@ const AdminFeedbackDashboard: React.FC = () => {
               <Bug className="w-8 h-8 text-red-400" />
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-400">Bug Reports</p>
-                <p className="text-2xl font-bold text-white">{stats.byType.bug || 0}</p>
+                <p className="text-2xl font-bold text-white">{stats.byType['bug'] || 0}</p>
               </div>
             </div>
           </div>
@@ -168,7 +168,7 @@ const AdminFeedbackDashboard: React.FC = () => {
               <Lightbulb className="w-8 h-8 text-yellow-400" />
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-400">Feature Requests</p>
-                <p className="text-2xl font-bold text-white">{stats.byType.feature || 0}</p>
+                <p className="text-2xl font-bold text-white">{stats.byType['feature'] || 0}</p>
               </div>
             </div>
           </div>

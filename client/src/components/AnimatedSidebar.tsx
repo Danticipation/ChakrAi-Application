@@ -182,10 +182,10 @@ const AnimatedSidebar: React.FC<AnimatedSidebarProps> = ({
             id="core"
             title="Core Features"
             icon={Star}
-            isCollapsed={collapsedSections.core}
+            isCollapsed={collapsedSections['core'] || false}
             gradient="from-blue-500 to-cyan-600"
           />
-          {!collapsedSections.core && (
+          {!collapsedSections['core'] && (
             <div className="ml-4 mt-2 space-y-2">
               <MenuItem
                 id="home"
@@ -230,10 +230,10 @@ const AnimatedSidebar: React.FC<AnimatedSidebarProps> = ({
             id="wellness"
             title="Wellness Tools"
             icon={Heart}
-            isCollapsed={collapsedSections.wellness}
+            isCollapsed={collapsedSections['wellness'] || false}
             gradient="from-rose-500 to-pink-600"
           />
-          {!collapsedSections.wellness && (
+          {!collapsedSections['wellness'] && (
             <div className="ml-4 mt-2 space-y-2">
               <MenuItem
                 id="meditation"
@@ -270,10 +270,10 @@ const AnimatedSidebar: React.FC<AnimatedSidebarProps> = ({
             id="community"
             title="Community"
             icon={Users}
-            isCollapsed={collapsedSections.community}
+            isCollapsed={collapsedSections['community'] || false}
             gradient="from-cyan-500 to-blue-600"
           />
-          {!collapsedSections.community && (
+          {!collapsedSections['community'] && (
             <div className="ml-4 mt-2 space-y-2">
               <MenuItem
                 id="community"
@@ -293,10 +293,10 @@ const AnimatedSidebar: React.FC<AnimatedSidebarProps> = ({
             id="settings"
             title="Settings & Privacy"
             icon={Settings}
-            isCollapsed={collapsedSections.settings}
+            isCollapsed={collapsedSections['settings'] || false}
             gradient="from-gray-500 to-slate-600"
           />
-          {!collapsedSections.settings && (
+          {!collapsedSections['settings'] && (
             <div className="ml-4 mt-2 space-y-2">
               <MenuItem
                 id="privacy"

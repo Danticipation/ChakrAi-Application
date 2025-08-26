@@ -1,8 +1,8 @@
 // CONVERSATION CONTINUITY SERVICE - Manages session tracking and context preservation
 // Ensures therapeutic conversations maintain context across sessions
 
-import { db } from '../db.js';
-import { conversationSessions, conversationThreads } from '@shared/schema';
+import { db } from '../db.ts';
+import { conversationSessions, conversationThreads } from '../../shared/schema.ts';
 import { eq, desc, and } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import type { 
@@ -35,8 +35,25 @@ export class ConversationContinuityService implements IConversationContinuitySer
       };
 
       const [session] = await db.insert(conversationSessions).values(sessionData).returning();
-      console.log(`✅ Created session ${session?.sessionKey} for user ${userId}`);
-      return session!;
+      
+      if (!session) {
+        throw new Error('Failed to create conversation session');
+      }
+      
+      console.log(`✅ Created session ${session.sessionKey} for user ${userId}`);
+      // Ensure all required fields are never null to match ConversationSession type
+      return {
+        ...session,
+        title: session.title || "New Therapeutic Session",
+        keyTopics: session.keyTopics || [],
+        emotionalTone: session.emotionalTone || "neutral",
+        unresolvedThreads: session.unresolvedThreads || {},
+        contextCarryover: session.contextCarryover || {},
+        messageCount: session.messageCount || 0,
+        isActive: session.isActive ?? true,
+        lastActivity: session.lastActivity || new Date(),
+        createdAt: session.createdAt || new Date()
+      };
 
     } catch (error) {
       console.error('Error creating conversation session:', error);
@@ -58,7 +75,21 @@ export class ConversationContinuityService implements IConversationContinuitySer
         .orderBy(desc(conversationSessions.lastActivity))
         .limit(1);
 
-      return session || null;
+      if (!session) return null;
+      
+      // Ensure all required fields are never null to match ConversationSession type
+      return {
+        ...session,
+        title: session.title || "Therapeutic Session",
+        keyTopics: session.keyTopics || [],
+        emotionalTone: session.emotionalTone || "neutral",
+        unresolvedThreads: session.unresolvedThreads || {},
+        contextCarryover: session.contextCarryover || {},
+        messageCount: session.messageCount || 0,
+        isActive: session.isActive ?? true,
+        lastActivity: session.lastActivity || new Date(),
+        createdAt: session.createdAt || new Date()
+      };
     } catch (error) {
       console.error('Error getting active session:', error);
       return null;
@@ -81,7 +112,23 @@ export class ConversationContinuityService implements IConversationContinuitySer
         .where(eq(conversationSessions.id, sessionId))
         .returning();
 
-      return updatedSession!;
+      if (!updatedSession) {
+        throw new Error(`Failed to update conversation session with id ${sessionId}`);
+      }
+
+      // Ensure all required fields are never null to match ConversationSession type
+      return {
+        ...updatedSession,
+        title: updatedSession.title || "Therapeutic Session",
+        keyTopics: updatedSession.keyTopics || [],
+        emotionalTone: updatedSession.emotionalTone || "neutral",
+        unresolvedThreads: updatedSession.unresolvedThreads || {},
+        contextCarryover: updatedSession.contextCarryover || {},
+        messageCount: updatedSession.messageCount || 0,
+        isActive: updatedSession.isActive ?? true,
+        lastActivity: updatedSession.lastActivity || new Date(),
+        createdAt: updatedSession.createdAt || new Date()
+      };
     } catch (error) {
       console.error('Error updating session:', error);
       throw error;
@@ -124,7 +171,23 @@ export class ConversationContinuityService implements IConversationContinuitySer
         const [specificSession] = await db.select()
           .from(conversationSessions)
           .where(eq(conversationSessions.id, sessionId));
-        session = specificSession || null;
+        if (specificSession) {
+          // Ensure all required fields are never null to match ConversationSession type
+          session = {
+            ...specificSession,
+            title: specificSession.title || "Therapeutic Session",
+            keyTopics: specificSession.keyTopics || [],
+            emotionalTone: specificSession.emotionalTone || "neutral",
+            unresolvedThreads: specificSession.unresolvedThreads || {},
+            contextCarryover: specificSession.contextCarryover || {},
+            messageCount: specificSession.messageCount || 0,
+            isActive: specificSession.isActive ?? true,
+            lastActivity: specificSession.lastActivity || new Date(),
+            createdAt: specificSession.createdAt || new Date()
+          };
+        } else {
+          session = null;
+        }
       } else {
         session = await this.getActiveSession(userId);
       }
@@ -188,7 +251,19 @@ export class ConversationContinuityService implements IConversationContinuitySer
         .orderBy(desc(conversationSessions.lastActivity))
         .limit(limit);
 
-      return sessions;
+      // Ensure all required fields are never null to match ConversationSession type
+      return sessions.map(session => ({
+        ...session,
+        title: session.title || "Therapeutic Session",
+        keyTopics: session.keyTopics || [],
+        emotionalTone: session.emotionalTone || "neutral",
+        unresolvedThreads: session.unresolvedThreads || {},
+        contextCarryover: session.contextCarryover || {},
+        messageCount: session.messageCount || 0,
+        isActive: session.isActive ?? true,
+        lastActivity: session.lastActivity || new Date(),
+        createdAt: session.createdAt || new Date()
+      }));
     } catch (error) {
       console.error('Error getting session history:', error);
       return [];
@@ -202,20 +277,55 @@ export class ConversationContinuityService implements IConversationContinuitySer
     console.log(`🧵 Creating conversation thread for session ${sessionId}`);
     
     try {
+      // Map to actual database schema for conversationThreads
+      // Note: This assumes we have the userId available - you may need to fetch it from the session
+      const sessionInfo = await db.select({ userId: conversationSessions.userId })
+        .from(conversationSessions)
+        .where(eq(conversationSessions.id, sessionId))
+        .limit(1);
+      
+      const userId = sessionInfo[0]?.userId;
+      if (!userId) {
+        throw new Error(`Session ${sessionId} not found or invalid`);
+      }
+
       const thread = {
+        userId,
         sessionId,
-        threadType: threadData.threadType || 'main',
+        threadKey: nanoid(), // Generate unique thread key
         topic: threadData.topic || 'General Discussion',
-        emotionalIntensity: threadData.emotionalIntensity || 5,
-        isResolved: false,
-        keyMessages: threadData.keyMessages || [],
-        insights: threadData.insights || [],
-        createdAt: new Date()
+        status: 'active',
+        priority: 'medium',
+        lastMentioned: new Date(),
+        contextSummary: `Thread about: ${threadData.topic || 'General Discussion'}`,
+        nextSessionPrompt: null,
+        relatedFacts: [],
+        emotionalContext: { intensity: threadData.emotionalIntensity || 5 },
+        progressNotes: null,
+        createdAt: new Date(),
+        updatedAt: new Date()
       };
 
       const [createdThread] = await db.insert(conversationThreads).values(thread).returning();
-      console.log(`✅ Created thread ${createdThread?.id} for session ${sessionId}`);
-      return createdThread!;
+      
+      if (!createdThread) {
+        throw new Error(`Failed to create conversation thread for session ${sessionId}`);
+      }
+      
+      console.log(`✅ Created thread ${createdThread.id} for session ${sessionId}`);
+      
+      // Map database result back to ConversationThread type
+      return {
+        id: createdThread.id,
+        sessionId: createdThread.sessionId || sessionId,
+        threadType: threadData.threadType || 'main',
+        topic: createdThread.topic,
+        emotionalIntensity: threadData.emotionalIntensity || 5,
+        isResolved: createdThread.status !== 'active',
+        keyMessages: threadData.keyMessages || [],
+        insights: threadData.insights || [],
+        createdAt: createdThread.createdAt || new Date()
+      };
 
     } catch (error) {
       console.error('Error creating conversation thread:', error);
@@ -232,11 +342,22 @@ export class ConversationContinuityService implements IConversationContinuitySer
         .from(conversationThreads)
         .where(and(
           eq(conversationThreads.sessionId, sessionId),
-          eq(conversationThreads.isResolved, false)
+          eq(conversationThreads.status, 'active') // Use actual database field
         ))
         .orderBy(desc(conversationThreads.createdAt));
 
-      return threads;
+      // Map database results back to ConversationThread type
+      return threads.map(thread => ({
+        id: thread.id,
+        sessionId: thread.sessionId || sessionId,
+        threadType: 'main' as const, // Default since not in database
+        topic: thread.topic,
+        emotionalIntensity: (thread.emotionalContext as any)?.intensity || 5,
+        isResolved: thread.status !== 'active',
+        keyMessages: [], // Not stored in database schema
+        insights: [], // Not stored in database schema
+        createdAt: thread.createdAt || new Date()
+      }));
     } catch (error) {
       console.error('Error getting active threads:', error);
       return [];
@@ -251,17 +372,18 @@ export class ConversationContinuityService implements IConversationContinuitySer
     
     try {
       const updateData: any = {
-        isResolved: true
+        status: 'resolved' // Use actual database field
       };
 
       if (resolution) {
-        // Get current thread to append resolution
+        // Get current thread to append resolution to progress notes
         const [currentThread] = await db.select()
           .from(conversationThreads)
           .where(eq(conversationThreads.id, threadId));
 
         if (currentThread) {
-          updateData.insights = [...currentThread.insights, resolution];
+          const existingNotes = currentThread.progressNotes || '';
+          updateData.progressNotes = existingNotes + (existingNotes ? '\n' : '') + resolution;
         }
       }
 
@@ -282,7 +404,7 @@ export class ConversationContinuityService implements IConversationContinuitySer
    */
   private calculateSessionDuration(session: ConversationSession): number {
     const now = new Date();
-    const start = new Date(session.createdAt);
+    const start = new Date(session.createdAt || now);
     return Math.floor((now.getTime() - start.getTime()) / 1000 / 60); // Duration in minutes
   }
 
@@ -304,7 +426,7 @@ export class ConversationContinuityService implements IConversationContinuitySer
         ));
 
       const inactiveSessions = sessions.filter(
-        session => new Date(session.lastActivity) < cutoffDate
+        session => session.lastActivity && new Date(session.lastActivity) < cutoffDate
       );
 
       for (const session of inactiveSessions) {

@@ -1,4 +1,4 @@
-import { getCurrentUserId } from "../utils/userSession";
+import { getCurrentUserId } from "../utils/unifiedUserSession";
 import React, { useState } from 'react';
 import { Trophy, Gift, Loader2, AlertCircle } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -226,9 +226,18 @@ const EnhancedGamificationDashboard: React.FC = () => {
   // Removed unused selectedChallenge and selectedReward state variables
   const [processingRewards, setProcessingRewards] = useState<Set<number>>(new Set());
   const [processingChallenges, setProcessingChallenges] = useState<Set<number>>(new Set());
+  const [userId, setUserId] = useState<number>(0);
   
-  const userId = getCurrentUserId();
   const queryClient = useQueryClient();
+  
+  // Get user ID on component mount
+  React.useEffect(() => {
+    const initializeUserId = async () => {
+      const id = await getCurrentUserId();
+      setUserId(id);
+    };
+    initializeUserId();
+  }, []);
 
   // User validation
   if (!userId) {

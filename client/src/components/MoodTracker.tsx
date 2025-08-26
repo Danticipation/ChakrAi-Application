@@ -1,5 +1,5 @@
-import { getCurrentUserId } from "../utils/userSession";
-import { useState } from 'react';
+import { getCurrentUserId } from "../utils/unifiedUserSession";
+import { useState, useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Heart, Brain, AlertTriangle, TrendingUp, Calendar } from 'lucide-react';
 
@@ -36,7 +36,19 @@ const EMOTIONS = [
   { name: 'neutral', icon: '😐', color: '#D3D3D3' }
 ];
 
-export default function MoodTracker({ userId = getCurrentUserId()}: { userId?: number }) {
+export default function MoodTracker({ userId }: { userId?: number }) {
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
+  
+  // Initialize user ID
+  useEffect(() => {
+    const initUserId = async () => {
+      const id = userId || await getCurrentUserId();
+      setCurrentUserId(id);
+    };
+    initUserId();
+  }, [userId]);
+  
+  const actualUserId = currentUserId;
   const [selectedEmotion, setSelectedEmotion] = useState('');
   const [intensity, setIntensity] = useState(50);
   const [context, setContext] = useState('');
@@ -49,26 +61,26 @@ export default function MoodTracker({ userId = getCurrentUserId()}: { userId?: n
 
   // Fetch recent mood entries
   const { data: moodData } = useQuery({
-    queryKey: ['/api/mood-entries', userId],
+    queryKey: ['/api/mood-entries', actualUserId],
     queryFn: async () => {
-      const response = await fetch(`/api/mood-entries?userId=${userId}&limit=7`);
+      const response = await fetch(`/api/mood-entries?userId=${actualUserId}&limit=7`);
       if (!response.ok) throw new Error('Failed to fetch mood entries');
       return response.json();
     },
     staleTime: 60000,
-    enabled: !isFreshStart // Don't fetch if fresh start
+    enabled: !isFreshStart && !!actualUserId // Don't fetch if fresh start or no user ID
   });
 
   // Fetch emotional patterns
   const { data: patterns } = useQuery({
-    queryKey: ['/api/emotional-patterns', userId],
+    queryKey: ['/api/emotional-patterns', actualUserId],
     queryFn: async () => {
-      const response = await fetch(`/api/emotional-patterns?userId=${userId}`);
+      const response = await fetch(`/api/emotional-patterns?userId=${actualUserId}`);
       if (!response.ok) throw new Error('Failed to fetch emotional patterns');
       return response.json();
     },
     staleTime: 300000, // 5 minutes
-    enabled: !isFreshStart // Don't fetch if fresh start
+    enabled: !isFreshStart && !!actualUserId // Don't fetch if fresh start or no user ID
   });
 
   // Log mood entry mutation

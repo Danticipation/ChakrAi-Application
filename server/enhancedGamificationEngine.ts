@@ -207,8 +207,8 @@ export async function getAvailableRewards(userId: number, storage: any): Promise
         // Sort by affordability, then by rarity, then by cost
         if (a.canAfford !== b.canAfford) return b.canAfford ? 1 : -1;
         const rarityOrder: { [key: string]: number } = { legendary: 4, epic: 3, rare: 2, common: 1 };
-        if (rarityOrder[a.rarity] !== rarityOrder[b.rarity]) {
-          return rarityOrder[b.rarity] - rarityOrder[a.rarity];
+        if ((rarityOrder[a.rarity] || 0) !== (rarityOrder[b.rarity] || 0)) {
+          return (rarityOrder[b.rarity] || 0) - (rarityOrder[a.rarity] || 0);
         }
         return a.pointsCost - b.pointsCost;
       });
@@ -311,7 +311,7 @@ export async function getActiveChallenges(storage: any): Promise<CommunityChalle
     
     return challenges.map((challenge: any) => ({
       ...challenge,
-      daysRemaining: Math.ceil((challenge.endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)),
+      daysRemaining: Math.ceil((new Date(challenge.endDate).getTime() - now.getTime()) / (1000 * 60 * 60 * 24)),
       isJoinable: challenge.endDate > now
     }));
   } catch (error) {
@@ -527,7 +527,7 @@ Return JSON array of potential achievements.
       max_tokens: 1000
     });
 
-    const potentialAchievements = JSON.parse(response.choices[0].message.content || '[]');
+    const potentialAchievements = JSON.parse(response.choices[0]?.message?.content || '[]');
     const unlockedAchievements: string[] = [];
 
     for (const achievement of potentialAchievements) {
@@ -638,7 +638,7 @@ Return JSON array of challenges.
       max_tokens: 2000
     });
 
-    const generatedChallenges = JSON.parse(response.choices[0].message.content || '[]');
+    const generatedChallenges = JSON.parse(response.choices[0]?.message?.content || '[]');
     const startDate = new Date();
     startDate.setDate(startDate.getDate() + 1); // Start tomorrow
     const endDate = new Date(startDate);

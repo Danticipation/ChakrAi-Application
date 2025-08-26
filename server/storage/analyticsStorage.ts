@@ -26,7 +26,7 @@ export class AnalyticsStorage implements IAnalyticsStorage {
   async getUserAchievements(userId: number): Promise<UserAchievement[]> {
     return await db.select().from(userAchievements)
       .where(eq(userAchievements.userId, userId))
-      .orderBy(desc(userAchievements.createdAt));
+      .orderBy(desc(userAchievements.id));
   }
 
   async getWellnessStreaks(userId: number): Promise<WellnessStreak[]> {
@@ -36,10 +36,10 @@ export class AnalyticsStorage implements IAnalyticsStorage {
   }
 
   async createUserAchievement(data: InsertUserAchievement): Promise<UserAchievement> {
-    const result = await db.insert(userAchievements).values({
-      ...data,
-      createdAt: new Date(),
-    }).returning();
+    const result = await db.insert(userAchievements).values(data).returning();
+    if (!result[0]) {
+      throw new Error('Failed to create user achievement');
+    }
     return result[0];
   }
 

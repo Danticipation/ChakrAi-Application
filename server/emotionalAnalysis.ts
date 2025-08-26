@@ -74,16 +74,16 @@ export async function analyzeEmotionalState(
       })
     );
 
-    const analysis = JSON.parse(response.choices[0].message.content || '{}');
+    const analysis = JSON.parse(response.choices[0]?.message?.content || '{}');
     
     return {
-      primaryEmotion: analysis.primaryEmotion || quickAnalysis.primaryEmotion || 'neutral',
-      intensity: Math.max(0, Math.min(1, analysis.intensity || quickAnalysis.intensity || 0.5)),
-      valence: Math.max(-1, Math.min(1, analysis.valence || quickAnalysis.valence || 0)),
-      arousal: Math.max(0, Math.min(1, analysis.arousal || quickAnalysis.arousal || 0.5)),
-      confidence: Math.max(0, Math.min(1, analysis.confidence || 0.7)),
-      supportiveResponse: analysis.supportiveResponse,
-      recommendedActions: analysis.recommendedActions || generateRecommendedActions(quickAnalysis.primaryEmotion || 'neutral'),
+      primaryEmotion: analysis?.primaryEmotion || quickAnalysis.primaryEmotion || 'neutral',
+      intensity: Math.max(0, Math.min(1, analysis?.intensity ?? quickAnalysis.intensity ?? 0.5)),
+      valence: Math.max(-1, Math.min(1, analysis?.valence ?? quickAnalysis.valence ?? 0)),
+      arousal: Math.max(0, Math.min(1, analysis?.arousal ?? quickAnalysis.arousal ?? 0.5)),
+      confidence: Math.max(0, Math.min(1, analysis?.confidence || 0.7)),
+      supportiveResponse: analysis?.supportiveResponse,
+      recommendedActions: analysis?.recommendedActions || generateRecommendedActions(quickAnalysis.primaryEmotion || 'neutral'),
       riskLevel: determineRiskLevel(analysis, message)
     };
   } catch (error) {
@@ -117,14 +117,15 @@ function performQuickEmotionalAnalysis(message: string): Partial<EmotionalState>
   }
   
   // Find dominant emotion
-  const primaryEmotion = Object.keys(scores).reduce((a, b) => 
-    scores[a] > scores[b] ? a : b
-  ) || 'neutral';
+  const scoreKeys = Object.keys(scores);
+  const primaryEmotion = scoreKeys.length > 0 ? scoreKeys.reduce((a, b) => 
+    (scores[a] || 0) > (scores[b] || 0) ? a : b
+  ) : 'neutral';
   
   // Calculate intensity based on keyword density and intensity words
   const intensityWords = ['very', 'extremely', 'really', 'so', 'incredibly', 'absolutely'];
   const intensityBoost = intensityWords.some(word => lowerMessage.includes(word)) ? 0.3 : 0;
-  const intensity = Math.min(1, (scores[primaryEmotion] * 0.2) + intensityBoost + 0.3);
+  const intensity = Math.min(1, ((scores[primaryEmotion] || 0) * 0.2) + intensityBoost + 0.3);
   
   // Calculate valence (positive/negative)
   const positiveEmotions = ['joy', 'pride'];
@@ -227,7 +228,7 @@ function generateRecommendedActions(emotion: string): string[] {
     ]
   };
   
-  return actionMap[emotion] || actionMap.neutral;
+  return actionMap[emotion] || actionMap['neutral'] || [];
 }
 
 function determineRiskLevel(analysis: any, message: string): 'low' | 'medium' | 'high' | 'critical' {
@@ -244,13 +245,13 @@ function determineRiskLevel(analysis: any, message: string): 'low' | 'medium' | 
   // High risk indicators
   const highRiskKeywords = ['hopeless', 'can\'t go on', 'nothing matters', 'give up'];
   if (highRiskKeywords.some(keyword => lowerMessage.includes(keyword)) || 
-      (analysis.intensity > 0.8 && analysis.valence < -0.7)) {
+      (analysis?.intensity > 0.8 && analysis?.valence < -0.7)) {
     return 'high';
   }
   
   // Medium risk indicators
-  if ((analysis.intensity > 0.6 && analysis.valence < -0.5) || 
-      (analysis.primaryEmotion === 'depression' && analysis.intensity > 0.7)) {
+  if ((analysis?.intensity > 0.6 && analysis?.valence < -0.5) || 
+      (analysis?.primaryEmotion === 'depression' && analysis?.intensity > 0.7)) {
     return 'medium';
   }
   
@@ -286,8 +287,8 @@ export async function generateSupportiveResponse(emotionalState: EmotionalState)
     ]
   };
   
-  const emotionResponses = responses[emotionalState.primaryEmotion] || responses.anxiety;
-  return emotionResponses[Math.floor(Math.random() * emotionResponses.length)];
+  const emotionResponses = responses[emotionalState.primaryEmotion] || responses['anxiety'];
+  return emotionResponses?.[Math.floor(Math.random() * emotionResponses.length)] || 'I understand you\'re going through something difficult right now. Your feelings are valid and I\'m here to support you.';
 }
 
 export function analyzeEmotionalPatterns(moodEntries: MoodEntry[]): EmotionalPattern {

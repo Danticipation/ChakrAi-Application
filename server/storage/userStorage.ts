@@ -47,6 +47,11 @@ export class UserStorage implements IUserStorage {
       ...data,
       lastActiveAt: new Date(),
     }).returning();
+    
+    if (!result[0]) {
+      throw new Error('Failed to create user');
+    }
+    
     return result[0];
   }
 
@@ -83,6 +88,11 @@ export class UserStorage implements IUserStorage {
     };
 
     const result = await db.insert(users).values(userData).returning();
+    
+    if (!result[0]) {
+      throw new Error('Failed to create registered user');
+    }
+    
     return result[0];
   }
 
@@ -95,6 +105,11 @@ export class UserStorage implements IUserStorage {
       })
       .where(eq(users.id, userId))
       .returning();
+    
+    if (!result[0]) {
+      throw new Error('Failed to migrate anonymous user');
+    }
+    
     return result[0];
   }
 
@@ -106,6 +121,11 @@ export class UserStorage implements IUserStorage {
       })
       .where(eq(users.id, id))
       .returning();
+    
+    if (!result[0]) {
+      throw new Error('Failed to update user');
+    }
+    
     return result[0];
   }
 
@@ -149,6 +169,11 @@ export class UserStorage implements IUserStorage {
       createdAt: new Date(),
       updatedAt: new Date(),
     }).returning();
+    
+    if (!result[0]) {
+      throw new Error('Failed to create user profile');
+    }
+    
     return result[0];
   }
 
@@ -165,6 +190,11 @@ export class UserStorage implements IUserStorage {
       })
       .where(eq(userProfiles.userId, userId))
       .returning();
+    
+    if (!result[0]) {
+      throw new Error('Failed to update user profile');
+    }
+    
     return result[0];
   }
 
@@ -174,6 +204,11 @@ export class UserStorage implements IUserStorage {
       ...data,
       createdAt: new Date(),
     }).returning();
+    
+    if (!result[0]) {
+      throw new Error('Failed to create voluntary question answer');
+    }
+    
     return result[0];
   }
 
@@ -192,6 +227,11 @@ export class UserStorage implements IUserStorage {
         eq(voluntaryQuestions.questionId, questionId)
       ))
       .returning();
+    
+    if (!result[0]) {
+      throw new Error('Failed to update voluntary question answer');
+    }
+    
     return result[0];
   }
 
@@ -207,6 +247,11 @@ export class UserStorage implements IUserStorage {
       ...data,
       createdAt: new Date(),
     }).returning();
+    
+    if (!result[0]) {
+      throw new Error('Failed to create feedback');
+    }
+    
     return result[0];
   }
 }

@@ -87,7 +87,7 @@ export class MemoryManager implements IMemoryManager {
       const sessionUpdates = {
         messageCount: session.messageCount + 1,
         lastActivity: new Date(),
-        keyTopics: [...new Set([...session.keyTopics, ...(context?.currentTopics || [])])],
+        keyTopics: Array.from(new Set([...session.keyTopics, ...(context?.currentTopics || [])])),
         emotionalTone: context?.emotionalState || session.emotionalTone
       };
 
@@ -194,7 +194,9 @@ export class MemoryManager implements IMemoryManager {
       for (const memory of allMemories) {
         let foundGroup = false;
         for (const group of groups) {
-          if (this.areSimilarMemories(memory, group[0])) {
+          // Ensure group has elements before accessing group[0]
+          const firstGroupMemory = group[0];
+          if (firstGroupMemory && this.areSimilarMemories(memory, firstGroupMemory)) {
             group.push(memory);
             foundGroup = true;
             break;
@@ -249,15 +251,14 @@ export class MemoryManager implements IMemoryManager {
     
     try {
       const memoryGraph = await this.memoryConnection.getMemoryGraph(userId);
-      
       // Remove weak connections (< 0.3 strength)
       const weakConnections = memoryGraph.connections.filter(
-        conn => parseFloat(conn.strength) < 0.3
+        conn => conn.strength && parseFloat(conn.strength) < 0.3
       );
 
       // Strengthen frequently accessed connections
       const strongConnections = memoryGraph.connections.filter(
-        conn => parseFloat(conn.strength) >= 0.7
+        conn => conn.strength && parseFloat(conn.strength) >= 0.7
       );
 
       console.log(`🧠 Memory optimization complete: removed ${weakConnections.length} weak connections, strengthened ${strongConnections.length} strong connections`);
@@ -273,27 +274,35 @@ export class MemoryManager implements IMemoryManager {
     const content2 = memory2.content.toLowerCase();
     
     // Check if they share significant content or tags
-    const sharedTags = memory1.semanticTags.filter(tag => memory2.semanticTags.includes(tag));
-    const contentSimilarity = content1.includes(content2.substring(0, 20)) || 
+    const tags1 = memory1.semanticTags || [];
+    const tags2 = memory2.semanticTags || [];
+    const sharedTags = tags1.filter(tag => tags2.includes(tag));
+    const contentSimilarity = content1.includes(content2.substring(0, 20)) ||
                              content2.includes(content1.substring(0, 20));
     
     return sharedTags.length >= 2 || contentSimilarity;
   }
-
   private async mergeSimilarMemories(memories: SemanticMemory[]): Promise<void> {
+    // Ensure we have memories to merge
+    if (memories.length === 0) return;
+    
     // Merge logic - combine content, tags, and update connections
     const primary = memories[0];
+    if (!primary) return;
+    
     const others = memories.slice(1);
 
     // Combine content and tags
     const combinedContent = memories.map(m => m.content).join('. ');
-    const combinedTags = [...new Set(memories.flatMap(m => m.semanticTags))];
+    const combinedTags = Array.from(new Set(
+      memories.flatMap(m => m.semanticTags || []).filter((tag): tag is string => tag !== null)
+    ));
 
     // Update primary memory
     await this.semanticMemory.updateMemory(primary.id, {
       content: combinedContent,
       semanticTags: combinedTags,
-      accessCount: memories.reduce((sum, m) => sum + m.accessCount, 0)
+      accessCount: memories.reduce((sum, m) => sum + (m.accessCount || 0), 0)
     });
 
     // Archive others (in a real implementation, we'd soft delete)

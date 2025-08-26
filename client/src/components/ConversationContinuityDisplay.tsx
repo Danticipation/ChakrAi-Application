@@ -14,6 +14,9 @@ interface ConversationSession {
   messageCount: number;
   lastActivity: string;
   isActive: boolean;
+  topicsSummary?: string;
+  endTime?: string;
+  keyInsights?: string[];
 }
 
 interface ConversationThread {
@@ -24,6 +27,7 @@ interface ConversationThread {
   contextSummary: string;
   nextSessionPrompt?: string;
   lastMentioned: string;
+  context?: string;
 }
 
 interface ContinuityData {
