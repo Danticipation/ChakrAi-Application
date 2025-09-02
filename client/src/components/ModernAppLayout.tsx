@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import NeonCursor from '@/components/neon-cursor';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import axios from 'axios';
-import { useTheme, ThemeProvider } from '@/contexts/ThemeContext';
+import { ThemeProvider, useTheme } from '@/contexts/ThemeContext';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { SubscriptionProvider } from '@/contexts/SubscriptionContext';
 
@@ -279,6 +279,7 @@ const ModernAppLayout: React.FC<{currentUserId: number | null, onDataReset: () =
 
 // User session management wrapper
 const AppWithModernDesign = () => {
+  const { currentTheme } = useTheme();
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
   const [showPersonalityQuiz, setShowPersonalityQuiz] = useState(false);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);

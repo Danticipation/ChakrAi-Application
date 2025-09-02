@@ -391,6 +391,15 @@ export class MinimalStorage implements IStorage {
     }
   }
 
+  async getJournalAnalytics(userId: number): Promise<any[]> {
+    return [];
+  }
+
+  async updateJournalEntry(entryId: number, data: any): Promise<any> {
+    const [entry] = await db.update(journalEntries).set(data).where(eq(journalEntries.id, entryId)).returning();
+    return entry;
+  }
+
   async getUserMessages(userId: number, limit: number = 50): Promise<any[]> {
     try {
       const userMessages = await db.select()

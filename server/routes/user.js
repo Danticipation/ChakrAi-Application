@@ -4,6 +4,56 @@ import { userSessionManager } from '../userSession.js';
 
 const router = express.Router();
 
+// Create anonymous user - endpoint that frontend calls
+router.post('/anonymous', async (req, res) => {
+  try {
+    // Simple anonymous user creation without requiring full auth context
+    const deviceFingerprint = req.headers['x-device-fingerprint'] || 
+                            req.headers['device-fingerprint'] || 
+                            `device-${Date.now()}`;
+    const sessionId = req.headers['x-session-id'] || 
+                     req.headers['session-id'] || 
+                     `session-${Date.now()}`;
+    
+    // Generate a simple user ID based on device fingerprint
+    const userId = Math.abs(deviceFingerprint.split('').reduce((a, b) => {
+      a = ((a << 5) - a) + b.charCodeAt(0);
+      return a & a;
+    }, 0)) || Math.floor(Math.random() * 1000000);
+    
+    console.log(`Anonymous user created/retrieved: ${userId}`);
+    res.json({ 
+      success: true,
+      user: {
+        id: userId,
+        deviceFingerprint: deviceFingerprint,
+        sessionId: sessionId
+      }
+    });
+  } catch (error) {
+    console.error('Error creating anonymous user:', error);
+    res.status(500).json({ error: 'Failed to create anonymous user' });
+  }
+});
+
+// Check if user profile exists - endpoint that frontend calls
+router.get('/user-profile-check/:userId', async (req, res) => {
+  try {
+    const userId = parseInt(req.params.userId);
+    console.log(`Checking profile for user: ${userId}`);
+    
+    // Simple response - assume no quiz needed for now
+    res.json({
+      needsQuiz: false,
+      hasProfile: true,
+      userId: userId
+    });
+  } catch (error) {
+    console.error('Error checking user profile:', error);
+    res.json({ needsQuiz: false, hasProfile: false }); // Default to not needing quiz
+  }
+});
+
 // Clear all user data for fresh start
 router.post('/clear-user-data', async (req, res) => {
   try {

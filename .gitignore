@@ -10,3 +10,13 @@ vite.config.ts.*
 !/.env.example
 client/dist
 *.bak
+
+# Backup folders (from troubleshooting)
+node_modules_backup/
+client/node_modules_old/
+
+# IDE settings
+.vscode/
+
+# Temporary files
+new 7.txt

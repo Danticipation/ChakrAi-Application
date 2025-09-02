@@ -53,7 +53,7 @@ export function adminSecurityMiddleware(req: Request, res: Response, next: NextF
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('X-XSS-Protection', '1; mode=block');
   
-  next();
+  return next();
 }
 
 export function debugSecurityMiddleware(req: Request, res: Response, next: NextFunction) {
@@ -82,7 +82,20 @@ export function debugSecurityMiddleware(req: Request, res: Response, next: NextF
     lastAttempt: Date.now()
   });
   
-  next();
+  return next();
+}
+
+export function requireAdmin(req: Request, res: Response, next: NextFunction) {
+  try {
+    const role = (req as any).role ?? (req.user as any)?.role;
+    if (role !== 'admin') {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+    return next();
+  } catch (e: unknown) {
+    const err = e instanceof Error ? e : new Error(String(e));
+    return next(err);
+  }
 }
 
 // Cleanup old rate limit entries

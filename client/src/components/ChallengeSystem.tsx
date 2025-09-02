@@ -326,6 +326,7 @@ const ConfettiAnimation: React.FC<{ show: boolean; onComplete: () => void }> = (
       const timer = setTimeout(onComplete, 3000);
       return () => clearTimeout(timer);
     }
+    return;
   }, [show, onComplete]);
 
   if (!show) return null;

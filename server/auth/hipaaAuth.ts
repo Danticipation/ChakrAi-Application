@@ -7,6 +7,7 @@ import { adidFromDID, udidFrom, genDID, sha256b64url, b64url } from '../lib/cryp
 import { uidLog, uidError } from '../util/uidLog.js'
 import { makeUidTag } from '../util/uidTag.js'
 
+
 // Database connection check
 let dbAvailable = false;
 try {
@@ -32,14 +33,14 @@ export const hipaaAuthMiddleware = async (req: express.Request, res: express.Res
       return next();
     }
     
-    let uid: string;
+    let uid: string | undefined;
     
     // Check if database is available before proceeding
     if (!dbAvailable) {
       console.log('🔄 Database unavailable, using session fallback auth');
       // Generate consistent session-based UID
-      const sessionId = req.cookies?.session_id || Math.random().toString(36).substring(2, 15);
-      if (!req.cookies?.session_id) {
+      const sessionId = req.cookies?.['session_id'] || Math.random().toString(36).substring(2, 15);
+      if (!req.cookies?.['session_id']) {
         res.cookie('session_id', sessionId, {
           httpOnly: true,
           maxAge: 1000 * 60 * 60 * 24 * 30,
@@ -51,7 +52,7 @@ export const hipaaAuthMiddleware = async (req: express.Request, res: express.Res
       console.log('✅ Using session-based UID:', uid);
     } else {
       // 1. Check for existing UID token (prefer signed, fallback to plain)
-      const rawCookie = req.signedCookies?.u || req.cookies?.u;
+      const rawCookie = req.signedCookies?.['u'] || req.cookies?.['u'];
       uid = rawCookie;
       console.log('🍪 Existing UID cookie:', uid ? 'present' : 'none');
 
@@ -61,19 +62,18 @@ export const hipaaAuthMiddleware = async (req: express.Request, res: express.Res
         
         try {
           // Generate DID for this device
-          let did = req.cookies?.did ? Buffer.from(req.cookies.did, 'base64url') : null
-          if (!did) {
-            console.log('🔑 Generating new DID...');
-            did = genDID()
-            res.cookie('did', b64url(did), {
-              httpOnly: true,
-              signed: true,
-              secure: process.env['NODE_ENV'] === 'production',
-              sameSite: process.env['NODE_ENV'] === 'production' ? 'none' : 'lax',
-              path: '/',
-              maxAge: 1000*60*60*24*365*5
-            })
-          }
+          const did: Buffer = req.cookies?.['did']
+            ? Buffer.from(req.cookies['did'], 'base64url')
+            : genDID();
+
+          res.cookie('did', b64url(did), {
+            httpOnly: true,
+            signed: true,
+            secure: process.env['NODE_ENV'] === 'production',
+            sameSite: process.env['NODE_ENV'] === 'production' ? 'none' : 'lax',
+            path: '/',
+            maxAge: 1000 * 60 * 60 * 24 * 365 * 5
+          });
 
           // Get ADID from DID
           console.log('📱 Getting ADID from DID...');
@@ -85,11 +85,11 @@ export const hipaaAuthMiddleware = async (req: express.Request, res: express.Res
               .values({ adid, didHash: sha256b64url(did), platform: 'web' })
               .onConflictDoNothing()
           } catch (dbError) {
-            console.warn('⚠️ Install record insert failed, continuing:', dbError.message);
+            console.warn('⚠️ Install record insert failed, continuing:', (dbError as Error).message);
           }
 
           // Create session
-          let sid = req.cookies?.sid || req.signedCookies?.sid
+          let sid = req.cookies?.['sid'] || req.signedCookies?.['sid']
           if (!sid) {
             console.log('🔄 Creating new session...');
             sid = uuid()
@@ -104,20 +104,20 @@ export const hipaaAuthMiddleware = async (req: express.Request, res: express.Res
             try {
               await db.insert(sessions).values({ sid, adid, uid: null })
             } catch (dbError) {
-              console.warn('⚠️ Session insert failed, continuing:', dbError.message);
+              console.warn('⚠️ Session insert failed, continuing:', (dbError as Error).message);
             }
           }
 
           // Get or create single user for this ADID (race-proof)
           console.log('👤 Getting or creating user...');
-          let existing = [];
+          let existing: { uid: string | null }[] = [];
           try {
             existing = await db.select().from(userDevices).where(eq(userDevices.adid, adid)).limit(1)
           } catch (dbError) {
-            console.warn('⚠️ User lookup failed, using fallback:', dbError.message);
+            console.warn('⚠️ User lookup failed, using fallback:', (dbError as Error).message);
           }
           
-          uid = existing[0]?.uid
+          uid = existing[0]?.uid ?? undefined
           
           if (!uid) {
             console.log('🆕 Creating new user...');
@@ -135,12 +135,12 @@ export const hipaaAuthMiddleware = async (req: express.Request, res: express.Res
                 })
                 .returning({ uid: userDevices.uid })
               
-              uid = result[0].uid
+              uid = result[0]?.uid
               if (uid === newUid) {
                 uidLog(`✅ Created single user ${uid} for ADID ${adid.slice(0,8)}...`)
               }
             } catch (dbError) {
-              console.warn('⚠️ User creation failed, using generated UID:', dbError.message);
+              console.warn('⚠️ User creation failed, using generated UID:', (dbError as Error).message);
               uid = newUid; // Use the generated UID even if DB insert failed
             }
           }
@@ -150,7 +150,7 @@ export const hipaaAuthMiddleware = async (req: express.Request, res: express.Res
           try {
             await db.update(sessions).set({ uid }).where(eq(sessions.sid, sid))
           } catch (dbError) {
-            console.warn('⚠️ Session update failed, continuing:', dbError.message);
+            console.warn('⚠️ Session update failed, continuing:', (dbError as Error).message);
           }
 
           // Set the signed UID cookie
@@ -165,7 +165,7 @@ export const hipaaAuthMiddleware = async (req: express.Request, res: express.Res
           })
           
         } catch (dbError) {
-          console.error('💥 Database operation failed, using fallback UID:', dbError.message);
+          console.error('💥 Database operation failed, using fallback UID:', (dbError as Error).message);
           // Generate a fallback UID when database is completely unavailable
           uid = `usr_fallback_${Math.random().toString(36).substring(2, 15)}`;
           console.log('🆕 Using fallback UID:', uid);
@@ -175,6 +175,12 @@ export const hipaaAuthMiddleware = async (req: express.Request, res: express.Res
 
     // 3. Set context with proper numeric conversion
     console.log('🔢 Setting request context...');
+    if (!uid) {
+      // This should not happen in normal flow, but as a safeguard:
+      console.error('💥 Critical auth error: UID is missing before setting context.');
+      uid = `usr_emergency_${uuid().replace(/-/g, '')}`;
+      uidError('🚨 Critical auth error: UID was missing, generated emergency UID.', { url: req.url });
+    }
     ;(req as any).ctx = { uid }
     // Use a simple hash for consistent numeric ID
     const hashCode = uid.split('').reduce((a, b) => {
@@ -183,7 +189,7 @@ export const hipaaAuthMiddleware = async (req: express.Request, res: express.Res
     }, 0);
     const positiveId = Math.abs(hashCode) % 2147483647; // Keep it positive and within INT range
     req.userId = positiveId
-    req.user = { id: positiveId, uid }
+    req.user = { id: positiveId }
     req.authenticatedUserId = positiveId
     req.isAnonymous = true
 
@@ -197,11 +203,11 @@ export const hipaaAuthMiddleware = async (req: express.Request, res: express.Res
   } catch (error) {
     console.error('❌ HIPAA auth error for', req.url, ':', error);
     console.error('📊 Error details:', {
-      message: error.message,
-      stack: error.stack?.split('\n').slice(0, 5).join('\n'),
-      type: error.constructor.name
+      message: (error as Error).message,
+      stack: (error as Error).stack?.split('\n').slice(0, 5).join('\n'),
+      type: (error as any).constructor.name
     });
-    uidError('❌ HIPAA auth error:', error)
+    uidError('❌ HIPAA auth error:', error as Error)
     res.status(500).json({ error: 'authentication_error' })
   }
 }

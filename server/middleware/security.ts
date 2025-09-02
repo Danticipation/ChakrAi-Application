@@ -113,7 +113,7 @@ export const validateFileUpload = (req: Request, res: Response, next: NextFuncti
     });
   }
 
-  next();
+  return next();
 };
 
 // Validation result handler
@@ -125,7 +125,7 @@ export const handleValidationErrors = (req: Request, res: Response, next: NextFu
       details: errors.array()
     });
   }
-  next();
+  return next();
 };
 
 // Secure CORS configuration
@@ -179,3 +179,10 @@ export const securityLogger = (req: Request, res: Response, next: NextFunction) 
   }
   next();
 };
+
+export function securityHeaders(_req: Request, res: Response, next: NextFunction) {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Referrer-Policy', 'no-referrer');
+  next();
+}

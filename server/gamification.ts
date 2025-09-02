@@ -1,5 +1,5 @@
-import { storage } from './storage';
-import { UserAchievement, WellnessStreak, DailyActivity } from '@shared/schema';
+import { storage } from './storage.js';
+import { UserAchievement, WellnessStreak, DailyActivity } from '../shared/schema.js';
 
 export interface Badge {
   id: string;

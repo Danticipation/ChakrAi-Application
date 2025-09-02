@@ -1,12 +1,12 @@
 import OpenAI from 'openai';
-import { db } from './db';
+import { db } from './db.js';
 import { 
   emotionalToneMetrics, 
   affirmationResponseMetrics, 
   wellnessGoalMetrics, 
   userEngagementMetrics,
   therapeuticEfficacyReports 
-} from '@shared/analyticsSchema';
+} from '../shared/analyticsSchema.js';
 import { eq, gte, lte, sql, desc, asc, and } from 'drizzle-orm';
 
 const openai = new OpenAI({

@@ -273,7 +273,9 @@ export default function CrisisAlert({ crisisAnalysis, currentUser, onClose, onGe
 
   // Screen reader announcement for crisis alerts
   useEffect(() => {
-    if (!crisisAnalysis) return;
+    if (!crisisAnalysis) {
+      return;
+    }
     
     const announcement = `Crisis alert: ${getRiskTitle(crisisAnalysis.riskLevel)}. ${crisisAnalysis.supportMessage}. Press 1 to call emergency line, Press 2 for professional help.`;
     const ariaLive = document.createElement('div');

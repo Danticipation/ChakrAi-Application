@@ -1,3 +1,4 @@
+import 'dotenv/config'; // Load environment variables first
 import crypto from 'node:crypto'
 import type { Request, Response, NextFunction } from 'express'
 
@@ -24,7 +25,9 @@ const b64u = (buf: Buffer) =>
   buf.toString('base64').replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')
 
 function seal(uid: string, kid: string) {
-  const mac = crypto.createHmac('sha256', keys[kid]).update(`${uid}.${kid}`).digest()
+  const key = keys[kid];
+  if (!key) throw new Error(`UID signing key not found for kid: ${kid}`);
+  const mac = crypto.createHmac('sha256', key).update(`${uid}.${kid}`).digest()
   return `${uid}.${kid}.${b64u(mac)}`
 }
 
@@ -32,6 +35,7 @@ function verify(token: string): { ok: boolean, uid?: string, kid?: string } {
   const parts = token.split('.')
   if (parts.length !== 3) return { ok: false }
   const [uid, kid, sig] = parts
+  if (!uid || !kid || !sig) return { ok: false };
   const key = keys[kid]
   if (!key || !/^usr_[0-9a-f]{32}$/.test(uid)) return { ok: false }
   const mac = crypto.createHmac('sha256', key).update(`${uid}.${kid}`).digest()

@@ -85,7 +85,9 @@ export function MindfulnessExercise({
 
   // Step progression
   useEffect(() => {
-    if (!isActive) return;
+    if (!isActive) {
+      return;
+    }
 
     const elapsed = totalTime - timeRemaining;
     let cumulativeTime = 0;

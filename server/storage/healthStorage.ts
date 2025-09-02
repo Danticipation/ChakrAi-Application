@@ -4,7 +4,7 @@ import {
   type LongitudinalTrend, type InsertLongitudinalTrend,
   type RiskAssessment, type InsertRiskAssessment,
   type CrisisDetectionLog, type InsertCrisisDetectionLog,
-} from "@shared/schema";
+} from "../../shared/schema.ts";
 import { eq, desc, and } from "drizzle-orm";
 
 export interface IHealthStorage {

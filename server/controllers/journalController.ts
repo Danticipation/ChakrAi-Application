@@ -11,7 +11,7 @@ export class JournalController {
   
   // Get journal entries with pagination
   static getEntries = asyncHandler(async (req: Request, res: Response) => {
-    const userId = parseInt(req.params['userId']);
+    const userId = parseInt(req.params['userId'] || '');
     const pagination = PaginationHelper.parseParams(req);
     
     // Get total count for pagination (simplified for now)
@@ -30,7 +30,7 @@ export class JournalController {
     validateJournalEntry,
     handleValidationErrors,
     asyncHandler(async (req: Request, res: Response) => {
-      const userId = parseInt(req.params['userId']);
+      const userId = parseInt(req.params['userId'] || '');
       const entryData = {
         ...req.body,
         userId
@@ -43,7 +43,7 @@ export class JournalController {
 
   // Analyze patterns in journal entries
   static analyzePatterns = asyncHandler(async (req: Request, res: Response) => {
-    const userId = parseInt(req.params['userId']);
+    const userId = parseInt(req.params['userId'] || '');
     const timeframeDays = parseInt(req.query['timeframeDays'] as string) || 30;
     
     // Simplified for current storage interface
@@ -71,7 +71,7 @@ export class JournalController {
       .slice(0, 3)
       .map(([emotion]) => emotion);
     
-    const averageValence = analytics.reduce((sum, a) => sum + (a.sentimentScore || 0), 0) / analytics.length;
+    const averageValence = analytics.reduce((sum: number, a: any) => sum + (a.sentimentScore || 0), 0) / analytics.length;
     const copingStrategies = AnalyticsService.generateCopingStrategies(topEmotions, averageValence);
     
     const analysis = {
@@ -89,8 +89,8 @@ export class JournalController {
 
   // Get journal analytics
   static getAnalytics = asyncHandler(async (req: Request, res: Response) => {
-    const userId = parseInt(req.params['userId']);
-    const analytics = await storage.getJournalAnalytics(userId);
+    const userId = parseInt(req.params['userId'] || '');
+    const analytics = await (storage as any).getJournalAnalytics(userId);
     
     ResponseService.sendSuccess(res, analytics);
   });
@@ -100,8 +100,8 @@ export class JournalController {
     validateJournalEntry,
     handleValidationErrors,
     asyncHandler(async (req: Request, res: Response) => {
-      const entryId = parseInt(req.params['id']);
-      const userId = parseInt(req.params['userId']);
+      const entryId = parseInt(req.params['id'] || '');
+      const userId = parseInt(req.params['userId'] || '');
       
       // Verify the entry exists and belongs to this user
       const existingEntry = await storage.getJournalEntry(entryId);
@@ -114,15 +114,15 @@ export class JournalController {
       }
       
       // Update the journal entry
-      const updatedEntry = await storage.updateJournalEntry(entryId, req.body);
-      ResponseService.sendSuccess(res, updatedEntry, 'Journal entry updated successfully');
+      const updatedEntry = await (storage as any).updateJournalEntry(entryId, req.body);
+      return ResponseService.sendSuccess(res, updatedEntry, 'Journal entry updated successfully');
     })
   ];
 
   // Delete journal entry
   static deleteEntry = asyncHandler(async (req: Request, res: Response) => {
-    const entryId = parseInt(req.params['id']);
-    const userId = parseInt(req.params['userId']);
+    const entryId = parseInt(req.params['id'] || '');
+    const userId = parseInt(req.params['userId'] || '');
     
     // Verify the entry exists and belongs to this user
     const entry = await storage.getJournalEntry(entryId);
@@ -139,6 +139,6 @@ export class JournalController {
     // Delete the journal entry
     await storage.deleteJournalEntry(entryId);
     
-    ResponseService.sendSuccess(res, { success: true }, 'Journal entry deleted successfully');
+    return ResponseService.sendSuccess(res, { success: true }, 'Journal entry deleted successfully');
   });
 }

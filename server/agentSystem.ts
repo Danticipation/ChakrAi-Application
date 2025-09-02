@@ -8,7 +8,7 @@ import type {
   InsertAgentHandoff,
   InsertAgentInsight,
   InsertAgentMetric
-} from '../shared/agentSchema';
+} from '../shared/agentSchema.js';
 
 const openai = new OpenAI({
   apiKey: process.env['OPENAI_API_KEY'],

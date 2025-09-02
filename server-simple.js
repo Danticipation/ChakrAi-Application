@@ -171,6 +171,68 @@ app.get('/api/journal/entries', (req, res) => {
   });
 });
 
+// Add missing journal endpoints that the frontend expects
+app.get('/api/journal/user-entries', (req, res) => {
+  res.json([
+    { 
+      id: 1, 
+      title: "Sample Entry", 
+      content: "This is a sample journal entry", 
+      mood: "neutral", 
+      moodIntensity: 5,
+      tags: ["sample"],
+      createdAt: new Date().toISOString() 
+    }
+  ]);
+});
+
+app.post('/api/journal/create', (req, res) => {
+  const { title, content, mood, moodIntensity, tags } = req.body;
+  
+  const newEntry = {
+    id: Date.now(), // Simple ID generation
+    title: title || 'Untitled Entry',
+    content: content || '',
+    mood: mood || 'neutral',
+    moodIntensity: moodIntensity || 5,
+    tags: tags || [],
+    createdAt: new Date().toISOString()
+  };
+  
+  console.log('✅ Journal entry created:', newEntry);
+  res.json(newEntry);
+});
+
+// Also handle POST requests to the root journal path
+app.post('/api/journal', (req, res) => {
+  const { title, content, mood, moodIntensity, tags } = req.body;
+  
+  const newEntry = {
+    id: Date.now(), // Simple ID generation
+    title: title || 'Untitled Entry',
+    content: content || '',
+    mood: mood || 'neutral',
+    moodIntensity: moodIntensity || 5,
+    tags: tags || [],
+    createdAt: new Date().toISOString()
+  };
+  
+  console.log('✅ Journal entry created via POST /api/journal:', newEntry);
+  res.json(newEntry);
+});
+
+app.get('/api/journal/analytics', (req, res) => {
+  res.json({
+    totalEntries: 5,
+    entriesThisMonth: 3,
+    averageMoodIntensity: 0.7,
+    themes: { "gratitude": 2, "stress": 1, "growth": 2 },
+    sentimentTrend: 'positive',
+    writingStreak: 3,
+    averageWordsPerEntry: 125
+  });
+});
+
 app.post('/api/chat', (req, res) => {
   res.json({
     response: "I'm here to listen and support you. What's on your mind today?",

@@ -42,7 +42,7 @@ router.get('/cookies', (req, res) => {
   const cookieName = process.env.UID_COOKIE_NAME || 'u';  // Fixed: use 'u' not 'chakrai_uid'
   const raw = (req as any).cookies?.[cookieName];
 
-  res.json({
+  return res.json({
     ok: true,
     cookieName,
     present: !!raw,

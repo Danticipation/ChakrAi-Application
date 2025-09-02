@@ -1,11 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import NeonCursor from '@/components/neon-cursor';
 import { QueryClient, QueryClientProvider, useQuery, useQueryClient } from '@tanstack/react-query';
-import { MessageCircle, Brain, BookOpen, Mic, User, Square, Send, Target, RotateCcw, Sun, Star, Heart, BarChart3, Gift, Headphones, Shield, X, Palette, Settings, ChevronDown, ChevronRight, Menu, Home, Users, Sparkles } from 'lucide-react';
+import { MessageCircle, Brain, BookOpen, Mic, User, Square, Send, Target, RotateCcw, Sun, Moon, Star, Heart, BarChart3, Gift, Headphones, Shield, X, Palette, Settings, ChevronDown, ChevronRight, Menu, Home, Users, Sparkles } from 'lucide-react';
 import axios from 'axios';
-import { useTheme, ThemeProvider } from '@/contexts/ThemeContext';
+// Removed problematic theme context import
+// import { useTheme, ThemeProvider } from '@/contexts/ThemeContext';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { SubscriptionProvider, useSubscription } from '@/contexts/SubscriptionContext';
+// Removed problematic layout component imports
+// import CleanLayout from '@/components/layouts/CleanLayout';
+// import CleanHome from '@/components/layouts/CleanHome';
 // import { SubscriptionModal } from '@/components/SubscriptionModal';
 // import { UsageLimitModal } from '@/components/UsageLimitModal';
 import MemoryDashboard from '@/components/MemoryDashboard';
@@ -16,6 +20,8 @@ import ThemeSelector from '@/components/ThemeSelector';
 import EnhancedDashboard from '@/components/EnhancedDashboard';
 import BeautifulChat from '@/components/BeautifulChat';
 import ChakraiPlans from '@/components/ChakraiPlans';
+import GlassmorphismShowcase from '@/components/GlassmorphismShowcase';
+import CleanShowcase from '@/components/CleanShowcase';
 
 // import AuthModal from '@/components/AuthModal';
 
@@ -69,19 +75,11 @@ function ErrorBoundary({ children }: { children: React.ReactNode }) {
 }
 
 const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void}> = ({ currentUserId, onDataReset }) => {
-  const { currentTheme } = useTheme();
+  // Removed problematic theme context usage
+  // const { currentTheme, isLightMode, toggleTheme } = useTheme();
   const [activeSection, setActiveSection] = useState('home');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [selectedVoice, setSelectedVoice] = useState('james');
-  const [collapsedSections, setCollapsedSections] = useState({
-    core: false,
-    mirrors: true,
-    guided: false, // Show therapeutic agents by default
-    healthcare: true,
-    wellness: true,
-    settings: true,
-    community: true
-  });
   const [showSettings, setShowSettings] = useState(false);
   const [showThemeModal, setShowThemeModal] = useState(false);
   
@@ -292,8 +290,176 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
     console.log('🔍 Rendering section:', activeSection); // Debug log
     switch (activeSection) {
       case 'home':
-        console.log('🏠 Rendering EnhancedDashboard with userId:', currentUserId); // Debug log
-        return <EnhancedDashboard userId={currentUserId} onNavigate={setActiveSection} />;
+        console.log('🏠 Rendering Clean Home Design'); // Debug log
+        return (
+          <div className="space-y-20">
+            {/* Hero Section */}
+            <div className="relative">
+              <div className="grid lg:grid-cols-2 gap-12 items-center">
+                
+                {/* Left Column - Hero Content */}
+                <div className="space-y-8">
+                  <div className="space-y-4">
+                    <h1 className="text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
+                      Discover Your True
+                      <span className="block">
+                        Self with <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">AI-Powered</span>
+                      </span>
+                      <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">
+                        Wellness Coaching
+                      </span>
+                    </h1>
+                    
+                    <p className="text-xl text-gray-600 leading-relaxed">
+                      Experience the world's most comprehensive 190-point personality analysis. 
+                      Get personalized insights, therapeutic recommendations, and AI-powered 
+                      conversations designed for your mental wellness journey.
+                    </p>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <button 
+                      onClick={() => setActiveSection('190-analysis')}
+                      className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-xl font-medium hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center group"
+                    >
+                      Start Free Analysis
+                      <span className="ml-2 group-hover:translate-x-1 transition-transform">→</span>
+                    </button>
+                    
+                    <button 
+                      onClick={() => setActiveSection('chat')}
+                      className="border border-gray-300 text-gray-700 px-8 py-4 rounded-xl font-medium hover:bg-gray-50 transition-colors duration-200"
+                    >
+                      Try Chat Demo
+                    </button>
+                  </div>
+
+                  <div className="flex items-center space-x-8 text-sm text-gray-500">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-green-500">✓</span>
+                      <span>HIPAA Compliant</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-green-500">✓</span>
+                      <span>End-to-End Encrypted</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-green-500">✓</span>
+                      <span>20k+ Users</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Column - Personality Analysis Preview */}
+                <div className="relative">
+                  <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-8 shadow-xl border border-white/20">
+                    <div className="flex items-center space-x-4 mb-6">
+                      <div className="w-16 h-16 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center">
+                        <Brain className="w-8 h-8 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-bold text-gray-900">Your Personality Analysis</h3>
+                        <p className="text-gray-600">190+ psychological dimensions</p>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-700 font-medium">Emotional Intelligence</span>
+                        <div className="flex items-center space-x-2">
+                          <div className="w-24 h-2 bg-gray-200 rounded-full">
+                            <div className="w-20 h-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"></div>
+                          </div>
+                          <span className="text-sm font-medium text-gray-900">8.3/10</span>
+                        </div>
+                      </div>
+                      
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-700 font-medium">Creative Problem Solving</span>
+                        <div className="flex items-center space-x-2">
+                          <div className="w-24 h-2 bg-gray-200 rounded-full">
+                            <div className="w-22 h-2 bg-gradient-to-r from-green-500 to-blue-500 rounded-full"></div>
+                          </div>
+                          <span className="text-sm font-medium text-gray-900">9.1/10</span>
+                        </div>
+                      </div>
+                      
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-700 font-medium">Stress Resilience</span>
+                        <div className="flex items-center space-x-2">
+                          <div className="w-24 h-2 bg-gray-200 rounded-full">
+                            <div className="w-18 h-2 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full"></div>
+                          </div>
+                          <span className="text-sm font-medium text-gray-900">7.5/10</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-6 p-4 bg-blue-50 rounded-xl">
+                      <p className="text-sm text-blue-800 font-medium">
+                        <strong>Your Type:</strong> Empathetic Innovator
+                      </p>
+                      <p className="text-sm text-blue-700 mt-1">
+                        You excel at creative problem-solving while maintaining strong emotional awareness...
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 190 Points Section */}
+            <div className="text-center space-y-12">
+              <div className="space-y-4">
+                <h2 className="text-4xl lg:text-5xl font-bold text-gray-900">
+                  <span className="text-blue-600">190 Points.</span> 
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400"> One True You.</span>
+                </h2>
+                <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+                  Discover the 190 Points That Make You, You
+                </p>
+              </div>
+
+              <p className="text-gray-600 max-w-4xl mx-auto leading-relaxed">
+                Chakrai doesn't settle for surface-level personality quizzes. Our proprietary 190-point 
+                analysis engine dives across 9 domains of thought, emotion, and behavior to reveal a living, 
+                evolving portrait of who you are. <strong>It's not a label — it's the most in-depth 
+                self-reflection system ever built.</strong>
+              </p>
+            </div>
+
+            {/* CTA Section */}
+            <div className="text-center bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-12 text-white">
+              <div className="space-y-6">
+                <h2 className="text-3xl lg:text-4xl font-bold">
+                  Ready to Discover Your True Self?
+                </h2>
+                <p className="text-xl opacity-90 max-w-2xl mx-auto">
+                  Join thousands of users who have transformed their mental wellness journey with AI-powered insights.
+                </p>
+                <button 
+                  onClick={() => setActiveSection('chat')}
+                  className="bg-white text-blue-600 px-8 py-4 rounded-xl font-bold hover:bg-gray-100 transition-colors duration-200 shadow-lg hover:shadow-xl"
+                >
+                  Start Your Free Analysis
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      case '190-analysis':
+        return (
+          <div className="text-center py-20">
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">190-Point Personality Analysis</h1>
+            <p className="text-xl text-gray-600 mb-8">Coming Soon - The most comprehensive personality assessment available</p>
+            <button 
+              onClick={() => setActiveSection('chat')}
+              className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-xl font-medium"
+            >
+              Try Chat Demo Instead
+            </button>
+          </div>
+        );
       case 'pricing':
         return <ChakraiPlans />;
       case 'questions':
@@ -354,6 +520,10 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
         return <StarsAndStudiesPage onBack={() => setActiveSection('home')} />;
       case 'subscription-demo':
         return <SubscriptionTierDemo />;
+      case 'glassmorphism-showcase':
+        return <GlassmorphismShowcase />;
+      case 'clean-showcase':
+        return <CleanShowcase />;
       case 'chat':
         return (
           <BeautifulChat
@@ -400,571 +570,112 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
   };
 
   return (
-    <div className="min-h-screen theme-background flex flex-col">
-      {/* Sparkling Stars Background */}
-      <div className="stars-background">
-        {[...Array(30)].map((_, i) => (
-          <div key={i} className="star"></div>
-        ))}
+    <div className="min-h-screen bg-red-500">
+      <div className="p-8 text-white text-4xl font-bold">
+        TEST - NEW LAYOUT IS LOADING
       </div>
-
-      {/* Desktop Layout */}
-      <div className="hidden lg:block">
-        <div className="flex">
-          {/* Collapsible Sidebar */}
-          <div className="w-72 fixed left-0 top-0 h-full theme-card border-r border-white/10 z-10 overflow-y-auto">
-            <div className="p-3">
-              
-              {/* Chakrai Logo */}
-              <div className="flex items-center justify-center mb-6 p-4">
-                <img src={chakraiLogo} alt="Chakrai" className="h-12 w-auto" />
-                <span className="ml-3 text-2xl font-bold text-blue-400">Chakrai</span>
-              </div>
-              
-              {/* Core Companion Section - Collapsible */}
-              <div className="mb-2">
-                <button
-                  onClick={() => setCollapsedSections(prev => ({ ...prev, core: !prev.core }))}
-                  className="w-full flex items-center justify-between theme-text-secondary text-xs font-medium px-3 py-2 hover:theme-text transition-colors rounded-lg mb-1"
-                >
-                  <span>🟦 Core Companion</span>
-                  {collapsedSections.core ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
-                </button>
-                {!collapsedSections.core && (
-                  <div className="space-y-1">
-                    {[
-                      { id: 'home', label: 'Home' },
-                      { id: 'chat', label: 'Chat with Chakrai' },
-                      { id: 'challenges', label: 'Reflection Goals' },
-                      { id: 'rewards', label: 'Reflection Rewards' }
-                    ].map((tab) => (
-                      <button
-                        key={tab.id}
-                        onClick={() => {
-                          setActiveSection(tab.id);
-                          // Removed floating chat - using only main chat
-                        }}
-                        className={`w-full h-9 px-3 text-xs font-medium transition-all rounded text-left ${
-                          activeSection === tab.id
-                            ? 'bg-blue-500/20 border border-blue-500/30 theme-text'
-                            : 'theme-text hover:bg-white/5'
-                        }`}
-                      >
-                        {tab.label}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Mirrors of You Section - Collapsible */}
-              <div className="mb-2 border-t border-white/10 pt-2">
-                <button
-                  onClick={() => setCollapsedSections(prev => ({ ...prev, mirrors: !prev.mirrors }))}
-                  className="w-full flex items-center justify-between theme-text-secondary text-xs font-medium px-3 py-2 hover:theme-text transition-colors rounded-lg mb-1"
-                >
-                  <span>💠 Mirrors of You</span>
-                  {collapsedSections.mirrors ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
-                </button>
-                {!collapsedSections.mirrors && (
-                  <div className="space-y-1">
-                    {[
-                      { id: 'questions', label: 'Get to Know Me' },
-                      { id: 'journal', label: 'Journal' },
-                      { id: 'daily', label: 'Reflection' },
-                      { id: 'memory', label: 'Insight Vault' },
-                      { id: 'conversation-continuity', label: 'Context Threads' },
-                      { id: 'adaptive', label: 'Mind Mirror' },
-                      { id: 'progress-tracker', label: 'Progress Journey' },
-                      { id: 'analytics', label: 'State of Self' },
-                      { id: 'health', label: 'Somatic Mirror' }
-                    ].map((tab) => (
-                      <button
-                        key={tab.id}
-                        onClick={() => setActiveSection(tab.id)}
-                        className={`w-full h-9 px-3 text-xs font-medium transition-all rounded text-left ${
-                          activeSection === tab.id
-                            ? 'bg-blue-500/20 border border-blue-500/30 theme-text'
-                            : 'theme-text hover:bg-white/5'
-                        }`}
-                      >
-                        {tab.label}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Guided Support Section - Collapsible */}
-              <div className="mb-2 border-t border-white/10 pt-2">
-                <button
-                  onClick={() => setCollapsedSections(prev => ({ ...prev, guided: !prev.guided }))}
-                  className="w-full flex items-center justify-between theme-text-secondary text-xs font-medium px-3 py-2 hover:theme-text transition-colors rounded-lg mb-1"
-                >
-                  <span>🧘 Guided Support</span>
-                  {collapsedSections.guided ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
-                </button>
-                {!collapsedSections.guided && (
-                  <div className="space-y-1">
-                    {[
-                      { id: 'meditation', label: 'Guided Meditation' },
-                      { id: 'agents', label: 'AI Wellness Coaches' },
-                      { id: 'vr', label: 'InnerScape' },
-                      { id: 'therapy-plans', label: 'Wellness Plans' },
-                      { id: 'community', label: 'Community' }
-                    ].map((tab) => (
-                      <button
-                        key={tab.id}
-                        onClick={() => setActiveSection(tab.id)}
-                        className={`w-full h-9 px-3 text-xs font-medium transition-all rounded text-left ${
-                          activeSection === tab.id
-                            ? 'bg-blue-500/20 border border-blue-500/30 theme-text'
-                            : 'theme-text hover:bg-white/5'
-                        }`}
-                      >
-                        {tab.label}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Healthcare Section - Starts Collapsed */}
-              <div className="mb-2 border-t border-white/10 pt-2">
-                <button
-                  onClick={() => setCollapsedSections(prev => ({ ...prev, healthcare: !prev.healthcare }))}
-                  className="w-full flex items-center justify-between theme-text-secondary text-xs font-medium px-3 py-2 hover:theme-text transition-colors rounded-lg mb-1"
-                >
-                  <span>🏥 Healthcare</span>
-                  {collapsedSections.healthcare ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
-                </button>
-                {!collapsedSections.healthcare && (
-                  <div className="space-y-1">
-                    {[
-                      { id: 'health', label: 'Health Integration' },
-                      { id: 'feedback', label: 'Feedback System' },
-                      { id: 'admin-portal', label: 'Admin Portal' },
-                      { id: 'therapist', label: 'Therapist Portal' }
-                    ].map((tab) => (
-                      <button
-                        key={tab.id}
-                        onClick={() => setActiveSection(tab.id)}
-                        className={`w-full h-9 px-3 text-xs font-medium transition-all rounded text-left ${
-                          activeSection === tab.id
-                            ? 'bg-blue-500/20 border border-blue-500/30 theme-text'
-                            : 'theme-text hover:bg-white/5'
-                        }`}
-                      >
-                        {tab.label}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Community Section - Starts Collapsed */}
-              <div className="mb-2 border-t border-white/10 pt-2">
-                <button
-                  onClick={() => setCollapsedSections(prev => ({ ...prev, community: !prev.community }))}
-                  className="w-full flex items-center justify-between theme-text-secondary text-xs font-medium px-3 py-2 hover:theme-text transition-colors rounded-lg mb-1"
-                >
-                  <span>🏘️ Community</span>
-                  {collapsedSections.community ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
-                </button>
-                {!collapsedSections.community && (
-                  <div className="space-y-1">
-                    {[
-                      { id: 'community', label: 'Community Support' }
-                    ].map((tab) => (
-                      <button
-                        key={tab.id}
-                        onClick={() => setActiveSection(tab.id)}
-                        className={`w-full h-9 px-3 text-xs font-medium transition-all rounded text-left ${
-                          activeSection === tab.id
-                            ? 'bg-blue-500/20 border border-blue-500/30 theme-text'
-                            : 'theme-text hover:bg-white/5'
-                        }`}
-                      >
-                        {tab.label}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Settings & Tools Section - Starts Collapsed */}
-              <div className="mb-2 border-t border-white/10 pt-2">
-                <button
-                  onClick={() => setCollapsedSections(prev => ({ ...prev, settings: !prev.settings }))}
-                  className="w-full flex items-center justify-between theme-text-secondary text-xs font-medium px-3 py-2 hover:theme-text transition-colors rounded-lg mb-1"
-                >
-                  <span>⚙️ Settings & Tools</span>
-                  {collapsedSections.settings ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
-                </button>
-                {!collapsedSections.settings && (
-                  <div className="space-y-1">
-                    {[
-                      { id: 'meditation', label: 'Guided Meditation' },
-                      { id: 'pilot-analytics', label: 'Pilot Analytics' },
-                      { id: 'subscription-demo', label: '💎 Subscription Demo' },
-                      { id: 'pricing', label: 'Plans & Pricing' },
-                      { id: 'voice', label: 'Voice Settings' },
-                      { id: 'themes', label: 'Themes' },
-                      { id: 'feedback', label: 'Feedback' },
-                      { id: 'privacy', label: 'Privacy' }
-                    ].map((tab) => (
-                      <button
-                        key={tab.id}
-                        onClick={() => {
-                          if (tab.id === 'themes') {
-                            setShowThemeModal(true);
-                          } else if (tab.id === 'voice') {
-                            setShowSettings(true);
-                          } else {
-                            setActiveSection(tab.id);
-                          }
-                        }}
-                        className={`w-full h-9 px-3 text-xs font-medium transition-all rounded text-left ${
-                          activeSection === tab.id
-                            ? 'bg-blue-500/20 border border-blue-500/30 theme-text'
-                            : 'theme-text hover:bg-white/5'
-                        }`}
-                      >
-                        {tab.label}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-              
-              {/* Section Status Indicator */}
-              <div className="mt-4 pt-2 border-t border-white/10">
-                <div className="text-xs theme-text-secondary text-center opacity-60">
-                  {Object.values(collapsedSections).filter(collapsed => !collapsed).length} of 6 sections expanded
-                </div>
-              </div>
-              
-            </div>
-          </div>
-
-          {/* Main Content Area */}
-          <div className="ml-72 flex-1 min-h-screen">
-            <div className="p-6">
-              <ErrorBoundary>
-                {renderActiveSection()}
-              </ErrorBoundary>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Mobile Layout - Full Featured */}
-      <div className="block lg:hidden">
-        {/* Mobile Header */}
-        <div className="fixed top-0 left-0 right-0 z-50 theme-card border-b border-white/10 p-4">
-          <div className="flex items-center justify-between">
+      {/* Clean Top Navigation Bar */}
+      <nav className="bg-white/80 backdrop-blur-md border-b border-white/20 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            
+            {/* Logo */}
             <div className="flex items-center space-x-3">
-              <img src={chakraiLogo} alt="Chakrai" className="h-8 w-auto chakrai-logo" />
-              <div>
-                <p className="text-white font-bold text-lg">Chakrai</p>
-                <p className="text-white/70 text-xs">Mental Wellness</p>
+              <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center">
+                <span className="text-white font-bold text-lg">C</span>
               </div>
+              <span className="text-xl font-bold text-gray-900">Chakrai</span>
             </div>
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={() => setShowSettings(true)}
-                className="p-2 theme-text-secondary rounded-lg hover:bg-white/10 transition-colors"
-                title="Voice Settings"
-                data-tour="settings-button"
-              >
-                <Settings className="w-5 h-5" />
-              </button>
 
-              <button
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="p-2 theme-text rounded-lg hover:bg-white/10 transition-colors"
-                title="Menu"
-                data-tour="mobile-menu"
-              >
-                <Menu className="w-6 h-6" />
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Mobile Navigation Drawer */}
-        {mobileMenuOpen && (
-          <div className="fixed inset-0 z-40 lg:hidden">
-            <div className="fixed inset-0 bg-black/50" onClick={() => setMobileMenuOpen(false)} />
-            <div className="fixed top-0 right-0 h-full w-80 theme-card border-l border-white/10 overflow-y-auto">
-              <div className="p-4">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold theme-text">Features & Tools</h3>
-                  <button
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="p-2 theme-text-secondary hover:theme-text rounded-lg"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
-                
-                {/* Mobile Navigation Items - Complete Feature Set */}
-                <div className="space-y-4">
-                  {/* Core Companion */}
-                  <div>
-                    <h4 className="text-sm font-medium theme-text-secondary mb-2">🟦 Core Companion</h4>
-                    <div className="space-y-1">
-                      {[
-                        { id: 'home', label: 'Home', icon: '🏠' },
-                        { id: 'chat', label: 'Chat with Chakrai', icon: '💬' },
-                        { id: 'challenges', label: 'Reflection Goals', icon: '🎯' },
-                        { id: 'rewards', label: 'Reflection Rewards', icon: '🎁' }
-                      ].map((item) => (
-                        <button
-                          key={item.id}
-                          onClick={() => {
-                            setActiveSection(item.id);
-                            setMobileMenuOpen(false);
-                          }}
-                          className={`w-full flex items-center space-x-3 p-2 rounded-lg text-left transition-colors ${
-                            activeSection === item.id
-                              ? 'bg-blue-500/20 border border-blue-500/30 theme-text'
-                              : 'theme-text hover:bg-white/5'
-                          }`}
-                        >
-                          <span>{item.icon}</span>
-                          <span className="text-sm">{item.label}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Mirrors of You */}
-                  <div>
-                    <h4 className="text-sm font-medium theme-text-secondary mb-2">💠 Mirrors of You</h4>
-                    <div className="space-y-1">
-                      {[
-                        { id: 'questions', label: 'Get to Know Me', icon: '❓' },
-                        { id: 'journal', label: 'Journal', icon: '📔' },
-                        { id: 'daily', label: 'Reflection', icon: '🌅' },
-                        { id: 'memory', label: 'Insight Vault', icon: '🧠' },
-                        { id: 'conversation-continuity', label: 'Context Threads', icon: '🧵' },
-                        { id: 'adaptive', label: 'Mind Mirror', icon: '🪞' },
-                        { id: 'progress-tracker', label: 'Progress Journey', icon: '📈' },
-                        { id: 'analytics', label: 'State of Self', icon: '📊' },
-                        { id: 'health', label: 'Somatic Mirror', icon: '💓' }
-                      ].map((item) => (
-                        <button
-                          key={item.id}
-                          onClick={() => {
-                            setActiveSection(item.id);
-                            setMobileMenuOpen(false);
-                          }}
-                          className={`w-full flex items-center space-x-3 p-2 rounded-lg text-left transition-colors ${
-                            activeSection === item.id
-                              ? 'bg-blue-500/20 border border-blue-500/30 theme-text'
-                              : 'theme-text hover:bg-white/5'
-                          }`}
-                        >
-                          <span>{item.icon}</span>
-                          <span className="text-sm">{item.label}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Guided Support */}
-                  <div>
-                    <h4 className="text-sm font-medium theme-text-secondary mb-2">🧘 Guided Support</h4>
-                    <div className="space-y-1">
-                      {[
-                        { id: 'meditation', label: 'Guided Meditation', icon: '🧘' },
-                        { id: 'agents', label: 'AI Wellness Coaches', icon: '🤝' },
-                        { id: 'vr', label: 'InnerScape', icon: '🌐' },
-                        { id: 'therapy-plans', label: 'Wellness Plans', icon: '📋' },
-                        { id: 'community', label: 'Community', icon: '👥' }
-                      ].map((item) => (
-                        <button
-                          key={item.id}
-                          onClick={() => {
-                            setActiveSection(item.id);
-                            setMobileMenuOpen(false);
-                          }}
-                          className={`w-full flex items-center space-x-3 p-2 rounded-lg text-left transition-colors ${
-                            activeSection === item.id
-                              ? 'bg-blue-500/20 border border-blue-500/30 theme-text'
-                              : 'theme-text hover:bg-white/5'
-                          }`}
-                        >
-                          <span>{item.icon}</span>
-                          <span className="text-sm">{item.label}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Healthcare */}
-                  <div>
-                    <h4 className="text-sm font-medium theme-text-secondary mb-2">🏥 Healthcare</h4>
-                    <div className="space-y-1">
-                      {[
-                        { id: 'admin-portal', label: 'Admin Portal', icon: '🛡️' },
-                        { id: 'therapist', label: 'Therapist Portal', icon: '👨‍⚕️' }
-                      ].map((item) => (
-                        <button
-                          key={item.id}
-                          onClick={() => {
-                            setActiveSection(item.id);
-                            setMobileMenuOpen(false);
-                          }}
-                          className={`w-full flex items-center space-x-3 p-2 rounded-lg text-left transition-colors ${
-                            activeSection === item.id
-                              ? 'bg-blue-500/20 border border-blue-500/30 theme-text'
-                              : 'theme-text hover:bg-white/5'
-                          }`}
-                        >
-                          <span>{item.icon}</span>
-                          <span className="text-sm">{item.label}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Wellness */}
-                  <div>
-                    <h4 className="text-sm font-medium theme-text-secondary mb-2">🌟 Wellness</h4>
-                    <div className="space-y-1">
-                      {[
-                        { id: 'horoscope', label: 'Daily Horoscope', icon: '⭐' },
-                        { id: 'affirmation', label: 'Daily Affirmation', icon: '💫' }
-                      ].map((item) => (
-                        <button
-                          key={item.id}
-                          onClick={() => {
-                            setActiveSection(item.id);
-                            setMobileMenuOpen(false);
-                          }}
-                          className={`w-full flex items-center space-x-3 p-2 rounded-lg text-left transition-colors ${
-                            activeSection === item.id
-                              ? 'bg-blue-500/20 border border-blue-500/30 theme-text'
-                              : 'theme-text hover:bg-white/5'
-                          }`}
-                        >
-                          <span>{item.icon}</span>
-                          <span className="text-sm">{item.label}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Plans & Pricing */}
-                  {[
-                  { id: 'home', label: 'Home', icon: '🏠' },
-                  { id: 'chat', label: 'Chat with Chakrai', icon: '💬' },
-                  { id: 'challenges', label: 'Reflection Goals', icon: '🎯' },
-                  { id: 'rewards', label: 'Reflection Rewards', icon: '🎁' },
-                  { id: 'pricing', label: 'Plans & Pricing', icon: '💳' } // ← add this
-                ].map((item) => (
-                  <button
-                    key={item.id}
-                    onClick={() => {
-                      setActiveSection(item.id);
-                      setMobileMenuOpen(false);
-                    }}
-                    className={`w-full flex items-center space-x-3 p-2 rounded-lg text-left transition-colors ${
-                      activeSection === item.id
-                        ? 'bg-blue-500/20 border border-blue-500/30 theme-text'
-                        : 'theme-text hover:bg-white/5'
-                    }`}
-                  >
-                    <span>{item.icon}</span>
-                    <span className="text-sm">{item.label}</span>
-                  </button>
-                ))}
-
-                  {/* Settings */}
-                  <div>
-                    <h4 className="text-sm font-medium theme-text-secondary mb-2">⚙️ Settings</h4>
-                    <div className="space-y-1">
-                      {[
-                        { id: 'pilot-analytics', label: 'Pilot Analytics', icon: '📊' },
-                        { id: 'subscription-demo', label: 'Subscription Demo', icon: '💎' },
-                        { id: 'voice', label: 'Voice Settings', icon: '🎤' },
-                        { id: 'themes', label: 'Themes', icon: '🎨' },
-                        { id: 'feedback', label: 'Feedback', icon: '💬' },
-                        { id: 'privacy', label: 'Privacy', icon: '🔒' }
-                      ].map((item) => (
-                        <button
-                          key={item.id}
-                          onClick={() => {
-                            if (item.id === 'themes') {
-                              setShowThemeModal(true);
-                              setMobileMenuOpen(false);
-                            } else if (item.id === 'voice') {
-                              setShowSettings(true);
-                              setMobileMenuOpen(false);
-                            } else {
-                              setActiveSection(item.id);
-                              setMobileMenuOpen(false);
-                            }
-                          }}
-                          className={`w-full flex items-center space-x-3 p-2 rounded-lg text-left transition-colors ${
-                            activeSection === item.id
-                              ? 'bg-blue-500/20 border border-blue-500/30 theme-text'
-                              : 'theme-text hover:bg-white/5'
-                          }`}
-                        >
-                          <span>{item.icon}</span>
-                          <span className="text-sm">{item.label}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Mobile Content */}
-        <div className="pt-20 pb-20 min-h-screen">
-          <div className="p-4">
-            <ErrorBoundary>
-              {renderActiveSection()}
-            </ErrorBoundary>
-          </div>
-        </div>
-
-        {/* Mobile Bottom Navigation */}
-        <div className="fixed bottom-0 left-0 right-0 z-50 theme-card border-t border-white/10">
-          <div className="flex items-center justify-around py-2">
-            {[
-              { id: 'home', label: 'Home', icon: Home, tourId: 'home-button' },
-              { id: 'chat', label: 'Chat', icon: MessageCircle, tourId: 'chat-button' },
-              { id: 'journal', label: 'Journal', icon: BookOpen, tourId: 'journal-button' },
-              { id: 'meditation', label: 'Meditate', icon: Sparkles, tourId: 'meditation-button' },
-              { id: 'analytics', label: 'Insights', icon: BarChart3, tourId: 'analytics-button' }
-            ].map((item) => {
-              const IconComponent = item.icon;
-              return (
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex space-x-8">
+              {[
+                { id: 'home', label: 'Home' },
+                { id: '190-analysis', label: '190-Point Analysis' },
+                { id: 'chat', label: 'Chat' },
+                { id: 'journal', label: 'Journal' },
+                { id: 'meditation', label: 'Wellness' },
+                { id: 'pricing', label: 'Pricing' }
+              ].map((item) => (
                 <button
                   key={item.id}
                   onClick={() => setActiveSection(item.id)}
-                  className={`flex flex-col items-center justify-center p-2 rounded-lg transition-colors ${
+                  className={`px-3 py-2 text-sm font-medium transition-colors duration-200 ${
                     activeSection === item.id
-                      ? 'theme-text bg-blue-500/20'
-                      : 'theme-text-secondary hover:theme-text'
+                      ? 'text-blue-600 border-b-2 border-blue-600'
+                      : 'text-gray-700 hover:text-blue-600'
                   }`}
-                  data-tour={item.tourId}
                 >
-                  <IconComponent className="w-5 h-5 mb-1" />
-                  <span className="text-xs">{item.label}</span>
+                  {item.label}
                 </button>
-              );
-            })}
+              ))}
+            </div>
+
+            {/* Right Side Actions */}
+            <div className="flex items-center space-x-4">
+              <button 
+                onClick={() => setShowSettings(true)}
+                className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <Settings className="w-5 h-5" />
+              </button>
+              
+              {/* Get Started Button */}
+              <button 
+                onClick={() => setActiveSection('pricing')}
+                className="hidden md:block bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-lg font-medium hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+              >
+                Get Started Free
+              </button>
+
+              {/* Mobile Menu Button */}
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="md:hidden p-2 text-gray-600"
+              >
+                {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+
+        {/* Mobile Navigation */}
+        {mobileMenuOpen && (
+          <div className="md:hidden bg-white/95 backdrop-blur-md border-t border-gray-200">
+            <div className="px-4 py-3 space-y-2">
+              {[
+                { id: 'home', label: 'Home' },
+                { id: 'chat', label: 'Chat' },
+                { id: 'journal', label: 'Journal' },
+                { id: 'meditation', label: 'Wellness' },
+                { id: 'pricing', label: 'Pricing' }
+              ].map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    setActiveSection(item.id);
+                    setMobileMenuOpen(false);
+                  }}
+                  className={`block w-full text-left px-3 py-2 rounded-lg text-base font-medium transition-colors ${
+                    activeSection === item.id
+                      ? 'bg-blue-50 text-blue-600'
+                      : 'text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </nav>
+
+      {/* Main Content Area */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <ErrorBoundary>
+          {renderActiveSection()}
+        </ErrorBoundary>
+      </main>
 
       {/* Voice Settings Modal */}
       {showSettings && (
@@ -979,10 +690,6 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
       {showThemeModal && (
         <ThemeSelector onClose={() => setShowThemeModal(false)} />
       )}
-
-
-
-      {/* Removed duplicate chat components - using only main chat interface in "Chat with Chakrai" section */}
     </div>
   );
 };
@@ -1169,14 +876,13 @@ const AppWithOnboarding = () => {
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <AuthProvider>
-          <SubscriptionProvider>
-            <AppWithOnboarding />
-            <NeonCursor />
-          </SubscriptionProvider>
-        </AuthProvider>
-      </ThemeProvider>
+      {/* Removed ThemeProvider that was causing errors */}
+      <AuthProvider>
+        <SubscriptionProvider>
+          <AppWithOnboarding />
+          <NeonCursor />
+        </SubscriptionProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

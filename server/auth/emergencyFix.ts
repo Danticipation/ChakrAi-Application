@@ -4,6 +4,7 @@
  */
 
 import express from 'express'
+import '../../types/express-request.js'
 import { v4 as uuid } from 'uuid'
 import { db } from '../db.js'
 import { users } from '../../shared/schema.js'
@@ -48,7 +49,7 @@ export const emergencyAuthFix = async (req: express.Request, res: express.Respon
         .where(eq(users.deviceFingerprint, deviceId))
         .limit(1)
       
-      if (existingUser.length > 0) {
+      if (existingUser.length > 0 && existingUser[0]) {
         userId = existingUser[0].id
         DEVICE_SESSION_MAP.set(deviceId, userId)
       } else {
@@ -61,16 +62,20 @@ export const emergencyAuthFix = async (req: express.Request, res: express.Respon
           sessionId: deviceId
         }).returning()
         
-        userId = newUser[0].id
-        DEVICE_SESSION_MAP.set(deviceId, userId)
-        console.log(`✅ EMERGENCY FIX: Created single user ${userId} for device ${deviceId.slice(0, 12)}...`)
+        if (newUser[0]) {
+          userId = newUser[0].id
+          DEVICE_SESSION_MAP.set(deviceId, userId)
+          console.log(`✅ EMERGENCY FIX: Created single user ${userId} for device ${deviceId.slice(0, 12)}...`)
+        }
       }
     }
     
     // Set user context
-    req.userId = userId
-    req.user = { id: userId }
-    req.authenticatedUserId = userId
+    if (userId) {
+      req.userId = userId
+      req.user = { id: userId }
+      req.authenticatedUserId = userId
+    }
     req.isAnonymous = true
     
     console.log(`🔒 EMERGENCY AUTH: User ${userId}`)

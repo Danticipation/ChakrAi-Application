@@ -52,11 +52,13 @@ function unseal(token: string | undefined | null): string | null {
   const parts = token.split('.');
   if (parts.length !== 3) return null;
   
-  const [uid, kid, sig] = parts;
+  const [uid, kid, sig] = parts as [string, string, string];
+  if (!kid || !keys[kid]) return null;
   const key = keys[kid];
-  if (!key || !/^usr_[0-9a-f]{32}$/.test(uid)) return null;
+  if (!key || !uid || !/^usr_[0-9a-f]{32}$/.test(uid)) return null;
   
   const mac = crypto.createHmac('sha256', key).update(`${uid}.${kid}`).digest();
+  if (!sig) return null;
   const got = Buffer.from(sig.replace(/-/g,'+').replace(/_/g,'/'), 'base64');
   const ok = got.length === mac.length && crypto.timingSafeEqual(got, mac);
   

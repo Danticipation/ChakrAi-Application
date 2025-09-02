@@ -480,6 +480,7 @@ export default function DailyAffirmation({ onBack, currentUser }: DailyAffirmati
       const timer = setTimeout(() => setAnnouncement(''), 3000);
       return () => clearTimeout(timer);
     }
+    return;
   }, [affirmationData, loading]);
 
   // Keyboard navigation and shortcuts

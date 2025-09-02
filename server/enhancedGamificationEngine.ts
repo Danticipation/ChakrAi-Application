@@ -1,5 +1,5 @@
-import { openai } from './openaiRetry';
-import * as schema from '../shared/schema';
+import { openai } from './openaiRetry.js';
+import * as schema from '../shared/schema.js';
 import { eq, desc, and, gte, lte, sql } from 'drizzle-orm';
 
 // Interface definitions for enhanced gamification

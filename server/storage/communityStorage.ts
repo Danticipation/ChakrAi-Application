@@ -3,7 +3,7 @@ import {
   supportForums, forumPosts,
   type SupportForum, type InsertSupportForum,
   type ForumPost, type InsertForumPost,
-} from "@shared/schema";
+} from "../../shared/schema.ts";
 import { eq, desc } from "drizzle-orm";
 
 export interface ICommunityStorage {

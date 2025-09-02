@@ -5,7 +5,7 @@ import {
   type UserProfile, type InsertUserProfile,
   type VoluntaryQuestion, type InsertVoluntaryQuestion,
   type UserFeedback, type InsertUserFeedback,
-} from "@shared/schema";
+} from "../../shared/schema.ts";
 import { eq, desc, and, lt, ne } from "drizzle-orm";
 
 export interface IUserStorage {

@@ -1,4 +1,4 @@
-import { storage } from './storage';
+import { storage } from './storage.js';
 import { 
   EhrIntegration, InsertEhrIntegration, 
   FhirResource, InsertFhirResource,
@@ -6,7 +6,7 @@ import {
   SessionBilling, InsertSessionBilling,
   ClinicalExport, InsertClinicalExport,
   AuditLog, InsertAuditLog
-} from '../shared/ehrSchema';
+} from '../shared/ehrSchema.js';
 import crypto from 'crypto';
 import PDFDocument from 'pdfkit';
 import { createObjectCsvWriter } from 'csv-writer';

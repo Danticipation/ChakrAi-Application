@@ -5,7 +5,7 @@ import {
   type WellnessStreak, type InsertWellnessStreak,
   type AnalyticsMetric, type InsertAnalyticsMetric,
   type ProgressTracking, type InsertProgressTracking,
-} from "@shared/schema";
+} from "../../shared/schema.ts";
 import { eq, desc } from "drizzle-orm";
 
 export interface IAnalyticsStorage {

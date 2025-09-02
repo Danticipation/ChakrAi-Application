@@ -135,7 +135,7 @@ export class WebAudioRecorder {
     // Convert to 16-bit PCM
     const pcmData = new Int16Array(mergedData.length);
     for (let i = 0; i < mergedData.length; i++) {
-      const sample = Math.max(-1, Math.min(1, mergedData[i]));
+      const sample = Math.max(-1, Math.min(1, mergedData[i] || 0));
       pcmData[i] = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
     }
 

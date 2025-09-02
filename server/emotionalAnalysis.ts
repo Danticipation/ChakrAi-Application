@@ -1,4 +1,4 @@
-import { openai, retryOpenAIRequest } from "./openaiRetry";
+import { openai, retryOpenAIRequest } from "./openaiRetry.js";
 
 export interface EmotionalState {
   primaryEmotion: string;

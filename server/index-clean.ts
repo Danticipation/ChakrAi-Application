@@ -59,9 +59,6 @@ app.use('/api/debug', debugRouter);
 import adminRouter from './routes/admin.js';
 app.use('/api/admin', adminRouter);
 
-import moodRouter from './routes/mood.js';
-app.use('/api/mood', moodRouter);
-
 // Use modular API routes
 import routes from './routes.js';
 app.use('/api', routes);

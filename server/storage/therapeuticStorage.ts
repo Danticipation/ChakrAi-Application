@@ -3,7 +3,7 @@ import {
   therapeuticGoals, therapists, clientTherapistRelationships, riskAlerts,
   type TherapeuticGoal, type InsertTherapeuticGoal,
   type Therapist, type InsertTherapist,
-} from "@shared/schema";
+} from "../../shared/schema.ts";
 import { eq, desc } from "drizzle-orm";
 
 export interface ITherapeuticStorage {

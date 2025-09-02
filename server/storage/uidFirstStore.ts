@@ -23,6 +23,7 @@ export class UidFirstStore {
   async getJournalEntriesByUid(uid: string, { limit = 50, offset = 0 } = {}) {
     try {
       const legacyId = await this.getLegacyIdForUid(uid);
+      if (legacyId === null) return [];
       const rows = await db.select().from(journalEntries)
         .where(eq(journalEntries.userId, legacyId))
         .orderBy(desc(journalEntries.createdAt))
@@ -40,7 +41,8 @@ export class UidFirstStore {
   async getMoodEntriesByUid(uid: string, { since }: { since?: Date } = {}) {
     try {
       const legacyId = await this.getLegacyIdForUid(uid);
-      const conds = [eq(moodEntries.userId, legacyId)] as any[];
+      if (legacyId === null) return [];
+      const conds = [eq(moodEntries.userId, legacyId)];
       if (since) conds.push(sql`${moodEntries.createdAt} >= ${since}`);
       
       const rows = await db.select().from(moodEntries)
@@ -58,6 +60,7 @@ export class UidFirstStore {
   async getUserByUid(uid: string) {
     try {
       const legacyId = await this.getLegacyIdForUid(uid);
+      if (legacyId === null) return null;
       const user = await db.select().from(users)
         .where(eq(users.id, legacyId))
         .limit(1);
@@ -74,6 +77,7 @@ export class UidFirstStore {
   async addJournalEntry(uid: string, data: any) {
     try {
       const legacyId = await this.getLegacyIdForUid(uid);
+      if (legacyId === null) throw new Error('Could not generate legacy ID');
       const entryData = {
         uid: uid,  // ← REQUIRED: Include UID in new writes
         userId: legacyId,  // Keep for compatibility
@@ -99,6 +103,7 @@ export class UidFirstStore {
   async addMoodEntry(uid: string, data: any) {
     try {
       const legacyId = await this.getLegacyIdForUid(uid);
+      if (legacyId === null) throw new Error('Could not generate legacy ID');
       const moodData = {
         userId: legacyId,
         mood: data.mood,
@@ -120,28 +125,10 @@ export class UidFirstStore {
 
   // ---------- ANALYTICS (UID-based aggregations) ----------
 
-  async getMoodEntriesByUid(uid: string, { limit = 50, since }: { limit?: number; since?: Date } = {}) {
-    try {
-      const legacyId = await this.getLegacyIdForUid(uid);
-      const conds = [eq(moodEntries.userId, legacyId)] as any[];
-      if (since) conds.push(sql`${moodEntries.createdAt} >= ${since}`);
-      
-      const rows = await db.select().from(moodEntries)
-        .where(and(...conds))
-        .orderBy(desc(moodEntries.createdAt))
-        .limit(limit);
-      
-      console.log(`🎭 Retrieved ${rows.length} mood entries for uid ${uid} (legacy: ${legacyId})`);
-      return rows;
-    } catch (error) {
-      console.error('Error getting mood entries by UID:', error);
-      return [];
-    }
-  }
-
   async createMoodEntryByUid(uid: string, data: any) {
     try {
       const legacyId = await this.getLegacyIdForUid(uid);
+      if (legacyId === null) throw new Error('Could not generate legacy ID');
       const moodData = {
         uid: uid,  // ← REQUIRED: Include UID in new writes
         userId: legacyId,  // Keep for compatibility
@@ -165,6 +152,7 @@ export class UidFirstStore {
   async getDashboardStatsForUid(uid: string) {
     try {
       const legacyId = await this.getLegacyIdForUid(uid);
+      if (legacyId === null) throw new Error('Could not generate legacy ID');
       
       // Count journal entries
       const journalCount = await db.select({ count: sql<number>`count(*)` })

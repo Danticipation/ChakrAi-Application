@@ -1,6 +1,6 @@
-import { storage } from './storage';
-import { openai, retryOpenAIRequest } from './openaiRetry';
-import { MoodEntry } from '@shared/schema';
+import { storage } from './storage.js';
+import { openai, retryOpenAIRequest } from './openaiRetry.js';
+import { MoodEntry } from '../shared/schema.js';
 
 interface CorrelationData {
   healthMetrics: any[]; // Health metrics would be defined when integrating with health data sources
