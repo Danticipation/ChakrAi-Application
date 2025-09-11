@@ -1,4 +1,4 @@
-import React, { lazy, ComponentType } from 'react';
+import type { lazy, ComponentType } from 'react';
 
 // Import components that definitely exist
 const PersonalityReflection = lazy(() => import('../components/PersonalityReflection'));

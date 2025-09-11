@@ -1,4 +1,4 @@
-import React, { Suspense, Component, ReactNode, useState, useEffect } from 'react';
+import type { Suspense, Component, ReactNode, useState, useEffect } from 'react';
 import { getSectionComponentMap } from './sectionComponentMap';
 
 interface ErrorBoundaryState {

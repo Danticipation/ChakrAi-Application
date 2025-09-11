@@ -2,7 +2,7 @@ import { getCurrentUserId } from "../utils/unifiedUserSession";
 import React, { useState } from 'react';
 import { Trophy, Gift, Loader2, AlertCircle } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import axios, { AxiosResponse } from 'axios';
+import type { AxiosResponse } from 'axios';
 
 interface WellnessPointsBalance {
   userId: number;

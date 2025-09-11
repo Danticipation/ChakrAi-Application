@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { ZodiacSign } from "../types/zodiac";
+import type { ZodiacSign } from "../types/zodiac";
 
 interface ZodiacCardProps {
   zodiac: ZodiacSign;

@@ -2,7 +2,7 @@ import { getCurrentUserId } from "../utils/userSession";
 import React, { useState, useCallback } from 'react';
 import { Brain, TrendingUp, AlertTriangle, Target, Zap, Clock, Heart, MessageCircle, Loader2, AlertCircle, Wifi } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import axios, { AxiosResponse } from 'axios';
+import type { AxiosResponse } from 'axios';
 
 interface MoodForecast {
   id: number;

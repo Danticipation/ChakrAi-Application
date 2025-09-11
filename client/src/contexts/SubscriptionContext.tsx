@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import type { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import axios from 'axios';
 
 // Updated interfaces to match your new tiered system

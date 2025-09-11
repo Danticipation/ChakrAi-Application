@@ -1,7 +1,7 @@
 import React from 'react';
 import { X, CheckCircle, AlertCircle, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useToast, Toast } from '@/hooks/use-toast';
+import type { Toast } from '@/hooks/use-toast';
 
 const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { toasts, dismiss } = useToast();
