@@ -56,6 +56,7 @@ const ModernAppLayout: React.FC<{currentUserId: number | null, onDataReset: () =
   const [messages, setMessages] = useState<Array<{sender: 'user' | 'bot', text: string, time: string, id: string}>>([]);
   const [isAiTyping, setIsAiTyping] = useState(false);
   const [isTtsEnabled, setIsTtsEnabled] = useState(true);
+  const [selectedModel, setSelectedModel] = useState('gpt-4o'); // Added selectedModel state
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const voiceRecorderRef = useRef<VoiceRecorder | null>(null);
 
@@ -98,6 +99,48 @@ const ModernAppLayout: React.FC<{currentUserId: number | null, onDataReset: () =
   // TTS toggle functionality
   const handleTtsToggle = () => {
     setIsTtsEnabled(!isTtsEnabled);
+  };
+
+  // Async TTS generation function (non-blocking)
+  const generateAndPlayTTS = async (text: string, voice: string) => {
+    try {
+      const startTime = Date.now();
+      console.log('🔊 Starting TTS generation...');
+      
+      const ttsResponse = await fetch('/api/text-to-speech', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ text, voice }),
+      });
+
+      if (ttsResponse.ok) {
+        const audioBlob = await ttsResponse.blob();
+        const audioUrl = URL.createObjectURL(audioBlob);
+        const audio = new Audio(audioUrl);
+        
+        const generationTime = Date.now() - startTime;
+        console.log(`🔊 TTS generated in ${generationTime}ms`);
+        
+        audio.addEventListener('ended', () => {
+          URL.revokeObjectURL(audioUrl);
+        });
+        
+        audio.addEventListener('error', (e) => {
+          console.error('🔊 TTS playback error:', e);
+          URL.revokeObjectURL(audioUrl);
+        });
+        
+        audio.volume = 0.8;
+        await audio.play();
+        console.log('🔊 TTS playback started');
+      } else {
+        console.error('🔊 TTS request failed:', ttsResponse.statusText);
+      }
+    } catch (error) {
+      console.error('🔊 TTS generation failed:', error);
+    }
   };
 
   // Send message functionality
@@ -158,34 +201,11 @@ const ModernAppLayout: React.FC<{currentUserId: number | null, onDataReset: () =
         setMessages(prev => [...prev, botMessage]);
         setIsAiTyping(false);
         
-        // Play audio if available
-        if (data.audioUrl) {
-          console.log('🔊 Playing audio response...');
-          try {
-            const binaryString = atob(data.audioUrl);
-            const bytes = new Uint8Array(binaryString.length);
-            for (let i = 0; i < binaryString.length; i++) {
-              bytes[i] = binaryString.charCodeAt(i);
-            }
-            const audioBlob = new Blob([bytes], { type: 'audio/mpeg' });
-            const audioUrl = URL.createObjectURL(audioBlob);
-            const audio = new Audio(audioUrl);
-            
-            audio.volume = 0.8;
-            const playPromise = audio.play();
-            
-            if (playPromise) {
-              playPromise
-                .then(() => {
-                  console.log('🔊 Audio playback started successfully');
-                })
-                .catch(error => {
-                  console.error('🔊 Audio playback failed:', error);
-                });
-            }
-          } catch (audioError) {
-            console.error('🔊 Audio processing failed:', audioError);
-          }
+        // Start TTS generation immediately (don't await)
+        if (isTtsEnabled && botMessage.text) {
+          console.log('🔊 Generating TTS for bot response...');
+          // Fire and forget - don't block UI
+          generateAndPlayTTS(botMessage.text, selectedVoice);
         }
       } else {
         console.error('❌ Chat API error - Status:', response.status, response.statusText);
@@ -235,6 +255,9 @@ const ModernAppLayout: React.FC<{currentUserId: number | null, onDataReset: () =
             isAiTyping={isAiTyping}
             isTtsEnabled={isTtsEnabled}
             onTtsToggle={handleTtsToggle}
+            onBotMessageSpeak={(text: string) => generateAndPlayTTS(text, selectedVoice)} // Pass the TTS function with selectedVoice
+            selectedModel={selectedModel} // Pass selectedModel
+            onModelChange={setSelectedModel} // Pass onModelChange handler
           />
         );
       case 'journal':

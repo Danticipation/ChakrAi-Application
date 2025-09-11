@@ -1,8 +1,8 @@
 // CONVERSATION CONTINUITY SERVICE - Manages session tracking and context preservation
 // Ensures therapeutic conversations maintain context across sessions
 
-import { db } from '../db.ts';
-import { conversationSessions, conversationThreads } from '../../shared/schema.ts';
+import { db } from '../db.js';
+import { conversationSessions, conversationThreads } from '../../shared/schema.js';
 import { eq, desc, and } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import type { 
@@ -44,15 +44,15 @@ export class ConversationContinuityService implements IConversationContinuitySer
       // Ensure all required fields are never null to match ConversationSession type
       return {
         ...session,
-        title: session.title || "New Therapeutic Session",
-        keyTopics: session.keyTopics || [],
-        emotionalTone: session.emotionalTone || "neutral",
-        unresolvedThreads: session.unresolvedThreads || {},
-        contextCarryover: session.contextCarryover || {},
-        messageCount: session.messageCount || 0,
+        title: session.title ?? "New Therapeutic Session",
+        keyTopics: session.keyTopics ?? [],
+        emotionalTone: session.emotionalTone ?? "neutral",
+        unresolvedThreads: session.unresolvedThreads ?? {},
+        contextCarryover: session.contextCarryover ?? {},
+        messageCount: session.messageCount ?? 0,
         isActive: session.isActive ?? true,
-        lastActivity: session.lastActivity || new Date(),
-        createdAt: session.createdAt || new Date()
+        lastActivity: session.lastActivity ?? new Date(),
+        createdAt: session.createdAt ?? new Date()
       };
 
     } catch (error) {
@@ -80,15 +80,15 @@ export class ConversationContinuityService implements IConversationContinuitySer
       // Ensure all required fields are never null to match ConversationSession type
       return {
         ...session,
-        title: session.title || "Therapeutic Session",
-        keyTopics: session.keyTopics || [],
-        emotionalTone: session.emotionalTone || "neutral",
-        unresolvedThreads: session.unresolvedThreads || {},
-        contextCarryover: session.contextCarryover || {},
-        messageCount: session.messageCount || 0,
+        title: session.title ?? "Therapeutic Session",
+        keyTopics: session.keyTopics ?? [],
+        emotionalTone: session.emotionalTone ?? "neutral",
+        unresolvedThreads: session.unresolvedThreads ?? {},
+        contextCarryover: session.contextCarryover ?? {},
+        messageCount: session.messageCount ?? 0,
         isActive: session.isActive ?? true,
-        lastActivity: session.lastActivity || new Date(),
-        createdAt: session.createdAt || new Date()
+        lastActivity: session.lastActivity ?? new Date(),
+        createdAt: session.createdAt ?? new Date()
       };
     } catch (error) {
       console.error('Error getting active session:', error);
@@ -119,15 +119,15 @@ export class ConversationContinuityService implements IConversationContinuitySer
       // Ensure all required fields are never null to match ConversationSession type
       return {
         ...updatedSession,
-        title: updatedSession.title || "Therapeutic Session",
-        keyTopics: updatedSession.keyTopics || [],
-        emotionalTone: updatedSession.emotionalTone || "neutral",
-        unresolvedThreads: updatedSession.unresolvedThreads || {},
-        contextCarryover: updatedSession.contextCarryover || {},
-        messageCount: updatedSession.messageCount || 0,
+        title: updatedSession.title ?? "Therapeutic Session",
+        keyTopics: updatedSession.keyTopics ?? [],
+        emotionalTone: updatedSession.emotionalTone ?? "neutral",
+        unresolvedThreads: updatedSession.unresolvedThreads ?? {},
+        contextCarryover: updatedSession.contextCarryover ?? {},
+        messageCount: updatedSession.messageCount ?? 0,
         isActive: updatedSession.isActive ?? true,
-        lastActivity: updatedSession.lastActivity || new Date(),
-        createdAt: updatedSession.createdAt || new Date()
+        lastActivity: updatedSession.lastActivity ?? new Date(),
+        createdAt: updatedSession.createdAt ?? new Date()
       };
     } catch (error) {
       console.error('Error updating session:', error);
@@ -175,15 +175,15 @@ export class ConversationContinuityService implements IConversationContinuitySer
           // Ensure all required fields are never null to match ConversationSession type
           session = {
             ...specificSession,
-            title: specificSession.title || "Therapeutic Session",
-            keyTopics: specificSession.keyTopics || [],
-            emotionalTone: specificSession.emotionalTone || "neutral",
-            unresolvedThreads: specificSession.unresolvedThreads || {},
-            contextCarryover: specificSession.contextCarryover || {},
-            messageCount: specificSession.messageCount || 0,
+            title: specificSession.title ?? "Therapeutic Session",
+            keyTopics: specificSession.keyTopics ?? [],
+            emotionalTone: specificSession.emotionalTone ?? "neutral",
+            unresolvedThreads: specificSession.unresolvedThreads ?? {},
+            contextCarryover: specificSession.contextCarryover ?? {},
+            messageCount: specificSession.messageCount ?? 0,
             isActive: specificSession.isActive ?? true,
-            lastActivity: specificSession.lastActivity || new Date(),
-            createdAt: specificSession.createdAt || new Date()
+            lastActivity: specificSession.lastActivity ?? new Date(),
+            createdAt: specificSession.createdAt ?? new Date()
           };
         } else {
           session = null;
@@ -252,17 +252,17 @@ export class ConversationContinuityService implements IConversationContinuitySer
         .limit(limit);
 
       // Ensure all required fields are never null to match ConversationSession type
-      return sessions.map(session => ({
+      return sessions.map((session: any) => ({
         ...session,
-        title: session.title || "Therapeutic Session",
-        keyTopics: session.keyTopics || [],
-        emotionalTone: session.emotionalTone || "neutral",
-        unresolvedThreads: session.unresolvedThreads || {},
-        contextCarryover: session.contextCarryover || {},
-        messageCount: session.messageCount || 0,
+        title: session.title ?? "Therapeutic Session",
+        keyTopics: session.keyTopics ?? [],
+        emotionalTone: session.emotionalTone ?? "neutral",
+        unresolvedThreads: session.unresolvedThreads ?? {},
+        contextCarryover: session.contextCarryover ?? {},
+        messageCount: session.messageCount ?? 0,
         isActive: session.isActive ?? true,
-        lastActivity: session.lastActivity || new Date(),
-        createdAt: session.createdAt || new Date()
+        lastActivity: session.lastActivity ?? new Date(),
+        createdAt: session.createdAt ?? new Date()
       }));
     } catch (error) {
       console.error('Error getting session history:', error);
@@ -347,16 +347,16 @@ export class ConversationContinuityService implements IConversationContinuitySer
         .orderBy(desc(conversationThreads.createdAt));
 
       // Map database results back to ConversationThread type
-      return threads.map(thread => ({
+      return threads.map((thread: any) => ({
         id: thread.id,
-        sessionId: thread.sessionId || sessionId,
+        sessionId: thread.sessionId ?? sessionId,
         threadType: 'main' as const, // Default since not in database
         topic: thread.topic,
-        emotionalIntensity: (thread.emotionalContext as any)?.intensity || 5,
+        emotionalIntensity: (thread.emotionalContext as any)?.intensity ?? 5,
         isResolved: thread.status !== 'active',
         keyMessages: [], // Not stored in database schema
         insights: [], // Not stored in database schema
-        createdAt: thread.createdAt || new Date()
+        createdAt: thread.createdAt ?? new Date()
       }));
     } catch (error) {
       console.error('Error getting active threads:', error);
@@ -426,7 +426,7 @@ export class ConversationContinuityService implements IConversationContinuitySer
         ));
 
       const inactiveSessions = sessions.filter(
-        session => session.lastActivity && new Date(session.lastActivity) < cutoffDate
+        (session: any) => session.lastActivity && new Date(session.lastActivity) < cutoffDate
       );
 
       for (const session of inactiveSessions) {

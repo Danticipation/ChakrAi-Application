@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Play, Pause, RotateCcw, Settings, Volume2, VolumeX, 
   Clock, Star, TreePine, Waves, Wind, Sun, Moon, 
   Heart, Brain, CheckCircle, SkipForward
 } from 'lucide-react';
+import useErrorHandler from '@/hooks/useErrorHandler';
 
 interface MeditationSession {
   id: string;
@@ -18,13 +19,27 @@ interface MeditationSession {
 }
 
 const BeautifulMeditation: React.FC = () => {
+  const { handleAsyncError, reportError } = useErrorHandler();
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [selectedSession, setSelectedSession] = useState<MeditationSession | null>(null);
   const [volume, setVolume] = useState(80);
   const [isMuted, setIsMuted] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
+  const [meditationAudioUrl, setMeditationAudioUrl] = useState<string | null>(null); // State to hold the blob URL
+  // Create audio element ref with proper initialization
+  const meditationAudioRef = useRef<HTMLAudioElement | null>(null);
+  
+  // Ensure audio element is properly created
+  React.useEffect(() => {
+    if (!meditationAudioRef.current) {
+      const audio = new Audio();
+      audio.id = 'meditation-audio';
+      audio.preload = 'metadata';
+      meditationAudioRef.current = audio;
+
+    }
+  }, []);
   const [ambientAudioElement, setAmbientAudioElement] = useState<HTMLAudioElement | null>(null);
   const [isLoadingAudio, setIsLoadingAudio] = useState(false);
   const [meditationScript, setMeditationScript] = useState<string>('');
@@ -109,7 +124,7 @@ const BeautifulMeditation: React.FC = () => {
   // Start ambient sound playback
   const startAmbientSound = async (session: MeditationSession) => {
     try {
-      console.log(`🎵 Starting ambient sound: ${session.backgroundSound}`);
+
       
       // Stop any existing ambient audio
       if (ambientAudioElement) {
@@ -122,29 +137,58 @@ const BeautifulMeditation: React.FC = () => {
       ambientAudio.loop = true; // Loop ambient sounds
       ambientAudio.volume = 0.3 * (volume / 100) * (isMuted ? 0 : 1); // Lower volume for background
       
-      ambientAudio.addEventListener('canplaythrough', () => {
-        console.log(`✅ Ambient sound ready: ${session.backgroundSound}`);
+      // Add tracked event listeners for ambient audio
+      addTrackedEventListener(ambientAudio, 'canplaythrough', () => {
+        // Ambient sound ready
       });
       
-      ambientAudio.addEventListener('error', (e) => {
-        console.error('Ambient sound playback error:', e);
+      addTrackedEventListener(ambientAudio, 'error', (e: Event) => {
+        reportError(new Error('Ambient sound playback failed'), 'Ambient audio error');
+      });
+      
+      addTrackedEventListener(ambientAudio, 'ended', () => {
+        // Handle ambient sound ending (though it should loop)
       });
       
       setAmbientAudioElement(ambientAudio);
-      await ambientAudio.play();
+      
+      try {
+        await ambientAudio.play();
+      } catch (playError) {
+
+      }
       
     } catch (error) {
-      console.error('Error starting ambient sound:', error);
+
     }
   };
 
-  // Stop ambient sound
+  // Enhanced ambient sound cleanup
   const stopAmbientSound = () => {
     if (ambientAudioElement) {
-      ambientAudioElement.pause();
-      ambientAudioElement.src = '';
-      setAmbientAudioElement(null);
-      console.log('🎵 Ambient sound stopped');
+      try {
+        ambientAudioElement.pause();
+        ambientAudioElement.currentTime = 0;
+        
+        // Remove event listeners if they exist
+        const listeners = audioManagerRef.current.eventListeners.get(ambientAudioElement);
+        if (listeners) {
+          listeners.forEach(({ event, handler }) => {
+            ambientAudioElement.removeEventListener(event, handler as EventListener);
+          });
+          audioManagerRef.current.eventListeners.delete(ambientAudioElement);
+        }
+        
+        if (ambientAudioElement.src) {
+          ambientAudioElement.src = '';
+          ambientAudioElement.load(); // Force resource cleanup
+        }
+        
+        setAmbientAudioElement(null);
+      } catch (error) {
+        reportError(new Error('Failed to stop ambient sound'), 'Ambient audio cleanup');
+        setAmbientAudioElement(null);
+      }
     }
   };
   const generateMeditationScript = (session: MeditationSession): string => {
@@ -157,99 +201,228 @@ const BeautifulMeditation: React.FC = () => {
     return scripts[session.type] || scripts.mindfulness;
   };
 
-  // Generate and play meditation audio
+  // Clean silent meditation
+  const startSilentMeditation = (session: MeditationSession) => {
+
+    setIsLoadingAudio(false);
+    setIsPlaying(true); // Set playing to true for silent meditation
+    startMeditationTimer(session);
+  };
+
+  // Enhanced audio management system
+  const audioManagerRef = useRef<{
+    currentAudioElement: HTMLAudioElement | null;
+    audioUrls: Set<string>;
+    eventListeners: Map<HTMLAudioElement, Array<{event: string, handler: Function}>>;
+    audioContext: AudioContext | null;
+  }>({
+    currentAudioElement: null,
+    audioUrls: new Set(),
+    eventListeners: new Map(),
+    audioContext: null,
+  });
+
+  // Comprehensive audio cleanup function
+  const cleanupAudio = () => {
+    const manager = audioManagerRef.current;
+    
+    // 1. Stop and cleanup current audio element
+    if (manager.currentAudioElement) {
+      try {
+        manager.currentAudioElement.pause();
+        manager.currentAudioElement.currentTime = 0;
+        
+        // Remove all tracked event listeners
+        const listeners = manager.eventListeners.get(manager.currentAudioElement);
+        if (listeners) {
+          listeners.forEach(({ event, handler }) => {
+            manager.currentAudioElement?.removeEventListener(event, handler as EventListener);
+          });
+          manager.eventListeners.delete(manager.currentAudioElement);
+        }
+        
+        // Clear source and load to free resources
+        if (manager.currentAudioElement.src) {
+          manager.currentAudioElement.src = '';
+          manager.currentAudioElement.load(); // Force unload
+        }
+        
+        manager.currentAudioElement = null;
+      } catch (error) {
+        reportError(new Error('Failed to cleanup audio element'), 'Audio cleanup');
+      }
+    }
+    
+    // 2. Revoke all blob URLs to prevent memory leaks
+    manager.audioUrls.forEach(url => {
+      try {
+        URL.revokeObjectURL(url);
+      } catch (error) {
+        // Silently handle URL revocation errors
+      }
+    });
+    manager.audioUrls.clear();
+    
+    // 3. Close audio context if exists
+    if (manager.audioContext && manager.audioContext.state !== 'closed') {
+      try {
+        manager.audioContext.close();
+        manager.audioContext = null;
+      } catch (error) {
+        // Silently handle audio context cleanup errors
+      }
+    }
+    
+    // 4. Clear meditation audio ref
+    if (meditationAudioRef.current) {
+      try {
+        meditationAudioRef.current.pause();
+        meditationAudioRef.current.currentTime = 0;
+        if (meditationAudioRef.current.src) {
+          meditationAudioRef.current.src = '';
+          meditationAudioRef.current.load();
+        }
+      } catch (error) {
+        // Silently handle ref cleanup errors
+      }
+    }
+  };
+  
+  // Helper function to add tracked event listeners
+  const addTrackedEventListener = (audio: HTMLAudioElement, event: string, handler: Function) => {
+    const manager = audioManagerRef.current;
+    
+    if (!manager.eventListeners.has(audio)) {
+      manager.eventListeners.set(audio, []);
+    }
+    
+    const listeners = manager.eventListeners.get(audio)!;
+    listeners.push({ event, handler });
+    
+    audio.addEventListener(event, handler as EventListener);
+  };
+  
+  // Helper function to create and track audio URLs
+  const createTrackedAudioUrl = (blob: Blob): string => {
+    const url = URL.createObjectURL(blob);
+    audioManagerRef.current.audioUrls.add(url);
+    return url;
+  };
+  
+  // Simplified audio handling function
   const playMeditationAudio = async (session: MeditationSession) => {
     try {
       setIsLoadingAudio(true);
-      console.log('Generating meditation audio for:', session.name);
       
       const script = generateMeditationScript(session);
       setMeditationScript(script);
 
-      // Generate audio using ElevenLabs TTS
-      const response = await fetch('/api/text-to-speech', {
+      // Stop any existing audio
+      cleanupAudio();
+      if (meditationAudioRef.current) {
+        meditationAudioRef.current.pause();
+        meditationAudioRef.current.src = '';
+      }
+
+      const response = await fetch('/api/tts/text-to-speech', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           text: script,
-          voice: selectedVoice, // Use selected meditation voice
-          stability: 0.4, // More stable for meditation
-          similarity_boost: 0.8 // Higher similarity for consistent voice
+          voice: selectedVoice,
+          stability: 0.4,
+          similarity_boost: 0.6,
         }),
       });
 
       if (response.ok) {
         const audioBlob = await response.blob();
-        const audioUrl = URL.createObjectURL(audioBlob);
+
+        if (audioBlob.size === 0) {
+          throw new Error('Received empty audio blob for meditation');
+        }
+
+        // Create and track audio URL
+        const audioUrl = createTrackedAudioUrl(audioBlob);
         
-        // Create new audio element
-        const audio = new Audio(audioUrl);
-        audio.volume = (volume / 100) * (isMuted ? 0 : 1);
+        // Create audio element with enhanced management
+        const newAudioElement = new Audio();
+        newAudioElement.src = audioUrl;
+        newAudioElement.volume = (volume / 100) * (isMuted ? 0 : 1);
+        newAudioElement.preload = 'auto';
         
-        // Set up audio event listeners
-        audio.addEventListener('loadstart', () => {
-          console.log('Audio loading started');
+        // Store reference for cleanup
+        audioManagerRef.current.currentAudioElement = newAudioElement;
+        
+        // Set up tracked event listeners
+        addTrackedEventListener(newAudioElement, 'canplay', async () => {
+          await handleAsyncError(async () => {
+            if (!audioManagerRef.current.currentAudioElement) return;
+            
+            // Ensure audio context is active and tracked
+            if (typeof AudioContext !== 'undefined') {
+              if (!audioManagerRef.current.audioContext) {
+                audioManagerRef.current.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+              }
+              
+              if (audioManagerRef.current.audioContext.state === 'suspended') {
+                await audioManagerRef.current.audioContext.resume();
+              }
+            }
+
+            await audioManagerRef.current.currentAudioElement.play();
+            setIsPlaying(true);
+            setIsLoadingAudio(false);
+            startMeditationTimer(session);
+          }, 'Playing meditation audio')?.catch(() => {
+            setIsPlaying(false);
+            setIsLoadingAudio(false);
+            startSilentMeditation(session);
+          });
         });
-        
-        audio.addEventListener('canplaythrough', () => {
-          console.log('Audio ready to play');
-          setIsLoadingAudio(false);
-        });
-        
-        audio.addEventListener('play', () => {
-          console.log('Audio started playing');
-          setIsPlaying(true);
-        });
-        
-        audio.addEventListener('pause', () => {
-          console.log('Audio paused');
+
+        addTrackedEventListener(newAudioElement, 'error', (e: Event) => {
+          reportError(new Error('Meditation audio playback failed'), 'Meditation audio error');
           setIsPlaying(false);
-        });
-        
-        audio.addEventListener('ended', () => {
-          console.log('Voice guidance completed, meditation continues...');
-          // Don't stop the meditation or reset timer - voice is just guidance
-          // The meditation timer continues independently
-        });
-        
-        // Remove timeupdate listener - we'll use independent timer instead
-        
-        audio.addEventListener('error', (e) => {
-          console.error('Audio playback error:', e);
-          setIsPlaying(false);
           setIsLoadingAudio(false);
+          startSilentMeditation(session);
         });
         
-        setAudioElement(audio);
+        addTrackedEventListener(newAudioElement, 'ended', () => {
+          setIsPlaying(false);
+          // Audio finished naturally
+        });
         
-        // Start ambient sound alongside voice guidance
-        await startAmbientSound(session);
+        addTrackedEventListener(newAudioElement, 'loadstart', () => {
+          // Track loading start
+        });
         
-        // Start independent meditation timer
-        startMeditationTimer(session);
-        
-        // Start playing
-        await audio.play();
-        
+        addTrackedEventListener(newAudioElement, 'loadeddata', () => {
+          // Track when data is loaded
+        });
+
+        // Start loading the audio
+        newAudioElement.load();
+
       } else {
-        console.error('Failed to generate meditation audio');
+
         setIsLoadingAudio(false);
-        // Fallback to ambient sound meditation
-        startAmbientMeditation(session);
+        setIsPlaying(false);
+        startSilentMeditation(session);
       }
     } catch (error) {
-      console.error('Error playing meditation audio:', error);
+
       setIsLoadingAudio(false);
-      // Fallback to ambient sound meditation
-      startAmbientMeditation(session);
+      setIsPlaying(false);
+      startSilentMeditation(session);
     }
   };
 
   // Start independent meditation timer
   const startMeditationTimer = (session: MeditationSession) => {
-    console.log(`Starting ${session.duration}-minute meditation timer for:`, session.name);
+
     setIsPlaying(true);
     setCurrentTime(0);
     
@@ -257,13 +430,13 @@ const BeautifulMeditation: React.FC = () => {
       setCurrentTime(prev => {
         const newTime = prev + 1;
         if (newTime >= session.duration * 60) {
-          console.log('Meditation session completed');
+
           setIsPlaying(false);
           clearInterval(timer);
           setMeditationTimer(null);
           // Clean up audio if still playing
-          if (audioElement) {
-            audioElement.pause();
+          if (meditationAudioRef.current) {
+            meditationAudioRef.current.pause();
           }
           return session.duration * 60; // Keep final time displayed
         }
@@ -275,89 +448,165 @@ const BeautifulMeditation: React.FC = () => {
   };
 
   // Fallback ambient meditation without voice
-  const startAmbientMeditation = async (session: MeditationSession) => {
-    console.log('Starting ambient meditation session:', session.name);
-    await startAmbientSound(session);
+  const startAmbientMeditation = (session: MeditationSession) => {
+
+    // Skip ambient sounds for now - just start the timer
     startMeditationTimer(session);
   };
 
-  // Handle play/pause
+  // Enhanced play/pause with aggressive cleanup
   const togglePlayPause = async () => {
     if (!selectedSession) return;
 
     if (isPlaying) {
-      // Pause meditation
+      // AGGRESSIVE STOP EVERYTHING
       setIsPlaying(false);
+      
+      // Stop meditation timer
       if (meditationTimer) {
         clearInterval(meditationTimer);
         setMeditationTimer(null);
       }
-      if (audioElement) {
-        audioElement.pause();
+      
+      // FORCE STOP speech synthesis with multiple attempts
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        // Aggressive cleanup
+        [50, 100, 200].forEach(delay => {
+          setTimeout(() => {
+            if (window.speechSynthesis.speaking) {
+              window.speechSynthesis.cancel();
+            }
+          }, delay);
+        });
       }
+      
+      // Comprehensive audio cleanup
+      cleanupAudio();
+      setMeditationAudioUrl(null);
+      
+      // Stop ambient audio
       if (ambientAudioElement) {
-        ambientAudioElement.pause();
+        try {
+          ambientAudioElement.pause();
+          ambientAudioElement.currentTime = 0;
+        } catch (error) {
+          reportError(new Error('Failed to pause ambient audio'), 'Audio pause error');
+        }
       }
+      
     } else {
       // Start or resume meditation
-      if (currentTime === 0 || currentTime >= selectedSession.duration * 60) {
-        // Start new session
+      if (currentTime === 0 || currentTime >= selectedSession.duration * 60 || !meditationAudioUrl) {
+        // Start new session - cleanup first to prevent conflicts
+        cleanupAudio();
         await playMeditationAudio(selectedSession);
       } else {
         // Resume existing session
         startMeditationTimer(selectedSession);
-        if (audioElement) {
-          await audioElement.play();
-        }
-        if (ambientAudioElement) {
-          await ambientAudioElement.play();
-        }
+        
+        // Safely resume audio
+        await handleAsyncError(async () => {
+          if (audioManagerRef.current.currentAudioElement) {
+            await audioManagerRef.current.currentAudioElement.play();
+          }
+          if (ambientAudioElement) {
+            await ambientAudioElement.play();
+          }
+        }, 'Resuming meditation audio');
       }
     }
   };
 
-  // Reset meditation session
+  // Enhanced meditation reset with comprehensive cleanup
   const resetMeditation = () => {
+    // Stop timer first
     if (meditationTimer) {
       clearInterval(meditationTimer);
       setMeditationTimer(null);
     }
-    if (audioElement) {
-      audioElement.pause();
-      audioElement.currentTime = 0;
+    
+    // FORCE STOP speech synthesis with multiple attempts
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      // Aggressive cleanup with timeouts
+      [50, 100, 200].forEach(delay => {
+        setTimeout(() => {
+          if (window.speechSynthesis.speaking) {
+            window.speechSynthesis.cancel();
+          }
+        }, delay);
+      });
     }
+    
+    // Comprehensive audio cleanup
+    cleanupAudio();
+    
+    // Stop ambient audio
     stopAmbientSound();
+    
+    // Reset all state
     setIsPlaying(false);
     setCurrentTime(0);
-    console.log('Meditation session reset');
+    setIsLoadingAudio(false);
+    setMeditationAudioUrl(null);
+    
+    // Force garbage collection hint (if available)
+    if (window.gc) {
+      try {
+        window.gc();
+      } catch {
+        // Ignore if not available
+      }
+    }
   };
 
   // Update audio volume when volume state changes
   React.useEffect(() => {
-    if (audioElement) {
-      audioElement.volume = (volume / 100) * (isMuted ? 0 : 1);
+    if (meditationAudioRef.current) {
+      meditationAudioRef.current.volume = (volume / 100) * (isMuted ? 0 : 1);
     }
     if (ambientAudioElement) {
       ambientAudioElement.volume = 0.3 * (volume / 100) * (isMuted ? 0 : 1);
     }
-  }, [volume, isMuted, audioElement, ambientAudioElement]);
+  }, [volume, isMuted, ambientAudioElement]); // Removed audioElement from dependencies
 
-  // Cleanup audio and timer on unmount
+  // Simplified effect for cleanup only
   React.useEffect(() => {
     return () => {
-      if (audioElement) {
-        audioElement.pause();
-        audioElement.src = '';
+      // Only clean up on component unmount
+      if (meditationAudioRef.current && meditationAudioRef.current.src) {
+        meditationAudioRef.current.pause();
+        meditationAudioRef.current.src = '';
       }
-      if (ambientAudioElement) {
-        ambientAudioElement.pause();
-        ambientAudioElement.src = '';
-      }
+    };
+  }, []);
+
+  // Comprehensive cleanup on component unmount
+  React.useEffect(() => {
+    return () => {
+      // Stop timer
       if (meditationTimer) {
         clearInterval(meditationTimer);
       }
+      
+      // Comprehensive audio cleanup
+      cleanupAudio();
+      
+      // Stop ambient audio
+      stopAmbientSound();
+      
+      // Force stop speech synthesis
+      if ('speechSynthesis' in window && window.speechSynthesis.speaking) {
+        window.speechSynthesis.cancel();
+      }
+      
+      // Clear all state
+      setMeditationAudioUrl(null);
+      setIsPlaying(false);
+      setIsLoadingAudio(false);
     };
-  }, [audioElement, ambientAudioElement, meditationTimer]);
+  }, []); // No dependencies - run only on unmount
 
   const SessionCard = ({ session, isSelected, onClick }: {
     session: MeditationSession;
@@ -373,7 +622,30 @@ const BeautifulMeditation: React.FC = () => {
             ? 'bg-white/25 border-2 border-white/50 shadow-2xl' 
             : 'bg-white/10 border border-white/20 hover:bg-white/15'
         }`}
-        onClick={onClick}
+        onClick={() => {
+          onClick();
+          
+          // Comprehensive cleanup when switching sessions
+          if (meditationTimer) {
+            clearInterval(meditationTimer);
+            setMeditationTimer(null);
+          }
+          
+          // Stop current audio completely
+          cleanupAudio();
+          stopAmbientSound();
+          
+          // Reset all state
+          setMeditationAudioUrl(null);
+          setIsPlaying(false);
+          setCurrentTime(0);
+          setIsLoadingAudio(false);
+          
+          // Force stop speech synthesis
+          if ('speechSynthesis' in window && window.speechSynthesis.speaking) {
+            window.speechSynthesis.cancel();
+          }
+        }}
       >
         {/* Background Gradient */}
         <div className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${session.color} opacity-20 group-hover:opacity-30 transition-opacity duration-300`} />
@@ -562,8 +834,8 @@ const BeautifulMeditation: React.FC = () => {
                 onClick={() => {
                   const newTime = Math.max(0, currentTime - 10);
                   setCurrentTime(newTime);
-                  if (audioElement) {
-                    audioElement.currentTime = newTime;
+                  if (meditationAudioRef.current) {
+                    meditationAudioRef.current.currentTime = newTime;
                   }
                 }}
                 className="p-3 rounded-full bg-white/10 hover:bg-white/20 transition-colors duration-300"
@@ -589,8 +861,8 @@ const BeautifulMeditation: React.FC = () => {
                 onClick={() => {
                   const newTime = Math.min(selectedSession.duration * 60, currentTime + 10);
                   setCurrentTime(newTime);
-                  if (audioElement) {
-                    audioElement.currentTime = newTime;
+                  if (meditationAudioRef.current) {
+                    meditationAudioRef.current.currentTime = newTime;
                   }
                 }}
                 className="p-3 rounded-full bg-white/10 hover:bg-white/20 transition-colors duration-300"
@@ -627,7 +899,7 @@ const BeautifulMeditation: React.FC = () => {
             )}
           </div>
         )}
-
+        {/* Removed conflicting DOM audio element */}
       </div>
     </div>
   );

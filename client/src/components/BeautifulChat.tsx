@@ -23,6 +23,9 @@ interface BeautifulChatProps {
   isAiTyping?: boolean;
   isTtsEnabled: boolean;
   onTtsToggle: () => void;
+  onBotMessageSpeak: (text: string) => void;
+  selectedModel: string;
+  onModelChange: (model: string) => void;
 }
 
 const TypingIndicator = () => (
@@ -169,7 +172,10 @@ const BeautifulChat: React.FC<BeautifulChatProps> = ({
   setChatInput,
   isAiTyping = false,
   isTtsEnabled,
-  onTtsToggle
+  onTtsToggle,
+  onBotMessageSpeak,
+  selectedModel,
+  onModelChange
 }) => {
   const [showQuickActions, setShowQuickActions] = useState(messages.length === 0);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -177,27 +183,30 @@ const BeautifulChat: React.FC<BeautifulChatProps> = ({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const lastBotMessageRef = useRef<string>('');
 
-  // Function to play text-to-speech
+  // Function to play text-to-speech using ElevenLabs API
   const playTTS = async (text: string) => {
     if (!isTtsEnabled || !text.trim()) return;
-    
+
     try {
       setIsPlaying(true);
-      
+
       // Stop any currently playing audio
       if (currentAudio) {
         currentAudio.pause();
         currentAudio.currentTime = 0;
+        setCurrentAudio(null);
       }
-      
-      const response = await fetch('/api/text-to-speech', {
+
+      console.log('🔊 Requesting TTS from ElevenLabs:', text.substring(0, 50) + '...');
+
+      const response = await fetch('/api/tts/text-to-speech', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           text: text,
-          voice: selectedVoice
+          voice: selectedVoice, // Use the selected voice from props
         }),
       });
 
@@ -205,29 +214,48 @@ const BeautifulChat: React.FC<BeautifulChatProps> = ({
         const audioBlob = await response.blob();
         const audioUrl = URL.createObjectURL(audioBlob);
         const audio = new Audio(audioUrl);
-        
-        setCurrentAudio(audio);
-        
+
         audio.addEventListener('ended', () => {
           setIsPlaying(false);
           setCurrentAudio(null);
-          URL.revokeObjectURL(audioUrl);
         });
-        
-        audio.addEventListener('error', () => {
-          console.error('Audio playback failed');
+        audio.addEventListener('error', (e) => {
+          console.error('Chat audio playback error:', e, 'Audio URL:', audioUrl);
+          if (audio.error) {
+            console.error('Audio error code:', audio.error.code, 'message:', audio.error.message);
+            switch (audio.error.code) {
+              case audio.error.MEDIA_ERR_ABORTED:
+                console.error('Chat audio playback aborted.');
+                break;
+              case audio.error.MEDIA_ERR_NETWORK:
+                console.error('Chat audio network error: A network error caused the audio download to fail.');
+                break;
+              case audio.error.MEDIA_ERR_DECODE:
+                console.error('Chat audio decode error: The audio playback was aborted due to a decoding error.');
+                break;
+              case audio.error.MEDIA_ERR_SRC_NOT_SUPPORTED:
+                console.error('Chat audio source not supported: The audio format is not supported.');
+                break;
+              default:
+                console.error('An unknown chat audio error occurred.');
+            }
+          }
           setIsPlaying(false);
           setCurrentAudio(null);
-          URL.revokeObjectURL(audioUrl);
+          alert('Failed to play audio. Please try again or check your network connection.');
         });
-        
+
+        setCurrentAudio(audio);
         await audio.play();
       } else {
-        console.error('TTS request failed:', response.statusText);
+        const errorData = await response.json();
+        console.error('ElevenLabs TTS API error:', response.status, errorData);
+        alert(`Text-to-speech failed: ${errorData.error || 'Unknown error'}`);
         setIsPlaying(false);
       }
     } catch (error) {
-      console.error('TTS error:', error);
+      console.error('Text-to-speech request failed:', error);
+      alert('Failed to connect to text-to-speech service. Please check your internet connection.');
       setIsPlaying(false);
     }
   };
@@ -240,6 +268,7 @@ const BeautifulChat: React.FC<BeautifulChatProps> = ({
       setCurrentAudio(null);
     }
     setIsPlaying(false);
+    console.log('✅ Chat TTS stopped');
   };
 
   // Function to toggle TTS on/off
@@ -252,14 +281,17 @@ const BeautifulChat: React.FC<BeautifulChatProps> = ({
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, isAiTyping]);
-
-  // Removed auto-play TTS to prevent duplication with Layout.tsx
-  // The main chat system already handles auto-play via API audioUrl response
+    // When a new bot message arrives and TTS is enabled, play it
+    const lastMessage = messages[messages.length - 1];
+    if (lastMessage && lastMessage.sender === 'bot' && lastMessage.text !== lastBotMessageRef.current && isTtsEnabled) {
+      playTTS(lastMessage.text);
+      lastBotMessageRef.current = lastMessage.text;
+    }
+  }, [messages, isAiTyping, isTtsEnabled]); // Added isTtsEnabled to dependencies
 
   const handleSend = () => {
     if (!chatInput.trim()) return;
-    
+
     setShowQuickActions(false);
     onSendMessage(chatInput);
     setChatInput('');
@@ -313,7 +345,23 @@ const BeautifulChat: React.FC<BeautifulChatProps> = ({
           </div>
           
           <div className="flex items-center space-x-3">
-            <button 
+            {/* Model Selection Dropdown */}
+            <div className="relative">
+              <select
+                value={selectedModel}
+                onChange={(e) => onModelChange(e.target.value)}
+                className="p-2 rounded-xl bg-white/10 border border-white/20 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-300 appearance-none pr-8"
+                style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='%23ffffff' class='w-4 h-4'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19.5 8.25l-7.5 7.5-7.5-7.5' /%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.5rem center', backgroundSize: '1.2em' }}
+              >
+                <option value="gpt-4o">GPT-4o (Recommended)</option>
+                <option value="gpt-4o-mini">GPT-4o Mini (Faster)</option>
+                <option value="gpt-4-turbo">GPT-4 Turbo</option>
+                <option value="gpt-4">GPT-4</option>
+                <option value="gpt-3.5-turbo">GPT-3.5 Turbo (Budget)</option>
+              </select>
+            </div>
+
+            <button
               onClick={toggleTTS}
               className={`p-2 rounded-xl transition-colors duration-300 ${
                 isTtsEnabled ? 'bg-blue-500/20 hover:bg-blue-500/30' : 'bg-red-500/20 hover:bg-red-500/30'

@@ -1,6 +1,7 @@
 import express from 'express';
 import multer from 'multer';
 import { openai } from '../openaiRetry.js';
+import { getVoiceIdFromFrontend, defaultVoiceId } from '../voiceConfig.ts';
 
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
@@ -54,71 +55,78 @@ function scrubTextForTTS(text) {
     .replace(/\s+/g, ' ');            // Normalize all whitespace
 }
 
-// Text-to-speech endpoint with Piper TTS integration
+// Text-to-speech endpoint with ElevenLabs
 router.post('/text-to-speech', async (req, res) => {
   try {
-    const { text, voice = 'amy', emotionalContext = 'neutral' } = req.body;
+    const { text, voice = 'james', emotionalContext = 'neutral' } = req.body;
 
     if (!text) {
       return res.status(400).json({ error: 'Text is required' });
     }
 
-    // For now, all voices map to Amy since that's the only Piper model loaded
-    // This can be expanded later when more Piper models are added
-    console.log(`Generating speech with Piper TTS for voice: ${voice}`);
+    if (!process.env.ELEVENLABS_API_KEY) {
+      console.error('❌ ElevenLabs API key not found');
+      return res.status(500).json({ 
+        error: 'ElevenLabs API key not configured',
+        fallback: 'Check your .env file for ELEVENLABS_API_KEY'
+      });
+    }
+
+    // Get the ElevenLabs voice ID from the frontend voice name
+    const voiceId = getVoiceIdFromFrontend(voice);
+    console.log(`🎤 Generating speech with ElevenLabs for voice: ${voice} (ID: ${voiceId})`);
     
-    // Scrub text before sending to Piper
+    // Scrub text before sending to ElevenLabs
     const scrubbedText = scrubTextForTTS(text);
     console.log(`Original text: "${text.substring(0, 100)}..."`);
     console.log(`Scrubbed text: "${scrubbedText.substring(0, 100)}..."`);
     
     try {
-      // Call local Piper server
-      const piperResponse = await fetch('http://localhost:5005/speak', {
+      // Call ElevenLabs API
+      const elevenLabsResponse = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
         method: 'POST',
         headers: {
+          'Accept': 'audio/mpeg',
+          'xi-api-key': process.env.ELEVENLABS_API_KEY,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          text: scrubbedText
+          text: scrubbedText,
+          model_id: "eleven_monolingual_v1",
+          voice_settings: {
+            stability: 0.5,
+            similarity_boost: 0.5
+          }
         })
       });
 
-      if (piperResponse.ok) {
-        const audioBuffer = await piperResponse.arrayBuffer();
+      if (elevenLabsResponse.ok) {
+        const audioBuffer = await elevenLabsResponse.arrayBuffer();
         
-        console.log(`Generated audio with Piper: ${audioBuffer.byteLength} bytes`);
+        console.log(`✅ Generated audio with ElevenLabs: ${audioBuffer.byteLength} bytes`);
         
-        // Return audio as WAV from Piper
+        // Return audio as MP3 from ElevenLabs
         res.set({
-          'Content-Type': 'audio/wav',
+          'Content-Type': 'audio/mpeg',
           'Content-Length': audioBuffer.byteLength.toString(),
           'Cache-Control': 'no-cache'
         });
         
         res.send(Buffer.from(audioBuffer));
       } else {
-        const errorText = await piperResponse.text();
-        console.error('Piper TTS server error:', piperResponse.status, errorText);
-        throw new Error(`Piper TTS server error: ${piperResponse.status}`);
+        const errorText = await elevenLabsResponse.text();
+        console.error('❌ ElevenLabs API error:', elevenLabsResponse.status, errorText);
+        throw new Error(`ElevenLabs API error: ${elevenLabsResponse.status}`);
       }
     } catch (error) {
-      console.error('Piper TTS generation failed:', error);
-      
-      // Check if Piper server is running
-      try {
-        await fetch('http://localhost:5005/health');
-      } catch (healthError) {
-        console.error('Piper server is not running. Start it with: python speak_server.py');
-      }
-      
+      console.error('❌ ElevenLabs TTS generation failed:', error);
       throw error;
     }
   } catch (error) {
-    console.error('Text-to-speech error:', error);
+    console.error('❌ Text-to-speech error:', error);
     res.status(500).json({ 
-      error: 'Failed to generate speech with Piper TTS',
-      fallback: 'Make sure Piper server is running on port 5005'
+      error: 'Failed to generate speech with ElevenLabs',
+      details: error.message
     });
   }
 });
@@ -139,50 +147,11 @@ router.post('/transcribe-enhanced', upload.single('audio'), async (req, res) => 
     console.log('  - Type:', req.file.mimetype);
     console.log('  - Buffer length:', req.file.buffer.length);
 
-    // Try local Whisper server first
-    try {
-      console.log('🚀 Trying local Whisper server...');
-      
-      const formData = new FormData();
-      const audioBlob = new Blob([req.file.buffer], { type: req.file.mimetype });
-      formData.append('audio', audioBlob, req.file.originalname || 'recording.wav');
-      
-      const localResponse = await fetch('http://localhost:5005/transcribe', {
-        method: 'POST',
-        body: formData
-      });
-      
-      if (localResponse.ok) {
-        const result = await localResponse.json();
-        console.log('✅ Local Whisper transcription successful:', result.text);
-        
-        const audioQualityScore = req.file.size > 10000 ? 'good' : 'fair';
-        const hasLowQuality = result.text.length < 10 && req.file.size < 5000;
-        
-        return res.json({ 
-          success: true, 
-          transcription: result.text,
-          text: result.text,
-          source: 'local_whisper',
-          warning: hasLowQuality ? 'Speech may have been unclear. Try speaking louder and more clearly.' : undefined,
-          audioDetails: {
-            size: req.file.buffer.length,
-            qualityScore: audioQualityScore,
-            mimeType: req.file.mimetype
-          }
-        });
-      } else {
-        console.log('❌ Local Whisper failed, trying OpenAI...');
-      }
-    } catch (localError) {
-      console.log('❌ Local Whisper unavailable, trying OpenAI...', localError.message);
-    }
-
-    // Fallback to OpenAI Whisper API
+    // Use OpenAI Whisper API for transcription
     if (!process.env.OPENAI_API_KEY) {
-      console.error('❌ No OpenAI API key found and local Whisper failed');
+      console.error('❌ No OpenAI API key found');
       return res.status(503).json({ 
-        error: 'Voice transcription unavailable. Install local Whisper or provide OpenAI API key.',
+        error: 'Voice transcription unavailable. OpenAI API key required.',
         errorType: 'auth_error'
       });
     }

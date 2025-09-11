@@ -2,9 +2,9 @@
  * FIXED UNIFIED AUTHENTICATION SYSTEM
  * Prevents multiple user creation for same session
  */
-
+import { unifiedAuth } from '../auth/unifiedAuth.js';
 import jwt from 'jsonwebtoken';
-import { storage } from '../storage.js';
+import { storage } from '../src/storage.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'chakrai-dev-secret-change-in-production';
 

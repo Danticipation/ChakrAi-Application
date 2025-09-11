@@ -2,7 +2,7 @@
 // Professional-grade psychological assessment framework for mental health applications
 
 import { openai } from '../openaiRetry.js';
-import { storage } from '../storage.js';
+import { storage } from '../src/storage.js';
 import { bulletproofMemory } from '../memory/BulletproofMemoryManager.js';
 
 /**

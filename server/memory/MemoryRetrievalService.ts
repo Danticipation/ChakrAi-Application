@@ -1,8 +1,8 @@
 // MEMORY RETRIEVAL SERVICE - Intelligent retrieval of contextually relevant memories
 // Provides sophisticated memory search for therapeutic conversation enhancement
 
-import { db } from '../db.ts';
-import { semanticMemories, memoryInsights } from '../../shared/schema.ts';
+import { db } from '../db.js';
+import { semanticMemories, memoryInsights } from '../../shared/schema.js';
 import { eq, and, or, ilike, desc, sql } from 'drizzle-orm';
 import type { 
   IMemoryRetrievalService, 
@@ -53,7 +53,7 @@ export class MemoryRetrievalService implements IMemoryRetrievalService {
       const uniqueMemories = this.deduplicateAndRank(memories, context);
       
       console.log(`🎯 Retrieved ${uniqueMemories.length} contextual memories`);
-      return uniqueMemories.slice(0, limit);
+      return uniqueMemories.slice(0, limit) as SemanticMemory[];
 
     } catch (error) {
       console.error('Error getting contextual memories:', error);
@@ -107,7 +107,7 @@ export class MemoryRetrievalService implements IMemoryRetrievalService {
       }
 
       console.log(`💬 Found ${rankedMemories.length} relevant memories`);
-      return rankedMemories.slice(0, limit);
+      return rankedMemories.slice(0, limit) as SemanticMemory[];
 
     } catch (error) {
       console.error('Error getting conversation relevant memories:', error);
@@ -157,8 +157,8 @@ export class MemoryRetrievalService implements IMemoryRetrievalService {
 
       // Combine and deduplicate
       const allMatches = [...directMatches, ...relatedMatches];
-      const uniqueMatches = allMatches.filter((memory, index, self) => 
-        self.findIndex(m => m.id === memory.id) === index
+      const uniqueMatches = allMatches.filter((memory: any, index: any, self: any) => 
+        self.findIndex((m: any) => m.id === memory.id) === index
       );
 
       console.log(`😊 Found ${uniqueMatches.length} emotionally relevant memories`);
@@ -243,7 +243,7 @@ export class MemoryRetrievalService implements IMemoryRetrievalService {
         .orderBy(desc(semanticMemories.createdAt));
 
       // Filter for progress indicators
-      const progressIndicators = progressMemories.filter(memory => 
+      const progressIndicators = progressMemories.filter((memory: any) => 
         this.isProgressMarker(memory)
       );
 
@@ -352,12 +352,12 @@ export class MemoryRetrievalService implements IMemoryRetrievalService {
     const keywords = this.extractKeywords(currentMessage);
     
     return memories
-      .map(memory => ({
+      .map((memory: any) => ({
         memory,
         score: this.calculateRelevanceScore(memory, keywords)
       }))
-      .sort((a, b) => b.score - a.score)
-      .map(item => item.memory);
+      .sort((a: any, b: any) => b.score - a.score)
+      .map((item: any) => item.memory);
   }
 
   private calculateRelevanceScore(memory: SemanticMemory, keywords: string[]): number {
@@ -390,12 +390,12 @@ export class MemoryRetrievalService implements IMemoryRetrievalService {
 
   private deduplicateAndRank(memories: SemanticMemory[], context: MemoryContext): SemanticMemory[] {
     // Remove duplicates
-    const unique = memories.filter((memory, index, self) => 
-      self.findIndex(m => m.id === memory.id) === index
+    const unique = memories.filter((memory: any, index: any, self: any) => 
+      self.findIndex((m: any) => m.id === memory.id) === index
     );
 
     // Simple ranking by access count and recency
-    return unique.sort((a, b) => {
+    return unique.sort((a: any, b: any) => {
       const timeScoreA = a.createdAt ? (Date.now() - new Date(a.createdAt).getTime()) / (1000 * 60 * 60 * 24 * -1) : 0;
       const timeScoreB = b.createdAt ? (Date.now() - new Date(b.createdAt).getTime()) / (1000 * 60 * 60 * 24 * -1) : 0;
       const scoreA = (a.accessCount ?? 0) + timeScoreA;
@@ -420,8 +420,8 @@ export class MemoryRetrievalService implements IMemoryRetrievalService {
   private analyzeTagFrequency(memories: SemanticMemory[]): Record<string, number> {
     const frequency: Record<string, number> = {};
     
-    memories.forEach(memory => {
-      memory.semanticTags?.forEach(tag => {
+    memories.forEach((memory: any) => {
+      memory.semanticTags?.forEach((tag: any) => {
         frequency[tag] = (frequency[tag] || 0) + 1;
       });
     });

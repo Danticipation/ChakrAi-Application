@@ -1,8 +1,8 @@
 // MEMORY CONNECTION SERVICE - Manages relationships between semantic memories
 // Creates intelligent connections for better therapeutic context retrieval
 
-import { db } from '../db.ts';
-import { memoryConnections, semanticMemories } from '../../shared/schema.ts';
+import { db } from '../db.js';
+import { memoryConnections, semanticMemories } from '../../shared/schema.js';
 import { eq, and, or, desc } from 'drizzle-orm';
 import type { 
   IMemoryConnectionService, 
@@ -52,7 +52,7 @@ export class MemoryConnectionService implements IMemoryConnectionService {
         ))
         .orderBy(desc(memoryConnections.strength));
 
-      return connections;
+      return connections as MemoryConnection[];
     } catch (error) {
       console.error('Error finding memory connections:', error);
       return [];
@@ -142,13 +142,13 @@ export class MemoryConnectionService implements IMemoryConnectionService {
         .orderBy(desc(semanticMemories.createdAt));
 
       // Get all connections for these memories
-      const memoryIds = memories.map(m => m.id);
+      const memoryIds = memories.map((m: any) => m.id);
       const connections = await db.select()
         .from(memoryConnections)
         .where(eq(memoryConnections.userId, userId));
 
       // Filter connections to only include memories we have
-      const filteredConnections = connections.filter(conn => 
+      const filteredConnections = connections.filter((conn: any) => 
         memoryIds.includes(conn.fromMemoryId) && memoryIds.includes(conn.toMemoryId)
       );
 
@@ -201,7 +201,7 @@ export class MemoryConnectionService implements IMemoryConnectionService {
         .orderBy(desc(memoryConnections.strength))
         .limit(limit);
 
-      return connections;
+      return connections as MemoryConnection[];
     } catch (error) {
       console.error('Error getting strongest connections:', error);
       return [];

@@ -3,13 +3,12 @@
  * Now uses the unified authentication system
  */
 
-import { getAuthenticatedUser } from './auth/unifiedAuth.js';
+import { getAuthenticatedUser } from '@server/auth/unifiedAuth';
+
+import { Request } from 'express';
 
 // Define a type for the request object to satisfy TypeScript
-interface AppRequest {
-  headers: {
-    [key: string]: string | string[] | undefined;
-  };
+interface AppRequest extends Request {
   ctx?: {
     uid: string;
     adid: string;

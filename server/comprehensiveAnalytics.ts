@@ -2,7 +2,7 @@
 // Provides exceptionally detailed personality reflections and comprehensive data analysis
 
 import { openai } from './openaiRetry.js';
-import { storage } from './storage.js';
+import { storage } from './src/storage.js';
 import { retryOpenAIRequest } from './openaiRetry.js';
 
 export interface ComprehensivePersonalityProfile {

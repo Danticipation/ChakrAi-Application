@@ -9,7 +9,7 @@ interface SubscriptionStatus {
   monthlyUsage: number;
   monthlyLimit: number;
   lastUsageReset: string;
-  features: string[];
+  features: SubscriptionFeatures; // Changed to SubscriptionFeatures
 }
 
 interface SubscriptionFeatures {
@@ -115,7 +115,10 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
             (data.usage.limit - data.usage.remaining) : 0,
           monthlyLimit: data.usage?.limit || 1,
           lastUsageReset: new Date().toISOString(),
-          features: data.subscription.features || []
+          features: data.subscription.features.reduce((acc: SubscriptionFeatures, featureName: keyof SubscriptionFeatures) => {
+            acc[featureName] = true;
+            return acc;
+          }, { ...TIER_FEATURES.free }) // Initialize with free tier features
         });
       } else {
         throw new Error('Failed to get subscription status');
@@ -132,7 +135,7 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
           monthlyUsage: legacyResponse.data.monthlyUsage || 0,
           monthlyLimit: legacyResponse.data.status === 'premium' ? -1 : 1,
           lastUsageReset: legacyResponse.data.lastUsageReset || new Date().toISOString(),
-          features: []
+          features: TIER_FEATURES[legacyResponse.data.status === 'premium' ? 'premium' : 'free']
         });
       } catch (legacyError) {
         console.error('Failed to fetch legacy subscription status:', legacyError);
@@ -143,7 +146,7 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
           monthlyUsage: 0,
           monthlyLimit: 1,
           lastUsageReset: new Date().toISOString(),
-          features: []
+          features: TIER_FEATURES.free
         });
       }
     } finally {
@@ -232,10 +235,11 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
   // Helper functions for feature access
   const currentTier = subscription?.tier || 'free';
   const isPremium = currentTier === 'premium' || currentTier === 'professional';
-  const features = TIER_FEATURES[currentTier];
+  // Use features directly from subscription state, which is now a SubscriptionFeatures object
+  const features = subscription?.features || TIER_FEATURES.free;
 
   const canUseFeature = (feature: keyof SubscriptionFeatures): boolean => {
-    return features[feature];
+    return features[feature] || false; // Ensure it returns boolean
   };
 
   const needsUpgrade = (feature: keyof SubscriptionFeatures): boolean => {

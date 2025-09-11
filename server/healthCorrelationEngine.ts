@@ -1,4 +1,4 @@
-import { storage } from './storage.js';
+import { storage } from './src/storage.js';
 import { openai, retryOpenAIRequest } from './openaiRetry.js';
 import { MoodEntry } from '../shared/schema.js';
 

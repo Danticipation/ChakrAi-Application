@@ -216,7 +216,7 @@ async function generateReportNarrative(
 }> {
   
   try {
-    const openai = new OpenAI({ apiKey: process.env['OPENAI_API_KEY']! });
+    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY as string });
     
     const prompt = `Generate a comprehensive, encouraging monthly wellness report for a user's therapeutic journey.
 

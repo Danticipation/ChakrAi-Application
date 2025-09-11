@@ -1,8 +1,8 @@
 // MEMORY ANALYTICS SERVICE - Advanced analysis and insights from therapeutic memories
 // Provides deep insights into therapeutic progress and patterns
 
-import { db } from '../db.ts';
-import { semanticMemories, memoryInsights } from '../../shared/schema.ts';
+import { db } from '../db.js';
+import { semanticMemories, memoryInsights } from '../../shared/schema.js';
 import { eq, and, desc, sql, count } from 'drizzle-orm';
 import type { 
   IMemoryAnalyticsService, 
@@ -55,12 +55,12 @@ export class MemoryAnalyticsService implements IMemoryAnalyticsService {
     
     try {
       // Get total memory count
-      const totalResults = await db.select({ count: count() })
-        .from(semanticMemories)
-        .where(and(
+      const totalResults = await db.select({ count: count() }).from(semanticMemories).where(
+        and(
           eq(semanticMemories.userId, userId),
           eq(semanticMemories.isActiveMemory, true)
-        ));
+        )
+      );
 
       const totalMemories = totalResults[0]?.count ?? 0;
 
@@ -90,15 +90,15 @@ export class MemoryAnalyticsService implements IMemoryAnalyticsService {
       const growthRate = previousCount > 0 ? (recentCount - previousCount) / previousCount : 0;
 
       // Analyze categories
-      const allMemories = await db.select()
-        .from(semanticMemories)
-        .where(and(
+      const allMemories = await db.select().from(semanticMemories).where(
+        and(
           eq(semanticMemories.userId, userId),
           eq(semanticMemories.isActiveMemory, true)
-        ));
+        )
+      );
 
       const categories: Record<string, number> = {};
-      allMemories.forEach(memory => {
+      allMemories.forEach((memory: any) => {
         categories[memory.memoryType] = (categories[memory.memoryType] || 0) + 1;
       });
 
@@ -118,17 +118,17 @@ export class MemoryAnalyticsService implements IMemoryAnalyticsService {
     console.log(`🔍 Identifying memory gaps for user ${userId}`);
     
     try {
-      const memories = await db.select()
-        .from(semanticMemories)
-        .where(and(
+      const memories = await db.select().from(semanticMemories).where(
+        and(
           eq(semanticMemories.userId, userId),
           eq(semanticMemories.isActiveMemory, true)
-        ));
+        )
+      );
 
       const gaps: string[] = [];
 
       // Check for missing memory types
-      const memoryTypes = new Set(memories.map(m => m.memoryType));
+      const memoryTypes = new Set(memories.map((m: any) => m.memoryType));
       const expectedTypes = ['conversation', 'insight', 'pattern', 'goal', 'breakthrough'];
       
       expectedTypes.forEach(type => {
@@ -139,25 +139,25 @@ export class MemoryAnalyticsService implements IMemoryAnalyticsService {
 
       // Check for emotional coverage gaps
       const emotionalStates = memories
-        .map(m => m.emotionalContext)
-        .filter((e): e is string => Boolean(e))
-        .map(e => e.toLowerCase());
+        .map((m: any) => m.emotionalContext)
+        .filter((e: any): e is string => Boolean(e))
+        .map((e: any) => e.toLowerCase());
       
       const expectedEmotions = ['happy', 'sad', 'anxious', 'calm', 'frustrated', 'excited'];
       expectedEmotions.forEach(emotion => {
-        if (!emotionalStates.some(state => state.includes(emotion))) {
+        if (!emotionalStates.some((state: any) => state.includes(emotion))) {
           gaps.push(`Limited ${emotion} emotional memories - consider capturing experiences with this emotion`);
         }
       });
 
       // Check for topic coverage gaps
       const topics = memories
-        .flatMap(m => m.relatedTopics || [])
-        .filter((t): t is string => t != null && typeof t === 'string' && t.trim() !== '');
+        .flatMap((m: any) => m.relatedTopics || [])
+        .filter((t: any): t is string => t != null && typeof t === 'string' && t.trim() !== '');
       const importantTopics = ['work', 'relationships', 'family', 'health', 'goals', 'stress'];
       
       importantTopics.forEach(topic => {
-        if (!topics.some(t => t.toLowerCase().includes(topic))) {
+        if (!topics.some((t: any) => t.toLowerCase().includes(topic))) {
           gaps.push(`No memories about ${topic} - this might be an important area to explore`);
         }
       });
@@ -248,11 +248,11 @@ export class MemoryAnalyticsService implements IMemoryAnalyticsService {
       
       // Remove duplicates and sort by significance
       const uniqueBreakthroughs = allBreakthroughs
-        .filter((memory, index, self) =>
-          self.findIndex(m => m.id === memory.id) === index
+        .filter((memory: any, index: any, self: any) =>
+          self.findIndex((m: any) => m.id === memory.id) === index
         )
-        .map(memory => this.transformDatabaseMemory(memory))
-        .sort((a, b) => parseFloat(b.confidence || '0') - parseFloat(a.confidence || '0'));
+        .map((memory: any) => this.transformDatabaseMemory(memory))
+        .sort((a: any, b: any) => parseFloat(b.confidence || '0') - parseFloat(a.confidence || '0'));
 
       console.log(`💡 Identified ${uniqueBreakthroughs.length} breakthrough moments`);
       return uniqueBreakthroughs;
@@ -283,10 +283,10 @@ export class MemoryAnalyticsService implements IMemoryAnalyticsService {
         .orderBy(desc(semanticMemories.createdAt))
         .limit(100);
 
-      const memoriesWithEmotions = emotionalMemories.filter(m => m.emotionalContext);
+      const memoriesWithEmotions = emotionalMemories.filter((m: any) => m.emotionalContext);
 
       // Build timeline
-      const timeline = memoriesWithEmotions.map(memory => ({
+      const timeline = memoriesWithEmotions.map((memory: any) => ({
         date: memory.createdAt,
         emotion: memory.emotionalContext,
         content: memory.content.substring(0, 100) + '...',
@@ -295,7 +295,7 @@ export class MemoryAnalyticsService implements IMemoryAnalyticsService {
       }));
 
       // Generate insights from emotional patterns
-      const transformedMemories = memoriesWithEmotions.map(memory => this.transformDatabaseMemory(memory));
+      const transformedMemories = memoriesWithEmotions.map((memory: any) => this.transformDatabaseMemory(memory));
       const insights = await this.generateEmotionalInsights(transformedMemories);
 
       console.log(`📈 Emotional journey: ${timeline.length} emotional entries, ${insights.length} insights`);
@@ -325,7 +325,7 @@ export class MemoryAnalyticsService implements IMemoryAnalyticsService {
       userId,
       insightType: 'pattern',
       content: `You have identified ${patternMemories.length} behavioral patterns. This shows strong self-awareness and is a positive indicator for therapeutic progress.`,
-      relatedMemoryIds: patternMemories.map(m => m.id),
+      relatedMemoryIds: patternMemories.map((m: any) => m.id),
       confidence: '0.85',
       therapeuticRelevance: 'high',
       actionSuggestions: [
@@ -361,7 +361,7 @@ export class MemoryAnalyticsService implements IMemoryAnalyticsService {
       userId,
       insightType: 'growth',
       content: `You've had ${recentInsights.length} insights in the past month, showing active engagement in your therapeutic journey and personal growth.`,
-      relatedMemoryIds: recentInsights.map(m => m.id),
+      relatedMemoryIds: recentInsights.map((m: any) => m.id),
       confidence: '0.90',
       therapeuticRelevance: 'high',
       actionSuggestions: [

@@ -1,8 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 
 // Supabase configuration for community features only
-const supabaseUrl = process.env['SUPABASE_URL'];
-const supabaseServiceKey = process.env['SUPABASE_SERVICE_ROLE_KEY'];
+const supabaseUrl = process.env.SUPABASE_URL as string;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY as string;
 
 // Check if Supabase is configured
 const isSupabaseConfigured = !!(supabaseUrl && supabaseServiceKey);
@@ -370,7 +370,7 @@ export class SupabaseCommunityService {
           table: 'forum_posts',
           filter: `forum_id=eq.${forumId}`
         }, 
-        (payload) => callback(payload.new as SupabaseForumPost)
+        (payload: { new: SupabaseForumPost }) => callback(payload.new)
       )
       .subscribe();
   }
@@ -389,7 +389,7 @@ export class SupabaseCommunityService {
           table: 'forum_replies',
           filter: `post_id=eq.${postId}`
         }, 
-        (payload) => callback(payload.new as SupabaseForumReply)
+        (payload: { new: SupabaseForumReply }) => callback(payload.new)
       )
       .subscribe();
   }

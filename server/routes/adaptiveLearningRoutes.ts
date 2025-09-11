@@ -1,7 +1,7 @@
 import { Router, type Request, type Response } from 'express';
 import { safe } from '../util/safe.js';
 import { z } from 'zod';
-import { storage } from '../storage.js';
+import { storage } from '../src/storage.js';
 import { insertLearningMilestoneSchema, insertProgressMetricSchema, insertAdaptiveLearningInsightSchema, insertWellnessJourneyEventSchema } from '../../shared/schema.ts';
 // Remove auth middleware for now to avoid import errors
 // import { authMiddleware } from '../middleware/security';

@@ -1,0 +1,336 @@
+C:\8-14-Chakrai-App\client\node_modules\@tanstack\react-query\build\query-codemods\vite.config.ts:6: // fix from https://github.com/vitest-dev/vitest/issues/6992#issuecomment-2509408660
+C:\8-14-Chakrai-App\client\node_modules\es-errors\tsconfig.json:9: // "lib": [],																				/* Specify a set of bundled library declaration files that describe the target runtime environment. */
+C:\8-14-Chakrai-App\client\node_modules\es-errors\tsconfig.json:10: // "noLib": true,																		/* Disable including any library files, including the default lib.d.ts. */
+C:\8-14-Chakrai-App\client\node_modules\es-errors\tsconfig.json:12: // "moduleDetection": "auto",												/* Control what method is used to detect module-format JS files. */
+C:\8-14-Chakrai-App\client\node_modules\es-errors\tsconfig.json:16: // "rootDir": "./",																	/* Specify the root folder within your source files. */
+C:\8-14-Chakrai-App\client\node_modules\es-errors\tsconfig.json:17: // "moduleResolution": "node",											 /* Specify how TypeScript looks up a file from a given module specifier. */
+C:\8-14-Chakrai-App\client\node_modules\es-errors\tsconfig.json:18: // "baseUrl": "./",																	/* Specify the base directory to resolve non-relative module names. */
+C:\8-14-Chakrai-App\client\node_modules\es-errors\tsconfig.json:19: // "paths": {},																			/* Specify a set of entries that re-map imports to additional lookup locations. */
+C:\8-14-Chakrai-App\client\node_modules\es-errors\tsconfig.json:20: // "rootDirs": [],																	 /* Allow multiple folders to be treated as one when resolving modules. */
+C:\8-14-Chakrai-App\client\node_modules\es-errors\tsconfig.json:21: // "typeRoots": ["types"],													 /* Specify multiple folders that act like `./node_modules/@types`. */
+C:\8-14-Chakrai-App\client\node_modules\es-errors\tsconfig.json:23: // "allowArbitraryExtensions": true,								 /* Enable importing files with any extension, provided a declaration file is present. */
+C:\8-14-Chakrai-App\client\node_modules\es-errors\tsconfig.json:44: // "skipLibCheck": true															/* Skip type checking all .d.ts files. */
+C:\8-14-Chakrai-App\client\node_modules\get-proto\tsconfig.json:4: //"target": "es2021",
+C:\8-14-Chakrai-App\client\node_modules\has-tostringtag\tsconfig.json:9: // "lib": [],                                        /* Specify a set of bundled library declaration files that describe the target runtime environment. */
+C:\8-14-Chakrai-App\client\node_modules\has-tostringtag\tsconfig.json:10: // "noLib": true,                                    /* Disable including any library files, including the default lib.d.ts. */
+C:\8-14-Chakrai-App\client\node_modules\has-tostringtag\tsconfig.json:12: // "moduleDetection": "auto",                        /* Control what method is used to detect module-format JS files. */
+C:\8-14-Chakrai-App\client\node_modules\has-tostringtag\tsconfig.json:16: // "rootDir": "./",                                  /* Specify the root folder within your source files. */
+C:\8-14-Chakrai-App\client\node_modules\has-tostringtag\tsconfig.json:17: // "moduleResolution": "node10",                     /* Specify how TypeScript looks up a file from a given module specifier. */
+C:\8-14-Chakrai-App\client\node_modules\has-tostringtag\tsconfig.json:18: // "baseUrl": "./",                                  /* Specify the base directory to resolve non-relative module names. */
+C:\8-14-Chakrai-App\client\node_modules\has-tostringtag\tsconfig.json:19: // "paths": {},                                      /* Specify a set of entries that re-map imports to additional lookup locations. */
+C:\8-14-Chakrai-App\client\node_modules\has-tostringtag\tsconfig.json:20: // "rootDirs": [],                                   /* Allow multiple folders to be treated as one when resolving modules. */
+C:\8-14-Chakrai-App\client\node_modules\has-tostringtag\tsconfig.json:23: // "allowArbitraryExtensions": true,                 /* Enable importing files with any extension, provided a declaration file is present. */
+C:\8-14-Chakrai-App\client\node_modules\has-tostringtag\tsconfig.json:44: //"skipLibCheck": true                                 /* Skip type checking all .d.ts files. */
+C:\8-14-Chakrai-App\client\node_modules_old\@tanstack\react-query\build\query-codemods\vite.config.ts:6: // fix from https://github.com/vitest-dev/vitest/issues/6992#issuecomment-2509408660
+C:\8-14-Chakrai-App\client\node_modules_old\es-errors\tsconfig.json:9: // "lib": [],																				/* Specify a set of bundled library declaration files that describe the target runtime environment. */
+C:\8-14-Chakrai-App\client\node_modules_old\es-errors\tsconfig.json:10: // "noLib": true,																		/* Disable including any library files, including the default lib.d.ts. */
+C:\8-14-Chakrai-App\client\node_modules_old\es-errors\tsconfig.json:12: // "moduleDetection": "auto",												/* Control what method is used to detect module-format JS files. */
+C:\8-14-Chakrai-App\client\node_modules_old\es-errors\tsconfig.json:16: // "rootDir": "./",																	/* Specify the root folder within your source files. */
+C:\8-14-Chakrai-App\client\node_modules_old\es-errors\tsconfig.json:17: // "moduleResolution": "node",											 /* Specify how TypeScript looks up a file from a given module specifier. */
+C:\8-14-Chakrai-App\client\node_modules_old\es-errors\tsconfig.json:18: // "baseUrl": "./",																	/* Specify the base directory to resolve non-relative module names. */
+C:\8-14-Chakrai-App\client\node_modules_old\es-errors\tsconfig.json:19: // "paths": {},																			/* Specify a set of entries that re-map imports to additional lookup locations. */
+C:\8-14-Chakrai-App\client\node_modules_old\es-errors\tsconfig.json:20: // "rootDirs": [],																	 /* Allow multiple folders to be treated as one when resolving modules. */
+C:\8-14-Chakrai-App\client\node_modules_old\es-errors\tsconfig.json:21: // "typeRoots": ["types"],													 /* Specify multiple folders that act like `./node_modules/@types`. */
+C:\8-14-Chakrai-App\client\node_modules_old\es-errors\tsconfig.json:23: // "allowArbitraryExtensions": true,								 /* Enable importing files with any extension, provided a declaration file is present. */
+C:\8-14-Chakrai-App\client\node_modules_old\es-errors\tsconfig.json:44: // "skipLibCheck": true															/* Skip type checking all .d.ts files. */
+C:\8-14-Chakrai-App\client\node_modules_old\get-proto\tsconfig.json:4: //"target": "es2021",
+C:\8-14-Chakrai-App\client\node_modules_old\has-tostringtag\tsconfig.json:9: // "lib": [],                                        /* Specify a set of bundled library declaration files that describe the target runtime environment. */
+C:\8-14-Chakrai-App\client\node_modules_old\has-tostringtag\tsconfig.json:10: // "noLib": true,                                    /* Disable including any library files, including the default lib.d.ts. */
+C:\8-14-Chakrai-App\client\node_modules_old\has-tostringtag\tsconfig.json:12: // "moduleDetection": "auto",                        /* Control what method is used to detect module-format JS files. */
+C:\8-14-Chakrai-App\client\node_modules_old\has-tostringtag\tsconfig.json:16: // "rootDir": "./",                                  /* Specify the root folder within your source files. */
+C:\8-14-Chakrai-App\client\node_modules_old\has-tostringtag\tsconfig.json:17: // "moduleResolution": "node10",                     /* Specify how TypeScript looks up a file from a given module specifier. */
+C:\8-14-Chakrai-App\client\node_modules_old\has-tostringtag\tsconfig.json:18: // "baseUrl": "./",                                  /* Specify the base directory to resolve non-relative module names. */
+C:\8-14-Chakrai-App\client\node_modules_old\has-tostringtag\tsconfig.json:19: // "paths": {},                                      /* Specify a set of entries that re-map imports to additional lookup locations. */
+C:\8-14-Chakrai-App\client\node_modules_old\has-tostringtag\tsconfig.json:20: // "rootDirs": [],                                   /* Allow multiple folders to be treated as one when resolving modules. */
+C:\8-14-Chakrai-App\client\node_modules_old\has-tostringtag\tsconfig.json:23: // "allowArbitraryExtensions": true,                 /* Enable importing files with any extension, provided a declaration file is present. */
+C:\8-14-Chakrai-App\client\node_modules_old\has-tostringtag\tsconfig.json:44: //"skipLibCheck": true                                 /* Skip type checking all .d.ts files. */
+C:\8-14-Chakrai-App\node_modules\@tanstack\react-query\build\query-codemods\vite.config.ts:6: // fix from https://github.com/vitest-dev/vitest/issues/6992#issuecomment-2509408660
+C:\8-14-Chakrai-App\node_modules\available-typed-arrays\tsconfig.json:9: // "lib": [],                                        /* Specify a set of bundled library declaration files that describe the target runtime environment. */
+C:\8-14-Chakrai-App\node_modules\available-typed-arrays\tsconfig.json:10: // "noLib": true,                                    /* Disable including any library files, including the default lib.d.ts. */
+C:\8-14-Chakrai-App\node_modules\available-typed-arrays\tsconfig.json:12: // "moduleDetection": "auto",                        /* Control what method is used to detect module-format JS files. */
+C:\8-14-Chakrai-App\node_modules\available-typed-arrays\tsconfig.json:16: // "rootDir": "./",                                  /* Specify the root folder within your source files. */
+C:\8-14-Chakrai-App\node_modules\available-typed-arrays\tsconfig.json:17: // "moduleResolution": "node10",                     /* Specify how TypeScript looks up a file from a given module specifier. */
+C:\8-14-Chakrai-App\node_modules\available-typed-arrays\tsconfig.json:18: // "baseUrl": "./",                                  /* Specify the base directory to resolve non-relative module names. */
+C:\8-14-Chakrai-App\node_modules\available-typed-arrays\tsconfig.json:19: // "paths": {},                                      /* Specify a set of entries that re-map imports to additional lookup locations. */
+C:\8-14-Chakrai-App\node_modules\available-typed-arrays\tsconfig.json:20: // "rootDirs": [],                                   /* Allow multiple folders to be treated as one when resolving modules. */
+C:\8-14-Chakrai-App\node_modules\available-typed-arrays\tsconfig.json:23: // "allowArbitraryExtensions": true,                 /* Enable importing files with any extension, provided a declaration file is present. */
+C:\8-14-Chakrai-App\node_modules\available-typed-arrays\tsconfig.json:44: //"skipLibCheck": true                                 /* Skip type checking all .d.ts files. */
+C:\8-14-Chakrai-App\node_modules\define-data-property\tsconfig.json:9: // "lib": [],                                        /* Specify a set of bundled library declaration files that describe the target runtime environment. */
+C:\8-14-Chakrai-App\node_modules\define-data-property\tsconfig.json:10: // "noLib": true,                                    /* Disable including any library files, including the default lib.d.ts. */
+C:\8-14-Chakrai-App\node_modules\define-data-property\tsconfig.json:12: // "moduleDetection": "auto",                        /* Control what method is used to detect module-format JS files. */
+C:\8-14-Chakrai-App\node_modules\define-data-property\tsconfig.json:16: // "rootDir": "./",                                  /* Specify the root folder within your source files. */
+C:\8-14-Chakrai-App\node_modules\define-data-property\tsconfig.json:17: // "moduleResolution": "node10",                     /* Specify how TypeScript looks up a file from a given module specifier. */
+C:\8-14-Chakrai-App\node_modules\define-data-property\tsconfig.json:18: // "baseUrl": "./",                                  /* Specify the base directory to resolve non-relative module names. */
+C:\8-14-Chakrai-App\node_modules\define-data-property\tsconfig.json:19: // "paths": {},                                      /* Specify a set of entries that re-map imports to additional lookup locations. */
+C:\8-14-Chakrai-App\node_modules\define-data-property\tsconfig.json:20: // "rootDirs": [],                                   /* Allow multiple folders to be treated as one when resolving modules. */
+C:\8-14-Chakrai-App\node_modules\define-data-property\tsconfig.json:32: // "emitDeclarationOnly": true,                      /* Only output d.ts files and not JavaScript files. */
+C:\8-14-Chakrai-App\node_modules\define-data-property\tsconfig.json:51: // "noPropertyAccessFromIndexSignature": true,       /* Enforces using indexed accessors for keys declared using an indexed type. */
+C:\8-14-Chakrai-App\node_modules\define-data-property\tsconfig.json:54: // "skipLibCheck": true                                 /* Skip type checking all .d.ts files. */
+C:\8-14-Chakrai-App\node_modules\es-errors\tsconfig.json:9: // "lib": [],																				/* Specify a set of bundled library declaration files that describe the target runtime environment. */
+C:\8-14-Chakrai-App\node_modules\es-errors\tsconfig.json:10: // "noLib": true,																		/* Disable including any library files, including the default lib.d.ts. */
+C:\8-14-Chakrai-App\node_modules\es-errors\tsconfig.json:12: // "moduleDetection": "auto",												/* Control what method is used to detect module-format JS files. */
+C:\8-14-Chakrai-App\node_modules\es-errors\tsconfig.json:16: // "rootDir": "./",																	/* Specify the root folder within your source files. */
+C:\8-14-Chakrai-App\node_modules\es-errors\tsconfig.json:17: // "moduleResolution": "node",											 /* Specify how TypeScript looks up a file from a given module specifier. */
+C:\8-14-Chakrai-App\node_modules\es-errors\tsconfig.json:18: // "baseUrl": "./",																	/* Specify the base directory to resolve non-relative module names. */
+C:\8-14-Chakrai-App\node_modules\es-errors\tsconfig.json:19: // "paths": {},																			/* Specify a set of entries that re-map imports to additional lookup locations. */
+C:\8-14-Chakrai-App\node_modules\es-errors\tsconfig.json:20: // "rootDirs": [],																	 /* Allow multiple folders to be treated as one when resolving modules. */
+C:\8-14-Chakrai-App\node_modules\es-errors\tsconfig.json:21: // "typeRoots": ["types"],													 /* Specify multiple folders that act like `./node_modules/@types`. */
+C:\8-14-Chakrai-App\node_modules\es-errors\tsconfig.json:23: // "allowArbitraryExtensions": true,								 /* Enable importing files with any extension, provided a declaration file is present. */
+C:\8-14-Chakrai-App\node_modules\es-errors\tsconfig.json:44: // "skipLibCheck": true															/* Skip type checking all .d.ts files. */
+C:\8-14-Chakrai-App\node_modules\get-proto\tsconfig.json:4: //"target": "es2021",
+C:\8-14-Chakrai-App\node_modules\has-tostringtag\tsconfig.json:9: // "lib": [],                                        /* Specify a set of bundled library declaration files that describe the target runtime environment. */
+C:\8-14-Chakrai-App\node_modules\has-tostringtag\tsconfig.json:10: // "noLib": true,                                    /* Disable including any library files, including the default lib.d.ts. */
+C:\8-14-Chakrai-App\node_modules\has-tostringtag\tsconfig.json:12: // "moduleDetection": "auto",                        /* Control what method is used to detect module-format JS files. */
+C:\8-14-Chakrai-App\node_modules\has-tostringtag\tsconfig.json:16: // "rootDir": "./",                                  /* Specify the root folder within your source files. */
+C:\8-14-Chakrai-App\node_modules\has-tostringtag\tsconfig.json:17: // "moduleResolution": "node10",                     /* Specify how TypeScript looks up a file from a given module specifier. */
+C:\8-14-Chakrai-App\node_modules\has-tostringtag\tsconfig.json:18: // "baseUrl": "./",                                  /* Specify the base directory to resolve non-relative module names. */
+C:\8-14-Chakrai-App\node_modules\has-tostringtag\tsconfig.json:19: // "paths": {},                                      /* Specify a set of entries that re-map imports to additional lookup locations. */
+C:\8-14-Chakrai-App\node_modules\has-tostringtag\tsconfig.json:20: // "rootDirs": [],                                   /* Allow multiple folders to be treated as one when resolving modules. */
+C:\8-14-Chakrai-App\node_modules\has-tostringtag\tsconfig.json:23: // "allowArbitraryExtensions": true,                 /* Enable importing files with any extension, provided a declaration file is present. */
+C:\8-14-Chakrai-App\node_modules\has-tostringtag\tsconfig.json:44: //"skipLibCheck": true                                 /* Skip type checking all .d.ts files. */
+C:\8-14-Chakrai-App\node_modules\internal-slot\tsconfig.json:4: //"target": "es2021",
+C:\8-14-Chakrai-App\node_modules\is-map\tsconfig.json:9: // "lib": [],                                        /* Specify a set of bundled library declaration files that describe the target runtime environment. */
+C:\8-14-Chakrai-App\node_modules\is-map\tsconfig.json:10: // "noLib": true,                                    /* Disable including any library files, including the default lib.d.ts. */
+C:\8-14-Chakrai-App\node_modules\is-map\tsconfig.json:12: // "moduleDetection": "auto",                        /* Control what method is used to detect module-format JS files. */
+C:\8-14-Chakrai-App\node_modules\is-map\tsconfig.json:16: // "rootDir": "./",                                  /* Specify the root folder within your source files. */
+C:\8-14-Chakrai-App\node_modules\is-map\tsconfig.json:17: // "moduleResolution": "node10",                     /* Specify how TypeScript looks up a file from a given module specifier. */
+C:\8-14-Chakrai-App\node_modules\is-map\tsconfig.json:18: // "baseUrl": "./",                                  /* Specify the base directory to resolve non-relative module names. */
+C:\8-14-Chakrai-App\node_modules\is-map\tsconfig.json:19: // "paths": {},                                      /* Specify a set of entries that re-map imports to additional lookup locations. */
+C:\8-14-Chakrai-App\node_modules\is-map\tsconfig.json:20: // "rootDirs": [],                                   /* Allow multiple folders to be treated as one when resolving modules. */
+C:\8-14-Chakrai-App\node_modules\is-map\tsconfig.json:23: // "allowArbitraryExtensions": true,                 /* Enable importing files with any extension, provided a declaration file is present. */
+C:\8-14-Chakrai-App\node_modules\is-map\tsconfig.json:44: //"skipLibCheck": true                                 /* Skip type checking all .d.ts files. */
+C:\8-14-Chakrai-App\node_modules\is-negative-zero\tsconfig.json:9: // "lib": [],                                        /* Specify a set of bundled library declaration files that describe the target runtime environment. */
+C:\8-14-Chakrai-App\node_modules\is-negative-zero\tsconfig.json:10: // "noLib": true,                                    /* Disable including any library files, including the default lib.d.ts. */
+C:\8-14-Chakrai-App\node_modules\is-negative-zero\tsconfig.json:12: // "moduleDetection": "auto",                        /* Control what method is used to detect module-format JS files. */
+C:\8-14-Chakrai-App\node_modules\is-negative-zero\tsconfig.json:16: // "rootDir": "./",                                  /* Specify the root folder within your source files. */
+C:\8-14-Chakrai-App\node_modules\is-negative-zero\tsconfig.json:17: // "moduleResolution": "node10",                     /* Specify how TypeScript looks up a file from a given module specifier. */
+C:\8-14-Chakrai-App\node_modules\is-negative-zero\tsconfig.json:18: // "baseUrl": "./",                                  /* Specify the base directory to resolve non-relative module names. */
+C:\8-14-Chakrai-App\node_modules\is-negative-zero\tsconfig.json:19: // "paths": {},                                      /* Specify a set of entries that re-map imports to additional lookup locations. */
+C:\8-14-Chakrai-App\node_modules\is-negative-zero\tsconfig.json:20: // "rootDirs": [],                                   /* Allow multiple folders to be treated as one when resolving modules. */
+C:\8-14-Chakrai-App\node_modules\is-negative-zero\tsconfig.json:23: // "allowArbitraryExtensions": true,                 /* Enable importing files with any extension, provided a declaration file is present. */
+C:\8-14-Chakrai-App\node_modules\is-negative-zero\tsconfig.json:44: //"skipLibCheck": true                                 /* Skip type checking all .d.ts files. */
+C:\8-14-Chakrai-App\node_modules\is-set\tsconfig.json:9: // "lib": [],                                        /* Specify a set of bundled library declaration files that describe the target runtime environment. */
+C:\8-14-Chakrai-App\node_modules\is-set\tsconfig.json:10: // "noLib": true,                                    /* Disable including any library files, including the default lib.d.ts. */
+C:\8-14-Chakrai-App\node_modules\is-set\tsconfig.json:12: // "moduleDetection": "auto",                        /* Control what method is used to detect module-format JS files. */
+C:\8-14-Chakrai-App\node_modules\is-set\tsconfig.json:16: // "rootDir": "./",                                  /* Specify the root folder within your source files. */
+C:\8-14-Chakrai-App\node_modules\is-set\tsconfig.json:17: // "moduleResolution": "node10",                     /* Specify how TypeScript looks up a file from a given module specifier. */
+C:\8-14-Chakrai-App\node_modules\is-set\tsconfig.json:18: // "baseUrl": "./",                                  /* Specify the base directory to resolve non-relative module names. */
+C:\8-14-Chakrai-App\node_modules\is-set\tsconfig.json:19: // "paths": {},                                      /* Specify a set of entries that re-map imports to additional lookup locations. */
+C:\8-14-Chakrai-App\node_modules\is-set\tsconfig.json:20: // "rootDirs": [],                                   /* Allow multiple folders to be treated as one when resolving modules. */
+C:\8-14-Chakrai-App\node_modules\is-set\tsconfig.json:23: // "allowArbitraryExtensions": true,                 /* Enable importing files with any extension, provided a declaration file is present. */
+C:\8-14-Chakrai-App\node_modules\is-set\tsconfig.json:44: //"skipLibCheck": true                                 /* Skip type checking all .d.ts files. */
+C:\8-14-Chakrai-App\node_modules\is-weakmap\tsconfig.json:9: // "lib": [],                                        /* Specify a set of bundled library declaration files that describe the target runtime environment. */
+C:\8-14-Chakrai-App\node_modules\is-weakmap\tsconfig.json:10: // "noLib": true,                                    /* Disable including any library files, including the default lib.d.ts. */
+C:\8-14-Chakrai-App\node_modules\is-weakmap\tsconfig.json:12: // "moduleDetection": "auto",                        /* Control what method is used to detect module-format JS files. */
+C:\8-14-Chakrai-App\node_modules\is-weakmap\tsconfig.json:16: // "rootDir": "./",                                  /* Specify the root folder within your source files. */
+C:\8-14-Chakrai-App\node_modules\is-weakmap\tsconfig.json:17: // "moduleResolution": "node10",                     /* Specify how TypeScript looks up a file from a given module specifier. */
+C:\8-14-Chakrai-App\node_modules\is-weakmap\tsconfig.json:18: // "baseUrl": "./",                                  /* Specify the base directory to resolve non-relative module names. */
+C:\8-14-Chakrai-App\node_modules\is-weakmap\tsconfig.json:19: // "paths": {},                                      /* Specify a set of entries that re-map imports to additional lookup locations. */
+C:\8-14-Chakrai-App\node_modules\is-weakmap\tsconfig.json:20: // "rootDirs": [],                                   /* Allow multiple folders to be treated as one when resolving modules. */
+C:\8-14-Chakrai-App\node_modules\is-weakmap\tsconfig.json:23: // "allowArbitraryExtensions": true,                 /* Enable importing files with any extension, provided a declaration file is present. */
+C:\8-14-Chakrai-App\node_modules\is-weakmap\tsconfig.json:44: //"skipLibCheck": true                                 /* Skip type checking all .d.ts files. */
+C:\8-14-Chakrai-App\node_modules\openai\src\tsconfig.json:2: // this config is included in the published src directory to prevent TS errors
+C:\8-14-Chakrai-App\node_modules\openai\src\tsconfig.json:3: // from appearing when users go to source, and VSCode opens the source .ts file
+C:\8-14-Chakrai-App\node_modules\openai\src\tsconfig.json:4: // via declaration maps
+C:\8-14-Chakrai-App\node_modules\safe-regex-test\tsconfig.json:4: // "target": "es2021",
+C:\8-14-Chakrai-App\node_modules\set-function-name\tsconfig.json:9: // "lib": [],                                        /* Specify a set of bundled library declaration files that describe the target runtime environment. */
+C:\8-14-Chakrai-App\node_modules\set-function-name\tsconfig.json:10: // "noLib": true,                                    /* Disable including any library files, including the default lib.d.ts. */
+C:\8-14-Chakrai-App\node_modules\set-function-name\tsconfig.json:12: // "moduleDetection": "auto",                        /* Control what method is used to detect module-format JS files. */
+C:\8-14-Chakrai-App\node_modules\set-function-name\tsconfig.json:16: // "rootDir": "./",                                  /* Specify the root folder within your source files. */
+C:\8-14-Chakrai-App\node_modules\set-function-name\tsconfig.json:17: // "moduleResolution": "node10",                     /* Specify how TypeScript looks up a file from a given module specifier. */
+C:\8-14-Chakrai-App\node_modules\set-function-name\tsconfig.json:18: // "baseUrl": "./",                                  /* Specify the base directory to resolve non-relative module names. */
+C:\8-14-Chakrai-App\node_modules\set-function-name\tsconfig.json:19: // "paths": {},                                      /* Specify a set of entries that re-map imports to additional lookup locations. */
+C:\8-14-Chakrai-App\node_modules\set-function-name\tsconfig.json:20: // "rootDirs": [],                                   /* Allow multiple folders to be treated as one when resolving modules. */
+C:\8-14-Chakrai-App\node_modules\set-function-name\tsconfig.json:32: // "emitDeclarationOnly": true,                      /* Only output d.ts files and not JavaScript files. */
+C:\8-14-Chakrai-App\node_modules\set-function-name\tsconfig.json:51: // "noPropertyAccessFromIndexSignature": true,       /* Enforces using indexed accessors for keys declared using an indexed type. */
+C:\8-14-Chakrai-App\node_modules\set-function-name\tsconfig.json:54: // "skipLibCheck": true                                 /* Skip type checking all .d.ts files. */
+C:\8-14-Chakrai-App\node_modules\set-proto\tsconfig.json:4: //"target": "es2021",
+C:\8-14-Chakrai-App\node_modules\stripe\types\test\tsconfig.json:9: // "allowJs": true,                       /* Allow javascript files to be compiled. */
+C:\8-14-Chakrai-App\node_modules\stripe\types\test\tsconfig.json:10: // "checkJs": true,                       /* Report errors in .js files. */
+C:\8-14-Chakrai-App\node_modules\stripe\types\test\tsconfig.json:11: // "jsx": "preserve",                     /* Specify JSX code generation: 'preserve', 'react-native', or 'react'. */
+C:\8-14-Chakrai-App\node_modules\stripe\types\test\tsconfig.json:12: // "declaration": true,                   /* Generates corresponding '.d.ts' file. */
+C:\8-14-Chakrai-App\node_modules\stripe\types\test\tsconfig.json:13: // "declarationMap": true,                /* Generates a sourcemap for each corresponding '.d.ts' file. */
+C:\8-14-Chakrai-App\node_modules\stripe\types\test\tsconfig.json:14: // "sourceMap": true,                     /* Generates corresponding '.map' file. */
+C:\8-14-Chakrai-App\node_modules\stripe\types\test\tsconfig.json:15: // "outFile": "./",                       /* Concatenate and emit output to single file. */
+C:\8-14-Chakrai-App\node_modules\stripe\types\test\tsconfig.json:16: // "outDir": "./",                        /* Redirect output structure to the directory. */
+C:\8-14-Chakrai-App\node_modules\stripe\types\test\tsconfig.json:18: // "composite": true,                     /* Enable project compilation */
+C:\8-14-Chakrai-App\node_modules\stripe\types\test\tsconfig.json:19: // "tsBuildInfoFile": "./",               /* Specify file to store incremental compilation information */
+C:\8-14-Chakrai-App\node_modules\stripe\types\test\tsconfig.json:20: // "removeComments": true,                /* Do not emit comments to output. */
+C:\8-14-Chakrai-App\node_modules\stripe\types\test\tsconfig.json:22: // "importHelpers": true,                 /* Import emit helpers from 'tslib'. */
+C:\8-14-Chakrai-App\node_modules\stripe\types\test\tsconfig.json:23: // "downlevelIteration": true,            /* Provide full support for iterables in 'for-of', spread, and destructuring when targeting 'ES5' or 'ES3'. */
+C:\8-14-Chakrai-App\node_modules\stripe\types\test\tsconfig.json:24: // "isolatedModules": true,               /* Transpile each file as a separate module (similar to 'ts.transpileModule'). */
+C:\8-14-Chakrai-App\node_modules\stripe\types\test\tsconfig.json:37: // "noUnusedLocals": true,                /* Report errors on unused locals. */
+C:\8-14-Chakrai-App\node_modules\stripe\types\test\tsconfig.json:38: // "noUnusedParameters": true,            /* Report errors on unused parameters. */
+C:\8-14-Chakrai-App\node_modules\stripe\types\test\tsconfig.json:39: // "noImplicitReturns": true,             /* Report error when not all code paths in function return a value. */
+C:\8-14-Chakrai-App\node_modules\stripe\types\test\tsconfig.json:40: // "noFallthroughCasesInSwitch": true,    /* Report errors for fallthrough cases in switch statement. */
+C:\8-14-Chakrai-App\node_modules\stripe\types\test\tsconfig.json:43: // "moduleResolution": "node",            /* Specify module resolution strategy: 'node' (Node.js) or 'classic' (TypeScript pre-1.6). */
+C:\8-14-Chakrai-App\node_modules\stripe\types\test\tsconfig.json:44: // "baseUrl": "./",                       /* Base directory to resolve non-absolute module names. */
+C:\8-14-Chakrai-App\node_modules\stripe\types\test\tsconfig.json:45: // "paths": {},                           /* A series of entries which re-map imports to lookup locations relative to the 'baseUrl'. */
+C:\8-14-Chakrai-App\node_modules\stripe\types\test\tsconfig.json:46: // "rootDirs": [],                        /* List of root folders whose combined content represents the structure of the project at runtime. */
+C:\8-14-Chakrai-App\node_modules\stripe\types\test\tsconfig.json:47: // "typeRoots": [],                       /* List of folders to include type definitions from. */
+C:\8-14-Chakrai-App\node_modules\stripe\types\test\tsconfig.json:48: // "types": [],                           /* Type declaration files to be included in compilation. */
+C:\8-14-Chakrai-App\node_modules\stripe\types\test\tsconfig.json:49: // "allowSyntheticDefaultImports": true,  /* Allow default imports from modules with no default export. This does not affect code emit, just typechecking. */
+C:\8-14-Chakrai-App\node_modules\stripe\types\test\tsconfig.json:50: // "esModuleInterop": true                /* Enables emit interoperability between CommonJS and ES Modules via creation of namespace objects for all imports. Implies 'allowSyntheticDefaultImports'. */,
+C:\8-14-Chakrai-App\node_modules\stripe\types\test\tsconfig.json:51: // "preserveSymlinks": true,              /* Do not resolve the real path of symlinks. */
+C:\8-14-Chakrai-App\node_modules\stripe\types\test\tsconfig.json:52: // "allowUmdGlobalAccess": true,          /* Allow accessing UMD globals from modules. */
+C:\8-14-Chakrai-App\node_modules\stripe\types\test\tsconfig.json:55: // "sourceRoot": "",                      /* Specify the location where debugger should locate TypeScript files instead of source locations. */
+C:\8-14-Chakrai-App\node_modules\stripe\types\test\tsconfig.json:56: // "mapRoot": "",                         /* Specify the location where debugger should locate map files instead of generated locations. */
+C:\8-14-Chakrai-App\node_modules\stripe\types\test\tsconfig.json:57: // "inlineSourceMap": true,               /* Emit a single file with source maps instead of having a separate file. */
+C:\8-14-Chakrai-App\node_modules\stripe\types\test\tsconfig.json:58: // "inlineSources": true,                 /* Emit the source alongside the sourcemaps within a single file; requires '--inlineSourceMap' or '--sourceMap' to be set. */
+C:\8-14-Chakrai-App\node_modules\stripe\types\test\tsconfig.json:61: // "experimentalDecorators": true,        /* Enables experimental support for ES7 decorators. */
+C:\8-14-Chakrai-App\node_modules\stripe\types\test\tsconfig.json:62: // "emitDecoratorMetadata": true,         /* Enables experimental support for emitting type metadata for decorators. */
+C:\8-14-Chakrai-App\node_modules\which-collection\tsconfig.json:9: // "lib": [],                                        /* Specify a set of bundled library declaration files that describe the target runtime environment. */
+C:\8-14-Chakrai-App\node_modules\which-collection\tsconfig.json:10: // "noLib": true,                                    /* Disable including any library files, including the default lib.d.ts. */
+C:\8-14-Chakrai-App\node_modules\which-collection\tsconfig.json:12: // "moduleDetection": "auto",                        /* Control what method is used to detect module-format JS files. */
+C:\8-14-Chakrai-App\node_modules\which-collection\tsconfig.json:16: // "rootDir": "./",                                  /* Specify the root folder within your source files. */
+C:\8-14-Chakrai-App\node_modules\which-collection\tsconfig.json:17: // "moduleResolution": "node10",                     /* Specify how TypeScript looks up a file from a given module specifier. */
+C:\8-14-Chakrai-App\node_modules\which-collection\tsconfig.json:18: // "baseUrl": "./",                                  /* Specify the base directory to resolve non-relative module names. */
+C:\8-14-Chakrai-App\node_modules\which-collection\tsconfig.json:19: // "paths": {},                                      /* Specify a set of entries that re-map imports to additional lookup locations. */
+C:\8-14-Chakrai-App\node_modules\which-collection\tsconfig.json:20: // "rootDirs": [],                                   /* Allow multiple folders to be treated as one when resolving modules. */
+C:\8-14-Chakrai-App\node_modules\which-collection\tsconfig.json:23: // "allowArbitraryExtensions": true,                 /* Enable importing files with any extension, provided a declaration file is present. */
+C:\8-14-Chakrai-App\node_modules\which-collection\tsconfig.json:44: //"skipLibCheck": true                                 /* Skip type checking all .d.ts files. */
+C:\8-14-Chakrai-App\node_modules_backup\@tanstack\react-query\build\query-codemods\vite.config.ts:6: // fix from https://github.com/vitest-dev/vitest/issues/6992#issuecomment-2509408660
+C:\8-14-Chakrai-App\node_modules_backup\available-typed-arrays\tsconfig.json:9: // "lib": [],                                        /* Specify a set of bundled library declaration files that describe the target runtime environment. */
+C:\8-14-Chakrai-App\node_modules_backup\available-typed-arrays\tsconfig.json:10: // "noLib": true,                                    /* Disable including any library files, including the default lib.d.ts. */
+C:\8-14-Chakrai-App\node_modules_backup\available-typed-arrays\tsconfig.json:12: // "moduleDetection": "auto",                        /* Control what method is used to detect module-format JS files. */
+C:\8-14-Chakrai-App\node_modules_backup\available-typed-arrays\tsconfig.json:16: // "rootDir": "./",                                  /* Specify the root folder within your source files. */
+C:\8-14-Chakrai-App\node_modules_backup\available-typed-arrays\tsconfig.json:17: // "moduleResolution": "node10",                     /* Specify how TypeScript looks up a file from a given module specifier. */
+C:\8-14-Chakrai-App\node_modules_backup\available-typed-arrays\tsconfig.json:18: // "baseUrl": "./",                                  /* Specify the base directory to resolve non-relative module names. */
+C:\8-14-Chakrai-App\node_modules_backup\available-typed-arrays\tsconfig.json:19: // "paths": {},                                      /* Specify a set of entries that re-map imports to additional lookup locations. */
+C:\8-14-Chakrai-App\node_modules_backup\available-typed-arrays\tsconfig.json:20: // "rootDirs": [],                                   /* Allow multiple folders to be treated as one when resolving modules. */
+C:\8-14-Chakrai-App\node_modules_backup\available-typed-arrays\tsconfig.json:23: // "allowArbitraryExtensions": true,                 /* Enable importing files with any extension, provided a declaration file is present. */
+C:\8-14-Chakrai-App\node_modules_backup\available-typed-arrays\tsconfig.json:44: //"skipLibCheck": true                                 /* Skip type checking all .d.ts files. */
+C:\8-14-Chakrai-App\node_modules_backup\define-data-property\tsconfig.json:9: // "lib": [],                                        /* Specify a set of bundled library declaration files that describe the target runtime environment. */
+C:\8-14-Chakrai-App\node_modules_backup\define-data-property\tsconfig.json:10: // "noLib": true,                                    /* Disable including any library files, including the default lib.d.ts. */
+C:\8-14-Chakrai-App\node_modules_backup\define-data-property\tsconfig.json:12: // "moduleDetection": "auto",                        /* Control what method is used to detect module-format JS files. */
+C:\8-14-Chakrai-App\node_modules_backup\define-data-property\tsconfig.json:16: // "rootDir": "./",                                  /* Specify the root folder within your source files. */
+C:\8-14-Chakrai-App\node_modules_backup\define-data-property\tsconfig.json:17: // "moduleResolution": "node10",                     /* Specify how TypeScript looks up a file from a given module specifier. */
+C:\8-14-Chakrai-App\node_modules_backup\define-data-property\tsconfig.json:18: // "baseUrl": "./",                                  /* Specify the base directory to resolve non-relative module names. */
+C:\8-14-Chakrai-App\node_modules_backup\define-data-property\tsconfig.json:19: // "paths": {},                                      /* Specify a set of entries that re-map imports to additional lookup locations. */
+C:\8-14-Chakrai-App\node_modules_backup\define-data-property\tsconfig.json:20: // "rootDirs": [],                                   /* Allow multiple folders to be treated as one when resolving modules. */
+C:\8-14-Chakrai-App\node_modules_backup\define-data-property\tsconfig.json:32: // "emitDeclarationOnly": true,                      /* Only output d.ts files and not JavaScript files. */
+C:\8-14-Chakrai-App\node_modules_backup\define-data-property\tsconfig.json:51: // "noPropertyAccessFromIndexSignature": true,       /* Enforces using indexed accessors for keys declared using an indexed type. */
+C:\8-14-Chakrai-App\node_modules_backup\define-data-property\tsconfig.json:54: // "skipLibCheck": true                                 /* Skip type checking all .d.ts files. */
+C:\8-14-Chakrai-App\node_modules_backup\es-errors\tsconfig.json:9: // "lib": [],																				/* Specify a set of bundled library declaration files that describe the target runtime environment. */
+C:\8-14-Chakrai-App\node_modules_backup\es-errors\tsconfig.json:10: // "noLib": true,																		/* Disable including any library files, including the default lib.d.ts. */
+C:\8-14-Chakrai-App\node_modules_backup\es-errors\tsconfig.json:12: // "moduleDetection": "auto",												/* Control what method is used to detect module-format JS files. */
+C:\8-14-Chakrai-App\node_modules_backup\es-errors\tsconfig.json:16: // "rootDir": "./",																	/* Specify the root folder within your source files. */
+C:\8-14-Chakrai-App\node_modules_backup\es-errors\tsconfig.json:17: // "moduleResolution": "node",											 /* Specify how TypeScript looks up a file from a given module specifier. */
+C:\8-14-Chakrai-App\node_modules_backup\es-errors\tsconfig.json:18: // "baseUrl": "./",																	/* Specify the base directory to resolve non-relative module names. */
+C:\8-14-Chakrai-App\node_modules_backup\es-errors\tsconfig.json:19: // "paths": {},																			/* Specify a set of entries that re-map imports to additional lookup locations. */
+C:\8-14-Chakrai-App\node_modules_backup\es-errors\tsconfig.json:20: // "rootDirs": [],																	 /* Allow multiple folders to be treated as one when resolving modules. */
+C:\8-14-Chakrai-App\node_modules_backup\es-errors\tsconfig.json:21: // "typeRoots": ["types"],													 /* Specify multiple folders that act like `./node_modules/@types`. */
+C:\8-14-Chakrai-App\node_modules_backup\es-errors\tsconfig.json:23: // "allowArbitraryExtensions": true,								 /* Enable importing files with any extension, provided a declaration file is present. */
+C:\8-14-Chakrai-App\node_modules_backup\es-errors\tsconfig.json:44: // "skipLibCheck": true															/* Skip type checking all .d.ts files. */
+C:\8-14-Chakrai-App\node_modules_backup\get-proto\tsconfig.json:4: //"target": "es2021",
+C:\8-14-Chakrai-App\node_modules_backup\has-tostringtag\tsconfig.json:9: // "lib": [],                                        /* Specify a set of bundled library declaration files that describe the target runtime environment. */
+C:\8-14-Chakrai-App\node_modules_backup\has-tostringtag\tsconfig.json:10: // "noLib": true,                                    /* Disable including any library files, including the default lib.d.ts. */
+C:\8-14-Chakrai-App\node_modules_backup\has-tostringtag\tsconfig.json:12: // "moduleDetection": "auto",                        /* Control what method is used to detect module-format JS files. */
+C:\8-14-Chakrai-App\node_modules_backup\has-tostringtag\tsconfig.json:16: // "rootDir": "./",                                  /* Specify the root folder within your source files. */
+C:\8-14-Chakrai-App\node_modules_backup\has-tostringtag\tsconfig.json:17: // "moduleResolution": "node10",                     /* Specify how TypeScript looks up a file from a given module specifier. */
+C:\8-14-Chakrai-App\node_modules_backup\has-tostringtag\tsconfig.json:18: // "baseUrl": "./",                                  /* Specify the base directory to resolve non-relative module names. */
+C:\8-14-Chakrai-App\node_modules_backup\has-tostringtag\tsconfig.json:19: // "paths": {},                                      /* Specify a set of entries that re-map imports to additional lookup locations. */
+C:\8-14-Chakrai-App\node_modules_backup\has-tostringtag\tsconfig.json:20: // "rootDirs": [],                                   /* Allow multiple folders to be treated as one when resolving modules. */
+C:\8-14-Chakrai-App\node_modules_backup\has-tostringtag\tsconfig.json:23: // "allowArbitraryExtensions": true,                 /* Enable importing files with any extension, provided a declaration file is present. */
+C:\8-14-Chakrai-App\node_modules_backup\has-tostringtag\tsconfig.json:44: //"skipLibCheck": true                                 /* Skip type checking all .d.ts files. */
+C:\8-14-Chakrai-App\node_modules_backup\internal-slot\tsconfig.json:4: //"target": "es2021",
+C:\8-14-Chakrai-App\node_modules_backup\is-map\tsconfig.json:9: // "lib": [],                                        /* Specify a set of bundled library declaration files that describe the target runtime environment. */
+C:\8-14-Chakrai-App\node_modules_backup\is-map\tsconfig.json:10: // "noLib": true,                                    /* Disable including any library files, including the default lib.d.ts. */
+C:\8-14-Chakrai-App\node_modules_backup\is-map\tsconfig.json:12: // "moduleDetection": "auto",                        /* Control what method is used to detect module-format JS files. */
+C:\8-14-Chakrai-App\node_modules_backup\is-map\tsconfig.json:16: // "rootDir": "./",                                  /* Specify the root folder within your source files. */
+C:\8-14-Chakrai-App\node_modules_backup\is-map\tsconfig.json:17: // "moduleResolution": "node10",                     /* Specify how TypeScript looks up a file from a given module specifier. */
+C:\8-14-Chakrai-App\node_modules_backup\is-map\tsconfig.json:18: // "baseUrl": "./",                                  /* Specify the base directory to resolve non-relative module names. */
+C:\8-14-Chakrai-App\node_modules_backup\is-map\tsconfig.json:19: // "paths": {},                                      /* Specify a set of entries that re-map imports to additional lookup locations. */
+C:\8-14-Chakrai-App\node_modules_backup\is-map\tsconfig.json:20: // "rootDirs": [],                                   /* Allow multiple folders to be treated as one when resolving modules. */
+C:\8-14-Chakrai-App\node_modules_backup\is-map\tsconfig.json:23: // "allowArbitraryExtensions": true,                 /* Enable importing files with any extension, provided a declaration file is present. */
+C:\8-14-Chakrai-App\node_modules_backup\is-map\tsconfig.json:44: //"skipLibCheck": true                                 /* Skip type checking all .d.ts files. */
+C:\8-14-Chakrai-App\node_modules_backup\is-negative-zero\tsconfig.json:9: // "lib": [],                                        /* Specify a set of bundled library declaration files that describe the target runtime environment. */
+C:\8-14-Chakrai-App\node_modules_backup\is-negative-zero\tsconfig.json:10: // "noLib": true,                                    /* Disable including any library files, including the default lib.d.ts. */
+C:\8-14-Chakrai-App\node_modules_backup\is-negative-zero\tsconfig.json:12: // "moduleDetection": "auto",                        /* Control what method is used to detect module-format JS files. */
+C:\8-14-Chakrai-App\node_modules_backup\is-negative-zero\tsconfig.json:16: // "rootDir": "./",                                  /* Specify the root folder within your source files. */
+C:\8-14-Chakrai-App\node_modules_backup\is-negative-zero\tsconfig.json:17: // "moduleResolution": "node10",                     /* Specify how TypeScript looks up a file from a given module specifier. */
+C:\8-14-Chakrai-App\node_modules_backup\is-negative-zero\tsconfig.json:18: // "baseUrl": "./",                                  /* Specify the base directory to resolve non-relative module names. */
+C:\8-14-Chakrai-App\node_modules_backup\is-negative-zero\tsconfig.json:19: // "paths": {},                                      /* Specify a set of entries that re-map imports to additional lookup locations. */
+C:\8-14-Chakrai-App\node_modules_backup\is-negative-zero\tsconfig.json:20: // "rootDirs": [],                                   /* Allow multiple folders to be treated as one when resolving modules. */
+C:\8-14-Chakrai-App\node_modules_backup\is-negative-zero\tsconfig.json:23: // "allowArbitraryExtensions": true,                 /* Enable importing files with any extension, provided a declaration file is present. */
+C:\8-14-Chakrai-App\node_modules_backup\is-negative-zero\tsconfig.json:44: //"skipLibCheck": true                                 /* Skip type checking all .d.ts files. */
+C:\8-14-Chakrai-App\node_modules_backup\is-set\tsconfig.json:9: // "lib": [],                                        /* Specify a set of bundled library declaration files that describe the target runtime environment. */
+C:\8-14-Chakrai-App\node_modules_backup\is-set\tsconfig.json:10: // "noLib": true,                                    /* Disable including any library files, including the default lib.d.ts. */
+C:\8-14-Chakrai-App\node_modules_backup\is-set\tsconfig.json:12: // "moduleDetection": "auto",                        /* Control what method is used to detect module-format JS files. */
+C:\8-14-Chakrai-App\node_modules_backup\is-set\tsconfig.json:16: // "rootDir": "./",                                  /* Specify the root folder within your source files. */
+C:\8-14-Chakrai-App\node_modules_backup\is-set\tsconfig.json:17: // "moduleResolution": "node10",                     /* Specify how TypeScript looks up a file from a given module specifier. */
+C:\8-14-Chakrai-App\node_modules_backup\is-set\tsconfig.json:18: // "baseUrl": "./",                                  /* Specify the base directory to resolve non-relative module names. */
+C:\8-14-Chakrai-App\node_modules_backup\is-set\tsconfig.json:19: // "paths": {},                                      /* Specify a set of entries that re-map imports to additional lookup locations. */
+C:\8-14-Chakrai-App\node_modules_backup\is-set\tsconfig.json:20: // "rootDirs": [],                                   /* Allow multiple folders to be treated as one when resolving modules. */
+C:\8-14-Chakrai-App\node_modules_backup\is-set\tsconfig.json:23: // "allowArbitraryExtensions": true,                 /* Enable importing files with any extension, provided a declaration file is present. */
+C:\8-14-Chakrai-App\node_modules_backup\is-set\tsconfig.json:44: //"skipLibCheck": true                                 /* Skip type checking all .d.ts files. */
+C:\8-14-Chakrai-App\node_modules_backup\is-weakmap\tsconfig.json:9: // "lib": [],                                        /* Specify a set of bundled library declaration files that describe the target runtime environment. */
+C:\8-14-Chakrai-App\node_modules_backup\is-weakmap\tsconfig.json:10: // "noLib": true,                                    /* Disable including any library files, including the default lib.d.ts. */
+C:\8-14-Chakrai-App\node_modules_backup\is-weakmap\tsconfig.json:12: // "moduleDetection": "auto",                        /* Control what method is used to detect module-format JS files. */
+C:\8-14-Chakrai-App\node_modules_backup\is-weakmap\tsconfig.json:16: // "rootDir": "./",                                  /* Specify the root folder within your source files. */
+C:\8-14-Chakrai-App\node_modules_backup\is-weakmap\tsconfig.json:17: // "moduleResolution": "node10",                     /* Specify how TypeScript looks up a file from a given module specifier. */
+C:\8-14-Chakrai-App\node_modules_backup\is-weakmap\tsconfig.json:18: // "baseUrl": "./",                                  /* Specify the base directory to resolve non-relative module names. */
+C:\8-14-Chakrai-App\node_modules_backup\is-weakmap\tsconfig.json:19: // "paths": {},                                      /* Specify a set of entries that re-map imports to additional lookup locations. */
+C:\8-14-Chakrai-App\node_modules_backup\is-weakmap\tsconfig.json:20: // "rootDirs": [],                                   /* Allow multiple folders to be treated as one when resolving modules. */
+C:\8-14-Chakrai-App\node_modules_backup\is-weakmap\tsconfig.json:23: // "allowArbitraryExtensions": true,                 /* Enable importing files with any extension, provided a declaration file is present. */
+C:\8-14-Chakrai-App\node_modules_backup\is-weakmap\tsconfig.json:44: //"skipLibCheck": true                                 /* Skip type checking all .d.ts files. */
+C:\8-14-Chakrai-App\node_modules_backup\openai\src\tsconfig.json:2: // this config is included in the published src directory to prevent TS errors
+C:\8-14-Chakrai-App\node_modules_backup\openai\src\tsconfig.json:3: // from appearing when users go to source, and VSCode opens the source .ts file
+C:\8-14-Chakrai-App\node_modules_backup\openai\src\tsconfig.json:4: // via declaration maps
+C:\8-14-Chakrai-App\node_modules_backup\safe-regex-test\tsconfig.json:4: // "target": "es2021",
+C:\8-14-Chakrai-App\node_modules_backup\set-function-name\tsconfig.json:9: // "lib": [],                                        /* Specify a set of bundled library declaration files that describe the target runtime environment. */
+C:\8-14-Chakrai-App\node_modules_backup\set-function-name\tsconfig.json:10: // "noLib": true,                                    /* Disable including any library files, including the default lib.d.ts. */
+C:\8-14-Chakrai-App\node_modules_backup\set-function-name\tsconfig.json:12: // "moduleDetection": "auto",                        /* Control what method is used to detect module-format JS files. */
+C:\8-14-Chakrai-App\node_modules_backup\set-function-name\tsconfig.json:16: // "rootDir": "./",                                  /* Specify the root folder within your source files. */
+C:\8-14-Chakrai-App\node_modules_backup\set-function-name\tsconfig.json:17: // "moduleResolution": "node10",                     /* Specify how TypeScript looks up a file from a given module specifier. */
+C:\8-14-Chakrai-App\node_modules_backup\set-function-name\tsconfig.json:18: // "baseUrl": "./",                                  /* Specify the base directory to resolve non-relative module names. */
+C:\8-14-Chakrai-App\node_modules_backup\set-function-name\tsconfig.json:19: // "paths": {},                                      /* Specify a set of entries that re-map imports to additional lookup locations. */
+C:\8-14-Chakrai-App\node_modules_backup\set-function-name\tsconfig.json:20: // "rootDirs": [],                                   /* Allow multiple folders to be treated as one when resolving modules. */
+C:\8-14-Chakrai-App\node_modules_backup\set-function-name\tsconfig.json:32: // "emitDeclarationOnly": true,                      /* Only output d.ts files and not JavaScript files. */
+C:\8-14-Chakrai-App\node_modules_backup\set-function-name\tsconfig.json:51: // "noPropertyAccessFromIndexSignature": true,       /* Enforces using indexed accessors for keys declared using an indexed type. */
+C:\8-14-Chakrai-App\node_modules_backup\set-function-name\tsconfig.json:54: // "skipLibCheck": true                                 /* Skip type checking all .d.ts files. */
+C:\8-14-Chakrai-App\node_modules_backup\set-proto\tsconfig.json:4: //"target": "es2021",
+C:\8-14-Chakrai-App\node_modules_backup\stripe\types\test\tsconfig.json:9: // "allowJs": true,                       /* Allow javascript files to be compiled. */
+C:\8-14-Chakrai-App\node_modules_backup\stripe\types\test\tsconfig.json:10: // "checkJs": true,                       /* Report errors in .js files. */
+C:\8-14-Chakrai-App\node_modules_backup\stripe\types\test\tsconfig.json:11: // "jsx": "preserve",                     /* Specify JSX code generation: 'preserve', 'react-native', or 'react'. */
+C:\8-14-Chakrai-App\node_modules_backup\stripe\types\test\tsconfig.json:12: // "declaration": true,                   /* Generates corresponding '.d.ts' file. */
+C:\8-14-Chakrai-App\node_modules_backup\stripe\types\test\tsconfig.json:13: // "declarationMap": true,                /* Generates a sourcemap for each corresponding '.d.ts' file. */
+C:\8-14-Chakrai-App\node_modules_backup\stripe\types\test\tsconfig.json:14: // "sourceMap": true,                     /* Generates corresponding '.map' file. */
+C:\8-14-Chakrai-App\node_modules_backup\stripe\types\test\tsconfig.json:15: // "outFile": "./",                       /* Concatenate and emit output to single file. */
+C:\8-14-Chakrai-App\node_modules_backup\stripe\types\test\tsconfig.json:16: // "outDir": "./",                        /* Redirect output structure to the directory. */
+C:\8-14-Chakrai-App\node_modules_backup\stripe\types\test\tsconfig.json:18: // "composite": true,                     /* Enable project compilation */
+C:\8-14-Chakrai-App\node_modules_backup\stripe\types\test\tsconfig.json:19: // "tsBuildInfoFile": "./",               /* Specify file to store incremental compilation information */
+C:\8-14-Chakrai-App\node_modules_backup\stripe\types\test\tsconfig.json:20: // "removeComments": true,                /* Do not emit comments to output. */
+C:\8-14-Chakrai-App\node_modules_backup\stripe\types\test\tsconfig.json:22: // "importHelpers": true,                 /* Import emit helpers from 'tslib'. */
+C:\8-14-Chakrai-App\node_modules_backup\stripe\types\test\tsconfig.json:23: // "downlevelIteration": true,            /* Provide full support for iterables in 'for-of', spread, and destructuring when targeting 'ES5' or 'ES3'. */
+C:\8-14-Chakrai-App\node_modules_backup\stripe\types\test\tsconfig.json:24: // "isolatedModules": true,               /* Transpile each file as a separate module (similar to 'ts.transpileModule'). */
+C:\8-14-Chakrai-App\node_modules_backup\stripe\types\test\tsconfig.json:37: // "noUnusedLocals": true,                /* Report errors on unused locals. */
+C:\8-14-Chakrai-App\node_modules_backup\stripe\types\test\tsconfig.json:38: // "noUnusedParameters": true,            /* Report errors on unused parameters. */
+C:\8-14-Chakrai-App\node_modules_backup\stripe\types\test\tsconfig.json:39: // "noImplicitReturns": true,             /* Report error when not all code paths in function return a value. */
+C:\8-14-Chakrai-App\node_modules_backup\stripe\types\test\tsconfig.json:40: // "noFallthroughCasesInSwitch": true,    /* Report errors for fallthrough cases in switch statement. */
+C:\8-14-Chakrai-App\node_modules_backup\stripe\types\test\tsconfig.json:43: // "moduleResolution": "node",            /* Specify module resolution strategy: 'node' (Node.js) or 'classic' (TypeScript pre-1.6). */
+C:\8-14-Chakrai-App\node_modules_backup\stripe\types\test\tsconfig.json:44: // "baseUrl": "./",                       /* Base directory to resolve non-absolute module names. */
+C:\8-14-Chakrai-App\node_modules_backup\stripe\types\test\tsconfig.json:45: // "paths": {},                           /* A series of entries which re-map imports to lookup locations relative to the 'baseUrl'. */
+C:\8-14-Chakrai-App\node_modules_backup\stripe\types\test\tsconfig.json:46: // "rootDirs": [],                        /* List of root folders whose combined content represents the structure of the project at runtime. */
+C:\8-14-Chakrai-App\node_modules_backup\stripe\types\test\tsconfig.json:47: // "typeRoots": [],                       /* List of folders to include type definitions from. */
+C:\8-14-Chakrai-App\node_modules_backup\stripe\types\test\tsconfig.json:48: // "types": [],                           /* Type declaration files to be included in compilation. */
+C:\8-14-Chakrai-App\node_modules_backup\stripe\types\test\tsconfig.json:49: // "allowSyntheticDefaultImports": true,  /* Allow default imports from modules with no default export. This does not affect code emit, just typechecking. */
+C:\8-14-Chakrai-App\node_modules_backup\stripe\types\test\tsconfig.json:50: // "esModuleInterop": true                /* Enables emit interoperability between CommonJS and ES Modules via creation of namespace objects for all imports. Implies 'allowSyntheticDefaultImports'. */,
+C:\8-14-Chakrai-App\node_modules_backup\stripe\types\test\tsconfig.json:51: // "preserveSymlinks": true,              /* Do not resolve the real path of symlinks. */
+C:\8-14-Chakrai-App\node_modules_backup\stripe\types\test\tsconfig.json:52: // "allowUmdGlobalAccess": true,          /* Allow accessing UMD globals from modules. */
+C:\8-14-Chakrai-App\node_modules_backup\stripe\types\test\tsconfig.json:55: // "sourceRoot": "",                      /* Specify the location where debugger should locate TypeScript files instead of source locations. */
+C:\8-14-Chakrai-App\node_modules_backup\stripe\types\test\tsconfig.json:56: // "mapRoot": "",                         /* Specify the location where debugger should locate map files instead of generated locations. */
+C:\8-14-Chakrai-App\node_modules_backup\stripe\types\test\tsconfig.json:57: // "inlineSourceMap": true,               /* Emit a single file with source maps instead of having a separate file. */
+C:\8-14-Chakrai-App\node_modules_backup\stripe\types\test\tsconfig.json:58: // "inlineSources": true,                 /* Emit the source alongside the sourcemaps within a single file; requires '--inlineSourceMap' or '--sourceMap' to be set. */
+C:\8-14-Chakrai-App\node_modules_backup\stripe\types\test\tsconfig.json:61: // "experimentalDecorators": true,        /* Enables experimental support for ES7 decorators. */
+C:\8-14-Chakrai-App\node_modules_backup\stripe\types\test\tsconfig.json:62: // "emitDecoratorMetadata": true,         /* Enables experimental support for emitting type metadata for decorators. */
+C:\8-14-Chakrai-App\node_modules_backup\which-collection\tsconfig.json:9: // "lib": [],                                        /* Specify a set of bundled library declaration files that describe the target runtime environment. */
+C:\8-14-Chakrai-App\node_modules_backup\which-collection\tsconfig.json:10: // "noLib": true,                                    /* Disable including any library files, including the default lib.d.ts. */
+C:\8-14-Chakrai-App\node_modules_backup\which-collection\tsconfig.json:12: // "moduleDetection": "auto",                        /* Control what method is used to detect module-format JS files. */
+C:\8-14-Chakrai-App\node_modules_backup\which-collection\tsconfig.json:16: // "rootDir": "./",                                  /* Specify the root folder within your source files. */
+C:\8-14-Chakrai-App\node_modules_backup\which-collection\tsconfig.json:17: // "moduleResolution": "node10",                     /* Specify how TypeScript looks up a file from a given module specifier. */
+C:\8-14-Chakrai-App\node_modules_backup\which-collection\tsconfig.json:18: // "baseUrl": "./",                                  /* Specify the base directory to resolve non-relative module names. */
+C:\8-14-Chakrai-App\node_modules_backup\which-collection\tsconfig.json:19: // "paths": {},                                      /* Specify a set of entries that re-map imports to additional lookup locations. */
+C:\8-14-Chakrai-App\node_modules_backup\which-collection\tsconfig.json:20: // "rootDirs": [],                                   /* Allow multiple folders to be treated as one when resolving modules. */
+C:\8-14-Chakrai-App\node_modules_backup\which-collection\tsconfig.json:23: // "allowArbitraryExtensions": true,                 /* Enable importing files with any extension, provided a declaration file is present. */
+C:\8-14-Chakrai-App\node_modules_backup\which-collection\tsconfig.json:44: //"skipLibCheck": true                                 /* Skip type checking all .d.ts files. */

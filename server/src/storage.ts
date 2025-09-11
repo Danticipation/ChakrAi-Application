@@ -2,8 +2,8 @@
 // Uses modular memory services for robust conversation continuity and therapeutic insights
 
 // Import the modular memory system
-import { MemoryManager } from './memory/MemoryManager.js';
-import { MinimalStorage, type IStorage } from './storage/storage-minimal.js';
+import { MemoryManager } from '../memory/MemoryManager.ts';
+import { MinimalStorage, type IStorage } from '../storage/storage-minimal.ts';
 
 // Create instances of both systems
 export const storage = new MinimalStorage(); // Basic storage operations

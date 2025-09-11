@@ -1,33 +1,51 @@
 import express from 'express';
 import { storage } from '../storage.js';
-import { userSessionManager } from '../userSession.js';
+import { db } from '../db.js'; // Import db
+import { userDevices } from '../../shared/schema.js'; // Import userDevices schema
+import { eq } from 'drizzle-orm'; // Import eq for queries
 
 const router = express.Router();
+
+// Helper to get authenticated user ID
+const getAuthUserId = (req) => {
+  // hipaaAuthMiddleware sets req.authenticatedUserId
+  if (req.authenticatedUserId) {
+    return req.authenticatedUserId;
+  }
+  // Fallback for development or if middleware is not fully active
+  console.warn('⚠️ req.authenticatedUserId not found, falling back to req.userId');
+  return req.userId || 1; // Default to 1 for testing if no user ID is present
+};
 
 // Create anonymous user - endpoint that frontend calls
 router.post('/anonymous', async (req, res) => {
   try {
-    // Simple anonymous user creation without requiring full auth context
-    const deviceFingerprint = req.headers['x-device-fingerprint'] || 
-                            req.headers['device-fingerprint'] || 
-                            `device-${Date.now()}`;
-    const sessionId = req.headers['x-session-id'] || 
-                     req.headers['session-id'] || 
-                     `session-${Date.now()}`;
+    const userId = getAuthUserId(req);
+    const uid = res.locals.uid; // Get the canonical UID from hipaaAuthMiddleware
+
+    if (!uid) {
+      console.error('❌ Anonymous user creation failed: UID not available from middleware.');
+      return res.status(500).json({ error: 'Authentication context missing' });
+    }
+
+    // Check if user exists in userDevices table
+    let userRecord = await db.select().from(userDevices).where(eq(userDevices.uid, uid)).limit(1);
+
+    if (userRecord.length === 0) {
+      // This scenario should ideally be handled by hipaaAuthMiddleware creating the user,
+      // but as a safeguard, we can log a warning or attempt to create if necessary.
+      console.warn(`⚠️ User record not found for UID ${uid}. This should have been created by hipaaAuthMiddleware.`);
+      // For now, we'll proceed with the UID provided by hipaaAuthMiddleware.
+      // A more robust solution might involve re-triggering user creation logic here.
+    }
     
-    // Generate a simple user ID based on device fingerprint
-    const userId = Math.abs(deviceFingerprint.split('').reduce((a, b) => {
-      a = ((a << 5) - a) + b.charCodeAt(0);
-      return a & a;
-    }, 0)) || Math.floor(Math.random() * 1000000);
-    
-    console.log(`Anonymous user created/retrieved: ${userId}`);
+    console.log(`Anonymous user created/retrieved: ${userId} (UID: ${uid})`);
     res.json({ 
       success: true,
       user: {
         id: userId,
-        deviceFingerprint: deviceFingerprint,
-        sessionId: sessionId
+        uid: uid,
+        // deviceFingerprint and sessionId are handled by hipaaAuthMiddleware and cookies
       }
     });
   } catch (error) {
@@ -39,10 +57,11 @@ router.post('/anonymous', async (req, res) => {
 // Check if user profile exists - endpoint that frontend calls
 router.get('/user-profile-check/:userId', async (req, res) => {
   try {
-    const userId = parseInt(req.params.userId);
+    const userId = getAuthUserId(req); // Use authenticated user ID
     console.log(`Checking profile for user: ${userId}`);
     
-    // Simple response - assume no quiz needed for now
+    // In a real scenario, you'd check the database for a profile associated with userId
+    // For now, we'll assume no quiz is needed and a profile exists if a userId is present.
     res.json({
       needsQuiz: false,
       hasProfile: true,
@@ -50,26 +69,18 @@ router.get('/user-profile-check/:userId', async (req, res) => {
     });
   } catch (error) {
     console.error('Error checking user profile:', error);
-    res.json({ needsQuiz: false, hasProfile: false }); // Default to not needing quiz
+    res.status(500).json({ error: 'Failed to check user profile' }); // Return 500 on error
   }
 });
 
 // Clear all user data for fresh start
 router.post('/clear-user-data', async (req, res) => {
   try {
-    const { deviceFingerprint } = req.body;
+    const userId = getAuthUserId(req); // Use authenticated user ID
     
-    if (!deviceFingerprint) {
-      return res.status(400).json({ error: 'Device fingerprint is required' });
+    if (!userId) {
+      return res.status(400).json({ error: 'User ID is required for data clearing' });
     }
-
-    // Get user ID by device fingerprint
-    const user = await storage.getUserByDeviceFingerprint(deviceFingerprint);
-    if (!user) {
-      return res.json({ success: true, message: 'No data found for this device' });
-    }
-
-    const userId = user.id;
 
     // Clear all user-related data INCLUDING CHALLENGE PROGRESS - with error resilience
     const clearOperations = [
@@ -99,18 +110,18 @@ router.post('/clear-user-data', async (req, res) => {
 // Get current user info
 router.get('/current', async (req, res) => {
   try {
-    // Get or create anonymous user
-    const sessionInfo = userSessionManager.getSessionFromRequest(req);
-    const anonymousUser = await userSessionManager.getOrCreateAnonymousUser(
-      sessionInfo.deviceFingerprint, 
-      sessionInfo.sessionId
-    );
+    const userId = getAuthUserId(req); // Use authenticated user ID
+    const uid = res.locals.uid; // Get the canonical UID from hipaaAuthMiddleware
+
+    if (!uid) {
+      console.error('❌ Current user retrieval failed: UID not available from middleware.');
+      return res.status(500).json({ error: 'Authentication context missing' });
+    }
     
-    console.log(`Current user request for userId: ${anonymousUser.id}`);
+    console.log(`Current user request for userId: ${userId} (UID: ${uid})`);
     res.json({ 
-      userId: anonymousUser.id,
-      deviceFingerprint: sessionInfo.deviceFingerprint,
-      sessionId: sessionInfo.sessionId,
+      userId: userId,
+      uid: uid,
       timestamp: new Date().toISOString()
     });
   } catch (error) {
@@ -122,7 +133,7 @@ router.get('/current', async (req, res) => {
 // User profile endpoints
 router.get('/profile/:userId?', async (req, res) => {
   try {
-    const userId = parseInt(req.params.userId) || 1;
+    const userId = getAuthUserId(req); // Use authenticated user ID
     
     const profile = await storage.getUserProfile(userId);
     if (!profile) {
@@ -155,7 +166,7 @@ router.post('/user-profile', async (req, res) => {
 // Delete user data endpoints
 router.delete('/:userId/messages', async (req, res) => {
   try {
-    const userId = parseInt(req.params.userId);
+    const userId = getAuthUserId(req); // Use authenticated user ID
     await storage.clearUserMessages(userId);
     res.json({ success: true, message: 'Messages cleared' });
   } catch (error) {
@@ -166,7 +177,7 @@ router.delete('/:userId/messages', async (req, res) => {
 
 router.delete('/:userId/journal-entries', async (req, res) => {
   try {
-    const userId = parseInt(req.params.userId);
+    const userId = getAuthUserId(req); // Use authenticated user ID
     await storage.clearUserJournalEntries(userId);
     res.json({ success: true, message: 'Journal entries cleared' });
   } catch (error) {
@@ -177,7 +188,7 @@ router.delete('/:userId/journal-entries', async (req, res) => {
 
 router.delete('/:userId/mood-entries', async (req, res) => {
   try {
-    const userId = parseInt(req.params.userId);
+    const userId = getAuthUserId(req); // Use authenticated user ID
     await storage.clearUserMoodEntries(userId);
     res.json({ success: true, message: 'Mood entries cleared' });
   } catch (error) {
@@ -189,11 +200,11 @@ router.delete('/:userId/mood-entries', async (req, res) => {
 // Adaptive preferences endpoint
 router.get('/adaptive-preferences', async (req, res) => {
   try {
-    const userId = parseInt(req.query.userId) || 1;
+    const userId = getAuthUserId(req); // Use authenticated user ID
     
     // For now, return default preferences - this should connect to user preferences system
     res.json({
-      id: 1,
+      id: userId,
       learningStyle: 'conversational',
       responseDepth: 'detailed',
       emotionalTone: 'supportive',
@@ -212,7 +223,7 @@ router.get('/adaptive-preferences', async (req, res) => {
 // User adaptive preferences endpoint for AdaptiveLearningProgressTracker
 router.get('/adaptive-preferences', async (req, res) => {
   try {
-    const userId = parseInt(req.query.userId) || 20;
+    const userId = getAuthUserId(req); // Use authenticated user ID
     console.log(`📊 Getting adaptive preferences for user ${userId}`);
     
     res.json({

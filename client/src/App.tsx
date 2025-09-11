@@ -43,14 +43,19 @@ const queryClient = new QueryClient({
   },
 });
 
-// Simple error boundary
-function ErrorBoundary({ children }: { children: React.ReactNode }) {
-  return <>{children}</>;
-}
+// Import enhanced error boundaries
+import ErrorBoundary from '@/components/ErrorBoundary';
+import MeditationErrorBoundary from '@/components/MeditationErrorBoundary';
 
 const ModernAppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void}> = ({ currentUserId, onDataReset }) => {
   const [activeSection, setActiveSection] = useState('dashboard');
   const [selectedVoice, setSelectedVoice] = useState('james');
+  const [selectedModel, setSelectedModel] = useState(() => {
+    // Check if saved model is a Grok model and fallback to GPT-4o
+    const savedModel = localStorage.getItem('selectedModel') || 'gpt-4o';
+    const validModels = ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-4', 'gpt-3.5-turbo'];
+    return validModels.includes(savedModel) ? savedModel : 'gpt-4o';
+  });
   
   // Chat functionality
   const [chatInput, setChatInput] = useState('');
@@ -66,7 +71,7 @@ const ModernAppLayout: React.FC<{currentUserId: number | null, onDataReset: () =
     voiceRecorderRef.current = new VoiceRecorder({
       onTranscription: (text) => {
         setChatInput(text);
-        console.log('✅ Voice transcription received:', text);
+      console.log('Voice transcription received:', text);
       },
       onError: (error) => {
         console.error('❌ Voice recording error:', error);
@@ -85,6 +90,11 @@ const ModernAppLayout: React.FC<{currentUserId: number | null, onDataReset: () =
       }
     };
   }, []);
+
+  // Save selected model to localStorage when it changes
+  React.useEffect(() => {
+    localStorage.setItem('selectedModel', selectedModel);
+  }, [selectedModel]);
 
   // Voice recording functions
   const handleVoiceToggle = () => {
@@ -107,10 +117,8 @@ const ModernAppLayout: React.FC<{currentUserId: number | null, onDataReset: () =
     const messageText = message || chatInput;
     if (!messageText.trim()) return;
     
-    console.log(`🎵 Frontend - Sending message with voice: ${selectedVoice}`);
-    
     if (!validateUserSession()) {
-      console.error('❌ Session validation failed for chat message');
+      console.error('Session validation failed for chat message');
       return;
     }
     
@@ -127,11 +135,10 @@ const ModernAppLayout: React.FC<{currentUserId: number | null, onDataReset: () =
     
     try {
       const headers = await getDeviceHeaders();
-      console.log('🔒 Sending chat message with bulletproof headers');
       
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 30000);
-      
+
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
@@ -140,16 +147,16 @@ const ModernAppLayout: React.FC<{currentUserId: number | null, onDataReset: () =
         },
         body: JSON.stringify({
           message: messageText,
-          voice: selectedVoice
+          voice: selectedVoice,
+          model: selectedModel
         }),
         signal: controller.signal
       });
       
       clearTimeout(timeoutId);
-      
+
       if (response.ok) {
         const data = await response.json();
-        console.log('✅ Chat API success - Status:', response.status);
         
         const botMessage = {
           sender: 'bot' as const,
@@ -159,38 +166,8 @@ const ModernAppLayout: React.FC<{currentUserId: number | null, onDataReset: () =
         };
         setMessages(prev => [...prev, botMessage]);
         setIsAiTyping(false);
-        
-        // Play audio if available
-        if (data.audioUrl) {
-          console.log('🔊 Playing audio response...');
-          try {
-            const binaryString = atob(data.audioUrl);
-            const bytes = new Uint8Array(binaryString.length);
-            for (let i = 0; i < binaryString.length; i++) {
-              bytes[i] = binaryString.charCodeAt(i);
-            }
-            const audioBlob = new Blob([bytes], { type: 'audio/mpeg' });
-            const audioUrl = URL.createObjectURL(audioBlob);
-            const audio = new Audio(audioUrl);
-            
-            audio.volume = 0.8;
-            const playPromise = audio.play();
-            
-            if (playPromise) {
-              playPromise
-                .then(() => {
-                  console.log('🔊 Audio playback started successfully');
-                })
-                .catch(error => {
-                  console.error('🔊 Audio playback failed:', error);
-                });
-            }
-          } catch (audioError) {
-            console.error('🔊 Audio processing failed:', audioError);
-          }
-        }
       } else {
-        console.error('❌ Chat API error - Status:', response.status, response.statusText);
+        console.error('Chat API error - Status:', response.status, response.statusText);
         const errorMessage = {
           sender: 'bot' as const,
           text: 'Sorry, I had trouble processing your message. Please try again.',
@@ -201,7 +178,7 @@ const ModernAppLayout: React.FC<{currentUserId: number | null, onDataReset: () =
         setIsAiTyping(false);
       }
     } catch (error) {
-      console.error('❌ Error sending message:', error);
+      console.error('Error sending message:', error);
       
       let errorText = 'Sorry, I had trouble processing your message. Please try again.';
       if (error instanceof Error && error.name === 'AbortError') {
@@ -237,6 +214,9 @@ const ModernAppLayout: React.FC<{currentUserId: number | null, onDataReset: () =
             isAiTyping={isAiTyping}
             isTtsEnabled={isTtsEnabled}
             onTtsToggle={handleTtsToggle}
+            onBotMessageSpeak={(text: string) => {}}
+            selectedModel={selectedModel} // Pass selected model
+            onModelChange={setSelectedModel} // Pass model change handler
           />
         );
       case 'journal':
@@ -250,7 +230,11 @@ const ModernAppLayout: React.FC<{currentUserId: number | null, onDataReset: () =
       case 'goals':
         return <ChallengeSystem />;
       case 'meditation':
-        return <BeautifulMeditation />;
+        return (
+          <MeditationErrorBoundary>
+            <BeautifulMeditation />
+          </MeditationErrorBoundary>
+        );
       case 'exercises':
         return <AgentSystem userId={currentUserId || 1} />;
       case 'resources':
@@ -272,7 +256,14 @@ const ModernAppLayout: React.FC<{currentUserId: number | null, onDataReset: () =
       onNavigate={setActiveSection}
       currentUserId={currentUserId}
     >
-      <ErrorBoundary>
+      <ErrorBoundary 
+        level="component" 
+        componentName="ModernAppLayout"
+        onError={(error, errorInfo) => {
+          // Custom error handling for main app layout
+          console.error('Main layout error:', error, errorInfo);
+        }}
+      >
         {renderActiveSection()}
       </ErrorBoundary>
     </ModernLayout>
@@ -290,10 +281,8 @@ const AppWithModernDesign = () => {
   useEffect(() => {
     const initializeUser = async () => {
       try {
-        console.log('🔒 Initializing user session...');
-        
         if (!validateUserSession()) {
-          console.error('❌ Session validation failed during initialization');
+          console.error('Session validation failed during initialization');
           setCurrentUserId(null);
           setIsLoadingProfile(false);
           return;
@@ -301,7 +290,6 @@ const AppWithModernDesign = () => {
         const userId = await getCurrentUserId();
         const headers = await getDeviceHeaders();
         
-        console.log('✅ Session validated. User ID:', userId);
         setCurrentUserId(userId);
 
         // Check if user exists in backend
@@ -315,22 +303,17 @@ const AppWithModernDesign = () => {
             body: JSON.stringify({})
           });
           
-          if (response.ok) {
-            const userData = await response.json();
-            console.log('✅ Backend user verified:', userData.user?.id);
-          } else {
-            console.warn('⚠️ Backend user creation failed, continuing with calculated ID');
+          if (!response.ok) {
+            console.warn('Backend user creation failed, continuing with calculated ID');
           }
         } catch (backendError) {
-          console.warn('⚠️ Backend user creation failed:', backendError);
+          console.warn('Backend user creation failed:', backendError);
         }
 
-        // Skip personality quiz for modern design
         setShowPersonalityQuiz(false);
       } catch (error) {
         console.error('Failed to initialize user:', error);
         const fallbackUserId = await getCurrentUserId();
-        console.log('Using fallback user ID:', fallbackUserId);
         setCurrentUserId(fallbackUserId);
         setShowPersonalityQuiz(false);
       } finally {
@@ -411,15 +394,24 @@ const AppWithModernDesign = () => {
 
 export default function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <AuthProvider>
-          <SubscriptionProvider>
-            <AppWithModernDesign />
-            <NeonCursor />
-          </SubscriptionProvider>
-        </AuthProvider>
-      </ThemeProvider>
-    </QueryClientProvider>
+    <ErrorBoundary 
+      level="app" 
+      componentName="App"
+      onError={(error, errorInfo) => {
+        // App-level error handling
+        console.error('App-level error:', error, errorInfo);
+      }}
+    >
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider>
+          <AuthProvider>
+            <SubscriptionProvider>
+              <AppWithModernDesign />
+              <NeonCursor />
+            </SubscriptionProvider>
+          </AuthProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }

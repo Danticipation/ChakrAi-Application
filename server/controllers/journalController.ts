@@ -1,6 +1,6 @@
 // Phase 2: Extract business logic from routes - Journal Controller
 import { Request, Response } from 'express';
-import { storage } from '../storage.js';
+import { storage } from '../src/storage.js';
 import { AnalyticsService } from '../services/analyticsService.js';
 import { ResponseService } from '../services/responseService.js';
 import { PaginationHelper } from '../utils/pagination.js';

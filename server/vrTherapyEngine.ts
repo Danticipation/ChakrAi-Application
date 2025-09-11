@@ -1,5 +1,5 @@
 import { openai } from './openaiRetry.js';
-import { storage } from './storage.js';
+import { storage } from './src/storage.js';
 import type { VrEnvironment, VrSession, VrTherapeuticPlan, VrAccessibilityProfile } from '../shared/schema.ts';
 
 export interface VrTherapyRecommendation {

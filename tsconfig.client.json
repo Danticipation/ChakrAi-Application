@@ -6,7 +6,8 @@
     "types": ["vite/client"],
     "skipLibCheck": true,
     "module": "ESNext",
-    "moduleResolution": "Node"
+    "moduleResolution": "Node",
+    "allowImportingTsExtensions": true
   },
-  "include": ["client/**/*", "types/**/*"]
+  "include": ["client/**/*", "types/**/*", "server/**/*"]
 }

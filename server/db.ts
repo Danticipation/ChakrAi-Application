@@ -1,11 +1,19 @@
+import dotenv from 'dotenv';
+
+console.log('DEBUG: DATABASE_URL before dotenv.config():', process.env['DATABASE_URL']);
+
+// Load environment variables first
+dotenv.config({ path: '../.env' });
+
+console.log('DEBUG: DATABASE_URL after dotenv.config():', process.env['DATABASE_URL']);
+
 import { Pool, neonConfig } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-serverless';
-import ws from "ws";
-import * as schema from "../shared/schema.ts";
+import * as schema from "../shared/schema.js";
 
-// FIX: Disable WebSocket for now to avoid "host" connection errors
-// The "getaddrinfo ENOTFOUND host" error is caused by WebSocket trying to connect to 'host'
-// neonConfig.webSocketConstructor = ws;
+// CRITICAL FIX: Disable WebSocket to prevent "non-101 status code" errors
+neonConfig.webSocketConstructor = undefined;
+neonConfig.fetchConnectionCache = false;
 
 if (!process.env['DATABASE_URL']) {
   throw new Error(

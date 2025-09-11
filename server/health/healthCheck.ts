@@ -1,6 +1,6 @@
 // Phase 3: Health monitoring system
 import { Request, Response } from 'express';
-import { storage } from '../storage.js';
+import { storage } from '../src/storage.js';
 import { PerformanceMonitor } from '../utils/performanceMonitor.js';
 import { MemoryManager } from '../utils/memoryOptimization.js';
 

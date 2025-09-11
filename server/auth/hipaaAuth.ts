@@ -188,10 +188,16 @@ export const hipaaAuthMiddleware = async (req: express.Request, res: express.Res
       return a & a; // Convert to 32bit integer
     }, 0);
     const positiveId = Math.abs(hashCode) % 2147483647; // Keep it positive and within INT range
-    req.userId = positiveId
-    req.user = { id: positiveId }
-    req.authenticatedUserId = positiveId
-    req.isAnonymous = true
+    req.userId = positiveId;
+    req.user = { 
+      id: positiveId, 
+      uid: uid, 
+      adid: req.cookies?.['adid'] || 'unknown_adid', // Fallback if adid not yet set in cookie
+      sid: req.cookies?.['sid'] || 'unknown_sid', // Fallback if sid not yet set in cookie
+      isAnonymous: true 
+    };
+    req.authenticatedUserId = positiveId;
+    req.isAnonymous = true;
 
     // 4. Set locals for downstream use (canonical UID and stable tag)
     res.locals['uid'] = uid;                 // the real persistent UID, e.g. "usr_abcdef..."

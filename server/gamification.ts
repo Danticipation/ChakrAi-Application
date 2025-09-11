@@ -1,4 +1,4 @@
-import { storage } from './storage.js';
+import { storage } from './src/storage.js';
 import { UserAchievement, WellnessStreak, DailyActivity } from '../shared/schema.js';
 
 export interface Badge {

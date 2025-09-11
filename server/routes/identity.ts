@@ -40,15 +40,16 @@ function setSidCookie(res: express.Response, sid: string) {
 
 // 1) /v1/install/register – sets DID cookie if missing; returns ADID
 router.post('/install/register', safe(async (req: Request, res: Response) => {
-  let did = getDidCookie(req)
+  let did = getDidCookie(req);
   if (!did) { 
-    did = genDID()
-    setDidCookie(res, did) 
+    const generatedDid = genDID();
+    did = Buffer.from(generatedDid);
+    setDidCookie(res, did); 
   }
   
-  const adid = await adidFromDID(did as Buffer)
-  const didHash = sha256b64url(did as Buffer)
-  const platform = req.get('X-Platform') ?? 'web'
+  const adid = await adidFromDID(did!);
+  const didHash = sha256b64url(did!);
+  const platform = req.get('X-Platform') ?? 'web';
   
   // upsert installs
   await db.insert(installs)
@@ -61,34 +62,34 @@ router.post('/install/register', safe(async (req: Request, res: Response) => {
 
 // 2) /v1/session/start – creates anonymous user if needed; sets SID cookie
 router.post('/session/start', safe(async (req: Request, res: Response) => {
-  const did = getDidCookie(req)
-  if (!did) return res.status(401).json({ error: 'no_install' })
+  const did = getDidCookie(req);
+  if (!did) return res.status(401).json({ error: 'no_install' });
   
-  const adid = await adidFromDID(did as Buffer)
+  const adid = await adidFromDID(did);
 
   // Bind or create a pseudonymous user for this ADID
-  let row = await db.select().from(userDevices).where(eq(userDevices.adid, adid)).limit(1)
-  let uid: string
+  let row = await db.select().from(userDevices).where(eq(userDevices.adid, adid)).limit(1);
+  let uid: string;
   
   if (row.length && row[0]) { 
-    uid = row[0].uid 
+    uid = row[0].uid;
     // Update last seen
     await db.update(userDevices)
       .set({ lastSeen: new Date() })
-      .where(eq(userDevices.adid, adid))
+      .where(eq(userDevices.adid, adid));
   } else {
-    uid = `usr_${uuidv4().replace(/-/g,'')}`
-    const udid = await udidFrom(uid, did as Buffer)
-    await db.insert(userDevices).values({ uid, adid, udid })
+    uid = `usr_${uuidv4().replace(/-/g,'')}`;
+    const udid = await udidFrom(uid, did);
+    await db.insert(userDevices).values({ uid, adid, udid });
   }
 
-  const sid = uuidv4()
-  await db.insert(sessions).values({ sid, adid, uid })
-  setSidCookie(res, sid)
-  const udid = await udidFrom(uid, did as Buffer)
+  const sid = uuidv4();
+  await db.insert(sessions).values({ sid, adid, uid });
+  setSidCookie(res, sid);
+  const udid = await udidFrom(uid, did);
   
-  console.log(`✅ Session started: uid=${uid}, sid=${sid}`)
-  return res.json({ sid, uid, adid, udid })
+  console.log(`✅ Session started: uid=${uid}, sid=${sid}`);
+  return res.json({ sid, uid, adid, udid });
 }))
 
 // 3) /v1/session/end – revoke session and clear cookie

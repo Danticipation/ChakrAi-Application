@@ -32,7 +32,9 @@ export class VoiceController {
         }
 
         // Create a File-like object for OpenAI
-        const audioFile = new File([req.file.buffer], 'audio.wav', {
+        // Create a File-like object for OpenAI
+        // Convert Buffer to Uint8Array for compatibility with File constructor
+        const audioFile = new File([new Uint8Array(req.file.buffer)], req.file.originalname, {
           type: req.file.mimetype
         });
 
@@ -100,7 +102,7 @@ export class VoiceController {
       return ResponseService.sendError(res, 'Text is required', 400);
     }
 
-    if (!process.env['ELEVENLABS_API_KEY']) {
+    if (!process.env.ELEVENLABS_API_KEY) {
       return ResponseService.sendError(res, 'ElevenLabs API not configured', 503);
     }
 
@@ -123,7 +125,7 @@ export class VoiceController {
         headers: {
           'Accept': 'audio/mpeg',
           'Content-Type': 'application/json',
-          'xi-api-key': process.env['ELEVENLABS_API_KEY']
+          'xi-api-key': process.env.ELEVENLABS_API_KEY
         },
         body: JSON.stringify({
           text: cleanText,

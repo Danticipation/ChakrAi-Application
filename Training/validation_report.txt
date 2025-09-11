@@ -1,0 +1,10 @@
+FINE-TUNE JSONL VALIDATION REPORT
+File: /mnt/data/training_ready.jsonl
+Total lines read: 33
+Valid structure: 33
+Issues found: 0
+
+Prompt length stats (chars): n=33, min=56, p50=89, mean=97, p90=142, max=163
+Completion length stats (chars): n=33, min=136, p50=178, mean=186, p90=240, max=273
+
+No issues detected. Ready to upload.

@@ -89,6 +89,7 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
   const [messages, setMessages] = useState<Array<{sender: 'user' | 'bot', text: string, time: string}>>([]);
   const [isAiTyping, setIsAiTyping] = useState(false);
   const [isTtsEnabled, setIsTtsEnabled] = useState(true);
+  const [selectedModel, setSelectedModel] = useState('gpt-4o'); // Added selectedModel state
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const voiceRecorderRef = useRef<VoiceRecorder | null>(null);
 
@@ -134,6 +135,7 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
     }
   };
 
+  // Async TTS generation function (non-blocking)
   // Async TTS generation function (non-blocking)
   const generateAndPlayTTS = async (text: string, voice: string) => {
     try {
@@ -540,6 +542,9 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
             isAiTyping={isAiTyping}
             isTtsEnabled={isTtsEnabled}
             onTtsToggle={() => setIsTtsEnabled(!isTtsEnabled)}
+            onBotMessageSpeak={(text: string) => generateAndPlayTTS(text, selectedVoice)} // Pass the TTS function with selectedVoice
+            selectedModel={selectedModel} // Pass selectedModel
+            onModelChange={setSelectedModel} // Pass onModelChange handler
           />
         );
       default:

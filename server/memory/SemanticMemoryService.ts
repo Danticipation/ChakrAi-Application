@@ -1,8 +1,8 @@
 // SEMANTIC MEMORY SERVICE - Handles extraction, storage, and retrieval of semantic memories
 // Core component for preserving therapeutic conversation insights
 
-import { db } from '../db.ts';
-import { semanticMemories } from '../../shared/schema.ts';
+import { db } from '../db.js';
+import { semanticMemories } from '../../shared/schema.js';
 import { eq, desc, and, or, ilike, sql } from 'drizzle-orm';
 import type { ISemanticMemoryService, SemanticMemory, MemoryContext } from './types.js';
 
@@ -69,7 +69,7 @@ export class SemanticMemoryService implements ISemanticMemoryService {
 
       const [createdMemory] = await db.insert(semanticMemories).values(memoryData).returning();
       console.log(`💾 Created semantic memory: ${createdMemory?.id}`);
-      return createdMemory!;
+      return createdMemory as SemanticMemory;
 
     } catch (error) {
       console.error('Error creating semantic memory:', error);
@@ -88,7 +88,7 @@ export class SemanticMemoryService implements ISemanticMemoryService {
         .where(eq(semanticMemories.id, id))
         .returning();
 
-      return updatedMemory!;
+      return updatedMemory as SemanticMemory;
     } catch (error) {
       console.error('Error updating semantic memory:', error);
       throw error;
@@ -114,7 +114,7 @@ export class SemanticMemoryService implements ISemanticMemoryService {
         await this.incrementAccessCount(memory.id);
       }
 
-      return memories;
+      return memories as SemanticMemory[];
     } catch (error) {
       console.error('Error getting recent memories:', error);
       return [];
@@ -176,7 +176,7 @@ export class SemanticMemoryService implements ISemanticMemoryService {
       }
 
       console.log(`🔍 Found ${memories.length} memories for query: "${query}"`);
-      return memories;
+      return memories as SemanticMemory[];
 
     } catch (error) {
       console.error('Error searching memories:', error);
@@ -200,10 +200,10 @@ export class SemanticMemoryService implements ISemanticMemoryService {
 
       // Find memories with overlapping tags or topics
       const relatedConditions = [
-        ...(sourceMemory.semanticTags ?? []).map(tag =>
+        ...(sourceMemory.semanticTags ?? []).map((tag: any) =>
           ilike(semanticMemories.semanticTags, `%${tag}%`)
         ),
-        ...(sourceMemory.relatedTopics ?? []).map(topic =>
+        ...(sourceMemory.relatedTopics ?? []).map((topic: any) =>
           ilike(semanticMemories.relatedTopics, `%${topic}%`)
         )
       ];

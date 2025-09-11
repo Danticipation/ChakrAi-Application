@@ -4,7 +4,6 @@
  */
 
 import express from 'express'
-import '../../types/express-request.js'
 import { v4 as uuid } from 'uuid'
 import { db } from '../db.js'
 import { users } from '../../shared/schema.js'
@@ -72,11 +71,17 @@ export const emergencyAuthFix = async (req: express.Request, res: express.Respon
     
     // Set user context
     if (userId) {
-      req.userId = userId
-      req.user = { id: userId }
-      req.authenticatedUserId = userId
+      req.userId = userId;
+      req.user = { 
+        id: userId, 
+        uid: deviceId, // Assuming deviceId can serve as uid for anonymous users
+        adid: deviceId, // Assuming deviceId can serve as adid for anonymous users
+        sid: deviceId, // Assuming deviceId can serve as sid for anonymous users
+        isAnonymous: true 
+      };
+      req.authenticatedUserId = userId;
     }
-    req.isAnonymous = true
+    req.isAnonymous = true;
     
     console.log(`🔒 EMERGENCY AUTH: User ${userId}`)
     next()

@@ -88,7 +88,9 @@ class UnifiedUserSessionManager {
       const response = await fetch('/api/users/current', {
         method: 'GET',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'x-device-fingerprint': this.getDeviceFingerprint(),
+          'x-session-id': this.getSessionId()
         }
       });
 
@@ -135,7 +137,9 @@ class UnifiedUserSessionManager {
    */
   async getAuthHeaders(): Promise<Record<string, string>> {
     return {
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
+      'x-device-fingerprint': this.getDeviceFingerprint(),
+      'x-session-id': this.getSessionId()
     };
   }
 

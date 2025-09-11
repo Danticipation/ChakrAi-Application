@@ -1,40 +1,37 @@
-// server/auth/unifiedAuth.d.ts
+import { Request, Response, NextFunction } from 'express';
 
-// Define the structure of the user object returned by getAuthenticatedUser
-export interface AuthenticatedUser {
-  id: string | number;
+interface User {
+  id: number;
   uid: string;
   adid: string;
   sid: string;
+  isAnonymous: boolean;
+  email?: string;
 }
 
-// Define the type for the request object, assuming it's from Express or similar
-export interface RequestObject {
-  ctx?: {
-    uid?: string;
-    adid?: string;
-    sid?: string;
-  };
-  userId?: string | number;
-  headers: { [key: string]: string | string[] | undefined };
+export const getAuthenticatedUser: (req: Request) => Promise<User>;
+export const unifiedAuthMiddleware: (req: Request, res: Response, next: NextFunction) => Promise<void>;
+export const optionalAuthMiddleware: (req: Request, res: Response, next: NextFunction) => Promise<void>;
+export const generateAuthToken: (user: User) => string;
+export const clearUserSession: (deviceFingerprint: string) => void;
+export const clearAllSessions: () => void;
+export const getCurrentUserId: (req: Request) => Promise<number>;
+
+// Extend the Request type to include userId, user, and authenticatedUserId
+declare global {
+  namespace Express {
+    interface Request {
+      userId?: number;
+      user?: {
+        id: number;
+        uid: string;
+        adid: string;
+        sid: string;
+        isAnonymous: boolean;
+        email?: string;
+      };
+      authenticatedUserId?: number;
+      isAnonymous?: boolean;
+    }
+  }
 }
-
-// Declare the module's exports
-export function getAuthenticatedUser(req: RequestObject): Promise<AuthenticatedUser>;
-export function unifiedAuthMiddleware(req: any, res: any, next: any): Promise<void>;
-export function optionalAuthMiddleware(req: any, res: any, next: any): Promise<void>;
-export function generateAuthToken(user: any): string;
-export function clearUserSession(deviceFingerprint: string): void;
-export function clearAllSessions(): void;
-export function getCurrentUserId(req: RequestObject): Promise<string | number>;
-
-const auth: {
-  getAuthenticatedUser: (req: RequestObject) => Promise<AuthenticatedUser>;
-  unifiedAuthMiddleware: (req: any, res: any, next: any) => Promise<void>;
-  optionalAuthMiddleware: (req: any, res: any, next: any) => Promise<void>;
-  generateAuthToken: (user: any) => string;
-  clearUserSession: (deviceFingerprint: string) => void;
-  getCurrentUserId: (req: RequestObject) => Promise<string | number>;
-};
-
-export default auth;

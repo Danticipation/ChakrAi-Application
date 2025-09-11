@@ -76,26 +76,32 @@ export class UidFirstStore {
 
   async addJournalEntry(uid: string, data: any) {
     try {
+      console.log('🔗 Testing database connection...');
+      
       const legacyId = await this.getLegacyIdForUid(uid);
+      console.log('✅ Legacy ID generated:', legacyId);
+      
       if (legacyId === null) throw new Error('Could not generate legacy ID');
+      
       const entryData = {
-        uid: uid,  // ← REQUIRED: Include UID in new writes
-        userId: legacyId,  // Keep for compatibility
-        title: data.title,
+        userId: legacyId,
+        title: data.title || null,
         content: data.content,
-        mood: data.mood,
-        moodIntensity: data.moodIntensity,
+        mood: data.mood || null,
+        moodIntensity: data.moodIntensity || null,
         tags: data.tags || [],
-        isPrivate: data.isPrivate !== false,
-        createdAt: new Date(),
-        updatedAt: new Date()
+        isPrivate: data.isPrivate !== false
       };
+      
+      console.log('📝 Inserting data:', entryData);
       
       const [entry] = await db.insert(journalEntries).values(entryData).returning();
       console.log(`📔 Created journal entry for uid ${uid} (legacy: ${legacyId})`);
       return entry;
     } catch (error) {
-      console.error('Error adding journal entry:', error);
+      console.error('❌ Database error details:', error);
+      console.error('❌ Error message:', error?.message || 'Unknown error');
+      console.error('❌ Error stack:', error?.stack || 'No stack trace');
       throw error;
     }
   }
@@ -130,8 +136,7 @@ export class UidFirstStore {
       const legacyId = await this.getLegacyIdForUid(uid);
       if (legacyId === null) throw new Error('Could not generate legacy ID');
       const moodData = {
-        uid: uid,  // ← REQUIRED: Include UID in new writes
-        userId: legacyId,  // Keep for compatibility
+        userId: legacyId,
         mood: data.mood,
         intensity: data.intensity || 5,
         triggers: data.triggers || [],

@@ -1,7 +1,7 @@
 // 🆓 BASIC PERSONALITY ANALYSIS FOR FREE TIER USERS
 // Provides valuable but limited insights to encourage premium upgrade
 
-import { storage } from '../storage.js';
+import { storage } from '../src/storage.js';
 import { openai } from '../openaiRetry.js';
 import { SubscriptionManager } from '../subscription/SubscriptionManager.js';
 

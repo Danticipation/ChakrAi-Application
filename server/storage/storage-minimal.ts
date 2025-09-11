@@ -9,7 +9,7 @@ import {
   type AdaptiveLearningInsight, type WellnessJourneyEvent,
   type InsertSemanticMemory, type InsertMemoryConnection, type InsertLearningMilestone,
   type InsertProgressMetric, type InsertAdaptiveLearningInsight, type InsertWellnessJourneyEvent
-} from '../../shared/schema.ts';
+} from '../../shared/schema.js';
 import { eq, desc, and, or, ilike, sql } from 'drizzle-orm';
 export interface IStorage {
   // Essential semantic memory methods
@@ -76,6 +76,12 @@ export interface IStorage {
   getActiveUserCount?(): Promise<number>;
   getTotalSessionCount?(): Promise<number>;
   getAllUsers?(limit?: number): Promise<any[]>;
+
+  // Subscription Management Methods
+  getUserSubscription(userId: number): Promise<any>;
+  updateUserSubscription(userId: number, data: Partial<any>): Promise<any>;
+  updateUserMonthlyUsage(userId: number, increment: number): Promise<any>;
+  createCheckoutSession(userId: number, planType: 'monthly' | 'yearly', deviceFingerprint: string): Promise<string>;
 }
 
 export class MinimalStorage implements IStorage {
@@ -90,7 +96,7 @@ export class MinimalStorage implements IStorage {
         .limit(limit);
       
       console.log(`📚 Retrieved ${memories.length} semantic memories for user ${userId}`);
-      return memories;
+      return memories as SemanticMemory[];
     } catch (error) {
       console.error('Error retrieving semantic memories:', error);
       return [];
@@ -116,7 +122,7 @@ export class MinimalStorage implements IStorage {
       
       const [memory] = await db.insert(semanticMemories).values(memoryData).returning();
       console.log(`💾 Created semantic memory: ${memory?.id}`);
-      return memory;
+      return memory as SemanticMemory;
     } catch (error) {
       console.error('Error creating semantic memory:', error);
       throw error;
@@ -147,7 +153,7 @@ export class MinimalStorage implements IStorage {
         .limit(limit);
       
       console.log(`🔍 Found ${memories.length} semantic memories for search: ${searchTerms.join(', ')}`);
-      return memories;
+      return memories as SemanticMemory[];
     } catch (error) {
       console.error('Error searching semantic memories:', error);
       return [];
@@ -163,7 +169,7 @@ export class MinimalStorage implements IStorage {
           eq(memoryConnections.toMemoryId, memoryId)
         ));
       
-      return connections;
+      return connections as MemoryConnection[];
     } catch (error) {
       console.error('Error getting memory connections:', error);
       return [];
@@ -183,7 +189,7 @@ export class MinimalStorage implements IStorage {
       };
       
       const [connection] = await db.insert(memoryConnections).values(connectionData).returning();
-      return connection;
+      return connection as MemoryConnection;
     } catch (error) {
       console.error('Error creating memory connection:', error);
       throw error;
@@ -209,7 +215,7 @@ export class MinimalStorage implements IStorage {
         .from(memoryConnections)
         .where(eq(memoryConnections.userId, userId));
       
-      return connections;
+      return connections as MemoryConnection[];
     } catch (error) {
       console.error('Error getting user memory connections:', error);
       return [];
@@ -242,12 +248,12 @@ export class MinimalStorage implements IStorage {
       id: Date.now(),
       userId: data.userId,
       sessionKey: data.sessionKey,
-      title: data.title || "New Conversation",
-      keyTopics: data.keyTopics || [],
-      emotionalTone: data.emotionalTone || "neutral",
-      unresolvedThreads: data.unresolvedThreads || {},
-      contextCarryover: data.contextCarryover || {},
-      messageCount: data.messageCount || 0,
+      title: data.title ?? "New Conversation",
+      keyTopics: data.keyTopics ?? [],
+      emotionalTone: data.emotionalTone ?? "neutral",
+      unresolvedThreads: data.unresolvedThreads ?? {},
+      contextCarryover: data.contextCarryover ?? {},
+      messageCount: data.messageCount ?? 0,
       isActive: true,
       lastActivity: new Date(),
       createdAt: new Date()
@@ -278,7 +284,7 @@ export class MinimalStorage implements IStorage {
         .where(eq(users.deviceFingerprint, deviceFingerprint))
         .limit(1);
       
-      return user[0] || null;
+      return user[0] ?? null;
     } catch (error) {
       console.error('Error getting user by device fingerprint:', error);
       return null;
@@ -304,7 +310,7 @@ export class MinimalStorage implements IStorage {
         .limit(5);
       
       console.log(`🔍 Found ${recentUsers.length} recent users for device fingerprint: ${deviceFingerprint.substring(0, 20)}...`);
-      return recentUsers;
+      return recentUsers as any[];
     } catch (error) {
       console.error('Error getting recent users by device fingerprint:', error);
       return [];
@@ -326,6 +332,98 @@ export class MinimalStorage implements IStorage {
     throw new Error('LEGACY_USER_CREATION_BLOCKED: Use HIPAA auth system');
   }
 
+  // SUBSCRIPTION MANAGEMENT IMPLEMENTATION
+  async getUserSubscription(userId: number): Promise<any> {
+    try {
+      const [user] = await db.select()
+        .from(users)
+        .where(eq(users.id, userId))
+        .limit(1);
+
+      if (!user) {
+        return null;
+      }
+
+      // Return relevant subscription fields from the user object
+      return {
+        tier: user.subscriptionStatus,
+        status: user.subscriptionStatus === 'free' ? 'active' : 'active', // Assuming 'active' for any non-free tier
+        expiresAt: user.subscriptionExpiresAt,
+        monthlyUsage: user.monthlyUsage,
+        monthlyLimit: user.subscriptionStatus === 'free' ? 1 : -1, // -1 for unlimited
+        lastUsageReset: user.lastUsageReset,
+        features: user.subscriptionStatus === 'premium' || user.subscriptionStatus === 'premium_device' ?
+          ['comprehensiveAnalysis', 'domainAnalysis', 'therapeuticRecommendations', 'progressTracking', 'exportReports', 'unlimitedAnalyses'] :
+          []
+      };
+    } catch (error) {
+      console.error('Error getting user subscription:', error);
+      throw error;
+    }
+  }
+
+  async updateUserSubscription(userId: number, data: Partial<any>): Promise<any> {
+    try {
+      const [updatedUser] = await db.update(users)
+        .set({ ...data, updatedAt: new Date() })
+        .where(eq(users.id, userId))
+        .returning();
+      return updatedUser;
+    } catch (error) {
+      console.error('Error updating user subscription:', error);
+      throw error;
+    }
+  }
+
+  async updateUserMonthlyUsage(userId: number, increment: number = 1): Promise<any> {
+    try {
+      const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      const newUsage = (user.monthlyUsage || 0) + increment;
+      const [updatedUser] = await db.update(users)
+        .set({ monthlyUsage: newUsage, updatedAt: new Date() })
+        .where(eq(users.id, userId))
+        .returning();
+      return updatedUser;
+    } catch (error) {
+      console.error('Error updating user monthly usage:', error);
+      throw error;
+    }
+  }
+
+  async createCheckoutSession(userId: number, planType: 'monthly' | 'yearly', deviceFingerprint: string): Promise<string> {
+    try {
+      // This is a simulated checkout session creation.
+      // In a real HIPAA-compliant application, this would involve:
+      // 1. Securely interacting with a payment gateway (e.g., Stripe, Braintree).
+      // 2. Creating a secure checkout session on the payment gateway's side.
+      // 3. Storing relevant transaction details (e.g., session ID, planType) in your database.
+      // 4. Returning the session ID to the client for redirection.
+
+      // For this task, we'll simulate a successful session creation
+      // and update the user's subscription status to 'premium' immediately.
+      const simulatedSessionId = `sim_checkout_${userId}_${planType}_${Date.now()}`;
+
+      await this.updateUserSubscription(userId, {
+        subscriptionStatus: 'premium', // Assuming 'premium' for any paid plan
+        subscriptionId: `sub_${Date.now()}`,
+        customerId: `cust_${userId}`,
+        subscriptionExpiresAt: new Date(Date.now() + (planType === 'monthly' ? 30 : 365) * 24 * 60 * 60 * 1000),
+        monthlyUsage: 0, // Reset usage on new subscription
+        lastUsageReset: new Date(),
+      });
+
+      console.log(`Simulated checkout session created for user ${userId}, plan: ${planType}, session ID: ${simulatedSessionId}`);
+      return simulatedSessionId;
+    } catch (error) {
+      console.error('Error creating simulated checkout session:', error);
+      throw error;
+    }
+  }
+
   async createJournalEntry(data: any): Promise<any> {
     try {
       const entryData = {
@@ -342,7 +440,7 @@ export class MinimalStorage implements IStorage {
       
       const [entry] = await db.insert(journalEntries).values(entryData).returning();
       console.log(`📔 Created journal entry: ${entry?.id}`);
-      return entry;
+      return entry as any;
     } catch (error) {
       console.error('Error creating journal entry:', error);
       throw error;
@@ -358,7 +456,7 @@ export class MinimalStorage implements IStorage {
         .limit(limit);
       
       console.log(`📔 Retrieved ${entries.length} journal entries for user ${userId}`);
-      return entries;
+      return entries as any[];
     } catch (error) {
       console.error('Error getting journal entries:', error);
       return [];
@@ -372,7 +470,7 @@ export class MinimalStorage implements IStorage {
         .where(eq(journalEntries.id, entryId))
         .limit(1);
       
-      return result[0] || null;
+      return result[0] ?? null;
     } catch (error) {
       console.error('Error getting journal entry:', error);
       return null;
@@ -397,7 +495,7 @@ export class MinimalStorage implements IStorage {
 
   async updateJournalEntry(entryId: number, data: any): Promise<any> {
     const [entry] = await db.update(journalEntries).set(data).where(eq(journalEntries.id, entryId)).returning();
-    return entry;
+    return entry as any;
   }
 
   async getUserMessages(userId: number, limit: number = 50): Promise<any[]> {
@@ -408,7 +506,7 @@ export class MinimalStorage implements IStorage {
         .orderBy(desc(messages.createdAt))
         .limit(limit);
       
-      return userMessages;
+      return userMessages as any[];
     } catch (error) {
       console.error('Error getting user messages:', error);
       return [];
@@ -425,7 +523,7 @@ export class MinimalStorage implements IStorage {
         ))
         .orderBy(desc(semanticMemories.createdAt));
       
-      return memories;
+      return memories as any[];
     } catch (error) {
       console.error('Error getting user memories:', error);
       return [];
@@ -443,7 +541,7 @@ export class MinimalStorage implements IStorage {
         ))
         .orderBy(desc(semanticMemories.createdAt));
       
-      return userFacts;
+      return userFacts as any[];
     } catch (error) {
       console.error('Error getting user facts:', error);
       return [];
@@ -458,7 +556,7 @@ export class MinimalStorage implements IStorage {
         .orderBy(desc(moodEntries.createdAt))
         .limit(limit);
       
-      return moods;
+      return moods as any[];
     } catch (error) {
       console.error('Error getting user mood entries:', error);
       return [];
@@ -479,7 +577,7 @@ export class MinimalStorage implements IStorage {
       
       const [entry] = await db.insert(moodEntries).values(moodData).returning();
       console.log(`🎭 Created mood entry: ${entry?.id} for user ${data.userId}`);
-      return entry;
+      return entry as any;
     } catch (error) {
       console.error('Error creating mood entry:', error);
       throw error;
@@ -493,7 +591,7 @@ export class MinimalStorage implements IStorage {
         .where(eq(moodEntries.userId, userId))
         .orderBy(desc(moodEntries.createdAt));
       
-      return moods;
+      return moods as any[];
     } catch (error) {
       console.error('Error getting mood entries:', error);
       return [];
@@ -507,7 +605,7 @@ export class MinimalStorage implements IStorage {
         .where(eq(memoryInsights.userId, userId))
         .orderBy(desc(memoryInsights.createdAt));
       
-      return insights;
+      return insights as any[];
     } catch (error) {
       console.error('Error getting memory insights:', error);
       return [];
@@ -531,7 +629,7 @@ export class MinimalStorage implements IStorage {
       if (!message) {
         throw new Error('Failed to save message');
       }
-      return message;
+      return message as any;
     } catch (error) {
       console.error('❌ Error saving message:', error);
       throw error;
@@ -609,7 +707,7 @@ export class MinimalStorage implements IStorage {
         .where(eq(learningMilestones.userId, userId))
         .orderBy(desc(learningMilestones.priority), desc(learningMilestones.createdAt));
       
-      return milestones;
+      return milestones as LearningMilestone[];
     } catch (error) {
       console.error('Error getting learning milestones:', error);
       return [];
@@ -622,7 +720,7 @@ export class MinimalStorage implements IStorage {
       if (!milestone) {
         throw new Error('Failed to create learning milestone');
       }
-      return milestone;
+      return milestone as LearningMilestone;
     } catch (error) {
       console.error('Error creating learning milestone:', error);
       throw error;
@@ -639,7 +737,7 @@ export class MinimalStorage implements IStorage {
       if (!milestone) {
         throw new Error('Failed to update learning milestone');
       }
-      return milestone;
+      return milestone as LearningMilestone;
     } catch (error) {
       console.error('Error updating learning milestone:', error);
       throw error;
@@ -661,7 +759,7 @@ export class MinimalStorage implements IStorage {
       if (!milestone) {
         throw new Error('Failed to mark milestone as completed');
       }
-      return milestone;
+      return milestone as LearningMilestone;
     } catch (error) {
       console.error('Error marking milestone completed:', error);
       throw error;
@@ -702,7 +800,7 @@ export class MinimalStorage implements IStorage {
         .from(progressMetrics)
         .where(and(...whereConditions))
         .orderBy(desc(progressMetrics.date));
-      return metrics;
+      return metrics as ProgressMetric[];
     } catch (error) {
       console.error('Error getting progress metrics:', error);
       return [];
@@ -715,7 +813,7 @@ export class MinimalStorage implements IStorage {
       if (!metric) {
         throw new Error('Failed to create progress metric');
       }
-      return metric;
+      return metric as ProgressMetric;
     } catch (error) {
       console.error('Error creating progress metric:', error);
       throw error;
@@ -734,7 +832,7 @@ export class MinimalStorage implements IStorage {
         .from(adaptiveLearningInsights)
         .where(and(...whereConditions))
         .orderBy(desc(adaptiveLearningInsights.createdAt));
-      return insights;
+      return insights as AdaptiveLearningInsight[];
     } catch (error) {
       console.error('Error getting adaptive learning insights:', error);
       return [];
@@ -754,7 +852,7 @@ export class MinimalStorage implements IStorage {
       if (!insight) {
         throw new Error('Failed to mark insight as viewed');
       }
-      return insight;
+      return insight as AdaptiveLearningInsight;
     } catch (error) {
       console.error('Error marking insight viewed:', error);
       throw error;
@@ -771,7 +869,7 @@ export class MinimalStorage implements IStorage {
       if (!insight) {
         throw new Error('Failed to update insight feedback');
       }
-      return insight;
+      return insight as AdaptiveLearningInsight;
     } catch (error) {
       console.error('Error updating insight feedback:', error);
       throw error;
@@ -785,7 +883,7 @@ export class MinimalStorage implements IStorage {
         .where(eq(wellnessJourneyEvents.userId, userId))
         .orderBy(desc(wellnessJourneyEvents.createdAt));
       
-      return events;
+      return events as WellnessJourneyEvent[];
     } catch (error) {
       console.error('Error getting wellness journey events:', error);
       return [];
@@ -798,7 +896,7 @@ export class MinimalStorage implements IStorage {
       if (!event) {
         throw new Error('Failed to create wellness journey event');
       }
-      return event;
+      return event as WellnessJourneyEvent;
     } catch (error) {
       console.error('Error creating wellness journey event:', error);
       throw error;
@@ -815,7 +913,7 @@ export class MinimalStorage implements IStorage {
       if (!event) {
         throw new Error('Failed to mark celebration as shown');
       }
-      return event;
+      return event as WellnessJourneyEvent;
     } catch (error) {
       console.error('Error marking celebration shown:', error);
       throw error;
@@ -825,17 +923,17 @@ export class MinimalStorage implements IStorage {
   async calculateLearningProgress(userId: number): Promise<void> {
     try {
       // Calculate progress metrics for the user
-      const journalCount = await db.select({ count: sql<number>`count(*)` })
-        .from(journalEntries)
-        .where(eq(journalEntries.userId, userId));
+      const journalCount = await db.select({ count: sql<number>`count(*)` }).from(journalEntries).where(
+        eq(journalEntries.userId, userId)
+      );
 
-      const chatCount = await db.select({ count: sql<number>`count(*)` })
-        .from(messages)
-        .where(and(eq(messages.userId, userId), eq(messages.isBot, false)));
+      const chatCount = await db.select({ count: sql<number>`count(*)` }).from(messages).where(
+        and(eq(messages.userId, userId), eq(messages.isBot, false))
+      );
 
-      const moodCount = await db.select({ count: sql<number>`count(*)` })
-        .from(moodEntries)
-        .where(eq(moodEntries.userId, userId));
+      const moodCount = await db.select({ count: sql<number>`count(*)` }).from(moodEntries).where(
+        eq(moodEntries.userId, userId)
+      );
 
       // Create progress metrics
       const today = new Date();
@@ -862,14 +960,13 @@ export class MinimalStorage implements IStorage {
 
       // Insert metrics if they don't exist for today
       for (const metric of metrics) {
-        const existing = await db.select()
-          .from(progressMetrics)
-          .where(and(
-            eq(progressMetrics.userId, userId),
-            eq(progressMetrics.metricType, metric.metricType),
-            sql`DATE(${progressMetrics.date}) = DATE(${today})`
-          ))
-          .limit(1);
+        const existing = await db.select().from(progressMetrics).where(
+        and(
+          eq(progressMetrics.userId, userId),
+          eq(progressMetrics.metricType, metric.metricType),
+          sql`DATE(${progressMetrics.date}) = DATE(${today})`
+        )
+      ).limit(1);
 
         if (existing.length === 0) {
           await db.insert(progressMetrics).values(metric);
@@ -983,14 +1080,14 @@ export class MinimalStorage implements IStorage {
               'Love the personality insights feature!',
               'Chat responses are too slow',
               'Request for meditation timer'
-            ][i] || 'General feedback',
+            ][i] ?? 'General feedback',
             description: [
               'The microphone button doesn\'t seem to capture audio correctly on Chrome browser.',
               'Would love to see a dark mode option for the journal writing interface for better readability at night.',
               'The personality reflection feature has really helped me understand myself better. Thank you!',
               'Sometimes the AI takes 10+ seconds to respond, which breaks the conversation flow.',
               'Could you add a meditation timer with different ambient sounds?'
-            ][i] || 'User feedback about the application',
+            ][i] ?? 'User feedback about the application',
             priority: ['high', 'medium', 'low'][i % 3],
             status: ['submitted', 'reviewed', 'in_progress', 'resolved'][i % 4],
             rating: Math.floor(Math.random() * 5) + 1,
@@ -1002,7 +1099,7 @@ export class MinimalStorage implements IStorage {
       }
       
       console.log(`📝 Retrieved ${simulatedFeedback.length} simulated feedback items`);
-      return simulatedFeedback;
+      return simulatedFeedback as any[];
     } catch (error) {
       console.error('Error getting all feedback:', error);
       return [];
@@ -1024,7 +1121,7 @@ export class MinimalStorage implements IStorage {
   async getTotalUserCount(): Promise<number> {
     try {
       const result = await db.select({ count: sql<number>`count(*)` }).from(users);
-      const count = result[0]?.count || 0;
+      const count = result[0]?.count ?? 0;
       console.log(`👥 Total user count: ${count}`);
       return count;
     } catch (error) {
@@ -1036,7 +1133,7 @@ export class MinimalStorage implements IStorage {
   async getTotalMessageCount(): Promise<number> {
     try {
       const result = await db.select({ count: sql<number>`count(*)` }).from(messages);
-      const count = result[0]?.count || 0;
+      const count = result[0]?.count ?? 0;
       console.log(`💬 Total message count: ${count}`);
       return count;
     } catch (error) {
@@ -1053,7 +1150,7 @@ export class MinimalStorage implements IStorage {
         .from(users)
         .where(sql`${users.lastActiveAt} >= ${yesterday}`);
       
-      const count = result[0]?.count || 0;
+      const count = result[0]?.count ?? 0;
       console.log(`⚡ Active user count (24h): ${count}`);
       return count;
     } catch (error) {
@@ -1066,7 +1163,7 @@ export class MinimalStorage implements IStorage {
     try {
       // Count unique session IDs from users table
       const result = await db.select({ count: sql<number>`count(DISTINCT ${users.sessionId})` }).from(users);
-      const count = result[0]?.count || 0;
+      const count = result[0]?.count ?? 0;
       console.log(`🎯 Total session count: ${count}`);
       return count;
     } catch (error) {
@@ -1083,9 +1180,9 @@ export class MinimalStorage implements IStorage {
         .limit(limit);
       
       // Remove sensitive information
-      const sanitizedUsers = userList.map(user => ({
+      const sanitizedUsers = userList.map((user: any) => ({
         id: user.id,
-        username: user.username || 'Anonymous',
+        username: user.username ?? 'Anonymous',
         isAnonymous: user.isAnonymous,
         createdAt: user.createdAt,
         lastActiveAt: user.lastActiveAt

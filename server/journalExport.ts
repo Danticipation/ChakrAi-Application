@@ -1,4 +1,4 @@
-import type { JournalEntry, JournalAnalytics, } from "../shared/schema.ts";
+import type { JournalEntry, JournalAnalytics } from "../shared/schema.js"; // Changed .ts to .js
 import { format } from "date-fns";
 
 export interface ExportOptions {
