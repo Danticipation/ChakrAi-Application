@@ -51,6 +51,7 @@
     "drizzle-orm": "^0.44.5",
     "drizzle-zod": "^0.8.3",
     "express": "^5.1.0",
+    "jose": "^6.1.0",
     "multer": "^2.0.2",
     "nanoid": "^5.1.5",
     "tailwindcss-animate": "^1.0.7",
