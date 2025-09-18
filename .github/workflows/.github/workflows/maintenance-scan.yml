@@ -1,0 +1,67 @@
+name: Maintenance Scan (Read-only)
+on:
+  schedule: [{ cron: "0 4 * * 0" }] # Sundays 04:00
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  scan:
+    runs-on: [self-hosted, windows, role-maintenance]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run scan (no deletions)
+        shell: pwsh
+        run: |
+          $ReportDir = "$env:RUNNER_TEMP\maint"
+          New-Item -ItemType Directory -Force -Path $ReportDir | Out-Null
+
+          # Areas to scan (tune these)
+          $Roots = @("$env:USERPROFILE\Downloads", "$env:USERPROFILE\Desktop", "$env:USERPROFILE\Documents", "C:\Temp")
+
+          $files = foreach ($r in $Roots) {
+            if (Test-Path $r) { Get-ChildItem $r -File -Recurse -ErrorAction SilentlyContinue }
+          }
+
+          # Largest files
+          $largest = $files | Sort-Object Length -Descending | Select-Object FullName,Length,LastWriteTime -First 200
+          $largest | Export-Csv -NoTypeInformation -Path "$ReportDir\largest.csv"
+
+          # Old files (not modified in 180 days)
+          $threshold = (Get-Date).AddDays(-180)
+          $old = $files | Where-Object { $_.LastWriteTime -lt $threshold } | Sort-Object LastWriteTime | Select-Object FullName,Length,LastWriteTime
+          $old | Export-Csv -NoTypeInformation -Path "$ReportDir\old.csv"
+
+          # Duplicates by SHA256
+          $hashes = @()
+          foreach ($f in $files) {
+            try { $h = Get-FileHash -Algorithm SHA256 -Path $f.FullName -ErrorAction Stop
+                  $hashes += [PSCustomObject]@{ Hash=$h.Hash; FullName=$f.FullName; Size=$f.Length } }
+            catch {}
+          }
+          $dupes = $hashes | Group-Object Hash | Where-Object { $_.Count -gt 1 } |
+                   ForEach-Object { $_.Group | Sort-Object Size -Descending }
+          $dupes | Export-Csv -NoTypeInformation -Path "$ReportDir\duplicates.csv"
+
+          # Disk usage snapshot
+          Get-PSDrive -PSProvider FileSystem | Select-Object Name,Root,Used=@{n='UsedGB';e={[math]::Round(($_.Used/1GB),1)}},Free=@{n='FreeGB';e={[math]::Round(($_.Free/1GB),1)}} |
+            Export-Csv -NoTypeInformation -Path "$ReportDir\disk.csv"
+
+          # Quick HTML index
+          $html = @"
+          <h2>Maintenance Report</h2>
+          <ul>
+            <li><a href='largest.csv'>largest.csv</a> (top 200 largest files)</li>
+            <li><a href='old.csv'>old.csv</a> (older than 180 days)</li>
+            <li><a href='duplicates.csv'>duplicates.csv</a> (hash matches)</li>
+            <li><a href='disk.csv'>disk.csv</a> (drive usage)</li>
+          </ul>
+"@
+          $html | Out-File -Encoding UTF8 "$ReportDir\index.html"
+
+      - name: Upload report
+        uses: actions/upload-artifact@v4
+        with:
+          name: maintenance-report
+          path: ${{ runner.temp }}\maint\
+          if-no-files-found: error
