@@ -1,7 +1,8 @@
-import React, { useState, useCallback, useEffect } from 'react';
+﻿import React, { useState, useCallback, useEffect } from 'react';
 import { MessageSquare, Bug, Lightbulb, Send, CheckCircle, AlertCircle, Star, Loader2, RefreshCw } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import type { AxiosResponse } from 'axios';
+import axios from "axios";
+import type { AxiosResponse } from "axios";
 import { getCurrentUserId } from '../utils/unifiedUserSession';
 
 // Types and Interfaces

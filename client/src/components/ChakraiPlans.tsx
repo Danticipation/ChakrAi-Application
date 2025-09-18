@@ -1,9 +1,9 @@
-export default function ChakraiPlans() {
+﻿export default function ChakraiPlans() {
   const plans = [
     {
       id: "free",
       name: "Free",
-      emoji: "🆓",
+      emoji: "ðŸ†“",
       price: "$0",
       blurb: "Great to start your wellness journey.",
       highlight: false,
@@ -11,7 +11,7 @@ export default function ChakraiPlans() {
     {
       id: "premium",
       name: "Premium",
-      emoji: "💎",
+      emoji: "ðŸ’Ž",
       price: "$9.99/mo",
       blurb: "Unlimited conversations + deeper insights.",
       highlight: true,
@@ -19,7 +19,7 @@ export default function ChakraiPlans() {
     {
       id: "pro",
       name: "Professional",
-      emoji: "🏥",
+      emoji: "ðŸ¥",
       price: "Contact Sales",
       blurb: "For clinics & enterprises with compliance needs.",
       highlight: false,
@@ -52,13 +52,13 @@ export default function ChakraiPlans() {
       tiers: { free: false, premium: true, pro: "Advanced" },
     },
     { label: "Export Reports", tiers: { free: false, premium: true, pro: "Clinical-grade" } },
-    { label: "Domain Deep‑dives", tiers: { free: false, premium: true, pro: true } },
+    { label: "Domain Deepâ€‘dives", tiers: { free: false, premium: true, pro: true } },
     { group: "Pro / Enterprise",
-      label: "Multi‑client Management",
+      label: "Multiâ€‘client Management",
       tiers: { free: false, premium: false, pro: true },
     },
     { label: "API Access", tiers: { free: false, premium: false, pro: true } },
-    { label: "White‑label Options", tiers: { free: false, premium: false, pro: true } },
+    { label: "Whiteâ€‘label Options", tiers: { free: false, premium: false, pro: true } },
     { label: "HIPAA Compliance", tiers: { free: "Basic", premium: "Enhanced", pro: "Full" } },
     { label: "Support Level", tiers: { free: "Community", premium: "Priority", pro: "Dedicated" } },
     { label: "Clinical Reporting", tiers: { free: false, premium: false, pro: true } },
@@ -87,7 +87,7 @@ export default function ChakraiPlans() {
     if (value === true) return <span className="inline-flex items-center justify-center rounded-md bg-emerald-600/10 px-2 py-1 text-sm font-medium text-emerald-600">{tick}</span>;
     if (value === false) return <span className="inline-flex items-center justify-center rounded-md bg-rose-600/10 px-2 py-1 text-sm font-medium text-rose-600">{x}</span>;
     if (typeof value === "string") return <span className="text-sm font-medium text-slate-200">{value}</span>;
-    return <span className="text-slate-400">—</span>;
+    return <span className="text-slate-400">â€”</span>;
   }
 
   return (
@@ -161,10 +161,11 @@ export default function ChakraiPlans() {
         ))}
 
         <div className="mt-6 flex flex-col md:flex-row items-center justify-between gap-3 text-sm text-slate-300">
-          <p>All plans include secure data handling, privacy controls, and mobile‑first experience.</p>
+          <p>All plans include secure data handling, privacy controls, and mobileâ€‘first experience.</p>
           <a href="#" className="underline decoration-emerald-400/60 underline-offset-4 hover:decoration-emerald-300">See full plan details</a>
         </div>
       </div>
     </div>
   );
 }
+

@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
+﻿import { createClient } from '@supabase/supabase-js';
 
 // Safe defaults to prevent TypeScript errors - configure these in .env if needed
 const supabaseUrl = (import.meta.env.VITE_SUPABASE_URL as string) || 'https://placeholder.supabase.co';
@@ -11,3 +11,4 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 export const isSupabaseConfigured = () => {
   return import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY;
 };
+

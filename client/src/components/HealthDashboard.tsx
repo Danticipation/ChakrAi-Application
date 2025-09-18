@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+﻿import React, { useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { 
   Heart, 
   Activity, 
@@ -9,8 +9,6 @@ import {
   BarChart3, 
   Plus, 
   RefreshCw,
-  CheckCircle,
-  Info,
   Trash2
 } from 'lucide-react';
 
@@ -164,7 +162,7 @@ export default function HealthDashboard() {
                 </div>
                 <div className="space-y-1">
                   {correlation.insights?.map((insight, index) => (
-                    <p key={index} className="text-white/80 text-sm">• {insight}</p>
+                    <p key={index} className="text-white/80 text-sm">â€¢ {insight}</p>
                   )) || <p className="text-white/60">No insights available</p>}
                 </div>
               </div>
@@ -249,7 +247,7 @@ export default function HealthDashboard() {
               <div key={correlation.id} className="p-4 bg-white/10 rounded-lg">
                 <div className="flex items-center justify-between mb-3">
                   <h4 className="text-white font-medium">
-                    {correlation.emotionalMetric} ↔ {correlation.physicalMetric}
+                    {correlation.emotionalMetric} â†” {correlation.physicalMetric}
                   </h4>
                   <div className="flex items-center space-x-2">
                     <span className="text-white/60 text-sm">Correlation:</span>
@@ -260,14 +258,14 @@ export default function HealthDashboard() {
                 <div className="space-y-2 mb-3">
                   <p className="text-white/80 text-sm font-medium">Insights:</p>
                   {correlation.insights?.map((insight, index) => (
-                    <p key={index} className="text-white/70 text-sm ml-2">• {insight}</p>
+                    <p key={index} className="text-white/70 text-sm ml-2">â€¢ {insight}</p>
                   )) || <p className="text-white/60 text-sm">No insights available</p>}
                 </div>
 
                 <div className="space-y-2">
                   <p className="text-white/80 text-sm font-medium">Recommendations:</p>
                   {correlation.recommendations?.map((rec, index) => (
-                    <p key={index} className="text-white/70 text-sm ml-2">• {rec}</p>
+                    <p key={index} className="text-white/70 text-sm ml-2">â€¢ {rec}</p>
                   )) || <p className="text-white/60 text-sm">No recommendations available</p>}
                 </div>
 

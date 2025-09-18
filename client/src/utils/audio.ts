@@ -1,4 +1,4 @@
-export const sendAudioToWhisper = async (audioBlob: Blob, setInput: (text: string) => void) => {
+﻿export const sendAudioToWhisper = async (audioBlob: Blob, setInput: (text: string) => void) => {
   try {
     console.log('Sending audio to Whisper API...');
     const formData = new FormData();
@@ -26,18 +26,18 @@ export const sendAudioToWhisper = async (audioBlob: Blob, setInput: (text: strin
           /^[^\w\s]*$/, // Only symbols/emojis
           /^.{1,3}$/, // Very short (1-3 characters)
           /^(thank you|thanks|watching|subscribe)/i, // Common YouTube-like phrases
-          /^[🧡❤️💙💚💛💜🖤🤍🤎]+$/, // Only heart emojis
+          /^[ðŸ§¡â¤ï¸ðŸ’™ðŸ’šðŸ’›ðŸ’œðŸ–¤ðŸ¤ðŸ¤Ž]+$/, // Only heart emojis
           /^[\s.,!?\-]*$/, // Only punctuation/whitespace (dash escaped)
         ];
         
         const isNonsensical = nonsensicalPatterns.some(pattern => pattern.test(transcription));
         
         if (isNonsensical) {
-          console.log('🚫 Transcription appears nonsensical, filtering out:', transcription);
+          console.log('ðŸš« Transcription appears nonsensical, filtering out:', transcription);
           setInput(''); // Don't set nonsensical text
         } else {
           setInput(transcription);
-          console.log('✅ Valid transcription set:', transcription);
+          console.log('âœ… Valid transcription set:', transcription);
         }
       } else {
         console.log('Empty transcription result');
@@ -89,7 +89,7 @@ export const startRecording = async (
       }
     }
     
-    console.log('🎵 MAIN CHAT using audio format:', mimeType);
+    console.log('ðŸŽµ MAIN CHAT using audio format:', mimeType);
 
     const mediaRecorder = new MediaRecorder(stream, { mimeType });
     mediaRecorderRef.current = mediaRecorder;
@@ -105,9 +105,9 @@ export const startRecording = async (
     analyser.fftSize = 1024;
     microphone.connect(analyser);
 
-    let lastSoundTime = Date.now();
+    const lastSoundTime = Date.now();
     let isContextClosed = false;
-    let recordingStartTime = Date.now();
+    const recordingStartTime = Date.now();
     const SILENCE_THRESHOLD = 15; // Lowered to be more sensitive to actual speech
     const SILENCE_DURATION = 3000; // Reduced to 3 seconds of continuous silence
     const MIN_RECORDING_DURATION = 2000; // Minimum 2 seconds before silence detection kicks in
@@ -139,24 +139,24 @@ export const startRecording = async (
       closeAudioContext();
       if (audioChunksRef.current.length > 0) {
         const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
-        console.log('🎵 MAIN CHAT audio blob type:', audioBlob.type, 'size:', audioBlob.size);
+        console.log('ðŸŽµ MAIN CHAT audio blob type:', audioBlob.type, 'size:', audioBlob.size);
         
         // Validate audio blob before sending to transcription
         const recordingDuration = Date.now() - recordingStartTime;
-        console.log(`📊 Recording analysis: ${audioBlob.size} bytes, ${recordingDuration}ms duration`);
+        console.log(`ðŸ“Š Recording analysis: ${audioBlob.size} bytes, ${recordingDuration}ms duration`);
         
         if (audioBlob.size < 2000) { // Reduced to 2KB - allow shorter legitimate speech
-          console.log('🚫 Recording too small (< 2KB), likely just noise/silence. Skipping transcription.');
+          console.log('ðŸš« Recording too small (< 2KB), likely just noise/silence. Skipping transcription.');
           setInput(''); // Clear any placeholder text
         } else if (recordingDuration < 800) { // Reduced to 0.8s minimum - allow shorter phrases
-          console.log('🚫 Recording too short (< 0.8s), likely accidental tap. Skipping transcription.');
+          console.log('ðŸš« Recording too short (< 0.8s), likely accidental tap. Skipping transcription.');
           setInput(''); // Clear any placeholder text
         } else {
-          console.log(`🎤 Valid recording passed validation - sending to transcription`);
+          console.log(`ðŸŽ¤ Valid recording passed validation - sending to transcription`);
           await sendAudioToWhisper(audioBlob, setInput);
         }
       } else {
-        console.log('🚫 No audio chunks recorded');
+        console.log('ðŸš« No audio chunks recorded');
         setInput(''); // Clear any placeholder text
       }
       stream.getTracks().forEach((track) => track.stop());
@@ -177,7 +177,7 @@ export const startRecording = async (
     // Auto-stop recording after 45 seconds as safety measure
     setTimeout(() => {
       if (mediaRecorderRef.current?.state === 'recording') {
-        console.log('⏰ Auto-stopping due to 45-second time limit');
+        console.log('â° Auto-stopping due to 45-second time limit');
         stopRecording(mediaRecorderRef, setIsRecording);
         closeAudioContext();
       }
@@ -223,14 +223,14 @@ export const playElevenLabsAudio = async (
 
     try {
       await audio.play();
-      console.log(`✓ ElevenLabs ${voiceUsed || 'voice'} played successfully`);
+      console.log(`âœ“ ElevenLabs ${voiceUsed || 'voice'} played successfully`);
       audio.addEventListener('ended', () => {
         URL.revokeObjectURL(audioUrl);
       });
     } catch {
       const readyMessage = {
         sender: 'bot',
-        text: '🔊 Audio ready - click anywhere to hear Carla voice',
+        text: 'ðŸ”Š Audio ready - click anywhere to hear Carla voice',
         time: new Date().toLocaleTimeString()
       };
       setMessages(prev => [...prev, readyMessage]);
@@ -238,7 +238,7 @@ export const playElevenLabsAudio = async (
       const playOnClick = async () => {
         try {
           await audio.play();
-          console.log('✓ ElevenLabs Carla voice played after user interaction');
+          console.log('âœ“ ElevenLabs Carla voice played after user interaction');
           setMessages(prev => prev.filter(msg => msg.text !== readyMessage.text));
         } catch (err) {
           console.error('Audio play failed even with user gesture:', err);

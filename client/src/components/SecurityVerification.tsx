@@ -1,4 +1,4 @@
-// BULLETPROOF DEVICE FINGERPRINTING - SECURITY VERIFICATION
+﻿// BULLETPROOF DEVICE FINGERPRINTING - SECURITY VERIFICATION
 // This component helps verify that the device fingerprinting system is working correctly
 // and that there's zero chance of user data contamination
 
@@ -295,11 +295,11 @@ const SecurityVerification: React.FC = () => {
               Security Guidelines
             </h3>
             <div className="text-white/80 text-sm space-y-2">
-              <p>• All CRITICAL tests must pass for the system to be considered secure</p>
-              <p>• Device fingerprints should remain consistent across page reloads</p>
-              <p>• User IDs should be unique and deterministic based on device fingerprint</p>
-              <p>• API headers should always include all required security headers</p>
-              <p>• Use Emergency Reset only if you suspect data contamination</p>
+              <p>â€¢ All CRITICAL tests must pass for the system to be considered secure</p>
+              <p>â€¢ Device fingerprints should remain consistent across page reloads</p>
+              <p>â€¢ User IDs should be unique and deterministic based on device fingerprint</p>
+              <p>â€¢ API headers should always include all required security headers</p>
+              <p>â€¢ Use Emergency Reset only if you suspect data contamination</p>
             </div>
           </div>
         </div>

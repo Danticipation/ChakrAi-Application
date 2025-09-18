@@ -1,13 +1,11 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState } from 'react';
 import { 
   Brain, 
   Heart, 
   BookOpen, 
   BarChart3, 
-  Settings, 
   User, 
   MessageCircle,
-  Calendar,
   Target,
   Shield,
   Menu,
@@ -19,7 +17,6 @@ import {
   Activity,
   Users,
   FileText,
-  Mic,
   Moon,
   Sun
 } from 'lucide-react';

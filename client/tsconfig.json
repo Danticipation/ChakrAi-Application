@@ -11,7 +11,7 @@
 
     "baseUrl": ".",
     "lib": ["DOM", "DOM.Iterable", "ES2022"],
-    "types": ["vite/client"],
+    "types": ["vite/client", "jest"],
 
     "paths": {
       "@/*": ["src/*"],

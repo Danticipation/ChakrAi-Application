@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import './utils/authInterceptor';
 import { useState, useEffect, useRef } from 'react';
 import NeonCursor from '@/components/neon-cursor';
@@ -20,15 +20,10 @@ import BeautifulMeditation from '@/components/BeautifulMeditation';
 import PersonalityReflection from '@/components/PersonalityReflection';
 import VoluntaryQuestionDeck from '@/components/VoluntaryQuestionDeck';
 import AgentSystem from '@/components/AgentSystem';
-import AdaptiveTherapyPlan from '@/components/AdaptiveTherapyPlan';
 import TherapistPortal from '@/components/TherapistPortal';
 import AdminPortal from '@/components/AdminPortal';
 import ChallengeSystem from '@/components/ChallengeSystem';
 import WellnessRewards from '@/components/WellnessRewards';
-import CommunitySupport from '@/components/CommunitySupport';
-import FeedbackSystem from '@/components/FeedbackSystem';
-import HealthIntegration from '@/components/HealthIntegration';
-import VRTherapy from '@/components/VRTherapy';
 import ChakraiPlans from '@/components/ChakraiPlans';
 import PersonalityQuiz from '@/components/PersonalityQuiz';
 import { VoiceRecorder } from '@/utils/voiceRecorder';
@@ -74,11 +69,11 @@ const ModernAppLayout: React.FC<{currentUserId: number | null, onDataReset: () =
       console.log('Voice transcription received:', text);
       },
       onError: (error) => {
-        console.error('❌ Voice recording error:', error);
+        console.error('âŒ Voice recording error:', error);
       },
       onStatusChange: (status) => {
         setVoiceStatus(status);
-        console.log('🎵 Voice status changed to:', status);
+        console.log('ðŸŽµ Voice status changed to:', status);
       },
       maxDuration: 30,
       minDuration: 2
@@ -415,3 +410,4 @@ export default function App() {
     </ErrorBoundary>
   );
 }
+

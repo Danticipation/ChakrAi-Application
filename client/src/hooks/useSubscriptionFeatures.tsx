@@ -1,4 +1,4 @@
-import { useSubscription } from '@/contexts/SubscriptionContext';
+﻿import { useSubscription } from '@/contexts/SubscriptionContext';
 
 /**
  * Custom hook for subscription feature checking
@@ -118,7 +118,7 @@ export function UsageBadge({
   if (feature && !canUseFeature(feature)) {
     return (
       <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-red-100 text-red-800">
-        {compact ? '🔒' : '🔒 Upgrade Required'}
+        {compact ? 'ðŸ”’' : 'ðŸ”’ Upgrade Required'}
       </span>
     );
   }
@@ -126,7 +126,7 @@ export function UsageBadge({
   if (isUnlimited) {
     return (
       <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
-        {compact ? '∞' : '∞ Unlimited'}
+        {compact ? 'âˆž' : 'âˆž Unlimited'}
       </span>
     );
   }
@@ -155,9 +155,9 @@ export function SubscriptionStatus() {
   };
   
   const tierLabels = {
-    free: '🆓 Free',
-    premium: '💎 Premium',
-    professional: '🏆 Professional'
+    free: 'ðŸ†“ Free',
+    premium: 'ðŸ’Ž Premium',
+    professional: 'ðŸ† Professional'
   };
   
   return (

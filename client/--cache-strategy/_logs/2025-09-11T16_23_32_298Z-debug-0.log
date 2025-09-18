@@ -1,0 +1,27 @@
+0 verbose cli C:\Program Files\nodejs\node.exe C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js
+1 info using npm@11.5.2
+2 info using node@v22.16.0
+3 silly config load:file:C:\nvm\v22.16.0\node_modules\npm\npmrc
+4 warn ".ts .tsx" is being parsed as a normal command line argument.
+5 warn Unknown cli config "--ext". This will stop working in the next major version of npm.
+6 warn Unknown cli config "--fix". This will stop working in the next major version of npm.
+7 silly config load:file:C:\8-14-Chakrai-App\client\client\.npmrc
+8 silly config load:file:C:\Users\sharp\.npmrc
+9 silly config load:file:C:\8-14-Chakrai-App\client\client\etc\npmrc
+10 verbose title npm exec eslint . .ts .tsx content
+11 verbose argv "--prefix" "client" "exec" "eslint" "." "--ext" ".ts .tsx" "--fix" "--cache" "--cache-strategy" "content" "--loglevel" "warn"
+12 verbose logfile logs-max:10 dir:C:\8-14-Chakrai-App\client\--cache-strategy\_logs\2025-09-11T16_23_32_298Z-
+13 verbose logfile C:\8-14-Chakrai-App\client\--cache-strategy\_logs\2025-09-11T16_23_32_298Z-debug-0.log
+14 silly logfile done cleaning log files
+15 http fetch GET 200 https://registry.npmjs.org/npm 259ms
+16 verbose cwd C:\8-14-Chakrai-App\client
+17 verbose os Windows_NT 10.0.26100
+18 verbose node v22.16.0
+19 verbose npm  v11.5.2
+20 notice
+20 notice New [33mminor[39m version of npm available! [33m11.5.2[39m -> [34m11.6.0[39m
+20 notice Changelog: [34mhttps://github.com/npm/cli/releases/tag/v11.6.0[39m
+20 notice To update run: [4mnpm install -g npm@11.6.0[24m
+20 notice  { force: true, [Symbol(proc-log.meta)]: true }
+21 verbose exit 2
+22 verbose code 2

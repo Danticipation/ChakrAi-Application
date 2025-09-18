@@ -1,80 +1,81 @@
-import React, { useState } from 'react';
-import { Mic, Square, AlertCircle, CheckCircle } from 'lucide-react';
+﻿// src/components/MicrophoneTest.tsx
+import { useState } from "react";
+import type { FC } from "react";
+import { Mic, Square } from "lucide-react";
 
-const MicrophoneTest: React.FC = () => {
+const MicrophoneTest: FC = () => {
   const [testResults, setTestResults] = useState<string[]>([]);
   const [isRecording, setIsRecording] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
 
   const log = (message: string) => {
     console.log(message);
-    setTestResults(prev => [...prev, message]);
+    setTestResults((prev) => [...prev, message]);
   };
 
   const runMicrophoneTest = async () => {
     setTestResults([]);
-    log('🔧 Starting comprehensive microphone test...');
+    log("🔧 Starting comprehensive microphone test...");
 
-    // Test 1: Check browser support
+    // Test 1: Check browser support (feature detection, not truthiness)
     log(`📱 Browser: ${navigator.userAgent.slice(0, 50)}...`);
-    log(`🎧 MediaDevices: ${!!navigator.mediaDevices ? '✅' : '❌'}`);
-    log(`🎤 getUserMedia: ${!!navigator.mediaDevices?.getUserMedia ? '✅' : '❌'}`);
-    log(`📊 MediaRecorder: ${!!window.MediaRecorder ? '✅' : '❌'}`);
+    log(`🎧 MediaDevices: ${"mediaDevices" in navigator ? "✅" : "❌"}`);
+    log(`🎤 getUserMedia: ${"mediaDevices" in navigator && "getUserMedia" in navigator.mediaDevices ? "✅" : "❌"}`);
+    log(`📊 MediaRecorder: ${"MediaRecorder" in window ? "✅" : "❌"}`);
 
-    if (!navigator.mediaDevices?.getUserMedia) {
-      log('❌ getUserMedia not supported');
+    if (!("mediaDevices" in navigator) || !("getUserMedia" in navigator.mediaDevices)) {
+      log("❌ getUserMedia not supported");
       return;
     }
 
-    if (!window.MediaRecorder) {
-      log('❌ MediaRecorder not supported');
+    if (!("MediaRecorder" in window)) {
+      log("❌ MediaRecorder not supported");
       return;
     }
 
     // Test 2: Basic permission test
     try {
-      log('🔍 Testing basic microphone permission...');
+      log("🔍 Testing basic microphone permission...");
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      log('✅ Basic microphone access granted');
-      
-      // Test MediaRecorder with the stream
+      log("✅ Basic microphone access granted");
+
       try {
         const recorder = new MediaRecorder(stream);
-        log('✅ MediaRecorder created successfully');
-        log(`📡 State: ${recorder.state}, MIME: ${recorder.mimeType}`);
+        log("✅ MediaRecorder created successfully");
+        log(`💡 State: ${recorder.state}, MIME: ${recorder.mimeType}`);
         recorder.stop();
       } catch (recorderError) {
-        log(`❌ MediaRecorder error: ${recorderError}`);
+        log(`❌ MediaRecorder error: ${String(recorderError)}`);
+      } finally {
+        stream.getTracks().forEach((t) => t.stop());
       }
-      
-      stream.getTracks().forEach(track => track.stop());
     } catch (error) {
-      const err = error as any;
-      log(`❌ Microphone access failed: ${err.name} - ${err.message}`);
+      const err = error as { name?: string; message?: string };
+      log(`❌ Microphone access failed: ${err.name ?? "Error"} - ${err.message ?? ""}`);
       return;
     }
 
     // Test 3: MIME type support
-    log('🧪 Testing MIME type support:');
-    const mimeTypes = [
-      'audio/webm;codecs=opus',
-      'audio/webm', 
-      'audio/mp4',
-      'audio/wav'
-    ];
-    
+    log("🧪 Testing MIME type support:");
+    const mimeTypes = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4", "audio/wav"];
     for (const type of mimeTypes) {
-      const supported = MediaRecorder.isTypeSupported(type);
-      log(`  ${type}: ${supported ? '✅' : '❌'}`);
+      const supported = "MediaRecorder" in window ? MediaRecorder.isTypeSupported(type) : false;
+      log(`  ${type}: ${supported ? "✅" : "❌"}`);
     }
 
-    log('🎉 Test complete! Ready to try recording.');
+    log("🎉 Test complete! Ready to try recording.");
   };
 
   const startTestRecording = async () => {
     try {
-      log('🎤 Starting test recording...');
-      const stream = await navigator.mediaDevices.getUserMedia({ 
+      log("🎤 Starting test recording...");
+      // Guard: ensure APIs exist (satisfies type-check + runtime)
+      if (!("mediaDevices" in navigator) || !("getUserMedia" in navigator.mediaDevices) || !("MediaRecorder" in window)) {
+        log("❌ Recording not supported in this browser.");
+        return;
+      }
+
+      const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
@@ -86,39 +87,38 @@ const MicrophoneTest: React.FC = () => {
 
       const recorder = new MediaRecorder(stream);
       setMediaRecorder(recorder);
-      
+
       const chunks: Blob[] = [];
-      
-      recorder.ondataavailable = (event) => {
-        log(`📦 Audio chunk: ${event.data.size} bytes`);
+
+      recorder.ondataavailable = (event: BlobEvent) => {
+        log(`💾 Audio chunk: ${event.data.size} bytes`);
         chunks.push(event.data);
       };
 
       recorder.onstop = () => {
-        log('🔴 Recording stopped');
+        log("🛑 Recording stopped");
         if (chunks.length > 0) {
           const blob = new Blob(chunks, { type: recorder.mimeType });
           log(`🎵 Final audio blob: ${blob.size} bytes`);
         } else {
-          log('❌ No audio data captured');
+          log("❌ No audio data captured");
         }
-        stream.getTracks().forEach(track => track.stop());
+        stream.getTracks().forEach((track) => track.stop());
       };
 
-      recorder.start(500);
+      recorder.start(500); // gather data every 500ms
       setIsRecording(true);
-      log('✅ Recording started');
-
+      log("✅ Recording started");
     } catch (error) {
-      log(`❌ Recording failed: ${error}`);
+      log(`❌ Recording failed: ${String(error)}`);
     }
   };
 
   const stopTestRecording = () => {
-    if (mediaRecorder && mediaRecorder.state === 'recording') {
+    if (mediaRecorder && mediaRecorder.state === "recording") {
       mediaRecorder.stop();
       setIsRecording(false);
-      log('⏹️ Stopping recording...');
+      log("⏹️ Stopping recording...");
     }
   };
 
@@ -142,9 +142,7 @@ const MicrophoneTest: React.FC = () => {
             <button
               onClick={isRecording ? stopTestRecording : startTestRecording}
               className={`flex-1 py-3 px-4 rounded-lg transition-colors ${
-                isRecording 
-                  ? 'bg-red-600 hover:bg-red-700 animate-pulse' 
-                  : 'bg-green-600 hover:bg-green-700'
+                isRecording ? "bg-red-600 hover:bg-red-700 animate-pulse" : "bg-green-600 hover:bg-green-700"
               } text-white`}
             >
               {isRecording ? (
@@ -169,11 +167,11 @@ const MicrophoneTest: React.FC = () => {
               <div className="space-y-1">
                 {testResults.map((result, index) => (
                   <div key={index} className="text-sm font-mono">
-                    {result.includes('✅') ? (
+                    {result.includes("✅") ? (
                       <span className="text-green-400">{result}</span>
-                    ) : result.includes('❌') ? (
+                    ) : result.includes("❌") ? (
                       <span className="text-red-400">{result}</span>
-                    ) : result.includes('⚠️') ? (
+                    ) : result.includes("⚠️") ? (
                       <span className="text-yellow-400">{result}</span>
                     ) : (
                       <span className="text-gray-300">{result}</span>

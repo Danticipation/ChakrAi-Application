@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 
 interface AnalysisResult {
   success: boolean;
@@ -105,7 +105,7 @@ const SubscriptionTierDemo: React.FC = () => {
     <div className="max-w-6xl mx-auto p-6 space-y-6">
       <div className="bg-white rounded-lg shadow-lg p-6">
         <h1 className="text-3xl font-bold text-gray-800 mb-6">
-          🎯 Subscription Tier Testing Dashboard
+          ðŸŽ¯ Subscription Tier Testing Dashboard
         </h1>
         
         {/* User Selector */}
@@ -136,7 +136,7 @@ const SubscriptionTierDemo: React.FC = () => {
             disabled={loading}
             className="bg-green-500 text-white px-4 py-3 rounded-lg hover:bg-green-600 disabled:opacity-50 transition-colors"
           >
-            🆓 Test Basic Analysis
+            ðŸ†“ Test Basic Analysis
           </button>
           
           <button
@@ -144,7 +144,7 @@ const SubscriptionTierDemo: React.FC = () => {
             disabled={loading}
             className="bg-blue-500 text-white px-4 py-3 rounded-lg hover:bg-blue-600 disabled:opacity-50 transition-colors"
           >
-            💎 Test Premium Analysis
+            ðŸ’Ž Test Premium Analysis
           </button>
           
           <button
@@ -152,7 +152,7 @@ const SubscriptionTierDemo: React.FC = () => {
             disabled={loading}
             className="bg-purple-500 text-white px-4 py-3 rounded-lg hover:bg-purple-600 disabled:opacity-50 transition-colors"
           >
-            🎯 Test Smart Analysis
+            ðŸŽ¯ Test Smart Analysis
           </button>
           
           <button
@@ -160,7 +160,7 @@ const SubscriptionTierDemo: React.FC = () => {
             disabled={loading}
             className="bg-gray-500 text-white px-4 py-3 rounded-lg hover:bg-gray-600 disabled:opacity-50 transition-colors"
           >
-            📊 Subscription Status
+            ðŸ“Š Subscription Status
           </button>
           
           <button
@@ -168,7 +168,7 @@ const SubscriptionTierDemo: React.FC = () => {
             disabled={loading}
             className="bg-orange-500 text-white px-4 py-3 rounded-lg hover:bg-orange-600 disabled:opacity-50 transition-colors"
           >
-            🎨 Premium Preview
+            ðŸŽ¨ Premium Preview
           </button>
         </div>
 
@@ -190,7 +190,7 @@ const SubscriptionTierDemo: React.FC = () => {
             {analysisResult.success ? (
               <div className="space-y-4">
                 <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
-                  ✅ Request successful! Tier: <strong>{analysisResult.tier}</strong>
+                  âœ… Request successful! Tier: <strong>{analysisResult.tier}</strong>
                 </div>
                 
                 {/* Analysis Results */}
@@ -241,7 +241,7 @@ const SubscriptionTierDemo: React.FC = () => {
             ) : (
               <div className="space-y-4">
                 <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-                  ❌ Request failed or access denied
+                  âŒ Request failed or access denied
                 </div>
                 
                 {analysisResult.error && (
@@ -275,7 +275,7 @@ const SubscriptionTierDemo: React.FC = () => {
             {/* Raw Response (for debugging) */}
             <details className="mt-4">
               <summary className="cursor-pointer text-gray-600 hover:text-gray-800">
-                🔍 View Raw Response (for debugging)
+                ðŸ” View Raw Response (for debugging)
               </summary>
               <pre className="mt-2 bg-gray-100 p-4 rounded text-xs overflow-auto">
                 {JSON.stringify(analysisResult, null, 2)}
@@ -325,15 +325,15 @@ const SubscriptionTierDemo: React.FC = () => {
               </tr>
               <tr>
                 <td className="border border-gray-300 px-4 py-2 font-medium">Progress Tracking</td>
-                <td className="border border-gray-300 px-4 py-2 text-center">❌</td>
-                <td className="border border-gray-300 px-4 py-2 text-center">✅</td>
-                <td className="border border-gray-300 px-4 py-2 text-center">✅</td>
+                <td className="border border-gray-300 px-4 py-2 text-center">âŒ</td>
+                <td className="border border-gray-300 px-4 py-2 text-center">âœ…</td>
+                <td className="border border-gray-300 px-4 py-2 text-center">âœ…</td>
               </tr>
               <tr className="bg-gray-50">
                 <td className="border border-gray-300 px-4 py-2 font-medium">Clinical Reporting</td>
-                <td className="border border-gray-300 px-4 py-2 text-center">❌</td>
-                <td className="border border-gray-300 px-4 py-2 text-center">❌</td>
-                <td className="border border-gray-300 px-4 py-2 text-center">✅</td>
+                <td className="border border-gray-300 px-4 py-2 text-center">âŒ</td>
+                <td className="border border-gray-300 px-4 py-2 text-center">âŒ</td>
+                <td className="border border-gray-300 px-4 py-2 text-center">âœ…</td>
               </tr>
             </tbody>
           </table>

@@ -1,4 +1,5 @@
 // 🔍 SYSTEM VALIDATION SCRIPT
+// 🔍 SYSTEM VALIDATION SCRIPT
 // This script verifies that all components of the 190-point analysis system are properly integrated
 
 export interface ValidationChecks {
@@ -168,7 +169,7 @@ export async function validateComprehensiveAnalysisSystem(): Promise<ValidationR
 }
 
 // Runtime validation check
-if (typeof window === 'undefined') {
+    if (typeof (globalThis as any).window === 'undefined') {
   // Node.js environment - can run validation
   validateComprehensiveAnalysisSystem()
     .then(results => {

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * UNIFIED USER SESSION SYSTEM
  * 
  * CRITICAL: This replaces all other user ID systems.
@@ -67,7 +67,7 @@ class UnifiedUserSessionManager {
   async getAuthenticatedUserId(): Promise<number> {
     // Return cached user if available and recent
     if (this.cachedUser && this.isRecentAuth()) {
-      console.log('🔄 Using cached authenticated user:', this.cachedUser.id);
+      console.log('ðŸ”„ Using cached authenticated user:', this.cachedUser.id);
       return this.cachedUser.id;
     }
 
@@ -81,7 +81,7 @@ class UnifiedUserSessionManager {
 
     try {
       this.isAuthenticating = true;
-      console.log('🔐 Getting user from HIPAA auth system...');
+      console.log('ðŸ” Getting user from HIPAA auth system...');
 
       // Call a simple API that will trigger HIPAA auth middleware
       // This will set the necessary cookies and create/retrieve the user
@@ -115,15 +115,15 @@ class UnifiedUserSessionManager {
         timestamp: new Date().toISOString()
       };
 
-      console.log('✅ HIPAA authentication successful - User ID:', this.cachedUser.id);
+      console.log('âœ… HIPAA authentication successful - User ID:', this.cachedUser.id);
       return this.cachedUser.id;
 
     } catch (error) {
-      console.error('❌ HIPAA authentication failed:', error);
+      console.error('âŒ HIPAA authentication failed:', error);
       
       // CRITICAL: Authentication failure should not create fake users
       // Return 0 to indicate auth failure - components must handle this
-      console.error('😨 CRITICAL: HIPAA authentication failed - component must retry or show error');
+      console.error('ðŸ˜¨ CRITICAL: HIPAA authentication failed - component must retry or show error');
       return 0;
       
     } finally {
@@ -173,7 +173,7 @@ class UnifiedUserSessionManager {
    */
   clearCache(): void {
     this.cachedUser = null;
-    console.log('🧹 User session cache cleared');
+    console.log('ðŸ§¹ User session cache cleared');
   }
 
   /**
@@ -222,7 +222,7 @@ export const getCurrentUserIdSync = (): number => {
  * NUCLEAR RESET - Deletes user record from database and clears all data
  */
 export const nuklearReset = async (): Promise<void> => {
-  console.warn('🚨 NUCLEAR RESET - Deleting USER RECORD and ALL data');
+  console.warn('ðŸš¨ NUCLEAR RESET - Deleting USER RECORD and ALL data');
   
   try {
     const deviceFingerprint = localStorage.getItem('deviceFingerprint') || 'unknown';
@@ -242,15 +242,15 @@ export const nuklearReset = async (): Promise<void> => {
       const result = await response.json();
       
       if (result.success) {
-        console.log(`✅ Server nuclear reset successful:`, result.message);
+        console.log(`âœ… Server nuclear reset successful:`, result.message);
         if (result.deletedUserId) {
-          console.log(`💥 Deleted user ID ${result.deletedUserId} from database`);
+          console.log(`ðŸ’¥ Deleted user ID ${result.deletedUserId} from database`);
         }
       } else {
-        console.warn('⚠️ Server nuclear reset failed:', result.error);
+        console.warn('âš ï¸ Server nuclear reset failed:', result.error);
       }
     } catch (serverError) {
-      console.warn('⚠️ Server nuclear reset request failed:', serverError);
+      console.warn('âš ï¸ Server nuclear reset request failed:', serverError);
     }
     
     // Clear all browser storage
@@ -265,10 +265,10 @@ export const nuklearReset = async (): Promise<void> => {
     // Clear cached user session
     unifiedUserSession.clearCache();
     
-    console.log('💥 Nuclear reset completed - user will get NEW ID on next interaction');
+    console.log('ðŸ’¥ Nuclear reset completed - user will get NEW ID on next interaction');
     
   } catch (error) {
-    console.error('❌ Nuclear reset failed:', error);
+    console.error('âŒ Nuclear reset failed:', error);
     throw error;
   }
 };
@@ -280,3 +280,4 @@ export const validateUserSession = (): boolean => {
   const currentUser = unifiedUserSession.getCurrentUser();
   return !!currentUser;
 };
+

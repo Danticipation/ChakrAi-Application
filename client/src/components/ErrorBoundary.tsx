@@ -1,5 +1,6 @@
-import type { Component, ErrorInfo, ReactNode } from 'react';
-import { AlertTriangle, RefreshCw, Home, MessageCircle, Bug } from 'lucide-react';
+﻿import React, { Component } from "react";
+import type { ErrorInfo, ReactNode } from "react";
+import { AlertTriangle, RefreshCw, Home, Bug } from 'lucide-react';
 
 interface Props {
   children: ReactNode;
@@ -79,7 +80,7 @@ class ErrorBoundary extends Component<Props, State> {
 
     // Log to console in development
     if (import.meta.env.DEV) {
-      console.group('🚨 Error Boundary Caught Error');
+      console.group('ðŸš¨ Error Boundary Caught Error');
       console.error('Error:', error);
       console.error('Error Info:', errorInfo);
       console.error('Error Data:', errorData);
@@ -87,7 +88,7 @@ class ErrorBoundary extends Component<Props, State> {
     }
 
     // In production, you could send this to an error monitoring service
-    this.sendErrorToMonitoring(errorData);
+    void this.sendErrorToMonitoring(errorData);
   };
 
   private sendErrorToMonitoring = async (errorData: any) => {

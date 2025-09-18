@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { 
-  Brain, BookOpen, Mic, BarChart3, Heart, Target, Users, Shield,
-  Sparkles, MessageCircle, Headphones, Gift, Star, Zap
+  Brain, BookOpen, Mic, BarChart3, Heart, Target, Users, Shield, Gift, Star, Zap
 } from 'lucide-react';
 
 interface FeatureCardProps {

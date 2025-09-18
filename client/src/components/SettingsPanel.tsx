@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { X, Settings, RefreshCw, Volume2, Palette, Database, Download, Upload, Info, Shield, User, LogIn, LogOut } from 'lucide-react';
+﻿import React, { useState } from 'react';
+import { X, Settings, RefreshCw, Volume2, Palette, Database, Download, Info, User, LogIn, LogOut } from 'lucide-react';
 import { getCurrentUserId } from '../utils/userSession';
 import { useAuth } from '../contexts/AuthContext';
 import AuthModal from './AuthModal';

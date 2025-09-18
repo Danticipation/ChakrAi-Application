@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 
 interface LogEntry {
   id: number;
@@ -33,9 +33,9 @@ const DebugLog: React.FC<DebugLogProps> = ({ isVisible, onToggle }) => {
 
     console.log = (...args) => {
       const message = args.join(' ');
-      if (message.includes('🎯') || message.includes('📊') || message.includes('🔴') || 
-          message.includes('🛑') || message.includes('✅') || message.includes('❌') ||
-          message.includes('🚀') || message.includes('transcrib') || message.includes('recording')) {
+      if (message.includes('ðŸŽ¯') || message.includes('ðŸ“Š') || message.includes('ðŸ”´') || 
+          message.includes('ðŸ›‘') || message.includes('âœ…') || message.includes('âŒ') ||
+          message.includes('ðŸš€') || message.includes('transcrib') || message.includes('recording')) {
         addLog(message, 'info');
       }
       originalLog(...args);
@@ -43,7 +43,7 @@ const DebugLog: React.FC<DebugLogProps> = ({ isVisible, onToggle }) => {
 
     console.error = (...args) => {
       const message = args.join(' ');
-      if (message.includes('🚨') || message.includes('❌') || 
+      if (message.includes('ðŸš¨') || message.includes('âŒ') || 
           message.includes('transcrib') || message.includes('recording')) {
         addLog(message, 'error');
       }
@@ -52,7 +52,7 @@ const DebugLog: React.FC<DebugLogProps> = ({ isVisible, onToggle }) => {
 
     console.warn = (...args) => {
       const message = args.join(' ');
-      if (message.includes('⚠️') || message.includes('transcrib') || message.includes('recording')) {
+      if (message.includes('âš ï¸') || message.includes('transcrib') || message.includes('recording')) {
         addLog(message, 'warn');
       }
       originalWarn(...args);

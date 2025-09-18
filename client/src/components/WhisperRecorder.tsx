@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+﻿import React, { useState, useRef } from 'react';
 
 interface WhisperRecorderProps {
   onTranscription: (text: string) => void;
@@ -41,7 +41,7 @@ export default function WhisperRecorder({ onTranscription, onResponse }: Whisper
       }
     }
     
-    console.log('🎵 WhisperRecorder using audio format:', mimeType, 'with options:', options);
+    console.log('ðŸŽµ WhisperRecorder using audio format:', mimeType, 'with options:', options);
     const mediaRecorder = new MediaRecorder(stream, options);
     mediaRecorderRef.current = mediaRecorder;
     setRecording(true);
@@ -66,7 +66,7 @@ export default function WhisperRecorder({ onTranscription, onResponse }: Whisper
         fileName = 'recording.webm';
       }
       
-      console.log('📤 Sending audio to transcription:', {
+      console.log('ðŸ“¤ Sending audio to transcription:', {
         size: blob.size,
         type: mimeType,
         fileName: fileName,
@@ -169,7 +169,7 @@ export default function WhisperRecorder({ onTranscription, onResponse }: Whisper
               : 'bg-emerald-600 hover:bg-emerald-700'
           }`}
         >
-          {processing ? '🔄 Processing...' : recording ? '⏹️ Stop Recording' : '🎤 Start Whisper Recording'}
+          {processing ? 'ðŸ”„ Processing...' : recording ? 'â¹ï¸ Stop Recording' : 'ðŸŽ¤ Start Whisper Recording'}
         </button>
         {audioUrl && (
           <audio controls src={audioUrl} className="ml-4 max-w-xs" />
@@ -178,7 +178,7 @@ export default function WhisperRecorder({ onTranscription, onResponse }: Whisper
 
       {transcription && (
         <div className="mt-4">
-          <p className="text-sm text-gray-300 mb-2">📝 Transcription:</p>
+          <p className="text-sm text-gray-300 mb-2">ðŸ“ Transcription:</p>
           <div className="bg-gray-800 p-3 rounded-lg border border-gray-600 mb-3">{transcription}</div>
           <button
             onClick={sendToBot}

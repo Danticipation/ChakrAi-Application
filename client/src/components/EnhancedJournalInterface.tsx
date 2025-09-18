@@ -1,9 +1,8 @@
-import React, { useState, useRef, useEffect } from 'react';
+﻿import React, { useState, useRef, useEffect } from 'react';
 import { 
-  Mic, MicOff, Save, Plus, Calendar, Tag, Heart, Smile, Meh, Frown, 
-  AlertCircle, Send, Brain, BarChart3, Download, FileText, Trash2, 
-  Edit3, BookOpen, TrendingUp, Eye, EyeOff, Clock, User, Sparkles,
-  PenTool, Library, Star, Filter, Search, MoreHorizontal
+  Mic, MicOff, Save, Tag, Heart, Trash2, 
+  Edit3, BookOpen, Clock, Sparkles,
+  PenTool, Library, Search
 } from 'lucide-react';
 import { getAuthHeaders } from '../utils/unifiedUserSession';
 
@@ -57,31 +56,31 @@ const EnhancedJournalInterface: React.FC<EnhancedJournalInterfaceProps> = ({ use
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const moodOptions = [
-    { value: 'very_happy', label: 'Joyful', icon: '✨', color: '#10B981', bgColor: 'bg-emerald-50' },
-    { value: 'happy', label: 'Happy', icon: '😊', color: '#059669', bgColor: 'bg-emerald-100' },
-    { value: 'grateful', label: 'Grateful', icon: '🙏', color: '#7C3AED', bgColor: 'bg-purple-50' },
-    { value: 'calm', label: 'Calm', icon: '🧘', color: '#0EA5E9', bgColor: 'bg-sky-50' },
-    { value: 'neutral', label: 'Neutral', icon: '😐', color: '#6B7280', bgColor: 'bg-gray-50' },
-    { value: 'thoughtful', label: 'Reflective', icon: '🤔', color: '#8B5CF6', bgColor: 'bg-violet-50' },
-    { value: 'anxious', label: 'Anxious', icon: '😰', color: '#F59E0B', bgColor: 'bg-amber-50' },
-    { value: 'sad', label: 'Sad', icon: '😢', color: '#3B82F6', bgColor: 'bg-blue-50' },
-    { value: 'frustrated', label: 'Frustrated', icon: '😤', color: '#EF4444', bgColor: 'bg-red-50' },
-    { value: 'overwhelmed', label: 'Overwhelmed', icon: '😵', color: '#DC2626', bgColor: 'bg-red-100' }
+    { value: 'very_happy', label: 'Joyful', icon: 'âœ¨', color: '#10B981', bgColor: 'bg-emerald-50' },
+    { value: 'happy', label: 'Happy', icon: 'ðŸ˜Š', color: '#059669', bgColor: 'bg-emerald-100' },
+    { value: 'grateful', label: 'Grateful', icon: 'ðŸ™', color: '#7C3AED', bgColor: 'bg-purple-50' },
+    { value: 'calm', label: 'Calm', icon: 'ðŸ§˜', color: '#0EA5E9', bgColor: 'bg-sky-50' },
+    { value: 'neutral', label: 'Neutral', icon: 'ðŸ˜', color: '#6B7280', bgColor: 'bg-gray-50' },
+    { value: 'thoughtful', label: 'Reflective', icon: 'ðŸ¤”', color: '#8B5CF6', bgColor: 'bg-violet-50' },
+    { value: 'anxious', label: 'Anxious', icon: 'ðŸ˜°', color: '#F59E0B', bgColor: 'bg-amber-50' },
+    { value: 'sad', label: 'Sad', icon: 'ðŸ˜¢', color: '#3B82F6', bgColor: 'bg-blue-50' },
+    { value: 'frustrated', label: 'Frustrated', icon: 'ðŸ˜¤', color: '#EF4444', bgColor: 'bg-red-50' },
+    { value: 'overwhelmed', label: 'Overwhelmed', icon: 'ðŸ˜µ', color: '#DC2626', bgColor: 'bg-red-100' }
   ];
 
   const commonTags = [
-    { name: 'Breakthrough', color: '#10B981', icon: '🌟' },
-    { name: 'Progress', color: '#059669', icon: '📈' },
-    { name: 'Challenge', color: '#F59E0B', icon: '💪' },
-    { name: 'Relationships', color: '#EC4899', icon: '💝' },
-    { name: 'Work', color: '#6366F1', icon: '💼' },
-    { name: 'Family', color: '#8B5CF6', icon: '👨‍👩‍👧‍👦' },
-    { name: 'Self-Care', color: '#06B6D4', icon: '🌸' },
-    { name: 'Goals', color: '#84CC16', icon: '🎯' },
-    { name: 'Mindfulness', color: '#A855F7', icon: '🧘‍♀️' },
-    { name: 'Therapy', color: '#F97316', icon: '🗣️' },
-    { name: 'Gratitude', color: '#EAB308', icon: '🙏' },
-    { name: 'Anxiety', color: '#EF4444', icon: '⚡' }
+    { name: 'Breakthrough', color: '#10B981', icon: 'ðŸŒŸ' },
+    { name: 'Progress', color: '#059669', icon: 'ðŸ“ˆ' },
+    { name: 'Challenge', color: '#F59E0B', icon: 'ðŸ’ª' },
+    { name: 'Relationships', color: '#EC4899', icon: 'ðŸ’' },
+    { name: 'Work', color: '#6366F1', icon: 'ðŸ’¼' },
+    { name: 'Family', color: '#8B5CF6', icon: 'ðŸ‘¨â€ðŸ‘©â€ðŸ‘§â€ðŸ‘¦' },
+    { name: 'Self-Care', color: '#06B6D4', icon: 'ðŸŒ¸' },
+    { name: 'Goals', color: '#84CC16', icon: 'ðŸŽ¯' },
+    { name: 'Mindfulness', color: '#A855F7', icon: 'ðŸ§˜â€â™€ï¸' },
+    { name: 'Therapy', color: '#F97316', icon: 'ðŸ—£ï¸' },
+    { name: 'Gratitude', color: '#EAB308', icon: 'ðŸ™' },
+    { name: 'Anxiety', color: '#EF4444', icon: 'âš¡' }
   ];
 
   useEffect(() => {
@@ -93,7 +92,7 @@ const EnhancedJournalInterface: React.FC<EnhancedJournalInterfaceProps> = ({ use
       // User authentication is handled by getAuthHeaders()
       
       const headers = await getAuthHeaders();
-      console.log('📝 Fetching journal entries with bulletproof headers');
+      console.log('ðŸ“ Fetching journal entries with bulletproof headers');
       
       const response = await fetch('/api/journal/user-entries', { headers });
       
@@ -126,7 +125,7 @@ const EnhancedJournalInterface: React.FC<EnhancedJournalInterfaceProps> = ({ use
         }
       }
       
-      console.log('🎵 EnhancedJournalInterface using audio format:', mimeType);
+      console.log('ðŸŽµ EnhancedJournalInterface using audio format:', mimeType);
       const mediaRecorder = new MediaRecorder(stream, { mimeType });
       
       mediaRecorderRef.current = mediaRecorder;
@@ -140,7 +139,7 @@ const EnhancedJournalInterface: React.FC<EnhancedJournalInterfaceProps> = ({ use
       
       mediaRecorder.onstop = async () => {
         const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
-        console.log('🎵 EnhancedJournalInterface audio blob type:', audioBlob.type);
+        console.log('ðŸŽµ EnhancedJournalInterface audio blob type:', audioBlob.type);
         await transcribeAudio(audioBlob);
         stream.getTracks().forEach(track => track.stop());
       };
@@ -211,7 +210,7 @@ const EnhancedJournalInterface: React.FC<EnhancedJournalInterfaceProps> = ({ use
 
   const getMoodEmoji = (mood: string) => {
     const moodOption = moodOptions.find(option => option.value === mood);
-    return moodOption?.icon || '😐';
+    return moodOption?.icon || 'ðŸ˜';
   };
 
   const getMoodColor = (mood: string) => {
@@ -227,7 +226,7 @@ const EnhancedJournalInterface: React.FC<EnhancedJournalInterfaceProps> = ({ use
       // User authentication is handled by getAuthHeaders()
       
       const headers = await getAuthHeaders();
-      console.log('💾 Saving journal entry with bulletproof headers');
+      console.log('ðŸ’¾ Saving journal entry with bulletproof headers');
       
       const response = await fetch('/api/journal', {
         method: 'POST',
@@ -272,7 +271,7 @@ const EnhancedJournalInterface: React.FC<EnhancedJournalInterfaceProps> = ({ use
       // User authentication is handled by getAuthHeaders()
       
       const headers = await getAuthHeaders();
-      console.log('🗑️ Deleting journal entry with bulletproof headers');
+      console.log('ðŸ—‘ï¸ Deleting journal entry with bulletproof headers');
       
       const response = await fetch(`/api/journal/${entryId}`, {
         method: 'DELETE',
@@ -695,7 +694,7 @@ const EnhancedJournalInterface: React.FC<EnhancedJournalInterfaceProps> = ({ use
                     onClick={() => setSelectedEntry(null)}
                     className="p-2 hover:bg-slate-100 rounded-xl transition-colors"
                   >
-                    ✕
+                    âœ•
                   </button>
                 </div>
               </div>

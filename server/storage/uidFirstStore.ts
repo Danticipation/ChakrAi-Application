@@ -97,14 +97,14 @@ export class UidFirstStore {
       
       const [entry] = await db.insert(journalEntries).values(entryData).returning();
       console.log(`📔 Created journal entry for uid ${uid} (legacy: ${legacyId})`);
-      return entry;
-    } catch (error) {
-      console.error('❌ Database error details:', error);
-      console.error('❌ Error message:', error?.message || 'Unknown error');
-      console.error('❌ Error stack:', error?.stack || 'No stack trace');
-      throw error;
-    }
+    return entry;
+  } catch (error: any) {
+    console.error('❌ Database error details:', error);
+    console.error('❌ Error message:', error.message || 'Unknown error');
+    console.error('❌ Error stack:', error.stack || 'No stack trace');
+    throw error;
   }
+}
 
   async addMoodEntry(uid: string, data: any) {
     try {
@@ -123,7 +123,7 @@ export class UidFirstStore {
       const [entry] = await db.insert(moodEntries).values(moodData).returning();
       console.log(`🎭 Created mood entry for uid ${uid} (legacy: ${legacyId})`);
       return entry;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error adding mood entry:', error);
       throw error;
     }
@@ -148,7 +148,7 @@ export class UidFirstStore {
       const [entry] = await db.insert(moodEntries).values(moodData).returning();
       console.log(`🎭 Created mood entry for uid ${uid} (legacy: ${legacyId})`);
       return entry;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating mood entry:', error);
       throw error;
     }
@@ -198,7 +198,7 @@ export class UidFirstStore {
         mindfulChange: null,
         lastUpdated: new Date().toISOString()
       };
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error getting dashboard stats for UID:', error);
       return {
         currentStreak: 0,

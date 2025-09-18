@@ -1,27 +1,14 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { 
-  TrendingUp, 
-  TrendingDown,
-  Calendar,
-  Target,
+  TrendingUp,
   Activity,
   Brain,
   Heart,
   BookOpen,
   MessageCircle,
-  CheckCircle,
   ArrowRight,
-  Play,
   Zap,
-  Sparkles,
-  Star,
-  Flame,
-  Users,
-  Eye,
-  Lightbulb,
-  Award,
-  Microscope,
-  Clock
+  Star
 } from 'lucide-react';
 import { getCurrentUserId, getAuthHeaders } from '../utils/unifiedUserSession';
 import DataMigrationTool from './DataMigrationTool';
@@ -48,9 +35,9 @@ const EnhancedDashboard: React.FC<EnhancedDashboardProps> = ({ userId, onNavigat
           return;
         }
         setAuthenticatedUserId(authUserId);
-        console.log('🔐 EnhancedDashboard: Using authenticated user:', authUserId);
+        console.log('ðŸ” EnhancedDashboard: Using authenticated user:', authUserId);
       } catch (error) {
-        console.error('❌ EnhancedDashboard: Auth failed:', error);
+        console.error('âŒ EnhancedDashboard: Auth failed:', error);
         setError('Authentication failed');
       }
     };
@@ -72,7 +59,7 @@ const EnhancedDashboard: React.FC<EnhancedDashboardProps> = ({ userId, onNavigat
       }
       
       const headers = await getAuthHeaders();
-      console.log('🎭 Saving mood with unified auth for user:', authenticatedUserId);
+      console.log('ðŸŽ­ Saving mood with unified auth for user:', authenticatedUserId);
 
       const response = await fetch('/api/mood', {
         method: 'POST',
@@ -89,7 +76,7 @@ const EnhancedDashboard: React.FC<EnhancedDashboardProps> = ({ userId, onNavigat
       
       if (response.ok) {
         const result = await response.json();
-        console.log('✅ Mood saved successfully:', result);
+        console.log('âœ… Mood saved successfully:', result);
         
         // Update comprehensive data with saved mood
         setComprehensiveData((prev: any) => ({
@@ -99,7 +86,7 @@ const EnhancedDashboard: React.FC<EnhancedDashboardProps> = ({ userId, onNavigat
         }));
       } else {
         const errorData = await response.json().catch(() => ({}));
-        console.error('❌ Failed to save mood:', response.status, errorData);
+        console.error('âŒ Failed to save mood:', response.status, errorData);
       }
     } catch (error) {
       console.error('Failed to save mood:', error);
@@ -123,7 +110,7 @@ const EnhancedDashboard: React.FC<EnhancedDashboardProps> = ({ userId, onNavigat
           return; // Wait for auth
         }
         
-        console.log('🔥 Loading COMPREHENSIVE dashboard data for user:', authenticatedUserId);
+        console.log('ðŸ”¥ Loading COMPREHENSIVE dashboard data for user:', authenticatedUserId);
 
         const headers = await getAuthHeaders();
         
@@ -185,7 +172,7 @@ const EnhancedDashboard: React.FC<EnhancedDashboardProps> = ({ userId, onNavigat
         setComprehensiveData(processedData);
 
       } catch (error) {
-        console.error('❌ Failed to load comprehensive data:', error);
+        console.error('âŒ Failed to load comprehensive data:', error);
         setError('Unable to load comprehensive data');
         // Set minimal data structure
         setComprehensiveData({
@@ -253,7 +240,7 @@ const EnhancedDashboard: React.FC<EnhancedDashboardProps> = ({ userId, onNavigat
           <div className="relative z-10 flex items-center justify-between">
             <div>
               <h1 className="text-5xl font-black mb-3 drop-shadow-lg">
-                Good {currentTime.getHours() < 12 ? 'Morning' : currentTime.getHours() < 17 ? 'Afternoon' : 'Evening'}! ✨
+                Good {currentTime.getHours() < 12 ? 'Morning' : currentTime.getHours() < 17 ? 'Afternoon' : 'Evening'}! âœ¨
               </h1>
               <p className="text-cyan-100 text-xl font-medium">
                 {currentTime.toLocaleDateString('en-US', { 
@@ -266,14 +253,14 @@ const EnhancedDashboard: React.FC<EnhancedDashboardProps> = ({ userId, onNavigat
             </div>
             <div className="text-right">
               <div className="text-4xl font-black drop-shadow-lg">{comprehensiveData?.stats?.streak || 0}</div>
-              <div className="text-cyan-100 text-lg font-medium">Day Streak 🔥</div>
+              <div className="text-cyan-100 text-lg font-medium">Day Streak ðŸ”¥</div>
             </div>
           </div>
           
           {/* Daily Affirmation */}
           <div className="mt-6 p-4 bg-white/10 rounded-2xl backdrop-blur-sm">
             <p className="text-center text-lg font-medium italic">
-              "💫 {comprehensiveData?.dailyAffirmation} 💫"
+              "ðŸ’« {comprehensiveData?.dailyAffirmation} ðŸ’«"
             </p>
           </div>
           
@@ -364,11 +351,11 @@ const EnhancedDashboard: React.FC<EnhancedDashboardProps> = ({ userId, onNavigat
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <span className="text-2xl">
-                    {comprehensiveData.todaysMood === 'sad' ? '😔' :
-                     comprehensiveData.todaysMood === 'neutral' ? '😐' :
-                     comprehensiveData.todaysMood === 'good' ? '🙂' :
-                     comprehensiveData.todaysMood === 'happy' ? '😊' :
-                     comprehensiveData.todaysMood === 'excited' ? '🤩' : '🙂'}
+                    {comprehensiveData.todaysMood === 'sad' ? 'ðŸ˜”' :
+                     comprehensiveData.todaysMood === 'neutral' ? 'ðŸ˜' :
+                     comprehensiveData.todaysMood === 'good' ? 'ðŸ™‚' :
+                     comprehensiveData.todaysMood === 'happy' ? 'ðŸ˜Š' :
+                     comprehensiveData.todaysMood === 'excited' ? 'ðŸ¤©' : 'ðŸ™‚'}
                   </span>
                   <div>
                     <p className="text-white font-medium">Today's Mood: {comprehensiveData.todaysMood}</p>
@@ -390,7 +377,7 @@ const EnhancedDashboard: React.FC<EnhancedDashboardProps> = ({ userId, onNavigat
                   onClick={() => onNavigate('journal')}
                   className="px-4 py-2 rounded-lg text-sm font-medium bg-gradient-to-r from-pink-500 to-purple-500 text-white hover:from-pink-600 hover:to-purple-600 transition-colors"
                 >
-                  📔 Journal
+                  ðŸ“” Journal
                 </button>
               </div>
             </div>
@@ -398,11 +385,11 @@ const EnhancedDashboard: React.FC<EnhancedDashboardProps> = ({ userId, onNavigat
           
           <div className="grid grid-cols-5 gap-4 mb-6">
             {[
-              { emoji: "😔", label: "Sad", value: "sad" },
-              { emoji: "😐", label: "Neutral", value: "neutral" },
-              { emoji: "🙂", label: "Good", value: "good" },
-              { emoji: "😊", label: "Happy", value: "happy" },
-              { emoji: "🤩", label: "Excited", value: "excited" }
+              { emoji: "ðŸ˜”", label: "Sad", value: "sad" },
+              { emoji: "ðŸ˜", label: "Neutral", value: "neutral" },
+              { emoji: "ðŸ™‚", label: "Good", value: "good" },
+              { emoji: "ðŸ˜Š", label: "Happy", value: "happy" },
+              { emoji: "ðŸ¤©", label: "Excited", value: "excited" }
             ].map((mood) => (
               <button
                 key={mood.value}

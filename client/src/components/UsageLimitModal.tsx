@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Button } from '@/components/ui/button';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { X, Crown, AlertTriangle } from 'lucide-react';

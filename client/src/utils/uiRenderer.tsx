@@ -1,4 +1,5 @@
-import type { Suspense, Component, ReactNode, useState, useEffect } from 'react';
+﻿import React, { Component, Suspense, useEffect, useState } from "react";
+import type { ReactNode, ComponentType } from "react";
 import { getSectionComponentMap } from './sectionComponentMap';
 
 interface ErrorBoundaryState {
@@ -38,7 +39,6 @@ interface MainContentProps {
   handleMobileModalNavigation: (section: string) => void;
 }
 
-import { ComponentType } from 'react';
 const MainContent: React.FC<MainContentProps> = ({ section, fetchStreakStats, setActiveSection, handleMobileModalNavigation }) => {
   const [components, setComponents] = useState<Record<string, ComponentType<any>> | null>(null);
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Button } from '@/components/ui/button';
 import { useSubscription } from '@/contexts/SubscriptionContext';
@@ -158,7 +158,7 @@ export function SubscriptionModal({ isOpen, onClose }: SubscriptionModalProps) {
 
           {/* Footer */}
           <div className="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">
-            <p>Cancel anytime • 30-day money-back guarantee</p>
+            <p>Cancel anytime â€¢ 30-day money-back guarantee</p>
             <p className="mt-1">Secure payment processing by Stripe</p>
           </div>
         </div>
@@ -166,3 +166,4 @@ export function SubscriptionModal({ isOpen, onClose }: SubscriptionModalProps) {
     </div>
   );
 }
+

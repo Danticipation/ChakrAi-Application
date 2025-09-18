@@ -1,4 +1,4 @@
-export const updateUserActivity = async (userId: number, activityType: string) => {
+﻿export const updateUserActivity = async (userId: number, activityType: string) => {
   try {
     if (!userId) return;
 

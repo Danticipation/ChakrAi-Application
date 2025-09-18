@@ -1,4 +1,4 @@
-import { getCurrentUserId } from "../utils/unifiedUserSession";
+﻿import { getCurrentUserId } from "../utils/unifiedUserSession";
 import { useState, useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Heart, Brain, AlertTriangle, TrendingUp, Calendar } from 'lucide-react';
@@ -26,14 +26,14 @@ interface EmotionalState {
 }
 
 const EMOTIONS = [
-  { name: 'joy', icon: '😊', color: '#FFD700' },
-  { name: 'calm', icon: '😌', color: '#87CEEB' },
-  { name: 'excited', icon: '🤩', color: '#FF6347' },
-  { name: 'grateful', icon: '🙏', color: '#98FB98' },
-  { name: 'anxious', icon: '😰', color: '#FFA500' },
-  { name: 'sad', icon: '😢', color: '#6495ED' },
-  { name: 'frustrated', icon: '😤', color: '#FF4500' },
-  { name: 'neutral', icon: '😐', color: '#D3D3D3' }
+  { name: 'joy', icon: 'ðŸ˜Š', color: '#FFD700' },
+  { name: 'calm', icon: 'ðŸ˜Œ', color: '#87CEEB' },
+  { name: 'excited', icon: 'ðŸ¤©', color: '#FF6347' },
+  { name: 'grateful', icon: 'ðŸ™', color: '#98FB98' },
+  { name: 'anxious', icon: 'ðŸ˜°', color: '#FFA500' },
+  { name: 'sad', icon: 'ðŸ˜¢', color: '#6495ED' },
+  { name: 'frustrated', icon: 'ðŸ˜¤', color: '#FF4500' },
+  { name: 'neutral', icon: 'ðŸ˜', color: '#D3D3D3' }
 ];
 
 export default function MoodTracker({ userId }: { userId?: number }) {
@@ -133,7 +133,7 @@ export default function MoodTracker({ userId }: { userId?: number }) {
 
   const getEmotionIcon = (emotion: string) => {
     const found = EMOTIONS.find(e => e.name === emotion);
-    return found ? found.icon : '😐';
+    return found ? found.icon : 'ðŸ˜';
   };
 
   const getEmotionColor = (emotion: string) => {
@@ -346,7 +346,7 @@ export default function MoodTracker({ userId }: { userId?: number }) {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-1 text-sm">
                   {patterns.copingStrategies.slice(0, 4).map((strategy: string, index: number) => (
                     <div key={index} className="flex items-start">
-                      <span className="mr-2">•</span>
+                      <span className="mr-2">â€¢</span>
                       <span style={{ color: 'var(--text-secondary)' }}>{strategy}</span>
                     </div>
                   ))}

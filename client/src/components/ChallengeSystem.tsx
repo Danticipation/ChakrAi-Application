@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+﻿import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -63,7 +63,7 @@ const starterChallenges: Challenge[] = [
       goal: 1,
       streak: false
     },
-    icon: "📅",
+    icon: "ðŸ“…",
     active: true,
     startDate: "2025-07-01",
     endDate: "2025-12-31"
@@ -75,7 +75,7 @@ const starterChallenges: Challenge[] = [
     type: "weekly",
     reward: {
       points: 50,
-      badge: "🌱 Growth Seeker",
+      badge: "ðŸŒ± Growth Seeker",
       exclusive: null
     },
     progress: {
@@ -83,7 +83,7 @@ const starterChallenges: Challenge[] = [
       goal: 5,
       streak: false
     },
-    icon: "📓",
+    icon: "ðŸ““",
     active: true,
     startDate: "2025-07-01",
     endDate: "2025-07-07"
@@ -95,7 +95,7 @@ const starterChallenges: Challenge[] = [
     type: "streak",
     reward: {
       points: 100,
-      badge: "🌟 Wellness Warrior",
+      badge: "ðŸŒŸ Wellness Warrior",
       exclusive: null
     },
     progress: {
@@ -103,7 +103,7 @@ const starterChallenges: Challenge[] = [
       goal: 7,
       streak: false
     },
-    icon: "🔥",
+    icon: "ðŸ”¥",
     active: true,
     startDate: "2025-07-01",
     endDate: "2025-12-31"
@@ -115,7 +115,7 @@ const starterChallenges: Challenge[] = [
     type: "streak",
     reward: {
       points: 300,
-      badge: "🧘 Mindfulness Master",
+      badge: "ðŸ§˜ Mindfulness Master",
       exclusive: "Zen Garden Theme"
     },
     progress: {
@@ -123,7 +123,7 @@ const starterChallenges: Challenge[] = [
       goal: 30,
       streak: false
     },
-    icon: "🧘",
+    icon: "ðŸ§˜",
     active: true,
     startDate: "2025-07-01",
     endDate: "2025-07-31"
@@ -135,7 +135,7 @@ const starterChallenges: Challenge[] = [
     type: "seasonal",
     reward: {
       points: 200,
-      badge: "❤️ Self-Love Champion",
+      badge: "â¤ï¸ Self-Love Champion",
       exclusive: "Valentine's Avatar Skin"
     },
     progress: {
@@ -143,7 +143,7 @@ const starterChallenges: Challenge[] = [
       goal: 14,
       streak: true
     },
-    icon: "❤️",
+    icon: "â¤ï¸",
     active: false,
     startDate: "2025-02-01",
     endDate: "2025-02-14"
@@ -163,7 +163,7 @@ const starterChallenges: Challenge[] = [
       goal: 1,
       streak: false
     },
-    icon: "🙏",
+    icon: "ðŸ™",
     active: true,
     startDate: "2025-07-01",
     endDate: "2025-12-31"
@@ -175,7 +175,7 @@ const starterChallenges: Challenge[] = [
     type: "weekly",
     reward: {
       points: 75,
-      badge: "🔍 Self-Awareness Badge",
+      badge: "ðŸ” Self-Awareness Badge",
       exclusive: null
     },
     progress: {
@@ -183,7 +183,7 @@ const starterChallenges: Challenge[] = [
       goal: 1,
       streak: false
     },
-    icon: "🔍",
+    icon: "ðŸ”",
     active: true,
     startDate: "2025-07-01",
     endDate: "2025-07-07"
@@ -195,7 +195,7 @@ const starterChallenges: Challenge[] = [
     type: "weekly",
     reward: {
       points: 60,
-      badge: "🤖 Digital Wellness Partner",
+      badge: "ðŸ¤– Digital Wellness Partner",
       exclusive: null
     },
     progress: {
@@ -203,7 +203,7 @@ const starterChallenges: Challenge[] = [
       goal: 5,
       streak: false
     },
-    icon: "💬",
+    icon: "ðŸ’¬",
     active: true,
     startDate: "2025-07-01",
     endDate: "2025-07-07"
@@ -215,7 +215,7 @@ const starterChallenges: Challenge[] = [
     type: "weekly",
     reward: {
       points: 80,
-      badge: "🎯 Goal Getter",
+      badge: "ðŸŽ¯ Goal Getter",
       exclusive: null
     },
     progress: {
@@ -223,7 +223,7 @@ const starterChallenges: Challenge[] = [
       goal: 3,
       streak: false
     },
-    icon: "🎯",
+    icon: "ðŸŽ¯",
     active: true,
     startDate: "2025-07-01",
     endDate: "2025-07-07"
@@ -235,7 +235,7 @@ const starterChallenges: Challenge[] = [
     type: "seasonal",
     reward: {
       points: 500,
-      badge: "🎄 Holiday Wellness Hero",
+      badge: "ðŸŽ„ Holiday Wellness Hero",
       exclusive: "Winter Wonderland Theme"
     },
     progress: {
@@ -243,7 +243,7 @@ const starterChallenges: Challenge[] = [
       goal: 25,
       streak: true
     },
-    icon: "🎄",
+    icon: "ðŸŽ„",
     active: false,
     startDate: "2025-12-01",
     endDate: "2025-12-25"
@@ -434,29 +434,29 @@ const ChallengeSystem: React.FC<ChallengeSystemProps> = ({ onNavigate, onMobileM
 
   const handleChallengeNavigation = (challengeId: string) => {
     const target = getChallengeNavigationTarget(challengeId);
-    console.log('🎯 Challenge navigation clicked:', challengeId, target);
-    console.log('🎯 onNavigate prop available:', !!onNavigate);
-    console.log('🎯 onMobileModalNavigate prop available:', !!onMobileModalNavigate);
+    console.log('ðŸŽ¯ Challenge navigation clicked:', challengeId, target);
+    console.log('ðŸŽ¯ onNavigate prop available:', !!onNavigate);
+    console.log('ðŸŽ¯ onMobileModalNavigate prop available:', !!onMobileModalNavigate);
     
     if (onNavigate) {
-      console.log('🎯 Calling navigation with section:', target.section);
+      console.log('ðŸŽ¯ Calling navigation with section:', target.section);
       
       // Check if we're on mobile and this section should use modal navigation
       const isMobile = window.innerWidth < 768; // md breakpoint
       const modalSections = ['journal', 'analytics', 'daily', 'challenges', 'rewards', 'community', 'vr', 'health', 'agents', 'adaptive', 'therapy-plans'];
       
       if (isMobile && modalSections.includes(target.section) && onMobileModalNavigate) {
-        console.log('🎯 Using mobile modal navigation for:', target.section);
+        console.log('ðŸŽ¯ Using mobile modal navigation for:', target.section);
         onMobileModalNavigate(target.section);
       } else {
-        console.log('🎯 Using standard navigation for:', target.section);
+        console.log('ðŸŽ¯ Using standard navigation for:', target.section);
         onNavigate(target.section);
       }
       
       // Use toast notification instead of manual DOM manipulation
       toast({
         title: "Navigation",
-        description: `🎯 Navigating to ${target.description}...`,
+        description: `ðŸŽ¯ Navigating to ${target.description}...`,
         duration: 2000,
       });
       
@@ -471,11 +471,11 @@ const ChallengeSystem: React.FC<ChallengeSystemProps> = ({ onNavigate, onMobileM
   const [showConfetti, setShowConfetti] = useState(false);
   const [completionMessage, setCompletionMessage] = useState('');
   const [leaderboard] = useState<LeaderboardEntry[]>([
-    { id: '1', username: 'MindfulMaven', totalPoints: 1250, longestStreak: 45, rank: 1, avatar: '🧘‍♀️' },
-    { id: '2', username: 'WellnessWarrior', totalPoints: 980, longestStreak: 32, rank: 2, avatar: '💪' },
-    { id: '3', username: 'ZenSeeker', totalPoints: 756, longestStreak: 28, rank: 3, avatar: '🌸' },
-    { id: '4', username: 'You', totalPoints: 425, longestStreak: 18, rank: 4, avatar: '✨' },
-    { id: '5', username: 'CalmCrafter', totalPoints: 220, longestStreak: 15, rank: 5, avatar: '🎨' }
+    { id: '1', username: 'MindfulMaven', totalPoints: 1250, longestStreak: 45, rank: 1, avatar: 'ðŸ§˜â€â™€ï¸' },
+    { id: '2', username: 'WellnessWarrior', totalPoints: 980, longestStreak: 32, rank: 2, avatar: 'ðŸ’ª' },
+    { id: '3', username: 'ZenSeeker', totalPoints: 756, longestStreak: 28, rank: 3, avatar: 'ðŸŒ¸' },
+    { id: '4', username: 'You', totalPoints: 425, longestStreak: 18, rank: 4, avatar: 'âœ¨' },
+    { id: '5', username: 'CalmCrafter', totalPoints: 220, longestStreak: 15, rank: 5, avatar: 'ðŸŽ¨' }
   ]);
 
   // Reward previews for interactive tooltips - updated to match challenge IDs
@@ -484,42 +484,42 @@ const ChallengeSystem: React.FC<ChallengeSystemProps> = ({ onNavigate, onMobileM
       type: 'badge',
       name: 'Growth Seeker Badge',
       description: 'Unlocked for completing weekly journal writing',
-      preview: '🌱 A beautiful growing plant animation',
+      preview: 'ðŸŒ± A beautiful growing plant animation',
       rarity: 'rare'
     },
     'monthly-mindfulness': {
       type: 'theme',
       name: 'Zen Garden Theme',
       description: 'Peaceful green and earth tones with bamboo accents',
-      preview: '🎋 Soft greens, gentle animations, nature sounds',
+      preview: 'ðŸŽ‹ Soft greens, gentle animations, nature sounds',
       rarity: 'epic'
     },
     'holiday-wellness': {
       type: 'badge',
       name: 'Holiday Wellness Hero',
       description: 'Maintained wellness routine during holiday season',
-      preview: '🎄 Festive badge with snowflake animations',
+      preview: 'ðŸŽ„ Festive badge with snowflake animations',
       rarity: 'legendary'
     },
     'streak-7-day': {
       type: 'badge',
       name: 'Wellness Warrior',
       description: '7-day streak achievement badge',
-      preview: '🌟 Sparkling star animation with flame effects',
+      preview: 'ðŸŒŸ Sparkling star animation with flame effects',
       rarity: 'epic'
     },
     'chat-engagement': {
       type: 'badge',
       name: 'Digital Wellness Partner',
       description: 'Connected with AI companion for meaningful conversations',
-      preview: '🤖 Interactive chat bubble animation',
+      preview: 'ðŸ¤– Interactive chat bubble animation',
       rarity: 'rare'
     },
     'goal-tracker': {
       type: 'badge',
       name: 'Goal Getter',
       description: 'Successfully tracked and achieved personal goals',
-      preview: '🎯 Target hit animation with celebration',
+      preview: 'ðŸŽ¯ Target hit animation with celebration',
       rarity: 'rare'
     }
   };
@@ -586,7 +586,7 @@ const ChallengeSystem: React.FC<ChallengeSystemProps> = ({ onNavigate, onMobileM
     
     toast({
       title: "Challenge Complete!",
-      description: `🎉 ${challenge.reward.badge || 'Achievement'} Unlocked! +${challenge.reward.points} points`,
+      description: `ðŸŽ‰ ${challenge.reward.badge || 'Achievement'} Unlocked! +${challenge.reward.points} points`,
       duration: 4000,
     });
   };
@@ -777,7 +777,7 @@ const ChallengeSystem: React.FC<ChallengeSystemProps> = ({ onNavigate, onMobileM
                       rarity: 'common'
                     }}>
                       <div className="text-sm theme-text-secondary cursor-pointer hover:text-purple-500 transition-colors">
-                        <strong>🎁 Reward:</strong> {challenge.reward.badge}
+                        <strong>ðŸŽ Reward:</strong> {challenge.reward.badge}
                       </div>
                     </RewardPreview>
                   )}
@@ -790,7 +790,7 @@ const ChallengeSystem: React.FC<ChallengeSystemProps> = ({ onNavigate, onMobileM
                       rarity: 'legendary'
                     }}>
                       <div className="text-sm text-purple-600 dark:text-purple-400 cursor-pointer hover:text-purple-400 transition-colors">
-                        <strong>✨ Exclusive:</strong> {challenge.reward.exclusive}
+                        <strong>âœ¨ Exclusive:</strong> {challenge.reward.exclusive}
                       </div>
                     </RewardPreview>
                   )}
@@ -898,7 +898,7 @@ const ChallengeSystem: React.FC<ChallengeSystemProps> = ({ onNavigate, onMobileM
         <TabsContent value="leaderboard" className="space-y-4">
           <div className="space-y-4">
             <div className="text-center">
-              <h3 className="text-xl font-bold theme-text">🏆 Top Wellness Champions</h3>
+              <h3 className="text-xl font-bold theme-text">ðŸ† Top Wellness Champions</h3>
               <p className="text-sm theme-text-secondary mt-1">Community wellness leaderboard this month</p>
             </div>
 
@@ -937,7 +937,7 @@ const ChallengeSystem: React.FC<ChallengeSystemProps> = ({ onNavigate, onMobileM
                       </div>
                       {index < 3 && (
                         <div className="text-2xl">
-                          {index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉'}
+                          {index === 0 ? 'ðŸ¥‡' : index === 1 ? 'ðŸ¥ˆ' : 'ðŸ¥‰'}
                         </div>
                       )}
                     </div>
@@ -973,7 +973,7 @@ const ChallengeSystem: React.FC<ChallengeSystemProps> = ({ onNavigate, onMobileM
                         </div>
                       </div>
                       {entry.longestStreak >= 30 && (
-                        <div className="text-xl">🔥</div>
+                        <div className="text-xl">ðŸ”¥</div>
                       )}
                     </div>
                   ))}
@@ -999,7 +999,7 @@ const ChallengeSystem: React.FC<ChallengeSystemProps> = ({ onNavigate, onMobileM
                 </div>
                 <Progress value={84.7} className="h-3 mb-2" />
                 <div className="text-sm theme-text-secondary text-center">
-                  15 days left • {leaderboard.length} participants contributing
+                  15 days left â€¢ {leaderboard.length} participants contributing
                 </div>
               </CardContent>
             </Card>
@@ -1024,3 +1024,4 @@ const ChallengeSystem: React.FC<ChallengeSystemProps> = ({ onNavigate, onMobileM
 };
 
 export default ChallengeSystem;
+

@@ -1,5 +1,5 @@
-import React from 'react';
-import { Heart, Star, Brain, Shield, Users, BarChart3, Zap, Target, CheckCircle } from 'lucide-react';
+﻿import React from 'react';
+import { Heart, Brain, Shield, Users, BarChart3, Zap, Target, CheckCircle } from 'lucide-react';
 
 const CleanShowcase: React.FC = () => {
   return (
@@ -268,3 +268,4 @@ const CleanShowcase: React.FC = () => {
 };
 
 export default CleanShowcase;
+

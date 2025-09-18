@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+﻿import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -12,13 +12,10 @@ import {
   Hand, 
   Brain, 
   Volume2, 
-  Type, 
-  Palette, 
   Navigation,
   Languages,
   Settings,
   CheckCircle,
-  AlertCircle,
   AlertTriangle,
   HelpCircle
 } from 'lucide-react';
@@ -118,14 +115,14 @@ export function AccessibilitySettings({ userId, onSettingsChange }: Accessibilit
 
   const languages = [
     { code: 'en', name: 'English', nativeName: 'English' },
-    { code: 'es', name: 'Spanish', nativeName: 'Español' },
-    { code: 'fr', name: 'French', nativeName: 'Français' },
+    { code: 'es', name: 'Spanish', nativeName: 'EspaÃ±ol' },
+    { code: 'fr', name: 'French', nativeName: 'FranÃ§ais' },
     { code: 'de', name: 'German', nativeName: 'Deutsch' },
-    { code: 'pt', name: 'Portuguese', nativeName: 'Português' },
+    { code: 'pt', name: 'Portuguese', nativeName: 'PortuguÃªs' },
     { code: 'it', name: 'Italian', nativeName: 'Italiano' },
-    { code: 'zh', name: 'Chinese', nativeName: '中文' },
-    { code: 'ja', name: 'Japanese', nativeName: '日本語' },
-    { code: 'ko', name: 'Korean', nativeName: '한국어' },
+    { code: 'zh', name: 'Chinese', nativeName: 'ä¸­æ–‡' },
+    { code: 'ja', name: 'Japanese', nativeName: 'æ—¥æœ¬èªž' },
+    { code: 'ko', name: 'Korean', nativeName: 'í•œêµ­ì–´' },
   ];
 
   useEffect(() => {
@@ -815,11 +812,11 @@ export function AccessibilitySettings({ userId, onSettingsChange }: Accessibilit
             <div className="text-sm text-blue-800">
               <p className="font-medium mb-2">Accessibility Information</p>
               <ul className="space-y-1 text-xs">
-                <li>• Voice commands are available throughout the app when voice navigation is enabled</li>
-                <li>• Screen reader support provides detailed descriptions of interface elements</li>
-                <li>• Emergency support can be accessed with triple-tap gesture or "Emergency support" voice command</li>
-                <li>• All therapeutic content is available in your selected language</li>
-                <li>• These settings sync across your devices for consistent accessibility</li>
+                <li>â€¢ Voice commands are available throughout the app when voice navigation is enabled</li>
+                <li>â€¢ Screen reader support provides detailed descriptions of interface elements</li>
+                <li>â€¢ Emergency support can be accessed with triple-tap gesture or "Emergency support" voice command</li>
+                <li>â€¢ All therapeutic content is available in your selected language</li>
+                <li>â€¢ These settings sync across your devices for consistent accessibility</li>
               </ul>
             </div>
           </div>

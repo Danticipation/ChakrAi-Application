@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Star, Microscope, BookOpen, ExternalLink, Calendar, TrendingUp } from 'lucide-react';
 
 interface Study {
@@ -18,18 +18,18 @@ interface HoroscopeData {
 }
 
 const zodiacSigns = [
-  { name: 'aries', symbol: '♈', emoji: '🐏' },
-  { name: 'taurus', symbol: '♉', emoji: '🐂' },
-  { name: 'gemini', symbol: '♊', emoji: '👯' },
-  { name: 'cancer', symbol: '♋', emoji: '🦀' },
-  { name: 'leo', symbol: '♌', emoji: '🦁' },
-  { name: 'virgo', symbol: '♍', emoji: '👩' },
-  { name: 'libra', symbol: '♎', emoji: '⚖️' },
-  { name: 'scorpio', symbol: '♏', emoji: '🦂' },
-  { name: 'sagittarius', symbol: '♐', emoji: '🏹' },
-  { name: 'capricorn', symbol: '♑', emoji: '🐐' },
-  { name: 'aquarius', symbol: '♒', emoji: '🏺' },
-  { name: 'pisces', symbol: '♓', emoji: '🐟' }
+  { name: 'aries', symbol: 'â™ˆ', emoji: 'ðŸ' },
+  { name: 'taurus', symbol: 'â™‰', emoji: 'ðŸ‚' },
+  { name: 'gemini', symbol: 'â™Š', emoji: 'ðŸ‘¯' },
+  { name: 'cancer', symbol: 'â™‹', emoji: 'ðŸ¦€' },
+  { name: 'leo', symbol: 'â™Œ', emoji: 'ðŸ¦' },
+  { name: 'virgo', symbol: 'â™', emoji: 'ðŸ‘©' },
+  { name: 'libra', symbol: 'â™Ž', emoji: 'âš–ï¸' },
+  { name: 'scorpio', symbol: 'â™', emoji: 'ðŸ¦‚' },
+  { name: 'sagittarius', symbol: 'â™', emoji: 'ðŸ¹' },
+  { name: 'capricorn', symbol: 'â™‘', emoji: 'ðŸ' },
+  { name: 'aquarius', symbol: 'â™’', emoji: 'ðŸº' },
+  { name: 'pisces', symbol: 'â™“', emoji: 'ðŸŸ' }
 ];
 
 export default function StarsAndStudies() {
@@ -143,7 +143,7 @@ export default function StarsAndStudies() {
             <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
               <div className="flex items-center justify-between mb-2">
                 <h4 className="font-semibold text-purple-800">
-                  {zodiacSigns.find(s => s.name === selectedSign)?.emoji || '⭐'} {horoscopeData.sign}
+                  {zodiacSigns.find(s => s.name === selectedSign)?.emoji || 'â­'} {horoscopeData.sign}
                 </h4>
                 <span className="text-sm text-purple-600">{horoscopeData.date}</span>
               </div>

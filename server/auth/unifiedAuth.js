@@ -2,7 +2,6 @@
  * FIXED UNIFIED AUTHENTICATION SYSTEM
  * Prevents multiple user creation for same session
  */
-import { unifiedAuth } from '../auth/unifiedAuth.js';
 import jwt from 'jsonwebtoken';
 import { storage } from '../src/storage.js';
 
@@ -17,6 +16,7 @@ const globalUserCache = new Map();
  */
 export const getAuthenticatedUser = async (req) => {
   const ctx = (req && req.ctx) || (req && req['ctx']);
+  console.log(`[getAuthenticatedUser] req.ctx:`, ctx);
   if (!ctx?.uid) throw new Error('auth_ctx_missing');
   return { id: req.userId, uid: ctx.uid, adid: ctx.adid, sid: ctx.sid };
 };

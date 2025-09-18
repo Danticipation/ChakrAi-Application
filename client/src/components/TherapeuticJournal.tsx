@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Mic, MicOff, Save, Plus, Calendar, Tag, Heart, Smile, Meh, Frown, AlertCircle, Send, Brain, BarChart3, Download, FileText, Trash2 } from 'lucide-react';
+﻿import React, { useState, useRef, useEffect } from 'react';
+import { Mic, MicOff, Save, Plus, Calendar, Heart, Brain, BarChart3, Download, FileText, Trash2 } from 'lucide-react';
 
 interface JournalEntry {
   id?: number;
@@ -62,14 +62,14 @@ const TherapeuticJournal: React.FC<TherapeuticJournalProps> = ({ userId, onEntry
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const moodOptions = [
-    { value: 'very_happy', label: 'Very Happy', icon: '😊', color: 'bg-green-100 text-green-800' },
-    { value: 'happy', label: 'Happy', icon: '🙂', color: 'bg-green-50 text-green-700' },
-    { value: 'neutral', label: 'Neutral', icon: '😐', color: 'bg-gray-100 text-gray-700' },
-    { value: 'sad', label: 'Sad', icon: '🙁', color: 'bg-blue-100 text-blue-700' },
-    { value: 'very_sad', label: 'Very Sad', icon: '😢', color: 'bg-blue-200 text-blue-800' },
-    { value: 'anxious', label: 'Anxious', icon: '😰', color: 'bg-yellow-100 text-yellow-800' },
-    { value: 'angry', label: 'Angry', icon: '😠', color: 'bg-red-100 text-red-800' },
-    { value: 'grateful', label: 'Grateful', icon: '🙏', color: 'bg-purple-100 text-purple-800' }
+    { value: 'very_happy', label: 'Very Happy', icon: 'ðŸ˜Š', color: 'bg-green-100 text-green-800' },
+    { value: 'happy', label: 'Happy', icon: 'ðŸ™‚', color: 'bg-green-50 text-green-700' },
+    { value: 'neutral', label: 'Neutral', icon: 'ðŸ˜', color: 'bg-gray-100 text-gray-700' },
+    { value: 'sad', label: 'Sad', icon: 'ðŸ™', color: 'bg-blue-100 text-blue-700' },
+    { value: 'very_sad', label: 'Very Sad', icon: 'ðŸ˜¢', color: 'bg-blue-200 text-blue-800' },
+    { value: 'anxious', label: 'Anxious', icon: 'ðŸ˜°', color: 'bg-yellow-100 text-yellow-800' },
+    { value: 'angry', label: 'Angry', icon: 'ðŸ˜ ', color: 'bg-red-100 text-red-800' },
+    { value: 'grateful', label: 'Grateful', icon: 'ðŸ™', color: 'bg-purple-100 text-purple-800' }
   ];
 
   const commonTags = [
@@ -142,7 +142,7 @@ const TherapeuticJournal: React.FC<TherapeuticJournalProps> = ({ userId, onEntry
         }
       }
       
-      console.log('🎵 TherapeuticJournal using audio format:', mimeType);
+      console.log('ðŸŽµ TherapeuticJournal using audio format:', mimeType);
       const mediaRecorder = new MediaRecorder(stream, { mimeType });
       
       mediaRecorderRef.current = mediaRecorder;
@@ -156,7 +156,7 @@ const TherapeuticJournal: React.FC<TherapeuticJournalProps> = ({ userId, onEntry
       
       mediaRecorder.onstop = async () => {
         const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
-        console.log('🎵 TherapeuticJournal audio blob type:', audioBlob.type);
+        console.log('ðŸŽµ TherapeuticJournal audio blob type:', audioBlob.type);
         await transcribeAudio(audioBlob);
         stream.getTracks().forEach(track => track.stop());
       };
@@ -602,7 +602,7 @@ const TherapeuticJournal: React.FC<TherapeuticJournalProps> = ({ userId, onEntry
                       <span className={`px-2 py-1 rounded-full text-xs ${
                         moodOptions.find(m => m.value === recentEntry.mood)?.color || 'bg-gray-100 text-gray-700'
                       }`}>
-                        {moodOptions.find(m => m.value === recentEntry.mood)?.icon || '😐'} {moodOptions.find(m => m.value === recentEntry.mood)?.label || 'Neutral'}
+                        {moodOptions.find(m => m.value === recentEntry.mood)?.icon || 'ðŸ˜'} {moodOptions.find(m => m.value === recentEntry.mood)?.label || 'Neutral'}
                       </span>
                     </div>
                     <p className="text-white/80 text-sm line-clamp-2">
@@ -666,7 +666,7 @@ const TherapeuticJournal: React.FC<TherapeuticJournalProps> = ({ userId, onEntry
                       onClick={() => setSelectedEntry(null)}
                       className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
                     >
-                      ✕
+                      âœ•
                     </button>
                   </div>
 
@@ -706,11 +706,11 @@ const TherapeuticJournal: React.FC<TherapeuticJournalProps> = ({ userId, onEntry
                         e.preventDefault();
                         e.stopPropagation();
 
-                        console.log('🟦 Edit Entry button clicked!', selectedEntry);
-                        console.log('🟦 selectedEntry has ID?', selectedEntry?.id ? 'YES' : 'NO');
+                        console.log('ðŸŸ¦ Edit Entry button clicked!', selectedEntry);
+                        console.log('ðŸŸ¦ selectedEntry has ID?', selectedEntry?.id ? 'YES' : 'NO');
                         
                         if (selectedEntry?.id) {
-                          console.log('🟦 Setting entry state...');
+                          console.log('ðŸŸ¦ Setting entry state...');
                           setEntry({
                             id: selectedEntry.id,
                             title: selectedEntry.title || '',
@@ -721,18 +721,18 @@ const TherapeuticJournal: React.FC<TherapeuticJournalProps> = ({ userId, onEntry
                             isPrivate: selectedEntry.isPrivate ?? true
                           });
                           
-                          console.log('🟦 Setting editingEntry state...');
+                          console.log('ðŸŸ¦ Setting editingEntry state...');
                           setEditingEntry(selectedEntry);
                           
-                          console.log('🟦 Setting viewMode to edit...');
+                          console.log('ðŸŸ¦ Setting viewMode to edit...');
                           setViewMode('edit');
                           
-                          console.log('🟦 Clearing selectedEntry...');
+                          console.log('ðŸŸ¦ Clearing selectedEntry...');
                           setSelectedEntry(null);
                           
-                          console.log('🟦 All states set successfully!');
+                          console.log('ðŸŸ¦ All states set successfully!');
                         } else {
-                          console.error('🔴 Cannot edit entry: no ID found', selectedEntry);
+                          console.error('ðŸ”´ Cannot edit entry: no ID found', selectedEntry);
                         }
                       }}
                       className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium"
@@ -892,7 +892,7 @@ const TherapeuticJournal: React.FC<TherapeuticJournalProps> = ({ userId, onEntry
                       onClick={() => removeTag(tag)}
                       className="ml-2 text-white/80 hover:text-white"
                     >
-                      ×
+                      Ã—
                     </button>
                   </span>
                 ))}
@@ -1231,10 +1231,10 @@ const TherapeuticJournal: React.FC<TherapeuticJournalProps> = ({ userId, onEntry
             <div className="mt-6 theme-primary/30 border border-[#000000]/50 rounded-xl p-4">
               <h5 className="font-medium text-white mb-2">About Your Reports</h5>
               <ul className="text-sm text-white/80 space-y-1">
-                <li>• Reports are generated using AI analysis of your journal entries and mood data</li>
-                <li>• Therapist reports include clinical insights suitable for healthcare providers</li>
-                <li>• Personal reports focus on your growth journey and positive patterns</li>
-                <li>• All reports respect your privacy settings and only include data you've chosen to share</li>
+                <li>â€¢ Reports are generated using AI analysis of your journal entries and mood data</li>
+                <li>â€¢ Therapist reports include clinical insights suitable for healthcare providers</li>
+                <li>â€¢ Personal reports focus on your growth journey and positive patterns</li>
+                <li>â€¢ All reports respect your privacy settings and only include data you've chosen to share</li>
               </ul>
             </div>
           </div>
@@ -1346,7 +1346,7 @@ const TherapeuticJournal: React.FC<TherapeuticJournalProps> = ({ userId, onEntry
                         ? 'bg-red-100 text-red-800' 
                         : 'bg-green-100 text-green-800'
                     }`}>
-                      {selectedEntry.isPrivate ? '🔒 Private' : '🌐 Shared'}
+                      {selectedEntry.isPrivate ? 'ðŸ”’ Private' : 'ðŸŒ Shared'}
                     </span>
                   </div>
                 </div>

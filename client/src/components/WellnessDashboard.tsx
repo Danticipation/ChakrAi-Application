@@ -1,11 +1,7 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { 
-  Brain, Heart, BookOpen, Target, BarChart3, Calendar, 
-  Clock, TrendingUp, Star, Flame, MessageCircle, Mic,
-  CheckCircle, ArrowRight, Play, Pause, Users, Zap,
-  Award, Eye, Lightbulb, Activity, TrendingDown, Microscope
+  Brain, Heart, BookOpen, Target, TrendingUp, Star, Flame, MessageCircle, ArrowRight, Zap, Lightbulb, Activity, TrendingDown
 } from 'lucide-react';
-import StarsAndStudies from './StarsAndStudies';
 import { getCurrentUserId, getAuthHeaders } from '../utils/unifiedUserSession';
 
 interface WellnessDashboardProps {
@@ -109,7 +105,7 @@ const QuickAction = ({ icon: Icon, label, description, color, onClick }: {
     
     <div className="flex items-center justify-between relative z-10">
       <div className="flex items-center text-cyan-300 text-sm font-medium group-hover:text-cyan-200 group-hover:translate-x-2 transition-all duration-300">
-        <span className="mr-2">🚀 Start Now</span>
+        <span className="mr-2">ðŸš€ Start Now</span>
         <ArrowRight className="w-4 h-4 group-hover:animate-pulse" />
       </div>
       
@@ -262,9 +258,9 @@ const WellnessDashboard: React.FC<WellnessDashboardProps> = ({ userId, onNavigat
           return;
         }
         setAuthenticatedUserId(authUserId);
-        console.log('🔐 WellnessDashboard: Using authenticated user:', authUserId);
+        console.log('ðŸ” WellnessDashboard: Using authenticated user:', authUserId);
       } catch (error) {
-        console.error('❌ WellnessDashboard: Auth failed:', error);
+        console.error('âŒ WellnessDashboard: Auth failed:', error);
         setError('Authentication failed');
       }
     };
@@ -284,7 +280,7 @@ const WellnessDashboard: React.FC<WellnessDashboardProps> = ({ userId, onNavigat
         
         // Use unified auth headers
         const headers = await getAuthHeaders();
-        console.log('🔐 WellnessDashboard: Using unified auth for user:', authenticatedUserId);
+        console.log('ðŸ” WellnessDashboard: Using unified auth for user:', authenticatedUserId);
 
         // Fetch comprehensive dashboard data from our new UID-based endpoint
         const [
@@ -400,7 +396,7 @@ const WellnessDashboard: React.FC<WellnessDashboardProps> = ({ userId, onNavigat
       }
       
       const headers = await getAuthHeaders();
-      console.log('🎭 Saving mood with unified auth');
+      console.log('ðŸŽ­ Saving mood with unified auth');
 
       await fetch('/api/mood', {
         method: 'POST',
@@ -480,10 +476,10 @@ const WellnessDashboard: React.FC<WellnessDashboardProps> = ({ userId, onNavigat
             <Brain className="w-12 h-12 text-white animate-pulse" />
           </div>
           <h2 className="text-4xl font-bold bg-gradient-to-r from-cyan-400 via-pink-400 to-violet-400 bg-clip-text text-transparent mb-4">
-            🎆 Loading Your Wellness Universe 🎆
+            ðŸŽ† Loading Your Wellness Universe ðŸŽ†
           </h2>
           <p className="text-cyan-200 text-lg font-medium">
-            💫 Gathering your latest cosmic progress... 🌌
+            ðŸ’« Gathering your latest cosmic progress... ðŸŒŒ
           </p>
           <div className="flex justify-center space-x-2 mt-6">
             <div className="w-3 h-3 bg-cyan-400 rounded-full animate-bounce"></div>
@@ -509,16 +505,16 @@ const WellnessDashboard: React.FC<WellnessDashboardProps> = ({ userId, onNavigat
             <Brain className="w-12 h-12 text-white animate-pulse" />
           </div>
           <h2 className="text-4xl font-bold bg-gradient-to-r from-cyan-400 via-pink-400 to-violet-400 bg-clip-text text-transparent mb-4">
-            🎆 Welcome to Chakrai Universe! 🎆
+            ðŸŽ† Welcome to Chakrai Universe! ðŸŽ†
           </h2>
           <p className="text-cyan-200 text-lg font-medium mb-6">
-            🚀 Ready to start your wellness journey? 🌈
+            ðŸš€ Ready to start your wellness journey? ðŸŒˆ
           </p>
           <button
             onClick={() => window.location.reload()}
             className="px-8 py-4 bg-gradient-to-r from-cyan-600 via-pink-600 to-violet-600 text-white rounded-2xl font-bold text-lg hover:shadow-2xl hover:shadow-cyan-500/25 transition-all duration-500 transform hover:scale-110 hover:-translate-y-1"
           >
-            🎯 Launch Dashboard 🚀
+            ðŸŽ¯ Launch Dashboard ðŸš€
           </button>
         </div>
       </div>
@@ -552,7 +548,7 @@ const WellnessDashboard: React.FC<WellnessDashboardProps> = ({ userId, onNavigat
         {/* Welcome Header */}
         <div className="text-center mb-8">
           <h1 className="text-5xl font-bold bg-gradient-to-r from-cyan-400 via-pink-400 to-violet-400 bg-clip-text text-transparent mb-4 animate-pulse">
-            {getGreeting()}, Welcome Back! 🌟
+            {getGreeting()}, Welcome Back! ðŸŒŸ
           </h1>
           <p className="text-cyan-200 text-xl font-medium">
             {currentTime.toLocaleDateString('en-US', { 
@@ -588,11 +584,11 @@ const WellnessDashboard: React.FC<WellnessDashboardProps> = ({ userId, onNavigat
             <div className="relative z-10 text-center">
               <h2 className="text-3xl font-bold text-white mb-6 flex items-center justify-center">
                 <Star className="w-8 h-8 mr-3 text-yellow-400 animate-pulse" fill="currentColor" />
-                🎆 Today's Power Affirmation 🎆
+                ðŸŽ† Today's Power Affirmation ðŸŽ†
                 <Star className="w-8 h-8 ml-3 text-yellow-400 animate-pulse" fill="currentColor" />
               </h2>
               <blockquote className="text-2xl text-white font-bold leading-relaxed max-w-4xl mx-auto mb-6">
-                "💫 {dailyAffirmation} 💫"
+                "ðŸ’« {dailyAffirmation} ðŸ’«"
               </blockquote>
               <div className="flex justify-center space-x-2 mb-4">
                 <div className="w-6 h-1 bg-gradient-to-r from-cyan-400 to-pink-400 rounded-full animate-pulse"></div>
@@ -710,11 +706,11 @@ const WellnessDashboard: React.FC<WellnessDashboardProps> = ({ userId, onNavigat
             <h3 className="text-xl font-semibold text-white mb-4">How are you feeling today?</h3>
             <div className="grid grid-cols-5 gap-3 mb-4">
               {[
-                { emoji: "😔", label: "Sad", value: "sad" },
-                { emoji: "😐", label: "Neutral", value: "neutral" },
-                { emoji: "🙂", label: "Good", value: "good" },
-                { emoji: "😊", label: "Happy", value: "happy" },
-                { emoji: "🤩", label: "Excited", value: "excited" }
+                { emoji: "ðŸ˜”", label: "Sad", value: "sad" },
+                { emoji: "ðŸ˜", label: "Neutral", value: "neutral" },
+                { emoji: "ðŸ™‚", label: "Good", value: "good" },
+                { emoji: "ðŸ˜Š", label: "Happy", value: "happy" },
+                { emoji: "ðŸ¤©", label: "Excited", value: "excited" }
               ].map((mood) => (
                 <button
                   key={mood.value}

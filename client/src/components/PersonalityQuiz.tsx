@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { ChevronRight, ChevronLeft, CheckCircle, Brain, Heart, MessageCircle, Target, Sparkles, Star, Lightbulb, Award, AlertCircle } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';

@@ -1,4 +1,4 @@
-// Force React development mode to prevent production mode warnings
+﻿// Force React development mode to prevent production mode warnings
 if (typeof process !== 'undefined') {
   process.env.NODE_ENV = 'development';
 }
@@ -16,3 +16,4 @@ if (root) {
     </React.StrictMode>
   );
 }
+

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+﻿import React, { useEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
 
 interface AnimationProps {
@@ -167,3 +167,4 @@ export const MindfulSlide: React.FC<{ children: React.ReactNode; delay?: number 
 );
 
 export default Animation;
+

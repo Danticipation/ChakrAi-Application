@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
-import { Mic, MicOff, Play, Pause, Square, Clock, Send } from 'lucide-react';
+﻿import { useState, useEffect, useRef } from 'react';
+import { Mic, Play, Square, Clock, Send } from 'lucide-react';
 
 interface MicroSessionProps {
   isOpen: boolean;
@@ -61,13 +61,13 @@ export default function MicroSession({
   const getSessionTitle = () => {
     switch (sessionType) {
       case 'journal':
-        return '🎙️ Voice Journal Micro-Session';
+        return 'ðŸŽ™ï¸ Voice Journal Micro-Session';
       case 'mood':
-        return '💙 Quick Mood Check-In';
+        return 'ðŸ’™ Quick Mood Check-In';
       case 'gratitude':
-        return '🌟 Gratitude Moment';
+        return 'ðŸŒŸ Gratitude Moment';
       default:
-        return '🎙️ Quick Voice Session';
+        return 'ðŸŽ™ï¸ Quick Voice Session';
     }
   };
 
@@ -90,7 +90,7 @@ export default function MicroSession({
         }
       }
       
-      console.log('🎵 MicroSession using audio format:', mimeType);
+      console.log('ðŸŽµ MicroSession using audio format:', mimeType);
       const mediaRecorder = new MediaRecorder(stream, { mimeType });
       
       mediaRecorderRef.current = mediaRecorder;

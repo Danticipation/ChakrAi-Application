@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+﻿import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -16,7 +16,6 @@ import {
   PieChart,
   LineChart,
   Download,
-  Filter,
   AlertCircle,
   RefreshCw,
   FileText,
@@ -654,7 +653,7 @@ export function InteractiveDashboard({ userId }: InteractiveDashboardProps) {
                   <ul className="space-y-1">
                     {dashboardData.insights.personalizedTips.slice(0, 3).map((tip) => (
                       <li key={tip.id} className="text-sm flex items-start space-x-2">
-                        <span className="text-blue-500 mt-1" aria-hidden="true">•</span>
+                        <span className="text-blue-500 mt-1" aria-hidden="true">â€¢</span>
                         <span className="text-slate-700">{tip.text}</span>
                       </li>
                     ))}
@@ -665,7 +664,7 @@ export function InteractiveDashboard({ userId }: InteractiveDashboardProps) {
                   <ul className="space-y-1">
                     {dashboardData.insights.growthOpportunities.slice(0, 3).map((opportunity) => (
                       <li key={opportunity.id} className="text-sm flex items-start space-x-2">
-                        <span className="text-purple-500 mt-1" aria-hidden="true">•</span>
+                        <span className="text-purple-500 mt-1" aria-hidden="true">â€¢</span>
                         <span className="text-slate-700">{opportunity.text}</span>
                       </li>
                     ))}

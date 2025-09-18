@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Headphones, Play, Pause, SkipForward, RotateCcw, Zap, Stethoscope, Star, Eye } from 'lucide-react';
+import { Headphones, Play, Zap, Stethoscope, Star, Eye } from 'lucide-react';
 
 interface VREnvironment {
   id: number;
@@ -63,9 +63,9 @@ const VRTherapy: React.FC = () => {
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-lg font-semibold theme-text">{env.name}</h3>
                 <div className="flex items-center space-x-1">
-                  {env.difficulty_level === 'beginner' && <span className="text-green-400">●</span>}
-                  {env.difficulty_level === 'intermediate' && <span className="text-yellow-400">●</span>}
-                  {env.difficulty_level === 'advanced' && <span className="text-red-400">●</span>}
+                  {env.difficulty_level === 'beginner' && <span className="text-green-400">â—</span>}
+                  {env.difficulty_level === 'intermediate' && <span className="text-yellow-400">â—</span>}
+                  {env.difficulty_level === 'advanced' && <span className="text-red-400">â—</span>}
                   <span className="theme-text/60 text-xs capitalize">{env.difficulty_level}</span>
                 </div>
               </div>

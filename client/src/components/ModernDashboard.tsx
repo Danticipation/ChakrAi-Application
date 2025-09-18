@@ -1,22 +1,14 @@
-import React, { useState, useEffect, useCallback } from 'react';
+﻿import React, { useState, useEffect, useCallback } from 'react';
 import GlassCard from '@/components/ui/GlassCard';
 import GradientButton from '@/components/ui/GradientButton';
 import Animation, { StaggeredAnimation, TherapeuticEntrance, WellnessReveal, MindfulSlide } from '@/components/ui/Animation';
-import MobileAnimation, { 
-  MobileStaggeredAnimation, 
-  MobileTherapeuticEntrance, 
-  MobileWellnessReveal, 
-  MobileMindfulSlide,
-  PullToRefresh,
-  SwipeableCard,
-  TouchButton
+import {
+  SwipeableCard
 } from '@/components/ui/MobileAnimation';
 import { 
   TrendingUp, 
-  TrendingDown, 
-  MoreVertical,
+  TrendingDown,
   Calendar,
-  Clock,
   Target,
   Activity,
   Brain,
@@ -80,14 +72,14 @@ const ModernDashboard: React.FC<ModernDashboardProps> = ({ userId, onNavigate })
   // Fetch real data from APIs
   const fetchDashboardData = useCallback(async () => {
       if (!userId) {
-        console.log('⏳ Waiting for userId...');
+        console.log('â³ Waiting for userId...');
         return;
       }
 
       try {
         setLoading(true);
         setError(null);
-        console.log('📊 Fetching real dashboard data for user:', userId);
+        console.log('ðŸ“Š Fetching real dashboard data for user:', userId);
 
         // Fetch data from multiple endpoints
         const [journalResponse, moodResponse, chatResponse] = await Promise.allSettled([
@@ -103,25 +95,25 @@ const ModernDashboard: React.FC<ModernDashboardProps> = ({ userId, onNavigate })
         // Process journal analytics
         if (journalResponse.status === 'fulfilled' && journalResponse.value.ok) {
           journalData = await journalResponse.value.json();
-          console.log('✅ Journal data:', journalData);
+          console.log('âœ… Journal data:', journalData);
         } else {
-          console.warn('⚠️ Journal analytics failed, using defaults');
+          console.warn('âš ï¸ Journal analytics failed, using defaults');
         }
 
         // Process mood analytics  
         if (moodResponse.status === 'fulfilled' && moodResponse.value.ok) {
           moodData = await moodResponse.value.json();
-          console.log('✅ Mood data:', moodData);
+          console.log('âœ… Mood data:', moodData);
         } else {
-          console.warn('⚠️ Mood analytics failed, using defaults');
+          console.warn('âš ï¸ Mood analytics failed, using defaults');
         }
 
         // Process chat analytics
         if (chatResponse.status === 'fulfilled' && chatResponse.value.ok) {
           chatData = await chatResponse.value.json();
-          console.log('✅ Chat data:', chatData);
+          console.log('âœ… Chat data:', chatData);
         } else {
-          console.warn('⚠️ Chat analytics failed, using defaults');
+          console.warn('âš ï¸ Chat analytics failed, using defaults');
         }
 
         // Fetch recent journal entries for activity feed
@@ -131,10 +123,10 @@ const ModernDashboard: React.FC<ModernDashboardProps> = ({ userId, onNavigate })
           if (entriesResponse.ok) {
             const entries = await entriesResponse.json();
             recentEntries = entries.slice(0, 3); // Get last 3 entries
-            console.log('✅ Recent entries:', recentEntries.length);
+            console.log('âœ… Recent entries:', recentEntries.length);
           }
         } catch (entriesError) {
-          console.warn('⚠️ Failed to fetch recent entries:', entriesError);
+          console.warn('âš ï¸ Failed to fetch recent entries:', entriesError);
         }
 
         // Calculate real metrics
@@ -161,11 +153,11 @@ const ModernDashboard: React.FC<ModernDashboardProps> = ({ userId, onNavigate })
           insights: generateInsights(totalJournalEntries, totalChatSessions, moodTrend)
         };
 
-        console.log('📊 Real dashboard data compiled:', realDashboardData);
+        console.log('ðŸ“Š Real dashboard data compiled:', realDashboardData);
         setDashboardData(realDashboardData);
 
       } catch (error) {
-        console.error('❌ Failed to fetch dashboard data:', error);
+        console.error('âŒ Failed to fetch dashboard data:', error);
         setError('Failed to load dashboard data');
         
         // Fallback to minimal data structure
@@ -205,7 +197,7 @@ const ModernDashboard: React.FC<ModernDashboardProps> = ({ userId, onNavigate })
     );
     
     let streak = 0;
-    let currentDate = new Date();
+    const currentDate = new Date();
     currentDate.setHours(0, 0, 0, 0);
     
     for (const entry of sortedEntries) {
@@ -717,3 +709,4 @@ const ModernDashboard: React.FC<ModernDashboardProps> = ({ userId, onNavigate })
 };
 
 export default ModernDashboard;
+

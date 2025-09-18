@@ -1,4 +1,4 @@
-import { getCurrentUserId, getAuthHeaders } from "../utils/unifiedUserSession";
+﻿import { getCurrentUserId } from "../utils/unifiedUserSession";
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -75,13 +75,13 @@ export default function TherapeuticAnalytics({}: TherapeuticAnalyticsProps) {
       try {
         const authenticatedUserId = await getCurrentUserId();
         if (authenticatedUserId === 0) {
-          console.error('❌ TherapeuticAnalytics: Authentication failed');
+          console.error('âŒ TherapeuticAnalytics: Authentication failed');
           return;
         }
         setUserId(authenticatedUserId);
-        console.log('🔐 TherapeuticAnalytics: Using authenticated user:', authenticatedUserId);
+        console.log('ðŸ” TherapeuticAnalytics: Using authenticated user:', authenticatedUserId);
       } catch (error) {
-        console.error('❌ TherapeuticAnalytics: Auth failed:', error);
+        console.error('âŒ TherapeuticAnalytics: Auth failed:', error);
       }
     };
     getUser();

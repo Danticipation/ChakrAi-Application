@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -270,7 +270,7 @@ CREATE TABLE IF NOT EXISTS forums (
                     onChange={(e) => handleInputChange('supabaseUrl', e.target.value)}
                   />
                   <p className="text-xs text-gray-500 mt-1">
-                    Found in Settings → API → Project URL
+                    Found in Settings â†’ API â†’ Project URL
                   </p>
                 </div>
 
@@ -283,7 +283,7 @@ CREATE TABLE IF NOT EXISTS forums (
                     onChange={(e) => handleInputChange('supabaseAnonKey', e.target.value)}
                   />
                   <p className="text-xs text-gray-500 mt-1">
-                    Found in Settings → API → Project API keys → anon public
+                    Found in Settings â†’ API â†’ Project API keys â†’ anon public
                   </p>
                 </div>
 
@@ -297,7 +297,7 @@ CREATE TABLE IF NOT EXISTS forums (
                     onChange={(e) => handleInputChange('supabaseServiceKey', e.target.value)}
                   />
                   <p className="text-xs text-gray-500 mt-1">
-                    Found in Settings → API → Project API keys → service_role secret
+                    Found in Settings â†’ API â†’ Project API keys â†’ service_role secret
                   </p>
                 </div>
               </div>
@@ -360,20 +360,20 @@ CREATE TABLE IF NOT EXISTS forums (
                   <div className="p-3 bg-green-50 rounded-lg">
                     <h4 className="font-medium text-green-900">Tables Created</h4>
                     <ul className="text-sm text-green-700 mt-1 space-y-1">
-                      <li>• forums</li>
-                      <li>• forum_posts</li>
-                      <li>• forum_replies</li>
-                      <li>• peer_checkins</li>
-                      <li>• content_moderation</li>
+                      <li>â€¢ forums</li>
+                      <li>â€¢ forum_posts</li>
+                      <li>â€¢ forum_replies</li>
+                      <li>â€¢ peer_checkins</li>
+                      <li>â€¢ content_moderation</li>
                     </ul>
                   </div>
                   <div className="p-3 bg-blue-50 rounded-lg">
                     <h4 className="font-medium text-blue-900">Security Features</h4>
                     <ul className="text-sm text-blue-700 mt-1 space-y-1">
-                      <li>• Row Level Security (RLS)</li>
-                      <li>• Anonymous user protection</li>
-                      <li>• Content flagging policies</li>
-                      <li>• Crisis detection ready</li>
+                      <li>â€¢ Row Level Security (RLS)</li>
+                      <li>â€¢ Anonymous user protection</li>
+                      <li>â€¢ Content flagging policies</li>
+                      <li>â€¢ Crisis detection ready</li>
                     </ul>
                   </div>
                 </div>

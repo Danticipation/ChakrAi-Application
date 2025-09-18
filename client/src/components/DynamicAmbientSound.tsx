@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+﻿import React, { useState, useRef, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { 
@@ -247,7 +247,7 @@ const DynamicAmbientSound: React.FC<DynamicAmbientSoundProps> = ({
             Recommended for your current mood
           </h3>
           <p className="text-sm text-blue-600">
-            Based on your mood: {moodData.currentMood} • Stress: {moodData.stress}/10
+            Based on your mood: {moodData.currentMood} â€¢ Stress: {moodData.stress}/10
           </p>
         </div>
       )}

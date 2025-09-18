@@ -1,12 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import NeonCursor from '@/components/neon-cursor';
-import { QueryClient, QueryClientProvider, useQuery, useQueryClient } from '@tanstack/react-query';
-import { MessageCircle, Brain, BookOpen, Mic, User, Square, Send, Target, RotateCcw, Sun, Moon, Star, Heart, BarChart3, Gift, Headphones, Shield, X, Palette, Settings, ChevronDown, ChevronRight, Menu, Home, Users, Sparkles } from 'lucide-react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Brain, X, Settings, Menu } from 'lucide-react';
 import axios from 'axios';
 // Removed problematic theme context import
 // import { useTheme, ThemeProvider } from '@/contexts/ThemeContext';
-import { AuthProvider, useAuth } from '@/contexts/AuthContext';
-import { SubscriptionProvider, useSubscription } from '@/contexts/SubscriptionContext';
+import { AuthProvider } from '@/contexts/AuthContext';
+import { SubscriptionProvider } from '@/contexts/SubscriptionContext';
 // Removed problematic layout component imports
 // import CleanLayout from '@/components/layouts/CleanLayout';
 // import CleanHome from '@/components/layouts/CleanHome';
@@ -17,7 +17,6 @@ import ConversationContinuityDisplay from '@/components/ConversationContinuityDi
 import VoiceSelector from '@/components/VoiceSelector';
 import ThemeSelector from '@/components/ThemeSelector';
 // Import comprehensive engaging components
-import EnhancedDashboard from '@/components/EnhancedDashboard';
 import BeautifulChat from '@/components/BeautifulChat';
 import ChakraiPlans from '@/components/ChakraiPlans';
 import GlassmorphismShowcase from '@/components/GlassmorphismShowcase';
@@ -55,7 +54,7 @@ import SubscriptionTierDemo from '@/components/SubscriptionTierDemo';
 import ChallengeSystem from '@/components/ChallengeSystem';
 import SupabaseSetup from '@/components/SupabaseSetup';
 import { VoiceRecorder } from '@/utils/voiceRecorder';
-import { getCurrentUserId, getAuthHeaders, validateUserSession } from '../utils/unifiedUserSession';
+import { getCurrentUserId, getAuthHeaders } from '../utils/unifiedUserSession';
 import PrivacyControl from '@/components/PrivacyControl';
 import OnboardingTour from '@/components/OnboardingTour';
 
@@ -98,10 +97,10 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
     voiceRecorderRef.current = new VoiceRecorder({
       onTranscription: (text) => {
         setChatInput(text);
-        console.log('✅ Voice transcription received:', text);
+        console.log('âœ… Voice transcription received:', text);
       },
       onError: (error) => {
-        console.error('❌ Voice recording error:', error);
+        console.error('âŒ Voice recording error:', error);
         // More user-friendly error display
         const errorDiv = document.createElement('div');
         errorDiv.style.cssText = 'position:fixed;top:20px;right:20px;background:red;color:white;padding:15px;border-radius:8px;z-index:10000;max-width:300px;';
@@ -111,7 +110,7 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
       },
       onStatusChange: (status) => {
         setVoiceStatus(status);
-        console.log('🎵 Voice status changed to:', status);
+        console.log('ðŸŽµ Voice status changed to:', status);
       },
       maxDuration: 30, // Shorter duration for better success
       minDuration: 2   // Longer minimum for clearer speech
@@ -140,7 +139,7 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
   const generateAndPlayTTS = async (text: string, voice: string) => {
     try {
       const startTime = Date.now();
-      console.log('🔊 Starting TTS generation...');
+      console.log('ðŸ”Š Starting TTS generation...');
       
       const ttsResponse = await fetch('/api/text-to-speech', {
         method: 'POST',
@@ -156,25 +155,25 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
         const audio = new Audio(audioUrl);
         
         const generationTime = Date.now() - startTime;
-        console.log(`🔊 TTS generated in ${generationTime}ms`);
+        console.log(`ðŸ”Š TTS generated in ${generationTime}ms`);
         
         audio.addEventListener('ended', () => {
           URL.revokeObjectURL(audioUrl);
         });
         
         audio.addEventListener('error', (e) => {
-          console.error('🔊 TTS playback error:', e);
+          console.error('ðŸ”Š TTS playback error:', e);
           URL.revokeObjectURL(audioUrl);
         });
         
         audio.volume = 0.8;
         await audio.play();
-        console.log('🔊 TTS playback started');
+        console.log('ðŸ”Š TTS playback started');
       } else {
-        console.error('🔊 TTS request failed:', ttsResponse.statusText);
+        console.error('ðŸ”Š TTS request failed:', ttsResponse.statusText);
       }
     } catch (error) {
-      console.error('🔊 TTS generation failed:', error);
+      console.error('ðŸ”Š TTS generation failed:', error);
     }
   };
 
@@ -185,7 +184,7 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
     const messageText = message || chatInput;
     if (!messageText.trim()) return;
     
-    console.log(`🎵 Frontend - Sending message with voice: ${selectedVoice}`);
+    console.log(`ðŸŽµ Frontend - Sending message with voice: ${selectedVoice}`);
     
     // Validate session before sending (note: unified system handles this internally)
     
@@ -202,7 +201,7 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
     // Send to AI API with authenticated headers and voice parameter
     try {
       const headers = await getAuthHeaders();
-      console.log('🔒 Sending chat message with authenticated headers');
+      console.log('ðŸ”’ Sending chat message with authenticated headers');
       
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout for audio responses
@@ -221,12 +220,12 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
       
       if (response.ok) {
         const data = await response.json();
-        console.log('✅ Chat API success - Status:', response.status);
-        console.log('📥 Main Chat API response:', data);
-        console.log('🔍 Main Chat - audioUrl exists:', !!data.audioUrl);
-        console.log('🔍 Main Chat - audioUrl length:', data.audioUrl?.length);
-        console.log('🔍 Main Chat - response keys:', Object.keys(data));
-        console.log('🔍 Main Chat - message content:', data.message);
+        console.log('âœ… Chat API success - Status:', response.status);
+        console.log('ðŸ“¥ Main Chat API response:', data);
+        console.log('ðŸ” Main Chat - audioUrl exists:', !!data.audioUrl);
+        console.log('ðŸ” Main Chat - audioUrl length:', data.audioUrl?.length);
+        console.log('ðŸ” Main Chat - response keys:', Object.keys(data));
+        console.log('ðŸ” Main Chat - message content:', data.message);
         
         const botMessage = {
           sender: 'bot' as const,
@@ -238,14 +237,14 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
         
         // Start TTS generation immediately (don't await)
         if (isTtsEnabled && botMessage.text) {
-          console.log('🔊 Generating TTS for bot response...');
+          console.log('ðŸ”Š Generating TTS for bot response...');
           // Fire and forget - don't block UI
           generateAndPlayTTS(botMessage.text, selectedVoice);
         }
       } else {
-        console.error('❌ Chat API error - Status:', response.status, response.statusText);
+        console.error('âŒ Chat API error - Status:', response.status, response.statusText);
         const errorText = await response.text();
-        console.error('❌ Error details:', errorText);
+        console.error('âŒ Error details:', errorText);
         // Show error message to user
         const errorMessage = {
           sender: 'bot' as const,
@@ -256,9 +255,9 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
         setIsAiTyping(false); // Hide typing indicator on error
       }
     } catch (error) {
-      console.error('❌ Error sending message - Network/Parse error:', error);
-      console.error('❌ Error type:', error instanceof Error ? error.name : typeof error);
-      console.error('❌ Error message:', error instanceof Error ? error.message : String(error));
+      console.error('âŒ Error sending message - Network/Parse error:', error);
+      console.error('âŒ Error type:', error instanceof Error ? error.name : typeof error);
+      console.error('âŒ Error message:', error instanceof Error ? error.message : String(error));
       
       let errorText = 'Sorry, I had trouble processing your message. Please try again.';
       if (error instanceof Error && error.name === 'AbortError') {
@@ -289,10 +288,10 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
 
   // Component rendering function
   const renderActiveSection = () => {
-    console.log('🔍 Rendering section:', activeSection); // Debug log
+    console.log('ðŸ” Rendering section:', activeSection); // Debug log
     switch (activeSection) {
       case 'home':
-        console.log('🏠 Rendering Clean Home Design'); // Debug log
+        console.log('ðŸ  Rendering Clean Home Design'); // Debug log
         return (
           <div className="space-y-20">
             {/* Hero Section */}
@@ -325,7 +324,7 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
                       className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-xl font-medium hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center group"
                     >
                       Start Free Analysis
-                      <span className="ml-2 group-hover:translate-x-1 transition-transform">→</span>
+                      <span className="ml-2 group-hover:translate-x-1 transition-transform">â†’</span>
                     </button>
                     
                     <button 
@@ -338,15 +337,15 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
 
                   <div className="flex items-center space-x-8 text-sm text-gray-500">
                     <div className="flex items-center space-x-2">
-                      <span className="text-green-500">✓</span>
+                      <span className="text-green-500">âœ“</span>
                       <span>HIPAA Compliant</span>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <span className="text-green-500">✓</span>
+                      <span className="text-green-500">âœ“</span>
                       <span>End-to-End Encrypted</span>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <span className="text-green-500">✓</span>
+                      <span className="text-green-500">âœ“</span>
                       <span>20k+ Users</span>
                     </div>
                   </div>
@@ -425,7 +424,7 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
               <p className="text-gray-600 max-w-4xl mx-auto leading-relaxed">
                 Chakrai doesn't settle for surface-level personality quizzes. Our proprietary 190-point 
                 analysis engine dives across 9 domains of thought, emotion, and behavior to reveal a living, 
-                evolving portrait of who you are. <strong>It's not a label — it's the most in-depth 
+                evolving portrait of who you are. <strong>It's not a label â€” it's the most in-depth 
                 self-reflection system ever built.</strong>
               </p>
             </div>
@@ -548,7 +547,7 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
           />
         );
       default:
-        console.log('❌ DEFAULT CASE - activeSection:', activeSection); // Debug log
+        console.log('âŒ DEFAULT CASE - activeSection:', activeSection); // Debug log
         return (
           <div className="p-6 space-y-6 max-h-full overflow-y-auto">
             <div className="text-center space-y-4 mb-8">
@@ -565,7 +564,7 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
                   onClick={() => setActiveSection('home')} 
                   className="mt-4 px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
                 >
-                  🏠 Go to Dashboard
+                  ðŸ  Go to Dashboard
                 </button>
               </div>
             </div>
@@ -708,7 +707,7 @@ const AppWithOnboarding = () => {
   
   // Privacy control handler
   const handleUserIdChange = (newUserId: number) => {
-    console.log('🔄 Privacy Control: User ID changed to', newUserId);
+    console.log('ðŸ”„ Privacy Control: User ID changed to', newUserId);
     // Could trigger data refresh here if needed
   };
 
@@ -716,12 +715,12 @@ const AppWithOnboarding = () => {
   useEffect(() => {
     const initializeUser = async () => {
       try {
-        console.log('🔒 Initializing bulletproof user session...');
+        console.log('ðŸ”’ Initializing bulletproof user session...');
         
         // Get authenticated user session
         const userId = await getCurrentUserId();
         if (userId === 0) {
-          console.error('❌ User authentication failed during initialization');
+          console.error('âŒ User authentication failed during initialization');
           setCurrentUserId(null);
           setIsLoadingProfile(false);
           return;
@@ -729,7 +728,7 @@ const AppWithOnboarding = () => {
         
         const headers = await getAuthHeaders();
         
-        console.log('✅ User authentication successful. User ID:', userId);
+        console.log('âœ… User authentication successful. User ID:', userId);
         
         setCurrentUserId(userId);
 
@@ -743,12 +742,12 @@ const AppWithOnboarding = () => {
           
           if (response.ok) {
             const userData = await response.json();
-            console.log('✅ Backend user verified:', userData.user?.id);
+            console.log('âœ… Backend user verified:', userData.user?.id);
           } else {
-            console.warn('⚠️ Backend user creation failed, continuing with calculated ID');
+            console.warn('âš ï¸ Backend user creation failed, continuing with calculated ID');
           }
         } catch (backendError) {
-          console.warn('⚠️ Backend user creation failed, continuing with calculated ID:', backendError);
+          console.warn('âš ï¸ Backend user creation failed, continuing with calculated ID:', backendError);
         }
 
         // Check if this specific user needs personality quiz
@@ -891,3 +890,4 @@ export default function App() {
     </QueryClientProvider>
   );
 }
+

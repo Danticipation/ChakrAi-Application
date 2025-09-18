@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Shield, RefreshCw, Eye, EyeOff, User, AlertCircle, Trash2, RotateCcw, Zap } from 'lucide-react';
+﻿import React, { useState, useEffect } from 'react';
+import { Shield, RefreshCw, Eye, EyeOff, User, AlertCircle, RotateCcw, Zap } from 'lucide-react';
 import { 
   getCurrentUserId, 
   generateNewUserId, 
@@ -69,7 +69,7 @@ const PrivacyControl: React.FC<PrivacyControlProps> = ({ onUserIdChange }) => {
       // Show success message
       const successDiv = document.createElement('div');
       successDiv.style.cssText = 'position:fixed;top:20px;right:20px;background:green;color:white;padding:15px;border-radius:8px;z-index:10001;';
-      successDiv.textContent = '✅ Fresh start complete! Welcome back.';
+      successDiv.textContent = 'âœ… Fresh start complete! Welcome back.';
       document.body.appendChild(successDiv);
       setTimeout(() => {
         if (document.body.contains(successDiv)) {
@@ -87,7 +87,7 @@ const PrivacyControl: React.FC<PrivacyControlProps> = ({ onUserIdChange }) => {
   };
 
   const handleNuclearReset = async () => {
-    if (!confirm('🚨 NUCLEAR RESET 🚨\n\nThis will PERMANENTLY delete ALL your data and device identity. You will start completely fresh as if you never used Chakrai before.\n\nThis cannot be undone. Are you absolutely sure?')) {
+    if (!confirm('ðŸš¨ NUCLEAR RESET ðŸš¨\n\nThis will PERMANENTLY delete ALL your data and device identity. You will start completely fresh as if you never used Chakrai before.\n\nThis cannot be undone. Are you absolutely sure?')) {
       return;
     }
     
@@ -103,7 +103,7 @@ const PrivacyControl: React.FC<PrivacyControlProps> = ({ onUserIdChange }) => {
       // Show final message and reload
       const finalDiv = document.createElement('div');
       finalDiv.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:red;color:white;padding:30px;border-radius:12px;z-index:10002;text-align:center;';
-      finalDiv.innerHTML = '💥 Nuclear reset complete!<br>Reloading in 3 seconds...';
+      finalDiv.innerHTML = 'ðŸ’¥ Nuclear reset complete!<br>Reloading in 3 seconds...';
       document.body.appendChild(finalDiv);
       
       setTimeout(() => {
@@ -251,3 +251,4 @@ const PrivacyControl: React.FC<PrivacyControlProps> = ({ onUserIdChange }) => {
 };
 
 export default PrivacyControl;
+

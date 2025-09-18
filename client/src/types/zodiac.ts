@@ -1,4 +1,4 @@
-export interface ZodiacSign {
+﻿export interface ZodiacSign {
   id: string;
   name: string;
   symbol: string;
@@ -13,8 +13,8 @@ export const zodiacSigns: ZodiacSign[] = [
   {
     id: 'aries',
     name: 'Aries',
-    symbol: '♈',
-    emoji: '🐏',
+    symbol: 'â™ˆ',
+    emoji: 'ðŸ',
     element: 'Fire',
     dates: 'Mar 21 - Apr 19',
     traits: ['Bold', 'Energetic', 'Leader'],
@@ -23,8 +23,8 @@ export const zodiacSigns: ZodiacSign[] = [
   {
     id: 'taurus',
     name: 'Taurus',
-    symbol: '♉',
-    emoji: '🐂',
+    symbol: 'â™‰',
+    emoji: 'ðŸ‚',
     element: 'Earth',
     dates: 'Apr 20 - May 20',
     traits: ['Reliable', 'Patient', 'Practical'],
@@ -33,8 +33,8 @@ export const zodiacSigns: ZodiacSign[] = [
   {
     id: 'gemini',
     name: 'Gemini',
-    symbol: '♊',
-    emoji: '👯',
+    symbol: 'â™Š',
+    emoji: 'ðŸ‘¯',
     element: 'Air',
     dates: 'May 21 - Jun 20',
     traits: ['Curious', 'Adaptable', 'Witty'],
@@ -43,8 +43,8 @@ export const zodiacSigns: ZodiacSign[] = [
   {
     id: 'cancer',
     name: 'Cancer',
-    symbol: '♋',
-    emoji: '🦀',
+    symbol: 'â™‹',
+    emoji: 'ðŸ¦€',
     element: 'Water',
     dates: 'Jun 21 - Jul 22',
     traits: ['Nurturing', 'Intuitive', 'Protective'],
@@ -53,8 +53,8 @@ export const zodiacSigns: ZodiacSign[] = [
   {
     id: 'leo',
     name: 'Leo',
-    symbol: '♌',
-    emoji: '🦁',
+    symbol: 'â™Œ',
+    emoji: 'ðŸ¦',
     element: 'Fire',
     dates: 'Jul 23 - Aug 22',
     traits: ['Confident', 'Generous', 'Creative'],
@@ -63,8 +63,8 @@ export const zodiacSigns: ZodiacSign[] = [
   {
     id: 'virgo',
     name: 'Virgo',
-    symbol: '♍',
-    emoji: '👩',
+    symbol: 'â™',
+    emoji: 'ðŸ‘©',
     element: 'Earth',
     dates: 'Aug 23 - Sep 22',
     traits: ['Analytical', 'Helpful', 'Precise'],
@@ -73,8 +73,8 @@ export const zodiacSigns: ZodiacSign[] = [
   {
     id: 'libra',
     name: 'Libra',
-    symbol: '♎',
-    emoji: '⚖️',
+    symbol: 'â™Ž',
+    emoji: 'âš–ï¸',
     element: 'Air',
     dates: 'Sep 23 - Oct 22',
     traits: ['Balanced', 'Diplomatic', 'Charming'],
@@ -83,8 +83,8 @@ export const zodiacSigns: ZodiacSign[] = [
   {
     id: 'scorpio',
     name: 'Scorpio',
-    symbol: '♏',
-    emoji: '🦂',
+    symbol: 'â™',
+    emoji: 'ðŸ¦‚',
     element: 'Water',
     dates: 'Oct 23 - Nov 21',
     traits: ['Intense', 'Passionate', 'Mysterious'],
@@ -93,8 +93,8 @@ export const zodiacSigns: ZodiacSign[] = [
   {
     id: 'sagittarius',
     name: 'Sagittarius',
-    symbol: '♐',
-    emoji: '🏹',
+    symbol: 'â™',
+    emoji: 'ðŸ¹',
     element: 'Fire',
     dates: 'Nov 22 - Dec 21',
     traits: ['Adventurous', 'Optimistic', 'Free-spirited'],
@@ -103,8 +103,8 @@ export const zodiacSigns: ZodiacSign[] = [
   {
     id: 'capricorn',
     name: 'Capricorn',
-    symbol: '♑',
-    emoji: '🐐',
+    symbol: 'â™‘',
+    emoji: 'ðŸ',
     element: 'Earth',
     dates: 'Dec 22 - Jan 19',
     traits: ['Ambitious', 'Disciplined', 'Responsible'],
@@ -113,8 +113,8 @@ export const zodiacSigns: ZodiacSign[] = [
   {
     id: 'aquarius',
     name: 'Aquarius',
-    symbol: '♒',
-    emoji: '🏺',
+    symbol: 'â™’',
+    emoji: 'ðŸº',
     element: 'Air',
     dates: 'Jan 20 - Feb 18',
     traits: ['Independent', 'Innovative', 'Humanitarian'],
@@ -123,8 +123,8 @@ export const zodiacSigns: ZodiacSign[] = [
   {
     id: 'pisces',
     name: 'Pisces',
-    symbol: '♓',
-    emoji: '🐟',
+    symbol: 'â™“',
+    emoji: 'ðŸŸ',
     element: 'Water',
     dates: 'Feb 19 - Mar 20',
     traits: ['Compassionate', 'Artistic', 'Intuitive'],

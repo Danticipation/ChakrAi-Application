@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import type { Alarm, InsertAlarm } from '../../../shared/schema.ts';
@@ -67,13 +67,13 @@ export function useAlarms() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/alarms'] });
       toast({
-        title: '✅ Alarm Scheduled',
+        title: 'âœ… Alarm Scheduled',
         description: data.message
       });
     },
     onError: (error) => {
       toast({
-        title: '❌ Failed to Schedule Alarm',
+        title: 'âŒ Failed to Schedule Alarm',
         description: error.message,
         variant: 'destructive'
       });
@@ -103,13 +103,13 @@ export function useAlarms() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/alarms'] });
       toast({
-        title: '🗑️ Alarm Deleted',
+        title: 'ðŸ—‘ï¸ Alarm Deleted',
         description: data.message
       });
     },
     onError: (error) => {
       toast({
-        title: '❌ Failed to Delete Alarm',
+        title: 'âŒ Failed to Delete Alarm',
         description: error.message,
         variant: 'destructive'
       });
@@ -120,7 +120,7 @@ export function useAlarms() {
   const requestNotificationPermission = async (): Promise<boolean> => {
     if (!('Notification' in window)) {
       toast({
-        title: '❌ Not Supported',
+        title: 'âŒ Not Supported',
         description: 'This browser does not support notifications',
         variant: 'destructive'
       });
@@ -152,7 +152,7 @@ export function useAlarms() {
       if (timeUntilTrigger > 0 && timeUntilTrigger <= 24 * 60 * 60 * 1000) {
         setTimeout(() => {
           if (Notification.permission === 'granted') {
-            new Notification('🧘 Chakrai Wellness Reminder', {
+            new Notification('ðŸ§˜ Chakrai Wellness Reminder', {
               body: alarm.label || 'Time for your wellness check-in',
               icon: '/icon.png',
               tag: `chakrai-alarm-${alarm.id}`,
@@ -183,3 +183,4 @@ export function useAlarms() {
     refetch: alarmsQuery.refetch
   };
 }
+

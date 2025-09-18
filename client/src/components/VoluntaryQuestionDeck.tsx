@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { ChevronRight, ChevronLeft, Heart, Users, Target, Coffee, Settings, Sparkles, Brain, Activity, Clock, Home, CheckCircle } from 'lucide-react';
 import axios from 'axios';
 import { getCurrentUserId } from '../utils/userSession';
@@ -404,7 +404,7 @@ const questionCategories: QuestionCategory[] = [
     questions: [
       {
         id: 'f1',
-        text: 'Coffee, tea, energy drinks—or none?',
+        text: 'Coffee, tea, energy drinksâ€”or none?',
         type: 'multiple_choice',
         options: ['Coffee lover', 'Tea enthusiast', 'Energy drinks', 'Water/other beverages', 'All of the above']
       },
@@ -1163,7 +1163,7 @@ export default function VoluntaryQuestionDeck() {
                   
                   <div className="flex items-center justify-between">
                     <span className="theme-accent text-xs md:text-sm group-hover:underline font-semibold">
-                      {progress === 100 ? '✓ Review Answers' : '→ Click to Start Questions'}
+                      {progress === 100 ? 'âœ“ Review Answers' : 'â†’ Click to Start Questions'}
                     </span>
                     <ChevronRight className="theme-accent group-hover:translate-x-1 transition-transform duration-300" size={16} />
                   </div>
@@ -1330,7 +1330,7 @@ export default function VoluntaryQuestionDeck() {
                   }}
                   className="flex items-center px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-semibold shadow-lg"
                 >
-                  ✓ Complete Category
+                  âœ“ Complete Category
                   <ChevronRight size={16} className="ml-1" />
                 </button>
               ) : (
@@ -1355,7 +1355,7 @@ export default function VoluntaryQuestionDeck() {
                   <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                     <CheckCircle className="w-8 h-8 text-green-500" />
                   </div>
-                  <h3 className="text-2xl font-bold text-gray-800 mb-2">🎉 Category Complete!</h3>
+                  <h3 className="text-2xl font-bold text-gray-800 mb-2">ðŸŽ‰ Category Complete!</h3>
                   <p className="text-gray-600 mb-6">
                     Great job! You've completed all questions in the <strong>{completedCategoryName}</strong> category. 
                     Your answers have been automatically saved and will help me provide better personalized support.
@@ -1391,3 +1391,4 @@ export default function VoluntaryQuestionDeck() {
     </div>
   );
 }
+

@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import { 
-  Send, Mic, MicOff, Volume2, VolumeX, Bot, User, 
+  Send, Mic, MicOff, Volume2, VolumeX, User, 
   Sparkles, Heart, Brain, MessageCircle, Copy, 
   MoreVertical, Settings, Zap, Loader2
 } from 'lucide-react';
@@ -197,7 +197,7 @@ const BeautifulChat: React.FC<BeautifulChatProps> = ({
         setCurrentAudio(null);
       }
 
-      console.log('🔊 Requesting TTS from ElevenLabs:', text.substring(0, 50) + '...');
+      console.log('ðŸ”Š Requesting TTS from ElevenLabs:', text.substring(0, 50) + '...');
 
       const response = await fetch('/api/tts/text-to-speech', {
         method: 'POST',
@@ -268,7 +268,7 @@ const BeautifulChat: React.FC<BeautifulChatProps> = ({
       setCurrentAudio(null);
     }
     setIsPlaying(false);
-    console.log('✅ Chat TTS stopped');
+    console.log('âœ… Chat TTS stopped');
   };
 
   // Function to toggle TTS on/off
@@ -505,3 +505,4 @@ const BeautifulChat: React.FC<BeautifulChatProps> = ({
 };
 
 export default BeautifulChat;
+

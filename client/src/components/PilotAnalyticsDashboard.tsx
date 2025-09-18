@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import {
   BarChart,
   Bar,
@@ -23,16 +23,16 @@ import { CheckCircle2, Shield, Mic, MessageCircle, Download, TrendingUp, Activit
 // --- Mock Data ---
 const summary = {
   partner: "Acme University Counseling Center",
-  dates: "June 10 – Aug 4, 2025 (8 weeks)",
+  dates: "June 10 â€“ Aug 4, 2025 (8 weeks)",
   participants: { enrolled: 120, active: 96 },
   weeklySessions: 3.2,
-  headline: "Average PHQ‑9 reduced by 36%",
+  headline: "Average PHQâ€‘9 reduced by 36%",
 };
 
 const wellbeing = [
-  { metric: "PHQ‑9", baseline: 13.4, final: 8.6 },
-  { metric: "GAD‑7", baseline: 12.1, final: 7.4 },
-  { metric: "WHO‑5", baseline: 44, final: 62 },
+  { metric: "PHQâ€‘9", baseline: 13.4, final: 8.6 },
+  { metric: "GADâ€‘7", baseline: 12.1, final: 7.4 },
+  { metric: "WHOâ€‘5", baseline: 44, final: 62 },
 ];
 
 const engagementByWeek = [
@@ -77,15 +77,15 @@ const npsScore = 58; // out of 100 (converted from 0-10 scale to 0-100 for radia
 const roi = [
   { title: "Reduced Absenteeism", value: "$42k est." },
   { title: "Productivity Uplift", value: "+3.4%" },
-  { title: "Therapy Load Offset", value: "‑18%" },
+  { title: "Therapy Load Offset", value: "â€‘18%" },
 ];
 
-const COLORS = ["#0d82da", "#c3c3c3", "#00cc66", "#ffcc00", "#cc0000"]; // on‑brand palette
+const COLORS = ["#0d82da", "#c3c3c3", "#00cc66", "#ffcc00", "#cc0000"]; // onâ€‘brand palette
 
 // Utility to compute % change text
 const pct = (base: number, fin: number, invert = false) => {
   const change = invert ? ((fin - base) / base) * 100 : ((base - fin) / base) * 100;
-  return `${change > 0 ? "↓" : "↑"} ${Math.abs(change).toFixed(1)}%`;
+  return `${change > 0 ? "â†“" : "â†‘"} ${Math.abs(change).toFixed(1)}%`;
 };
 
 export default function ChakraiPilotDashboard() {
@@ -96,7 +96,7 @@ export default function ChakraiPilotDashboard() {
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
           <div>
             <h1 className="text-3xl md:text-4xl font-bold tracking-tight">Chakrai Pilot Analytics</h1>
-            <p className="text-white/70">{summary.partner} • {summary.dates}</p>
+            <p className="text-white/70">{summary.partner} â€¢ {summary.dates}</p>
           </div>
           <button className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-white/10 hover:bg-white/15 border border-white/15 transition">
             <Download className="w-4 h-4" />
@@ -139,14 +139,14 @@ export default function ChakraiPilotDashboard() {
           </div>
           <div className="text-center -mt-3">
             <div className="text-3xl font-bold">{(npsScore/10).toFixed(1)}</div>
-            <div className="text-xs text-white/70">Likelihood to recommend (0–10)</div>
+            <div className="text-xs text-white/70">Likelihood to recommend (0â€“10)</div>
           </div>
         </div>
       </section>
 
       {/* Wellbeing Impact */}
       <section className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-4 mb-8">
-        <Card title="Wellbeing Impact — Baseline vs Final">
+        <Card title="Wellbeing Impact â€” Baseline vs Final">
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={wellbeing} barGap={8}>
@@ -164,9 +164,9 @@ export default function ChakraiPilotDashboard() {
             {wellbeing.map((w, i) => (
               <div key={i} className="rounded-xl border border-white/10 bg-white/5 p-3">
                 <p className="text-white/70">{w.metric}</p>
-                <p className="text-lg font-semibold">{w.baseline} → {w.final}</p>
-                <p className={`text-xs ${w.metric === "WHO‑5" ? "text-emerald-400" : "text-sky-300"}`}>
-                  {w.metric === "WHO‑5" ? pct(w.baseline, w.final, true) : pct(w.baseline, w.final)}
+                <p className="text-lg font-semibold">{w.baseline} â†’ {w.final}</p>
+                <p className={`text-xs ${w.metric === "WHOâ€‘5" ? "text-emerald-400" : "text-sky-300"}`}>
+                  {w.metric === "WHOâ€‘5" ? pct(w.baseline, w.final, true) : pct(w.baseline, w.final)}
                 </p>
               </div>
             ))}
@@ -207,7 +207,7 @@ export default function ChakraiPilotDashboard() {
           <div className="mt-2 grid grid-cols-3 gap-3 text-sm">
             <Badge label="Avg. session length" value="9m 12s" />
             <Badge label="Topics recalled by memory" value="2.1 / session" />
-            <Badge label="Retention (W1→W8)" value="+22%" />
+            <Badge label="Retention (W1â†’W8)" value="+22%" />
           </div>
         </Card>
       </section>
@@ -277,9 +277,9 @@ export default function ChakraiPilotDashboard() {
         </Card>
 
         <Card title="Satisfaction Quotes">
-          <blockquote className="text-sm text-white/80 italic">“The voice journaling felt like talking to a real person.”</blockquote>
-          <blockquote className="text-sm text-white/80 italic mt-3">“It remembered my last session — no other app I’ve tried does that.”</blockquote>
-          <blockquote className="text-sm text-white/80 italic mt-3">“The mood charts helped me notice triggers earlier.”</blockquote>
+          <blockquote className="text-sm text-white/80 italic">â€œThe voice journaling felt like talking to a real person.â€</blockquote>
+          <blockquote className="text-sm text-white/80 italic mt-3">â€œIt remembered my last session â€” no other app Iâ€™ve tried does that.â€</blockquote>
+          <blockquote className="text-sm text-white/80 italic mt-3">â€œThe mood charts helped me notice triggers earlier.â€</blockquote>
         </Card>
       </section>
 
@@ -289,7 +289,7 @@ export default function ChakraiPilotDashboard() {
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
               <h3 className="text-xl font-semibold flex items-center gap-2"><Building2 className="text-sky-400" /> Ready for Enterprise Rollout</h3>
-              <p className="text-white/80">EHR/FHIR integration • Therapist portal • SOC2 path • HIPAA BAA template</p>
+              <p className="text-white/80">EHR/FHIR integration â€¢ Therapist portal â€¢ SOC2 path â€¢ HIPAA BAA template</p>
             </div>
             <div className="flex gap-3">
               <button className="px-4 py-2 rounded-2xl bg-sky-600 hover:bg-sky-500 transition">Schedule Expansion Call</button>
@@ -300,7 +300,7 @@ export default function ChakraiPilotDashboard() {
       </section>
 
       <footer className="max-w-7xl mx-auto mt-6 text-xs text-white/50 text-center">
-        © {new Date().getFullYear()} Chakrai • Pilot Analytics Report
+        Â© {new Date().getFullYear()} Chakrai â€¢ Pilot Analytics Report
       </footer>
     </div>
   );

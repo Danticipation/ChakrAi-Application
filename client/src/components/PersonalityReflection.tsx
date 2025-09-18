@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { RefreshCw, Brain, TrendingUp, User, RotateCcw, Volume2, VolumeX, Play, Pause, Settings, Sparkles, Heart, Target, BookOpen } from 'lucide-react';
+import { RefreshCw, Brain, TrendingUp, User, RotateCcw, Volume2, Play, Pause, Settings, Sparkles, Heart, Target, BookOpen } from 'lucide-react';
 import { getCurrentUserId, getAuthHeaders } from '../utils/unifiedUserSession';
 
 interface PersonalityReflectionData {
@@ -38,9 +38,9 @@ const PersonalityReflection: React.FC<PersonalityReflectionProps> = ({ userId })
       try {
         const authenticatedUserId = await getCurrentUserId();
         setCurrentUserId(authenticatedUserId);
-        console.log('🔐 PersonalityReflection: Using authenticated user ID:', authenticatedUserId);
+        console.log('ðŸ” PersonalityReflection: Using authenticated user ID:', authenticatedUserId);
       } catch (error) {
-        console.error('❌ PersonalityReflection: Failed to get user ID:', error);
+        console.error('âŒ PersonalityReflection: Failed to get user ID:', error);
       }
     };
     getUser();
@@ -61,11 +61,11 @@ const PersonalityReflection: React.FC<PersonalityReflectionProps> = ({ userId })
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['personality-reflection', currentUserId, refreshTrigger],
     queryFn: async (): Promise<PersonalityReflectionData> => {
-      console.log('🧠 PersonalityReflection: Fetching for authenticated user:', currentUserId);
+      console.log('ðŸ§  PersonalityReflection: Fetching for authenticated user:', currentUserId);
       
       // Use unified authentication headers (includes X-User-ID)
       const authHeaders = await getAuthHeaders();
-      console.log('🔐 PersonalityReflection: Using auth headers:', authHeaders);
+      console.log('ðŸ” PersonalityReflection: Using auth headers:', authHeaders);
       
       const response = await fetch(`/api/personality-insights`, {
         headers: {
@@ -76,7 +76,7 @@ const PersonalityReflection: React.FC<PersonalityReflectionProps> = ({ userId })
       
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('❌ PersonalityReflection: Fetch failed:', response.status, errorText);
+        console.error('âŒ PersonalityReflection: Fetch failed:', response.status, errorText);
         throw new Error(`Failed to fetch personality reflection: ${response.status}`);
       }
       return response.json();

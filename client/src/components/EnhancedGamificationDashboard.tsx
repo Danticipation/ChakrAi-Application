@@ -1,8 +1,9 @@
-import { getCurrentUserId } from "../utils/unifiedUserSession";
+﻿import { getCurrentUserId } from "../utils/unifiedUserSession";
 import React, { useState } from 'react';
 import { Trophy, Gift, Loader2, AlertCircle } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import type { AxiosResponse } from 'axios';
+import axios from "axios";
+import type { AxiosResponse } from "axios";
 
 interface WellnessPointsBalance {
   userId: number;
@@ -189,7 +190,7 @@ const ChallengeCard: React.FC<{
     <div className="flex justify-between items-center">
       <div className="text-sm text-gray-500">
         <span>{challenge.daysRemaining} days left</span>
-        <span className="mx-2">•</span>
+        <span className="mx-2">â€¢</span>
         <span className="text-blue-600">+{challenge.pointsReward} points</span>
       </div>
       
@@ -414,17 +415,17 @@ const EnhancedGamificationDashboard: React.FC = () => {
 
   // Type-safe icon mapping for achievement categories
   const categoryIconMap = new Map([
-    ['resilience', '🛡️'],
-    ['emotional_breakthrough', '💡'], 
-    ['self_awareness', '🔍'],
-    ['mindfulness', '🧘'],
-    ['social_connection', '🤝'],
-    ['coping_skills', '💪'],
-    ['progress_milestone', '🎯']
+    ['resilience', 'ðŸ›¡ï¸ '],
+    ['emotional_breakthrough', 'ðŸ’¡'], 
+    ['self_awareness', 'ðŸ” '],
+    ['mindfulness', 'ðŸ§˜'],
+    ['social_connection', 'ðŸ¤ '],
+    ['coping_skills', 'ðŸ’ª'],
+    ['progress_milestone', 'ðŸŽ¯']
   ]);
 
   const getCategoryIcon = (category: string): string => {
-    return categoryIconMap.get(category) || '⭐';
+    return categoryIconMap.get(category) || 'â­ ';
   };
 
   // Optimized badge lookup using Map for O(1) performance
@@ -486,10 +487,10 @@ const EnhancedGamificationDashboard: React.FC = () => {
         <div className="w-full bg-white rounded-lg p-1 mb-6 shadow-lg">
           <div className="grid grid-cols-4 gap-1">
             {[
-              { id: 'overview', label: 'Overview', icon: '📊' },
-              { id: 'rewards', label: 'Rewards Shop', icon: '🎁' },
-              { id: 'challenges', label: 'Challenges', icon: '🏆' },
-              { id: 'achievements', label: 'Achievements', icon: '🏅' }
+              { id: 'overview', label: 'Overview', icon: 'ðŸ“Š' },
+              { id: 'rewards', label: 'Rewards Shop', icon: 'ðŸŽ ' },
+              { id: 'challenges', label: 'Challenges', icon: 'ðŸ †' },
+              { id: 'achievements', label: 'Achievements', icon: 'ðŸ …' }
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -513,7 +514,7 @@ const EnhancedGamificationDashboard: React.FC = () => {
             {/* Recent Achievements */}
             <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6">
               <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
-                <span className="mr-2">🏅</span>
+                <span className="mr-2">ðŸ …</span>
                 Recent Achievements
               </h3>
               
@@ -536,7 +537,7 @@ const EnhancedGamificationDashboard: React.FC = () => {
                 
                 {userAchievements.length === 0 && (
                   <div className="text-center py-8 text-gray-500">
-                    <div className="text-4xl mb-2">🎯</div>
+                    <div className="text-4xl mb-2">ðŸŽ¯</div>
                     <p>Keep engaging to unlock your first achievement!</p>
                   </div>
                 )}
@@ -546,7 +547,7 @@ const EnhancedGamificationDashboard: React.FC = () => {
             {/* Active Challenges */}
             <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6">
               <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
-                <span className="mr-2">🏆</span>
+                <span className="mr-2">ðŸ †</span>
                 Active Challenges
               </h3>
               
@@ -575,7 +576,7 @@ const EnhancedGamificationDashboard: React.FC = () => {
                 
                 {challenges.filter(c => c.isParticipating).length === 0 && (
                   <div className="text-center py-8 text-gray-500">
-                    <div className="text-4xl mb-2">🎯</div>
+                    <div className="text-4xl mb-2">ðŸŽ¯</div>
                     <p>Join a challenge to start your wellness journey!</p>
                   </div>
                 )}
@@ -585,7 +586,7 @@ const EnhancedGamificationDashboard: React.FC = () => {
             {/* Recent Rewards */}
             <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6">
               <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
-                <span className="mr-2">🎁</span>
+                <span className="mr-2">ðŸŽ </span>
                 Your Rewards
               </h3>
               
@@ -594,9 +595,9 @@ const EnhancedGamificationDashboard: React.FC = () => {
                   <div key={`user-reward-${reward.id}`} className="flex items-center space-x-3 p-3 bg-gradient-to-r from-gray-50 to-white rounded-xl">
                     <div className="w-12 h-12 bg-gradient-to-r from-[#ADD8E6] to-[#98FB98] rounded-xl flex items-center justify-center">
                       <span className="text-white font-bold">
-                        {reward.category === 'avatar' ? '👤' : 
-                         reward.category === 'theme' ? '🎨' : 
-                         reward.category === 'premium_content' ? '⭐' : '🏆'}
+                        {reward.category === 'avatar' ? 'ðŸ‘¤' : 
+                         reward.category === 'theme' ? 'ðŸŽ¨' : 
+                         reward.category === 'premium_content' ? 'â­ ' : 'ðŸ †'}
                       </span>
                     </div>
                     <div className="flex-1">
@@ -611,7 +612,7 @@ const EnhancedGamificationDashboard: React.FC = () => {
                 
                 {userRewards.length === 0 && (
                   <div className="text-center py-8 text-gray-500">
-                    <div className="text-4xl mb-2">🛍️</div>
+                    <div className="text-4xl mb-2">ðŸ› ï¸ </div>
                     <p>Visit the rewards shop to spend your wellness points!</p>
                   </div>
                 )}
@@ -621,7 +622,7 @@ const EnhancedGamificationDashboard: React.FC = () => {
             {/* Stats Overview */}
             <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6">
               <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
-                <span className="mr-2">📈</span>
+                <span className="mr-2">ðŸ“ˆ</span>
                 Wellness Stats
               </h3>
               
@@ -654,7 +655,7 @@ const EnhancedGamificationDashboard: React.FC = () => {
         {activeTab === 'rewards' && (
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6">
             <h3 className="text-2xl font-bold text-gray-800 mb-6 flex items-center">
-              <span className="mr-3">🎁</span>
+              <span className="mr-3">ðŸŽ </span>
               Therapeutic Rewards Shop
             </h3>
             
@@ -692,7 +693,7 @@ const EnhancedGamificationDashboard: React.FC = () => {
         {activeTab === 'challenges' && (
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6">
             <h3 className="text-2xl font-bold text-gray-800 mb-6 flex items-center">
-              <span className="mr-3">🏆</span>
+              <span className="mr-3">ðŸ †</span>
               Community Wellness Challenges
             </h3>
             
@@ -730,7 +731,7 @@ const EnhancedGamificationDashboard: React.FC = () => {
         {activeTab === 'achievements' && (
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6">
             <h3 className="text-2xl font-bold text-gray-800 mb-6 flex items-center">
-              <span className="mr-3">🏅</span>
+              <span className="mr-3">ðŸ …</span>
               Emotional Achievements
             </h3>
             
@@ -779,7 +780,7 @@ const EnhancedGamificationDashboard: React.FC = () => {
               
               {userAchievements.length === 0 && (
                 <div className="col-span-full text-center py-12 text-gray-500">
-                  <div className="text-6xl mb-4">🎯</div>
+                  <div className="text-6xl mb-4">ðŸŽ¯</div>
                   <h4 className="text-xl font-semibold mb-2">No Achievements Yet</h4>
                   <p>Continue your therapeutic journey to unlock meaningful achievements that recognize your emotional growth and resilience.</p>
                 </div>

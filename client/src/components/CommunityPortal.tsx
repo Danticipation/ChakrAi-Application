@@ -1,6 +1,6 @@
-import React, { useState, useCallback, useEffect } from 'react';
+﻿import React, { useState, useCallback, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { MessageCircle, Users, Heart, Flag, Clock, Shield, Send, Plus, UserCheck, Eye, EyeOff, AlertCircle, Loader2, RefreshCw } from 'lucide-react';
+import { MessageCircle, Users, Heart, Clock, Shield, Plus, UserCheck, Eye, EyeOff, AlertCircle, Loader2, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface SupportForum {
@@ -250,7 +250,7 @@ export default function CommunityPortal({ userId }: CommunityPortalProps) {
     <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4 mb-4" role="alert">
       <h4 className="font-semibold text-red-800 mb-2 flex items-center gap-2">
         <AlertCircle className="w-5 h-5" />
-        🚨 Need Immediate Help?
+        ðŸš¨ Need Immediate Help?
       </h4>
       <p className="text-red-700 text-sm mb-3">
         If you're having thoughts of self-harm, please reach out for professional help immediately.
@@ -339,7 +339,7 @@ export default function CommunityPortal({ userId }: CommunityPortalProps) {
               className="text-blue-500 hover:text-blue-600 flex items-center gap-2 min-h-[44px]"
               aria-label="Back to forums"
             >
-              ← Back to Forums
+              â† Back to Forums
             </button>
             <button
               onClick={() => setShowNewPost(true)}
@@ -366,7 +366,7 @@ export default function CommunityPortal({ userId }: CommunityPortalProps) {
           className="text-blue-500 hover:text-blue-600 flex items-center gap-2 min-h-[44px]"
           aria-label="Back to forums"
         >
-          ← Back to Forums
+          â† Back to Forums
         </button>
         <button
           onClick={() => setShowNewPost(true)}
@@ -422,7 +422,7 @@ export default function CommunityPortal({ userId }: CommunityPortalProps) {
         onClick={() => setSelectedPost(null)}
         className="text-blue-500 hover:text-blue-600 flex items-center gap-2"
       >
-        ← Back to Posts
+        â† Back to Posts
       </button>
 
       {/* Post content would be rendered here */}
@@ -908,3 +908,4 @@ export default function CommunityPortal({ userId }: CommunityPortalProps) {
     </div>
   );
 }
+

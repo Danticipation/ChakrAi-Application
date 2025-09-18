@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+﻿import { motion } from "framer-motion";
 import type { ZodiacSign } from "../types/zodiac";
 
 interface ZodiacCardProps {
@@ -74,7 +74,7 @@ export function ZodiacCard({ zodiac }: ZodiacCardProps) {
           className="text-sm opacity-80 mb-2"
           whileHover={{ opacity: 1 }}
         >
-          {zodiac.element} • {zodiac.dates}
+          {zodiac.element} â€¢ {zodiac.dates}
         </motion.p>
 
         {/* Traits */}
@@ -106,3 +106,4 @@ export function ZodiacCard({ zodiac }: ZodiacCardProps) {
     </motion.div>
   );
 }
+

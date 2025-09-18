@@ -1,4 +1,4 @@
-export const fetchDailyAffirmation = async (setDailyAffirmation: (affirmation: string) => void) => {
+﻿export const fetchDailyAffirmation = async (setDailyAffirmation: (affirmation: string) => void) => {
   try {
     const response = await fetch('/api/daily-affirmation');
     if (response.ok) {

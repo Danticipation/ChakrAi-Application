@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Shield, Lock, Download, Upload, Key, FileText, CheckCircle, AlertTriangle } from 'lucide-react';
+import { Shield, Lock, Download, Upload, Key, FileText, CheckCircle } from 'lucide-react';
 
 interface EncryptionSettings {
   id: number;
@@ -181,7 +181,7 @@ const PrivacyCompliance: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div className="p-4 bg-white/10 rounded-lg">
               <div className="flex items-center justify-between">
-                <span className="theme-text/80">Epsilon (ε)</span>
+                <span className="theme-text/80">Epsilon (Îµ)</span>
                 <span className="theme-text font-bold">1.0</span>
               </div>
               <div className="w-full bg-white/20 rounded-full h-2 mt-2">
@@ -192,7 +192,7 @@ const PrivacyCompliance: React.FC = () => {
 
             <div className="p-4 bg-white/10 rounded-lg">
               <div className="flex items-center justify-between">
-                <span className="theme-text/80">Delta (δ)</span>
+                <span className="theme-text/80">Delta (Î´)</span>
                 <span className="theme-text font-bold">0.00001</span>
               </div>
               <div className="w-full bg-white/20 rounded-full h-2 mt-2">

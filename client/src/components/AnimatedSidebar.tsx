@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { 
-  MessageCircle, Brain, BookOpen, Mic, User, Target, BarChart3, 
-  Gift, Headphones, Shield, Settings, ChevronDown, ChevronRight,
-  Heart, Users, Sparkles, Zap, Star
+  MessageCircle, Brain, BookOpen, Target, BarChart3, 
+  Gift, Shield, Settings, ChevronDown, ChevronRight,
+  Heart, Users, Sparkles, Star
 } from 'lucide-react';
 
 interface AnimatedSidebarProps {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import { X, ChevronLeft, ChevronRight, Check } from 'lucide-react';
 
 interface TourStep {
@@ -133,11 +133,11 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({
       if (!currentStepData) return;
       
       localRetryCount++;
-      console.log(`🔍 Looking for target: ${currentStepData.target} (attempt ${localRetryCount})`);
+      console.log(`ðŸ” Looking for target: ${currentStepData.target} (attempt ${localRetryCount})`);
       const element = document.querySelector(currentStepData.target) as HTMLElement;
       
       if (element) {
-        console.log('✅ Target element found:', element);
+        console.log('âœ… Target element found:', element);
         
         // Check if element is actually visible
         const rect = element.getBoundingClientRect();
@@ -162,11 +162,11 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({
           // Scroll element into view
           element.scrollIntoView({ behavior: 'smooth', block: 'center' });
         } else {
-          console.log('⚠️ Element found but not visible, retrying...');
+          console.log('âš ï¸ Element found but not visible, retrying...');
           
           // After 3 retries, give up and position tooltip in a safe location
           if (localRetryCount >= 3) {
-            console.log('🚫 Max retries reached, using fallback positioning');
+            console.log('ðŸš« Max retries reached, using fallback positioning');
             setTargetElement(null);
             
             // Position tooltip in a predictable location based on step
@@ -182,10 +182,10 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({
           }
         }
       } else {
-        console.log(`❌ Tour target not found: ${currentStepData.target}`);
+        console.log(`âŒ Tour target not found: ${currentStepData.target}`);
         
         if (localRetryCount >= 2) {
-          console.log('🚫 Element not found after retries, using center position');
+          console.log('ðŸš« Element not found after retries, using center position');
           // Fallback: center tooltip
           const centerTop = window.innerHeight / 2 + window.scrollY;
           const centerLeft = window.innerWidth / 2 - 160; // Account for tooltip width
@@ -363,7 +363,7 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({
             
             {/* Help text */}
             <div className="text-xs text-gray-500 dark:text-gray-400 mb-4 p-2 bg-gray-50 dark:bg-gray-700 rounded">
-              💡 Tip: Press ESC or click anywhere outside this box to skip the tour
+              ðŸ’¡ Tip: Press ESC or click anywhere outside this box to skip the tour
             </div>
 
             {/* Progress */}

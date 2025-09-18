@@ -9,7 +9,7 @@ export async function chatCompletions(messages: Msg[], model = 'gpt-4o'): Promis
     body: JSON.stringify({ model, messages, max_tokens: 800, temperature: 0.7 })
   });
   if (!r.ok) throw Object.assign(new Error(`OpenAI chat ${r.status}`), { status: r.status });
-  const j = await r.json();
+  const j = await r.json() as { choices?: { message?: { content?: string } }[] };
   return j.choices?.[0]?.message?.content ?? '';
 }
 
@@ -22,6 +22,6 @@ export async function transcribeWithWhisperWebm(file: Buffer, mime: string): Pro
     method: 'POST', headers: { Authorization: `Bearer ${KEY}` }, body: fd
   });
   if (!r.ok) throw Object.assign(new Error(`OpenAI transcribe ${r.status}`), { status: r.status });
-  const j = await r.json();
+  const j = await r.json() as { text?: string };
   return j.text as string;
 }

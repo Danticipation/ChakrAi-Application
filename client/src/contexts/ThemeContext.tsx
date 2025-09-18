@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+﻿import React, { createContext, useContext, useState, useEffect } from 'react';
 
 export interface Theme {
   id: string;
@@ -111,3 +111,4 @@ export const useTheme = () => {
   }
   return context;
 };
+

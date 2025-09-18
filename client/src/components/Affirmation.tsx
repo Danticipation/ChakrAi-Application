@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+﻿import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 
@@ -199,3 +199,4 @@ export default function Affirmation({
   // Render modal in a portal attached to document.body
   return createPortal(modalContent, document.body);
 }
+

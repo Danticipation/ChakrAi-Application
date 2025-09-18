@@ -1,5 +1,5 @@
-import React from 'react';
-import { Palette, Check, X, Sparkles, Heart, Leaf, Sun, Moon, Zap } from 'lucide-react';
+﻿import React from 'react';
+import { Palette, Check, X, Sparkles, Heart, Leaf, Sun } from 'lucide-react';
 import { useTheme, themes } from '../contexts/ThemeContext';
 
 interface ThemeSelectorProps {

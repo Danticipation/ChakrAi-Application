@@ -1,49 +1,41 @@
-// server/src/index.ts
-import express from 'express';
-import cors from 'cors';
-import dotenv from 'dotenv';
+import express from "express";
+import cors from "cors";
+import cookieParser from "cookie-parser";
+import users from "./routes/users.js";
+import subscription from "./routes/subscription.js";
+import tieredAnalysis from "./routes/tieredAnalysis.js";
+import { ensureAuthConfig, unifiedAuthMiddleware, getAuthenticatedUser } from "./auth/unifiedAuth.js";
 
-import { storage } from './storage.ts';
-import chatRouter from './routes/chat.js';
-import usersRouter from './routes/users.js';
-import subscriptionRouter from './routes/subscription.js';
-import tieredAnalysisRouter from './routes/tieredAnalysis.js';
-import moodRouter from './routes/mood.js';
-import analyticsRouter from './routes/analytics.js';
-import journalRouter from './routes/journal.js';
-import { unifiedAuthMiddleware } from '../auth/unifiedAuth.js'; // Import unifiedAuthMiddleware
-
-dotenv.config();
+ensureAuthConfig(); // ⛔ refuse to start if auth is misconfigured
 
 const app = express();
+const PORT = Number(process.env.PORT || 3001);
+const ORIGIN = process.env.ALLOWED_ORIGIN || "http://localhost:5173";
 
-// CORS + JSON
-app.use(cors({ origin: process.env.CORS_ORIGIN || 'http://localhost:5174' }));
-app.use(express.json());
+app.set("trust proxy", 1);
 
-// Apply unified authentication middleware globally
+app.use(cors({ origin: ORIGIN, credentials: true })); // exact origin, not '*'
+app.use(cookieParser());
+app.use(express.json({ limit: "1mb" }));
+app.use(express.urlencoded({ extended: false }));
+
+// Public
+app.get("/health", (_req, res) => res.json({ ok: true }));
+
+// Mount API routes
+app.use('/api/users', users);
+
+app.use('/api/subscription', subscription);
+app.use('/api/tiered-analysis', tieredAnalysis);
+
+// Add middleware for user authentication to these routes
 app.use(unifiedAuthMiddleware);
 
-// Health check (public)
-app.get('/health', (_req, res) => res.json({ ok: true }));
-
-// Log every API request + user id from header (safe: no bodies/PHI)
-app.use((req, _res, next) => {
-  if (req.path.startsWith('/api')) {
-    const uid = req.header('x-user-id') ?? (req as any).userId ?? 'none';
-    console.log(`[api] ${req.method} ${req.path} uid=${uid}`);
-  }
-  next();
+// Legacy /api/me route (keeping for compatibility)
+app.get("/api/me", (req, res) => {
+  res.json({ user: getAuthenticatedUser(req) });
 });
 
-// Routes
-app.use('/api', analyticsRouter);
-app.use('/api/chat', chatRouter);
-app.use('/api/users', usersRouter);
-app.use('/api/subscription', subscriptionRouter);
-app.use('/api/tiered-analysis', tieredAnalysisRouter);
-app.use('/api/journal', journalRouter);
-app.use('/api/mood', moodRouter);
+app.use((_req, res) => res.status(404).json({ error: "not_found" }));
 
-const port = Number(process.env.PORT ?? 3001);
-app.listen(port, () => console.log(`[server] listening on :${port}`));
+app.listen(PORT, () => console.log(`API listening on http://localhost:${PORT}`));

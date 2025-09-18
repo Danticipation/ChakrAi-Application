@@ -1,6 +1,6 @@
-import React, { useState, useCallback, useEffect } from 'react';
+﻿import React, { useState, useCallback, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Plus, BookOpen, TrendingUp, Download, Calendar, Search, Filter, Edit3, Eye, Clock, BarChart3, Star, MessageCircle, Loader2, RefreshCw, AlertCircle, Trash2 } from 'lucide-react';
+import { Plus, BookOpen, TrendingUp, Search, Edit3, Eye, Clock, BarChart3, Star, MessageCircle, Loader2, RefreshCw, AlertCircle, Trash2 } from 'lucide-react';
 import JournalEditor from './JournalEditor';
 import DeleteEntryModal from './DeleteEntryModal';
 import type { JournalEntry } from '../../../shared/schema';
@@ -139,7 +139,7 @@ const AIInsightsSection: React.FC<{ userId: number | null }> = ({ userId }) => {
               <ul className="text-xs theme-text-secondary space-y-1">
                 {insight.recommendations.slice(0, 2).map((rec: string, i: number) => (
                   <li key={i} className="flex items-start">
-                    <span className="mr-1">•</span>
+                    <span className="mr-1">â€¢</span>
                     <span>{rec}</span>
                   </li>
                 ))}
@@ -348,7 +348,7 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
         throw new Error('Failed to delete journal entry');
       }
 
-      console.log(`✅ Journal entry ${entryToDelete.id} deleted successfully with healthcare authentication`);
+      console.log(`âœ… Journal entry ${entryToDelete.id} deleted successfully with healthcare authentication`);
 
       // Close modals and refresh data
       setShowDeleteModal(false);
@@ -357,7 +357,7 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
       queryClient.invalidateQueries({ queryKey: ['/api/journal/user-entries'] });
       queryClient.invalidateQueries({ queryKey: ['/api/journal/analytics'] });
     } catch (error) {
-      console.error('❌ Failed to delete journal entry:', error);
+      console.error('âŒ Failed to delete journal entry:', error);
       alert('Failed to delete journal entry. Please try again.');
     }
   }, [entryToDelete, queryClient]);
@@ -370,18 +370,18 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
   // Mood utility functions (single implementation)
   const getMoodEmoji = useCallback((mood: string): string => {
     const moodEmojis: Record<string, string> = {
-      'very_happy': '😄',
-      'happy': '😊',
-      'neutral': '😐',
-      'sad': '😢',
-      'very_sad': '😭',
-      'angry': '😠',
-      'anxious': '😰',
-      'excited': '🤩',
-      'calm': '😌',
-      'frustrated': '😤'
+      'very_happy': 'ðŸ˜„',
+      'happy': 'ðŸ˜Š',
+      'neutral': 'ðŸ˜',
+      'sad': 'ðŸ˜¢',
+      'very_sad': 'ðŸ˜­',
+      'angry': 'ðŸ˜ ',
+      'anxious': 'ðŸ˜°',
+      'excited': 'ðŸ¤©',
+      'calm': 'ðŸ˜Œ',
+      'frustrated': 'ðŸ˜¤'
     };
-    return moodEmojis[mood] || '😐';
+    return moodEmojis[mood] || 'ðŸ˜';
   }, []);
 
   const getMoodColor = useCallback((mood: string): string => {
@@ -655,13 +655,13 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
             <h3 className="font-semibold theme-text mb-4">Recurring Themes & Tags</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {Object.entries(analytics.themes)
-                .sort(([, a], [, b]) => (b as number) - (a as number))
+                .sort(([, a], [, b]) => (b) - (a))
                 .slice(0, 8)
                 .map(([theme, count]) => (
                   <div key={`theme-${theme}`} className="flex items-center justify-between p-3 theme-surface rounded-lg">
                     <span className="theme-text font-medium">#{theme}</span>
                     <span className="text-sm theme-text-secondary">
-                      {count as number} {count === 1 ? 'entry' : 'entries'}
+                      {count} {count === 1 ? 'entry' : 'entries'}
                     </span>
                   </div>
                 ))}
@@ -867,7 +867,7 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
                   <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
                     <span className="flex items-center gap-1">
                       <Clock size={14} />
-                      {selectedEntry.createdAt ? format(new Date(selectedEntry.createdAt), 'MMMM dd, yyyy • h:mm a') : 'Unknown date'}
+                      {selectedEntry.createdAt ? format(new Date(selectedEntry.createdAt), 'MMMM dd, yyyy â€¢ h:mm a') : 'Unknown date'}
                     </span>
                     {selectedEntry.mood && (
                       <span 
@@ -886,7 +886,7 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
                   onClick={handleCloseModal}
                   className="p-2 rounded text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
                 >
-                  ✕
+                  âœ•
                 </button>
               </div>
               
@@ -925,7 +925,7 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
                     }}
                     className="inline-flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-md shadow-sm transition-colors duration-200"
                   >
-                    🗑️
+                    ðŸ—‘ï¸
                     <span className="ml-2">Delete Entry</span>
                   </button>
                   
@@ -968,3 +968,4 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
     </div>
   );
 }
+

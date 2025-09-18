@@ -1,5 +1,5 @@
-import { getCurrentUserId } from "../utils/userSession";
-import { useState, useEffect } from 'react';
+﻿import { getCurrentUserId } from "../utils/userSession";
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 interface VrEnvironment {
@@ -241,10 +241,10 @@ export default function VRTherapyDashboard() {
         <div className="w-full bg-[var(--theme-surface)] rounded-lg p-1 mb-6 shadow-lg border-2 border-[var(--theme-accent)]">
           <div className="grid grid-cols-4 gap-1">
             {[
-              { id: 'environments', label: 'Environments', icon: '🌟' },
-              { id: 'sessions', label: 'Sessions', icon: '📊' },
-              { id: 'progress', label: 'Progress', icon: '📈' },
-              { id: 'plans', label: 'Plans', icon: '🎯' }
+              { id: 'environments', label: 'Environments', icon: 'ðŸŒŸ' },
+              { id: 'sessions', label: 'Sessions', icon: 'ðŸ“Š' },
+              { id: 'progress', label: 'Progress', icon: 'ðŸ“ˆ' },
+              { id: 'plans', label: 'Plans', icon: 'ðŸŽ¯' }
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -385,7 +385,7 @@ export default function VRTherapyDashboard() {
                                 key={star}
                                 className={star <= session.effectiveness! ? 'text-yellow-400' : 'text-gray-300'}
                               >
-                                ⭐
+                                â­
                               </span>
                             ))}
                           </div>

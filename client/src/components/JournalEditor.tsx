@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+﻿import { useState, useRef } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
-import { Save, Trash2, Eye, EyeOff, Brain, TrendingUp, FileText, Mic, Square, AlertCircle } from 'lucide-react';
+import { Save, Trash2, EyeOff, Brain, TrendingUp, FileText, Mic, Square, AlertCircle } from 'lucide-react';
 import type { JournalEntry, JournalAnalytics } from '../../../shared/schema';
 
 interface JournalEditorProps {
@@ -29,11 +29,11 @@ const emotionalTags: EmotionalTag[] = [
 ];
 
 const moodOptions = [
-  { value: 'very_positive', label: '😊 Very Positive', color: '#10B981' },
-  { value: 'positive', label: '🙂 Positive', color: '#84CC16' },
-  { value: 'neutral', label: '😐 Neutral', color: '#6B7280' },
-  { value: 'negative', label: '🙁 Negative', color: '#F59E0B' },
-  { value: 'very_negative', label: '😢 Very Negative', color: '#EF4444' }
+  { value: 'very_positive', label: 'ðŸ˜Š Very Positive', color: '#10B981' },
+  { value: 'positive', label: 'ðŸ™‚ Positive', color: '#84CC16' },
+  { value: 'neutral', label: 'ðŸ˜ Neutral', color: '#6B7280' },
+  { value: 'negative', label: 'ðŸ™ Negative', color: '#F59E0B' },
+  { value: 'very_negative', label: 'ðŸ˜¢ Very Negative', color: '#EF4444' }
 ];
 
 export default function JournalEditor({ entry, onSave, onCancel, userId }: JournalEditorProps) {
@@ -75,7 +75,7 @@ export default function JournalEditor({ entry, onSave, onCancel, userId }: Journ
       }
       
       setCurrentMimeType(mimeType);
-      console.log('🎵 JournalEditor using audio format:', mimeType);
+      console.log('ðŸŽµ JournalEditor using audio format:', mimeType);
       const mediaRecorder = new MediaRecorder(stream, { mimeType: mimeType });
       mediaRecorderRef.current = mediaRecorder;
       chunksRef.current = [];
@@ -88,7 +88,7 @@ export default function JournalEditor({ entry, onSave, onCancel, userId }: Journ
 
       mediaRecorder.onstop = async () => {
         const audioBlob = new Blob(chunksRef.current, { type: currentMimeType });
-        console.log('🎵 JournalEditor audio blob type:', audioBlob.type);
+        console.log('ðŸŽµ JournalEditor audio blob type:', audioBlob.type);
         await sendAudioToWhisper(audioBlob);
         stream.getTracks().forEach(track => track.stop());
       };
@@ -132,7 +132,7 @@ export default function JournalEditor({ entry, onSave, onCancel, userId }: Journ
       
       // Check if it's an axios error with response
       if (axios.isAxiosError(error) && error.response?.data) {
-        const responseData = error.response.data as any;
+        const responseData = error.response.data;
         if (responseData.errorType === 'quota_exceeded') {
           errorMessage = 'Voice transcription temporarily unavailable due to high demand. Please try again later or type your entry manually.';
         } else if (responseData.errorType === 'auth_error') {
@@ -347,7 +347,7 @@ export default function JournalEditor({ entry, onSave, onCancel, userId }: Journ
               onClick={() => setErrorMessage(null)}
               className="text-red-500 hover:text-red-700 transition-colors text-xl leading-none"
             >
-              ×
+              Ã—
             </button>
           </div>
         )}
@@ -579,3 +579,4 @@ export default function JournalEditor({ entry, onSave, onCancel, userId }: Journ
     </div>
   );
 }
+

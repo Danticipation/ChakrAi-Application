@@ -15,13 +15,18 @@ import * as schema from "../shared/schema.js";
 neonConfig.webSocketConstructor = undefined;
 neonConfig.fetchConnectionCache = false;
 
+let pool;
+let db;
+
 if (!process.env['DATABASE_URL']) {
-  throw new Error(
-    "DATABASE_URL must be set. Did you forget to provision a database?",
-  );
+  console.log('⚠️  DATABASE_URL not set. Database operations will fail.');
+  pool = null;
+  db = null;
+} else {
+  console.log('📊 Database URL configured:', process.env['DATABASE_URL'].substring(0, 50) + '...');
+  pool = new Pool({ connectionString: process.env['DATABASE_URL'] });
+  db = drizzle({ client: pool, schema });
 }
 
-console.log('📊 Database URL configured:', process.env['DATABASE_URL'].substring(0, 50) + '...');
-
-export const pool = new Pool({ connectionString: process.env['DATABASE_URL'] });
-export const db = drizzle({ client: pool, schema });
+export { pool };
+export { db };

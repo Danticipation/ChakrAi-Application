@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Menu, X, User, Settings, Bell, Search } from 'lucide-react';
+﻿import React, { useState } from 'react';
+import { Menu, X, Settings, Bell, Search } from 'lucide-react';
 
 interface CleanLayoutProps {
   children: React.ReactNode;
@@ -170,7 +170,7 @@ const CleanLayout: React.FC<CleanLayoutProps> = ({
           </div>
           
           <div className="border-t border-gray-200 mt-8 pt-8 text-center text-sm text-gray-600">
-            © 2025 Chakrai. All rights reserved.
+            Â© 2025 Chakrai. All rights reserved.
           </div>
         </div>
       </footer>

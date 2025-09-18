@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Brain, Heart, Target, Sparkles, MessageCircle, BookOpen, Mic, BarChart3 } from 'lucide-react';
 
 const FloatingParticle = ({ delay = 0 }) => (

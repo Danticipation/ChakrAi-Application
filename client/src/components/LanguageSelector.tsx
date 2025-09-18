@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
@@ -45,8 +45,8 @@ export function LanguageSelector({
       // Fallback languages
       setLanguages([
         { code: 'en', name: 'English', nativeName: 'English', direction: 'ltr', voiceSupport: true, completeness: 100 },
-        { code: 'es', name: 'Spanish', nativeName: 'Español', direction: 'ltr', voiceSupport: true, completeness: 95 },
-        { code: 'fr', name: 'French', nativeName: 'Français', direction: 'ltr', voiceSupport: true, completeness: 90 },
+        { code: 'es', name: 'Spanish', nativeName: 'EspaÃ±ol', direction: 'ltr', voiceSupport: true, completeness: 95 },
+        { code: 'fr', name: 'French', nativeName: 'FranÃ§ais', direction: 'ltr', voiceSupport: true, completeness: 90 },
         { code: 'de', name: 'German', nativeName: 'Deutsch', direction: 'ltr', voiceSupport: true, completeness: 85 },
       ]);
     } finally {
@@ -85,14 +85,14 @@ export function LanguageSelector({
   const getTestMessage = (languageCode: string): string => {
     const messages = {
       en: "Hello, this is a test of the voice in English for your mental wellness journey.",
-      es: "Hola, esta es una prueba de la voz en español para tu viaje de bienestar mental.",
-      fr: "Bonjour, ceci est un test de la voix en français pour votre parcours de bien-être mental.",
-      de: "Hallo, dies ist ein Test der Stimme auf Deutsch für Ihre mentale Wellness-Reise.",
-      pt: "Olá, este é um teste da voz em português para sua jornada de bem-estar mental.",
-      it: "Ciao, questo è un test della voce in italiano per il tuo percorso di benessere mentale.",
-      zh: "你好，这是中文语音测试，为您的心理健康之旅服务。",
-      ja: "こんにちは、これは日本語の音声テストです。あなたの心の健康の旅のために。",
-      ko: "안녕하세요, 이것은 정신 건강 여정을 위한 한국어 음성 테스트입니다."
+      es: "Hola, esta es una prueba de la voz en espaÃ±ol para tu viaje de bienestar mental.",
+      fr: "Bonjour, ceci est un test de la voix en franÃ§ais pour votre parcours de bien-Ãªtre mental.",
+      de: "Hallo, dies ist ein Test der Stimme auf Deutsch fÃ¼r Ihre mentale Wellness-Reise.",
+      pt: "OlÃ¡, este Ã© um teste da voz em portuguÃªs para sua jornada de bem-estar mental.",
+      it: "Ciao, questo Ã¨ un test della voce in italiano per il tuo percorso di benessere mentale.",
+      zh: "ä½ å¥½ï¼Œè¿™æ˜¯ä¸­æ–‡è¯­éŸ³æµ‹è¯•ï¼Œä¸ºæ‚¨çš„å¿ƒç†å¥åº·ä¹‹æ—…æœåŠ¡ã€‚",
+      ja: "ã“ã‚“ã«ã¡ã¯ã€ã“ã‚Œã¯æ—¥æœ¬èªžã®éŸ³å£°ãƒ†ã‚¹ãƒˆã§ã™ã€‚ã‚ãªãŸã®å¿ƒã®å¥åº·ã®æ—…ã®ãŸã‚ã«ã€‚",
+      ko: "ì•ˆë…•í•˜ì„¸ìš”, ì´ê²ƒì€ ì •ì‹  ê±´ê°• ì—¬ì •ì„ ìœ„í•œ í•œêµ­ì–´ ìŒì„± í…ŒìŠ¤íŠ¸ìž…ë‹ˆë‹¤."
     };
     return messages[languageCode as keyof typeof messages] || messages.en;
   };
@@ -231,10 +231,10 @@ export function LanguageSelector({
 
               {/* Therapeutic Features */}
               <div className="text-xs text-gray-600">
-                <p>✓ Therapeutic terminology</p>
-                <p>✓ Cultural adaptation</p>
-                {language.voiceSupport && <p>✓ Emotional voice tones</p>}
-                {language.completeness >= 90 && <p>✓ Complete interface</p>}
+                <p>âœ“ Therapeutic terminology</p>
+                <p>âœ“ Cultural adaptation</p>
+                {language.voiceSupport && <p>âœ“ Emotional voice tones</p>}
+                {language.completeness >= 90 && <p>âœ“ Complete interface</p>}
               </div>
             </CardContent>
           </Card>
@@ -249,11 +249,11 @@ export function LanguageSelector({
             <div className="text-sm text-blue-800">
               <p className="font-medium mb-2">Language Support Information</p>
               <ul className="space-y-1 text-xs">
-                <li>• All therapeutic content is professionally translated for cultural sensitivity</li>
-                <li>• Voice support includes emotionally responsive tones adapted to each language</li>
-                <li>• Emergency resources are localized for your region when available</li>
-                <li>• Language preferences sync across devices for consistent experience</li>
-                <li>• New languages are regularly added based on community needs</li>
+                <li>â€¢ All therapeutic content is professionally translated for cultural sensitivity</li>
+                <li>â€¢ Voice support includes emotionally responsive tones adapted to each language</li>
+                <li>â€¢ Emergency resources are localized for your region when available</li>
+                <li>â€¢ Language preferences sync across devices for consistent experience</li>
+                <li>â€¢ New languages are regularly added based on community needs</li>
               </ul>
             </div>
           </div>

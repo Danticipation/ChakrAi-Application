@@ -1,4 +1,4 @@
-import type { ChatRequest, ChatResponse } from '@shared/chat.types';
+﻿import type { ChatRequest, ChatResponse } from '@shared/chat.types';
 
 export async function sendChat(userId: number, body: ChatRequest): Promise<ChatResponse> {
   const res = await fetch('/api/chat', {
@@ -21,3 +21,4 @@ export async function transcribe(userId: number, file: File) {
   if (!res.ok) throw new Error(`Transcribe failed: ${res.status}`);
   return res.json();
 }
+

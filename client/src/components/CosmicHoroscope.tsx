@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+﻿import { motion } from "framer-motion";
 import { ZodiacCard } from "./ZodiacCard";
 import { zodiacSigns } from "../types/zodiac";
 
@@ -50,7 +50,7 @@ export function CosmicHoroscope() {
             }}
             transition={{ duration: 2, repeat: Infinity }}
           >
-            ✨ Cosmic Horoscope Dashboard
+            âœ¨ Cosmic Horoscope Dashboard
           </motion.h1>
           <p className="text-lg text-blue-200/80 max-w-2xl mx-auto">
             Discover the cosmic insights of each zodiac sign. Hover over the cards to explore 
@@ -88,7 +88,7 @@ export function CosmicHoroscope() {
           className="text-center mt-12 p-6 bg-gradient-to-r from-slate-800/50 via-blue-900/30 to-slate-800/50 rounded-lg border border-blue-700/30 shadow-xl backdrop-blur-sm"
         >
           <h2 className="text-lg font-semibold text-white mb-2">
-            🌟 Your Cosmic Journey Awaits
+            ðŸŒŸ Your Cosmic Journey Awaits
           </h2>
           <p className="text-blue-200/70">
             Each zodiac sign carries unique energies and characteristics. 

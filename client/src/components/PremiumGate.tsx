@@ -1,6 +1,6 @@
-import React from 'react';
+﻿import React from 'react';
 import { useSubscription } from '../contexts/SubscriptionContext';
-import { Crown, Lock, Zap, Star } from 'lucide-react';
+import { Crown, Lock, Zap } from 'lucide-react';
 
 interface PremiumGateProps {
   feature: string;

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+﻿import { useState, useEffect, useCallback } from 'react';
 import { AlertTriangle, Phone, Heart, Clock, X, Users, Shield, KeyboardIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -492,7 +492,7 @@ export default function CrisisAlert({ crisisAnalysis, currentUser, onClose, onGe
                 <div className="space-y-2">
                   {safeEmergencyContacts.slice(0, 4).map((contact, index) => (
                     <div key={`emergency-${index}`} className="flex items-center text-sm text-red-700">
-                      <span className="mr-2" aria-hidden="true">•</span>
+                      <span className="mr-2" aria-hidden="true">â€¢</span>
                       <span>{contact}</span>
                     </div>
                   ))}
@@ -513,7 +513,7 @@ export default function CrisisAlert({ crisisAnalysis, currentUser, onClose, onGe
               <div className="space-y-2">
                 {crisisAnalysis.immediateActions.slice(0, 3).map((action, index) => (
                   <div key={index} className="flex items-start text-sm text-blue-700">
-                    <span className="mr-2 mt-1">•</span>
+                    <span className="mr-2 mt-1">â€¢</span>
                     <span>{action}</span>
                   </div>
                 ))}
@@ -609,7 +609,7 @@ export default function CrisisAlert({ crisisAnalysis, currentUser, onClose, onGe
                     <div className="space-y-1">
                       {crisisAnalysis.indicators.slice(0, 3).map((indicator, index) => (
                         <div key={`indicator-${index}`} className="text-sm text-gray-600">
-                          • {indicator}
+                          â€¢ {indicator}
                         </div>
                       ))}
                     </div>
@@ -635,3 +635,4 @@ export default function CrisisAlert({ crisisAnalysis, currentUser, onClose, onGe
     </>
   );
 }
+

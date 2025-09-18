@@ -159,7 +159,7 @@ router.post('/transcribe', upload.single('audio'), async (req, res) => {
       });
     }
 
-    const result = await response.json();
+    const result = await response.json() as { text?: string };
     console.log('✅ Transcription successful:', result.text);
 
     res.json({ 
@@ -172,7 +172,7 @@ router.post('/transcribe', upload.single('audio'), async (req, res) => {
     console.error('❌ Transcription error:', error);
     res.status(500).json({ 
       error: 'Transcription failed',
-      details: error.message
+      details: (error as Error).message
     });
   }
 });

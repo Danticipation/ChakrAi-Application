@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { 
   Shield, 
   MessageSquare, 
@@ -8,10 +8,7 @@ import {
   Mic, 
   Users, 
   BarChart3, 
-  Settings, 
-  AlertCircle, 
-  CheckCircle, 
-  Clock,
+  Settings,
   Eye,
   Server,
   Database,
@@ -109,7 +106,7 @@ const AdminPortal: React.FC = () => {
       setPrivacyData(privacyRes?.data || null);
       setPilotAnalytics(analyticsRes?.data || null);
       
-      console.log('✅ Admin data loaded successfully:', {
+      console.log('âœ… Admin data loaded successfully:', {
         hasStats: !!statsData,
         feedbackCount: feedbackRes?.data?.feedback?.length || 0,
         hasSystemHealth: !!systemStatsRes?.data,
@@ -214,7 +211,7 @@ const AdminPortal: React.FC = () => {
             <div>
               <p className="text-sm font-medium text-gray-400">Active Users</p>
               <p className="text-2xl font-bold text-white mt-1">
-                {stats?.system?.activeUsers ?? '—'}
+                {stats?.system?.activeUsers ?? 'â€”'}
               </p>
             </div>
             <Users className="w-8 h-8 text-blue-400" />
@@ -226,7 +223,7 @@ const AdminPortal: React.FC = () => {
             <div>
               <p className="text-sm font-medium text-gray-400">Total Messages</p>
               <p className="text-2xl font-bold text-white mt-1">
-                {stats?.system?.totalMessages ?? '—'}
+                {stats?.system?.totalMessages ?? 'â€”'}
               </p>
             </div>
             <MessageSquare className="w-8 h-8 text-purple-400" />
@@ -238,7 +235,7 @@ const AdminPortal: React.FC = () => {
             <div>
               <p className="text-sm font-medium text-gray-400">Memory Usage</p>
               <p className="text-2xl font-bold text-white mt-1">
-                {stats?.system?.memoryUsage ?? '—'}
+                {stats?.system?.memoryUsage ?? 'â€”'}
               </p>
             </div>
             <Server className="w-8 h-8 text-orange-400" />
@@ -291,7 +288,7 @@ const AdminPortal: React.FC = () => {
                 {getTypeIcon(item.feedbackType)}
                 <div>
                   <p className="font-medium text-white text-sm">{item.title}</p>
-                  <p className="text-xs text-gray-400">User #{item.userId} • {new Date(item.createdAt).toLocaleDateString()}</p>
+                  <p className="text-xs text-gray-400">User #{item.userId} â€¢ {new Date(item.createdAt).toLocaleDateString()}</p>
                 </div>
               </div>
               <div className="flex items-center space-x-2">
@@ -342,11 +339,11 @@ const AdminPortal: React.FC = () => {
                   <p className="text-gray-400 text-sm mb-2">{item.description.substring(0, 100)}...</p>
                   <div className="flex items-center space-x-4 text-xs text-gray-500">
                     <span>User #{item.userId}</span>
-                    <span>•</span>
+                    <span>â€¢</span>
                     <span>{new Date(item.createdAt).toLocaleDateString()}</span>
                     {item.rating && (
                       <>
-                        <span>•</span>
+                        <span>â€¢</span>
                         <span>Rating: {item.rating}/5</span>
                       </>
                     )}
@@ -611,7 +608,7 @@ const AdminPortal: React.FC = () => {
                   <p className="text-gray-400 text-sm mb-2">Common Requests:</p>
                   <div className="space-y-1">
                     {pilotAnalytics.userFeedback?.commonRequests?.map((request: string, index: number) => (
-                      <p key={index} className="text-blue-400 text-sm">• {request}</p>
+                      <p key={index} className="text-blue-400 text-sm">â€¢ {request}</p>
                     )) || <p className="text-gray-500 text-sm">No requests logged</p>}
                   </div>
                 </div>
@@ -819,17 +816,17 @@ const AdminPortal: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
                   <div className="bg-gray-700/50 rounded-lg p-4">
                     <p className="text-sm text-gray-400">Response Time</p>
-                    <p className="text-2xl font-bold text-green-400">—</p>
+                    <p className="text-2xl font-bold text-green-400">â€”</p>
                     <p className="text-xs text-gray-500 mt-1">Real-time data not available</p>
                   </div>
                   <div className="bg-gray-700/50 rounded-lg p-4">
                     <p className="text-sm text-gray-400">Success Rate</p>
-                    <p className="text-2xl font-bold text-blue-400">—</p>
+                    <p className="text-2xl font-bold text-blue-400">â€”</p>
                     <p className="text-xs text-gray-500 mt-1">Real-time data not available</p>
                   </div>
                   <div className="bg-gray-700/50 rounded-lg p-4">
                     <p className="text-sm text-gray-400">API Calls Today</p>
-                    <p className="text-2xl font-bold text-purple-400">—</p>
+                    <p className="text-2xl font-bold text-purple-400">â€”</p>
                     <p className="text-xs text-gray-500 mt-1">Real-time data not available</p>
                   </div>
                 </div>
@@ -852,15 +849,15 @@ const AdminPortal: React.FC = () => {
                   <div className="bg-gray-700/50 rounded-lg p-4">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm text-gray-400">Audio Input Status</span>
-                      <span className="text-green-400 text-sm">✓ Available</span>
+                      <span className="text-green-400 text-sm">âœ“ Available</span>
                     </div>
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm text-gray-400">WebAudio API</span>
-                      <span className="text-green-400 text-sm">✓ Supported</span>
+                      <span className="text-green-400 text-sm">âœ“ Supported</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-400">Voice Processing</span>
-                      <span className="text-green-400 text-sm">✓ Ready</span>
+                      <span className="text-green-400 text-sm">âœ“ Ready</span>
                     </div>
                   </div>
                 </div>
@@ -880,22 +877,22 @@ const AdminPortal: React.FC = () => {
                   <div className="bg-gray-700/50 rounded-lg p-4">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm text-gray-400">Supabase Connection</span>
-                      <span className="text-green-400 text-sm">✓ Connected</span>
+                      <span className="text-green-400 text-sm">âœ“ Connected</span>
                     </div>
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm text-gray-400">Community Forums</span>
-                      <span className="text-green-400 text-sm">✓ Active</span>
+                      <span className="text-green-400 text-sm">âœ“ Active</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-400">Real-time Updates</span>
-                      <span className="text-green-400 text-sm">✓ Enabled</span>
+                      <span className="text-green-400 text-sm">âœ“ Enabled</span>
                     </div>
                   </div>
                   <div className="bg-gray-700/50 rounded-lg p-4">
                     <p className="text-sm text-gray-400 mb-2">Active Forums</p>
-                    <p className="text-2xl font-bold text-purple-400">—</p>
+                    <p className="text-2xl font-bold text-purple-400">â€”</p>
                     <p className="text-sm text-gray-400 mt-2">Community Members</p>
-                    <p className="text-2xl font-bold text-blue-400">—</p>
+                    <p className="text-2xl font-bold text-blue-400">â€”</p>
                     <p className="text-xs text-gray-500 mt-1">Real-time data not available</p>
                   </div>
                 </div>
@@ -916,7 +913,7 @@ const AdminPortal: React.FC = () => {
                   <div>
                     <h2 className="text-xl font-bold text-white">{selectedFeedback.title}</h2>
                     <p className="text-gray-400 text-sm">
-                      {selectedFeedback.feedbackType} • {selectedFeedback.priority} priority • User #{selectedFeedback.userId}
+                      {selectedFeedback.feedbackType} â€¢ {selectedFeedback.priority} priority â€¢ User #{selectedFeedback.userId}
                     </p>
                   </div>
                 </div>
@@ -924,7 +921,7 @@ const AdminPortal: React.FC = () => {
                   onClick={() => setSelectedFeedback(null)}
                   className="text-gray-400 hover:text-white text-xl"
                 >
-                  ×
+                  Ã—
                 </button>
               </div>
 
@@ -943,7 +940,7 @@ const AdminPortal: React.FC = () => {
                           key={star}
                           className={star <= selectedFeedback.rating! ? 'text-yellow-400' : 'text-gray-600'}
                         >
-                          ★
+                          â˜…
                         </span>
                       ))}
                       <span className="ml-2 text-gray-400">({selectedFeedback.rating}/5)</span>

@@ -1,43 +1,42 @@
-// eslint.config.js — ESM flat config
 import js from "@eslint/js";
 import tseslint from "typescript-eslint";
 import reactHooks from "eslint-plugin-react-hooks";
 import jsxA11y from "eslint-plugin-jsx-a11y";
+import unusedImports from "eslint-plugin-unused-imports";
 
 export default [
-  // Don’t lint build outputs or this config file
-  { ignores: ["node_modules/**", "dist/**", "build/**", "eslint.config.*"] },
-
-  // Base JS rules
+  {
+    ignores: [
+      "node_modules/**",
+      "dist/**",
+      "build/**",
+      "eslint.config.*",
+      "vite.config.*",
+      "postcss.config.*",
+      "tailwind.config.*",
+      "**/*.d.ts"
+    ]
+  },
   js.configs.recommended,
-
-  // TypeScript rules with type-checking (uses @typescript-eslint/parser)
   ...tseslint.configs.recommendedTypeChecked,
-
-  // Project-scoped settings + React/a11y + extra TS rules for TS/TSX only
   {
     files: ["**/*.{ts,tsx}"],
     languageOptions: {
-      parserOptions: {
-        project: ["./tsconfig.json"],
-        tsconfigRootDir: import.meta.dirname
-      }
+      parserOptions: { project: ["./tsconfig.json"], tsconfigRootDir: import.meta.dirname }
     },
     plugins: {
       "@typescript-eslint": tseslint.plugin,
       "react-hooks": reactHooks,
-      "jsx-a11y": jsxA11y
+      "jsx-a11y": jsxA11y,
+      "unused-imports": unusedImports
     },
     rules: {
-      // Keep ESM strict: prefer `import type` for types
-      "@typescript-eslint/consistent-type-imports": [
-        "error",
-        { prefer: "type-imports", fixStyle: "separate-type-imports" }
-      ],
-
-      // React hooks hygiene
+      "@typescript-eslint/consistent-type-imports": ["error", { prefer: "type-imports", fixStyle: "separate-type-imports" }],
+      "unused-imports/no-unused-imports": "error",
+      "unused-imports/no-unused-vars": ["error", { args: "after-used", argsIgnorePattern: "^_", varsIgnorePattern: "^_", caughtErrors: "none" }],
       "react-hooks/rules-of-hooks": "error",
-      "react-hooks/exhaustive-deps": "warn"
+      "react-hooks/exhaustive-deps": "warn",
+      "@typescript-eslint/no-misused-promises": ["error", { checksVoidReturn: { attributes: false } }]
     }
   }
 ];

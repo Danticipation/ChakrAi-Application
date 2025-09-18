@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+﻿import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 
 interface MobileAnimationProps {
@@ -489,3 +489,4 @@ export const MobileMindfulSlide: React.FC<{
 );
 
 export default MobileAnimation;
+

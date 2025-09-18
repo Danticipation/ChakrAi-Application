@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { X, Mail, Lock, User, Eye, EyeOff, RefreshCw } from 'lucide-react';
 
 interface AuthModalProps {
@@ -266,3 +266,4 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuccess })
 };
 
 export default AuthModal;
+

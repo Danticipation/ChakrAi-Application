@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+﻿import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Brain, Clock, Star, Play, Pause, Volume2, Waves, TreePine, Wind } from 'lucide-react';
+import { Brain, Clock, Star, Play, Volume2, Waves, Wind } from 'lucide-react';
 import { MindfulnessExercise } from './MindfulnessExercise';
 import DynamicAmbientSound from './DynamicAmbientSound';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -343,7 +343,7 @@ export function GuidedMeditation() {
       {/* Header */}
       <div className="text-center space-y-4">
         <h1 className="text-4xl font-bold theme-text font-serif">
-          🧘 Guided Meditation
+          ðŸ§˜ Guided Meditation
         </h1>
         <p className="theme-text-secondary text-lg max-w-2xl mx-auto">
           Find inner peace and balance through our collection of guided meditation practices

@@ -1,17 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  TrendingUp, 
-  TrendingDown,
-  Calendar,
-  Target,
+﻿import React, { useState, useEffect } from 'react';
+import {
   Activity,
   Brain,
   Heart,
   BookOpen,
   MessageCircle,
-  CheckCircle,
   ArrowRight,
-  Play,
   Zap,
   Sparkles,
   Star
@@ -43,7 +37,7 @@ const EngagingDashboard: React.FC<EngagingDashboardProps> = ({ userId, onNavigat
         
         // Get real user ID
         const realUserId = userId || await getCurrentUserId() || 1;
-        console.log('🔥 Loading REAL dashboard data for user:', realUserId);
+        console.log('ðŸ”¥ Loading REAL dashboard data for user:', realUserId);
 
         // Use ACTUAL working endpoints  
         const headers = await getAuthHeaders();
@@ -91,11 +85,11 @@ const EngagingDashboard: React.FC<EngagingDashboardProps> = ({ userId, onNavigat
           mindfulMinutes: 0
         };
         
-        let recentActivity = [];
+        const recentActivity = [];
 
         // Use dashboard stats if available
         if (dashboardStats) {
-          console.log('✅ Dashboard stats loaded:', dashboardStats);
+          console.log('âœ… Dashboard stats loaded:', dashboardStats);
           stats = {
             conversations: dashboardStats.aiConversations || 0,
             journalEntries: dashboardStats.journalEntries || 0,
@@ -106,7 +100,7 @@ const EngagingDashboard: React.FC<EngagingDashboardProps> = ({ userId, onNavigat
 
         // Add mood data to activity if available
         if (moodHistory && moodHistory.moodEntries) {
-          console.log('✅ Mood history loaded:', moodHistory.moodEntries.length, 'entries');
+          console.log('âœ… Mood history loaded:', moodHistory.moodEntries.length, 'entries');
           const recentMoods = moodHistory.moodEntries.slice(0, 3);
           recentActivity.push(...recentMoods.map((mood: any) => ({
             type: 'mood',
@@ -118,7 +112,7 @@ const EngagingDashboard: React.FC<EngagingDashboardProps> = ({ userId, onNavigat
 
         // Add journal data if available
         if (journalAnalytics && journalAnalytics.totalEntries > 0) {
-          console.log('✅ Journal analytics loaded:', journalAnalytics);
+          console.log('âœ… Journal analytics loaded:', journalAnalytics);
           recentActivity.push({
             type: 'journal',
             title: `Journal entries: ${journalAnalytics.totalEntries}`,
@@ -127,7 +121,7 @@ const EngagingDashboard: React.FC<EngagingDashboardProps> = ({ userId, onNavigat
           });
         }
 
-        console.log('📊 Final real data:', { stats, activityCount: recentActivity.length });
+        console.log('ðŸ“Š Final real data:', { stats, activityCount: recentActivity.length });
 
         setRealData({
           stats,
@@ -140,7 +134,7 @@ const EngagingDashboard: React.FC<EngagingDashboardProps> = ({ userId, onNavigat
         });
 
       } catch (error) {
-        console.error('❌ Failed to load real data:', error);
+        console.error('âŒ Failed to load real data:', error);
         setError('Ready to start your wellness journey');
         // Set EMPTY data - absolutely no mock data
         setRealData({
@@ -282,7 +276,7 @@ const EngagingDashboard: React.FC<EngagingDashboardProps> = ({ userId, onNavigat
           <div className="relative z-10 flex items-center justify-between">
             <div>
               <h1 className="text-5xl font-black mb-3 drop-shadow-lg">
-                Good {currentTime.getHours() < 12 ? 'Morning' : currentTime.getHours() < 17 ? 'Afternoon' : 'Evening'}! ✨
+                Good {currentTime.getHours() < 12 ? 'Morning' : currentTime.getHours() < 17 ? 'Afternoon' : 'Evening'}! âœ¨
               </h1>
               <p className="text-cyan-100 text-xl font-medium">
                 {currentTime.toLocaleDateString('en-US', { 
@@ -295,7 +289,7 @@ const EngagingDashboard: React.FC<EngagingDashboardProps> = ({ userId, onNavigat
             </div>
             <div className="text-right">
               <div className="text-4xl font-black drop-shadow-lg">{realData?.stats?.streak || 0}</div>
-              <div className="text-cyan-100 text-lg font-medium">Day Streak 🔥</div>
+              <div className="text-cyan-100 text-lg font-medium">Day Streak ðŸ”¥</div>
             </div>
           </div>
           
@@ -437,3 +431,4 @@ const EngagingDashboard: React.FC<EngagingDashboardProps> = ({ userId, onNavigat
 };
 
 export default EngagingDashboard;
+

@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 
 // Minimal test component to check if React is working
 export default function TestApp() {

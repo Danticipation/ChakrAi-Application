@@ -1,19 +1,16 @@
-import React, { useState, useMemo, useCallback } from 'react';
+﻿import React, { useState, useMemo, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { 
   Brain, 
   MessageSquare, 
   Target, 
-  TrendingUp, 
   User, 
-  Settings, 
   Lightbulb, 
   Award, 
   CheckCircle, 
   AlertCircle, 
   Loader2, 
-  RefreshCw, 
-  ArrowRight 
+  RefreshCw 
 } from 'lucide-react';
 
 // Types for adaptive learning data matching backend response
@@ -342,7 +339,7 @@ export default function AdaptiveLearning() {
                 <p className="text-gray-300 text-xs mb-2 italic">Why for you: {rec.adaptationReason}</p>
                 <div className="flex items-center justify-between">
                   <span className="text-gray-300 text-xs flex items-center">
-                    <span className="mr-1">⏱️</span>
+                    <span className="mr-1">â±ï¸</span>
                     {rec.estimatedDuration}
                   </span>
                   <div className="flex items-center space-x-1">

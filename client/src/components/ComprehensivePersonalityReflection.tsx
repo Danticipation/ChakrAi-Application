@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { 
-  RefreshCw, Brain, TrendingUp, User, RotateCcw, Volume2, VolumeX, Play, Pause, Settings, 
-  Sparkles, Heart, Target, BookOpen, Eye, Zap, MessageCircle, Activity, Users, Star,
-  BarChart3, Lightbulb, Shield, Compass, Puzzle, ChevronDown, ChevronUp, Search, Calendar
+  RefreshCw, Brain, TrendingUp, User, 
+  Sparkles, Heart, Target, Zap, MessageCircle, Activity, Users, Star, Lightbulb, Shield, Compass, ChevronDown, ChevronUp, Search, Calendar
 } from 'lucide-react';
 import { getCurrentUserId } from '../utils/userSession';
 

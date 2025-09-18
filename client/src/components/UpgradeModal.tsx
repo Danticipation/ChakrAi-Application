@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { X, Crown, Check, Zap, Star, Shield, Infinity } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
 import { useAuth } from '../contexts/AuthContext';
@@ -279,3 +279,4 @@ const UpgradeModal: React.FC<UpgradeModalProps> = ({ isOpen, onClose }) => {
 };
 
 export default UpgradeModal;
+

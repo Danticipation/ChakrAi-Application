@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { ArrowRight, CheckCircle, Brain, MessageCircle, Mic, Shield, Users, Zap } from 'lucide-react';
 
 interface CleanHomeProps {
@@ -139,7 +139,7 @@ const CleanHome: React.FC<CleanHomeProps> = ({ onNavigate }) => {
         <p className="text-gray-600 max-w-4xl mx-auto leading-relaxed">
           Chakrai doesn't settle for surface-level personality quizzes. Our proprietary 190-point 
           analysis engine dives across 9 domains of thought, emotion, and behavior to reveal a living, 
-          evolving portrait of who you are. <strong>It's not a label — it's the most in-depth 
+          evolving portrait of who you are. <strong>It's not a label â€” it's the most in-depth 
           self-reflection system ever built.</strong>
         </p>
       </div>
@@ -156,55 +156,55 @@ const CleanHome: React.FC<CleanHomeProps> = ({ onNavigate }) => {
             {
               title: 'Cognition',
               description: 'How you solve problems, learn, and make decisions',
-              icon: '🧠',
+              icon: 'ðŸ§ ',
               color: 'from-blue-500 to-blue-600'
             },
             {
               title: 'Emotion',
               description: 'Your patterns of regulation, resilience, and intensity',
-              icon: '❤️',
+              icon: 'â¤ï¸',
               color: 'from-red-500 to-red-600'
             },
             {
               title: 'Communication',
               description: 'How you express yourself, listen, and connect',
-              icon: '💬',
+              icon: 'ðŸ’¬',
               color: 'from-green-500 to-green-600'
             },
             {
               title: 'Behavioral Habits',
               description: 'The actions you take under stress or routine',
-              icon: '🔄',
+              icon: 'ðŸ”„',
               color: 'from-purple-500 to-purple-600'
             },
             {
               title: 'Interpersonal Dynamics',
               description: 'Attachment, trust, and relationship styles',
-              icon: '👥',
+              icon: 'ðŸ‘¥',
               color: 'from-orange-500 to-orange-600'
             },
             {
               title: 'Core Traits',
               description: 'The personality signatures that define your daily life',
-              icon: '⭐',
+              icon: 'â­',
               color: 'from-pink-500 to-pink-600'
             },
             {
               title: 'Values & Beliefs',
               description: 'What drives your purpose and decisions',
-              icon: '🎯',
+              icon: 'ðŸŽ¯',
               color: 'from-blue-500 to-purple-600'
             },
             {
               title: 'Motivation',
               description: 'The forces that push you toward growth or comfort',
-              icon: '⚡',
+              icon: 'âš¡',
               color: 'from-yellow-500 to-orange-600'
             },
             {
               title: 'Coping & Resilience',
               description: 'How you adapt, recover, and thrive',
-              icon: '🛡️',
+              icon: 'ðŸ›¡ï¸',
               color: 'from-teal-500 to-teal-600'
             }
           ].map((item, index) => (
@@ -324,3 +324,4 @@ const CleanHome: React.FC<CleanHomeProps> = ({ onNavigate }) => {
 };
 
 export default CleanHome;
+

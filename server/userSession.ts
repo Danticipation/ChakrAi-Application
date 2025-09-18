@@ -3,7 +3,7 @@
  * Now uses the unified authentication system
  */
 
-import { getAuthenticatedUser } from '@server/auth/unifiedAuth';
+import { getAuthenticatedUser } from '@server/auth/unifiedAuth.js';
 
 import { Request } from 'express';
 

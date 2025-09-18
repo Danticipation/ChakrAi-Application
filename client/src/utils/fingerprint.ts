@@ -1,4 +1,4 @@
-export const generateDeviceFingerprint = (): string => {
+﻿export const generateDeviceFingerprint = (): string => {
   const urlParams = new URLSearchParams(window.location.search);
   const freshStart = urlParams.get('fresh') === 'true';
 

@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+﻿import { useState, useCallback } from 'react';
 
 interface ErrorState {
   error: Error | null;
@@ -47,7 +47,7 @@ const useErrorHandler = (): UseErrorHandlerReturn => {
     };
 
     if (process.env.NODE_ENV === 'development') {
-      console.group(`🚨 useErrorHandler - ${context || 'Error'}`);
+      console.group(`ðŸš¨ useErrorHandler - ${context || 'Error'}`);
       console.error('Error:', error);
       console.error('Context:', context);
       console.error('Error Data:', errorData);

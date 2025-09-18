@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Check, X, Volume2, Play, Pause, Settings, Mic } from 'lucide-react';
+﻿import React, { useState } from 'react';
+import { Check, X, Volume2, Play, Pause, Settings } from 'lucide-react';
 
 interface Voice {
   id: string;
@@ -125,7 +125,7 @@ export default function VoiceSelector({ selectedVoice, onVoiceChange, onClose }:
   };
 
   const getVoiceIcon = (gender: string) => {
-    return gender === 'male' ? '👨' : '👩';
+    return gender === 'male' ? 'ðŸ‘¨' : 'ðŸ‘©';
   };
 
   const getMoodColor = (mood: string) => {
@@ -231,7 +231,7 @@ export default function VoiceSelector({ selectedVoice, onVoiceChange, onClose }:
                       <h3 className="text-xl font-bold text-white">{voice.name}</h3>
                       <div className="flex items-center space-x-2 text-sm">
                         <span className="text-white/60">{voice.gender}</span>
-                        <span className="text-white/40">•</span>
+                        <span className="text-white/40">â€¢</span>
                         <span className="text-white/60">{voice.accent}</span>
                       </div>
                     </div>

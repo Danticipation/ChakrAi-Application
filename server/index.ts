@@ -7,7 +7,8 @@ import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
 import multer from "multer";
-import { hipaaAuthMiddleware } from "./auth/hipaaAuth.js";
+import { identityMiddleware } from "./middleware/identity.js"; // Import identityMiddleware
+import { unifiedAuthMiddleware } from "./auth/unifiedAuth.js"; // Import unifiedAuthMiddleware
 
 // ---- Routes (keep only what you truly have) ----
 // @ts-ignore
@@ -34,9 +35,13 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const upload = multer({ storage: multer.memoryStorage() });
 
+// ---- Core Middleware (must run first) ----
+app.use(cookieParser(process.env.COOKIE_SECRET ?? "dev_secret"));
+app.use(identityMiddleware); // Identity middleware must run very early
+app.use(unifiedAuthMiddleware); // Unified auth middleware must run after identity
+
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
-app.use(cookieParser(process.env.COOKIE_SECRET ?? "dev_secret"));
 
 // ---- Public / API routes ----
 app.use("/api/auth", authRoutes);
@@ -79,10 +84,6 @@ app.post("/api/transcribe", upload.single("audio"), async (req: Request, res: Re
     return res.status(500).json({ error: "Transcription failed", details: msg });
   }
 });
-
-// ---- HIPAA Authentication Middleware ----
-// CRITICAL: This must be enabled for production HIPAA compliance
-app.use(hipaaAuthMiddleware);
 
 app.use("/api/journal", journalRoutes);
 app.use("/api/chat", chatRoutes);

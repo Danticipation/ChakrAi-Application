@@ -1,9 +1,9 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
-import { Download, FileText, Users, Calendar, X, Check } from 'lucide-react';
+import { Download, FileText, Users, X, Check } from 'lucide-react';
 import type { JournalEntry } from '../../../shared/schema';
-import { format, subDays, subMonths } from 'date-fns';
+import { subDays, subMonths } from 'date-fns';
 
 interface JournalExportModalProps {
   userId: number;
@@ -464,3 +464,4 @@ export default function JournalExportModal({ userId, entries, onClose }: Journal
     </div>
   );
 }
+

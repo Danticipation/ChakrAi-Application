@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import NeonCursor from '@/components/neon-cursor';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import axios from 'axios';
@@ -18,15 +18,10 @@ import BeautifulMeditation from '@/components/BeautifulMeditation';
 import PersonalityReflection from '@/components/PersonalityReflection';
 import VoluntaryQuestionDeck from '@/components/VoluntaryQuestionDeck';
 import AgentSystem from '@/components/AgentSystem';
-import AdaptiveTherapyPlan from '@/components/AdaptiveTherapyPlan';
 import TherapistPortal from '@/components/TherapistPortal';
 import AdminPortal from '@/components/AdminPortal';
 import ChallengeSystem from '@/components/ChallengeSystem';
 import WellnessRewards from '@/components/WellnessRewards';
-import CommunitySupport from '@/components/CommunitySupport';
-import FeedbackSystem from '@/components/FeedbackSystem';
-import HealthIntegration from '@/components/HealthIntegration';
-import VRTherapy from '@/components/VRTherapy';
 import ChakraiPlans from '@/components/ChakraiPlans';
 import PersonalityQuiz from '@/components/PersonalityQuiz';
 import { VoiceRecorder } from '@/utils/voiceRecorder';
@@ -65,14 +60,14 @@ const ModernAppLayout: React.FC<{currentUserId: number | null, onDataReset: () =
     voiceRecorderRef.current = new VoiceRecorder({
       onTranscription: (text) => {
         setChatInput(text);
-        console.log('✅ Voice transcription received:', text);
+        console.log('âœ… Voice transcription received:', text);
       },
       onError: (error) => {
-        console.error('❌ Voice recording error:', error);
+        console.error('âŒ Voice recording error:', error);
       },
       onStatusChange: (status) => {
         setVoiceStatus(status);
-        console.log('🎵 Voice status changed to:', status);
+        console.log('ðŸŽµ Voice status changed to:', status);
       },
       maxDuration: 30,
       minDuration: 2
@@ -105,7 +100,7 @@ const ModernAppLayout: React.FC<{currentUserId: number | null, onDataReset: () =
   const generateAndPlayTTS = async (text: string, voice: string) => {
     try {
       const startTime = Date.now();
-      console.log('🔊 Starting TTS generation...');
+      console.log('ðŸ”Š Starting TTS generation...');
       
       const ttsResponse = await fetch('/api/text-to-speech', {
         method: 'POST',
@@ -121,25 +116,25 @@ const ModernAppLayout: React.FC<{currentUserId: number | null, onDataReset: () =
         const audio = new Audio(audioUrl);
         
         const generationTime = Date.now() - startTime;
-        console.log(`🔊 TTS generated in ${generationTime}ms`);
+        console.log(`ðŸ”Š TTS generated in ${generationTime}ms`);
         
         audio.addEventListener('ended', () => {
           URL.revokeObjectURL(audioUrl);
         });
         
         audio.addEventListener('error', (e) => {
-          console.error('🔊 TTS playback error:', e);
+          console.error('ðŸ”Š TTS playback error:', e);
           URL.revokeObjectURL(audioUrl);
         });
         
         audio.volume = 0.8;
         await audio.play();
-        console.log('🔊 TTS playback started');
+        console.log('ðŸ”Š TTS playback started');
       } else {
-        console.error('🔊 TTS request failed:', ttsResponse.statusText);
+        console.error('ðŸ”Š TTS request failed:', ttsResponse.statusText);
       }
     } catch (error) {
-      console.error('🔊 TTS generation failed:', error);
+      console.error('ðŸ”Š TTS generation failed:', error);
     }
   };
 
@@ -148,10 +143,10 @@ const ModernAppLayout: React.FC<{currentUserId: number | null, onDataReset: () =
     const messageText = message || chatInput;
     if (!messageText.trim()) return;
     
-    console.log(`🎵 Frontend - Sending message with voice: ${selectedVoice}`);
+    console.log(`ðŸŽµ Frontend - Sending message with voice: ${selectedVoice}`);
     
     if (!validateUserSession()) {
-      console.error('❌ Session validation failed for chat message');
+      console.error('âŒ Session validation failed for chat message');
       return;
     }
     
@@ -168,7 +163,7 @@ const ModernAppLayout: React.FC<{currentUserId: number | null, onDataReset: () =
     
     try {
       const headers = await getDeviceHeaders();
-      console.log('🔒 Sending chat message with bulletproof headers');
+      console.log('ðŸ”’ Sending chat message with bulletproof headers');
       
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 30000);
@@ -190,7 +185,7 @@ const ModernAppLayout: React.FC<{currentUserId: number | null, onDataReset: () =
       
       if (response.ok) {
         const data = await response.json();
-        console.log('✅ Chat API success - Status:', response.status);
+        console.log('âœ… Chat API success - Status:', response.status);
         
         const botMessage = {
           sender: 'bot' as const,
@@ -203,12 +198,12 @@ const ModernAppLayout: React.FC<{currentUserId: number | null, onDataReset: () =
         
         // Start TTS generation immediately (don't await)
         if (isTtsEnabled && botMessage.text) {
-          console.log('🔊 Generating TTS for bot response...');
+          console.log('ðŸ”Š Generating TTS for bot response...');
           // Fire and forget - don't block UI
           generateAndPlayTTS(botMessage.text, selectedVoice);
         }
       } else {
-        console.error('❌ Chat API error - Status:', response.status, response.statusText);
+        console.error('âŒ Chat API error - Status:', response.status, response.statusText);
         const errorMessage = {
           sender: 'bot' as const,
           text: 'Sorry, I had trouble processing your message. Please try again.',
@@ -219,7 +214,7 @@ const ModernAppLayout: React.FC<{currentUserId: number | null, onDataReset: () =
         setIsAiTyping(false);
       }
     } catch (error) {
-      console.error('❌ Error sending message:', error);
+      console.error('âŒ Error sending message:', error);
       
       let errorText = 'Sorry, I had trouble processing your message. Please try again.';
       if (error instanceof Error && error.name === 'AbortError') {
@@ -311,10 +306,10 @@ const AppWithModernDesign = () => {
   useEffect(() => {
     const initializeUser = async () => {
       try {
-        console.log('🔒 Initializing user session...');
+        console.log('ðŸ”’ Initializing user session...');
         
         if (!validateUserSession()) {
-          console.error('❌ Session validation failed during initialization');
+          console.error('âŒ Session validation failed during initialization');
           setCurrentUserId(null);
           setIsLoadingProfile(false);
           return;
@@ -322,7 +317,7 @@ const AppWithModernDesign = () => {
         const userId = await getCurrentUserId();
         const headers = await getDeviceHeaders();
         
-        console.log('✅ Session validated. User ID:', userId);
+        console.log('âœ… Session validated. User ID:', userId);
         setCurrentUserId(userId);
 
         // Check if user exists in backend
@@ -338,12 +333,12 @@ const AppWithModernDesign = () => {
           
           if (response.ok) {
             const userData = await response.json();
-            console.log('✅ Backend user verified:', userData.user?.id);
+            console.log('âœ… Backend user verified:', userData.user?.id);
           } else {
-            console.warn('⚠️ Backend user creation failed, continuing with calculated ID');
+            console.warn('âš ï¸ Backend user creation failed, continuing with calculated ID');
           }
         } catch (backendError) {
-          console.warn('⚠️ Backend user creation failed:', backendError);
+          console.warn('âš ï¸ Backend user creation failed:', backendError);
         }
 
         // Skip personality quiz for modern design
@@ -444,3 +439,4 @@ export default function App() {
     </QueryClientProvider>
   );
 }
+

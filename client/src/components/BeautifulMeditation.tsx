@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useRef } from 'react';
 import { 
   Play, Pause, RotateCcw, Settings, Volume2, VolumeX, 
-  Clock, Star, TreePine, Waves, Wind, Sun, Moon, 
+  Clock, TreePine, Waves, Sun, Moon, 
   Heart, Brain, CheckCircle, SkipForward
 } from 'lucide-react';
 import useErrorHandler from '@/hooks/useErrorHandler';
@@ -697,7 +697,7 @@ const BeautifulMeditation: React.FC = () => {
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-white mb-4">
-            🧘 Guided Meditation
+            ðŸ§˜ Guided Meditation
           </h1>
           <p className="text-blue-200 text-lg max-w-2xl mx-auto">
             Find inner peace and balance through our collection of guided meditation practices
@@ -906,3 +906,4 @@ const BeautifulMeditation: React.FC = () => {
 };
 
 export default BeautifulMeditation;
+

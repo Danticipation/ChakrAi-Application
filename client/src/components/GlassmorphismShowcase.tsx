@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Heart, Star, Sparkles, Brain, Zap, Shield } from 'lucide-react';
 
 const GlassmorphismShowcase: React.FC = () => {
@@ -6,7 +6,7 @@ const GlassmorphismShowcase: React.FC = () => {
     <div className="min-h-screen p-6 space-y-8">
       <div className="text-center space-y-4">
         <h1 className="text-4xl font-bold text-white font-luxury">
-          ✨ Chakrai Glassmorphism Showcase
+          âœ¨ Chakrai Glassmorphism Showcase
         </h1>
         <p className="text-white/70 text-lg">
           Experience the soft, clean, glass feel
@@ -148,3 +148,4 @@ const GlassmorphismShowcase: React.FC = () => {
 };
 
 export default GlassmorphismShowcase;
+

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+﻿import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Heart, RefreshCw, Volume2, VolumeX, Loader2, Settings, Keyboard } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -577,7 +577,7 @@ export default function DailyAffirmation({ onBack, currentUser }: DailyAffirmati
                   aria-label="Back to Home"
                   title="Back to Home"
                 >
-                  <span className="text-white text-xl" aria-hidden="true">×</span>
+                  <span className="text-white text-xl" aria-hidden="true">Ã—</span>
                 </button>
               )}
             </div>
@@ -668,7 +668,7 @@ export default function DailyAffirmation({ onBack, currentUser }: DailyAffirmati
                 <div className="mt-4 text-center">
                   <div className="inline-flex items-center space-x-2 text-sm text-white/60 bg-blue-500/20 rounded-lg px-3 py-1">
                     <Settings className="w-4 h-4" aria-hidden="true" />
-                    <span>Voice: {voicePreferences.selectedVoice} • Rate: {voicePreferences.speechRate}x</span>
+                    <span>Voice: {voicePreferences.selectedVoice} â€¢ Rate: {voicePreferences.speechRate}x</span>
                   </div>
                 </div>
               </div>
@@ -693,11 +693,11 @@ export default function DailyAffirmation({ onBack, currentUser }: DailyAffirmati
               How to Use Your Affirmation
             </h3>
             <ul className="text-sm text-white/80 space-y-2" role="list">
-              <li role="listitem">• Read it slowly and mindfully</li>
-              <li role="listitem">• Repeat it three times with intention</li>
-              <li role="listitem">• Listen to the audio for deeper connection</li>
-              <li role="listitem">• Carry this message with you throughout the day</li>
-              <li role="listitem">• Return to it when you need encouragement</li>
+              <li role="listitem">â€¢ Read it slowly and mindfully</li>
+              <li role="listitem">â€¢ Repeat it three times with intention</li>
+              <li role="listitem">â€¢ Listen to the audio for deeper connection</li>
+              <li role="listitem">â€¢ Carry this message with you throughout the day</li>
+              <li role="listitem">â€¢ Return to it when you need encouragement</li>
             </ul>
           </div>
 
@@ -706,10 +706,10 @@ export default function DailyAffirmation({ onBack, currentUser }: DailyAffirmati
             <div className="inline-flex items-center space-x-2 text-xs text-white/50">
               <span>
                 {Array.from(cachedAffirmations.keys()).includes(getTodayKey())
-                  ? "✓ Cached for today" 
-                  : "◦ Fresh content"}
+                  ? "âœ“ Cached for today" 
+                  : "â—¦ Fresh content"}
               </span>
-              <span>•</span>
+              <span>â€¢</span>
               <span>{cachedAffirmations.size} affirmations stored</span>
             </div>
           </div>
@@ -718,3 +718,4 @@ export default function DailyAffirmation({ onBack, currentUser }: DailyAffirmati
     </div>
   );
 }
+

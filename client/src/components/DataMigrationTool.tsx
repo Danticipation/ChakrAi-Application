@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 
 interface OrphanedUserData {
   userId: string;
@@ -72,7 +72,7 @@ const DataMigrationTool = () => {
 
   return (
     <div className="p-6 bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 shadow-xl mb-6">
-      <h2 className="text-xl font-bold mb-4 text-white">🔄 Data Migration Tool</h2>
+      <h2 className="text-xl font-bold mb-4 text-white">ðŸ”„ Data Migration Tool</h2>
       
       <button 
         onClick={findOrphanedData}
@@ -127,3 +127,4 @@ const DataMigrationTool = () => {
 };
 
 export default DataMigrationTool;
+

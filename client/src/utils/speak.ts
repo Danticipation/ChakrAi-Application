@@ -1,6 +1,6 @@
-export const speakWithElevenLabs = async (text: string): Promise<void> => {
+﻿export const speakWithElevenLabs = async (text: string): Promise<void> => {
   try {
-    console.log('🎤 Attempting ElevenLabs TTS for:', text.substring(0, 50) + '...');
+    console.log('ðŸŽ¤ Attempting ElevenLabs TTS for:', text.substring(0, 50) + '...');
     
     const response = await fetch('/api/tts/text-to-speech', {
       method: 'POST',
@@ -17,20 +17,20 @@ export const speakWithElevenLabs = async (text: string): Promise<void> => {
       throw new Error(`TTS API failed with status: ${response.status}`);
     }
 
-    console.log('✅ ElevenLabs TTS response received');
+    console.log('âœ… ElevenLabs TTS response received');
     const audioBlob = await response.blob();
     const audioUrl = URL.createObjectURL(audioBlob);
     const audio = new Audio(audioUrl);
     
     return new Promise((resolve, reject) => {
       audio.onended = () => {
-        console.log('🔊 ElevenLabs audio playback completed');
+        console.log('ðŸ”Š ElevenLabs audio playback completed');
         URL.revokeObjectURL(audioUrl);
         resolve();
       };
       
       audio.onerror = () => {
-        console.error('❌ Audio playback failed');
+        console.error('âŒ Audio playback failed');
         URL.revokeObjectURL(audioUrl);
         reject(new Error('Audio playback failed'));
       };
@@ -38,14 +38,14 @@ export const speakWithElevenLabs = async (text: string): Promise<void> => {
       audio.play().catch(reject);
     });
   } catch (error) {
-    console.error('❌ ElevenLabs TTS error:', error);
+    console.error('âŒ ElevenLabs TTS error:', error);
     throw error;
   }
 };
 
 // BROWSER TTS ENABLED FOR DEVELOPMENT
 export const speakWithBrowserTTS = (text: string): Promise<void> => {
-  console.log('🔊 Fall back Browser TTS');
+  console.log('ðŸ”Š Fall back Browser TTS');
   return new Promise((resolve, reject) => {
     if (!('speechSynthesis' in window)) {
       reject(new Error('Speech synthesis not supported'));
@@ -80,7 +80,7 @@ export const speakWithBrowserTTS = (text: string): Promise<void> => {
       reject(new Error(`Speech synthesis failed: ${event.error}`));
     };
     
-    console.log('🔊 Playing text-to-speech:', text.substring(0, 50) + '...');
+    console.log('ðŸ”Š Playing text-to-speech:', text.substring(0, 50) + '...');
     window.speechSynthesis.speak(utterance);
   });
 };
@@ -88,12 +88,13 @@ export const speakWithBrowserTTS = (text: string): Promise<void> => {
 // NEW: Smart TTS that tries ElevenLabs first, falls back to browser TTS
 export const speak = async (text: string): Promise<void> => {
   try {
-    console.log('🎯 Smart TTS: Trying ElevenLabs first...');
+    console.log('ðŸŽ¯ Smart TTS: Trying ElevenLabs first...');
     await speakWithElevenLabs(text);
-    console.log('✅ ElevenLabs TTS successful');
+    console.log('âœ… ElevenLabs TTS successful');
   } catch (error: unknown) { // Explicitly type error as unknown
     const errorMessage = error instanceof Error ? error.message : String(error);
-    console.log('⚠️ ElevenLabs failed, falling back to browser TTS:', errorMessage);
+    console.log('âš ï¸ ElevenLabs failed, falling back to browser TTS:', errorMessage);
     await speakWithBrowserTTS(text);
   }
 };
+

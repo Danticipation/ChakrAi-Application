@@ -1,4 +1,5 @@
-import type { Component, ErrorInfo, ReactNode } from 'react';
+﻿import React, { Component } from "react";
+import type { ErrorInfo, ReactNode } from "react";
 import { PlayCircle, AlertTriangle, RefreshCw, Home } from 'lucide-react';
 
 interface Props {
@@ -46,7 +47,7 @@ class MeditationErrorBoundary extends Component<Props, State> {
     };
 
     if (import.meta.env.DEV) {
-      console.group('🧘 Meditation Error Boundary');
+      console.group('ðŸ§˜ Meditation Error Boundary');
       console.error('Meditation Error:', error);
       console.error('Audio Context Info:', errorData.audioContext);
       console.groupEnd();
@@ -118,10 +119,10 @@ class MeditationErrorBoundary extends Component<Props, State> {
               <div className="bg-white/5 rounded-xl p-4 mb-6 text-left">
                 <h3 className="text-white font-semibold mb-3">Quick Fixes to Try:</h3>
                 <ul className="text-white/70 text-sm space-y-2">
-                  <li>• Check if audio is enabled in your browser</li>
-                  <li>• Ensure you've granted microphone permissions (if using voice features)</li>
-                  <li>• Try using headphones or speakers</li>
-                  <li>• Close other apps that might be using audio</li>
+                  <li>â€¢ Check if audio is enabled in your browser</li>
+                  <li>â€¢ Ensure you've granted microphone permissions (if using voice features)</li>
+                  <li>â€¢ Try using headphones or speakers</li>
+                  <li>â€¢ Close other apps that might be using audio</li>
                 </ul>
               </div>
 

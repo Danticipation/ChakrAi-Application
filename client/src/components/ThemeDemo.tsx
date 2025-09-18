@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Sun, Moon, Heart, Star, Brain, Shield } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 
@@ -118,12 +118,12 @@ const ThemeDemo: React.FC = () => {
       <div className="max-w-2xl mx-auto text-center">
         <div className="clean-card-subtle">
           <h4 className="text-lg font-semibold mb-3" style={{ color: 'var(--theme-text)' }}>
-            💡 How to Toggle Themes
+            ðŸ’¡ How to Toggle Themes
           </h4>
           <div className="space-y-2 text-sm" style={{ color: 'var(--theme-text-secondary)' }}>
-            <p>🖥️ <strong>Desktop:</strong> Click the theme toggle button in the top-right of the sidebar</p>
-            <p>📱 <strong>Mobile:</strong> Click the theme toggle button in the top navigation bar</p>
-            <p>⚡ <strong>Quick Toggle:</strong> Use the button above to switch modes instantly</p>
+            <p>ðŸ–¥ï¸ <strong>Desktop:</strong> Click the theme toggle button in the top-right of the sidebar</p>
+            <p>ðŸ“± <strong>Mobile:</strong> Click the theme toggle button in the top navigation bar</p>
+            <p>âš¡ <strong>Quick Toggle:</strong> Use the button above to switch modes instantly</p>
           </div>
         </div>
       </div>
@@ -132,3 +132,4 @@ const ThemeDemo: React.FC = () => {
 };
 
 export default ThemeDemo;
+

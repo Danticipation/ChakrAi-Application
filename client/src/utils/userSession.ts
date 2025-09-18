@@ -1,4 +1,4 @@
-// DEPRECATED - Use unifiedUserSession.ts instead
+﻿// DEPRECATED - Use unifiedUserSession.ts instead
 export * from './unifiedUserSession';
 
 // Legacy exports for compatibility
@@ -15,3 +15,4 @@ export const isIncognitoMode = () => false;
 export const resetUserSession = async () => Math.floor(Math.random() * 999000) + 1000;
 export const safeReset = async () => Math.floor(Math.random() * 999000) + 1000;
 export const nuklearReset = async () => ({ success: true });
+

@@ -1,16 +1,24 @@
 {
-  "extends": "../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "dist",
-    "noEmit": true,
-    "module": "NodeNext",
     "target": "ES2022",
+    "lib": ["ES2022"],
+    "types": ["node"],
+    "module": "NodeNext",
     "moduleResolution": "NodeNext",
+    "outDir": "dist",
+    "strict": true,
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
     "allowImportingTsExtensions": true,
-    "lib": ["ES2022", "DOM"],
+    "noEmit": true,
+    "baseUrl": ".",
     "paths": {
-      "@shared/*": ["../shared/*"]
+      "@shared/*": ["../shared/*"],
+      "@server/*": ["./src/*"]
     }
   },
-  "include": ["src", "../shared"]
+  "include": ["src", "db.ts", "memory", "../shared", "storage", "util", "identity", "middleware", "auth", "userSession.ts", "routes", "src/types/express.d.ts", "src/types/global.d.ts"],
+  "exclude": ["node_modules", "dist", "routes/chat-backup.ts", "routes/chat-WORKING-BACKUP.ts"]
 }

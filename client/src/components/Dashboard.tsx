@@ -1,5 +1,4 @@
-import React from 'react';
-import StarsAndStudies from './StarsAndStudies';
+﻿import React from 'react';
 import DataMigrationTool from './DataMigrationTool';
 
 export default function Dashboard() {
@@ -22,3 +21,4 @@ export default function Dashboard() {
     </div>
   );
 }
+
