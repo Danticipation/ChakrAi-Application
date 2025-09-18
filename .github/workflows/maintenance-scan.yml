@@ -83,5 +83,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: maintenance-report
-          path: "${{ runner.temp }}\maint\"
+          path: "${{ runner.temp }}/maint/"
           if-no-files-found: error
