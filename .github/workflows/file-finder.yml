@@ -9,7 +9,7 @@ on:
         type: string
         default: 'Access-Reports.txt'
       drives:
-        description: 'Comma/space list of drives to search (e.g. C:,D:). Leave blank to scan all local drives.'
+        description: 'Comma/space list of drives (e.g. C:,D:). Blank = all local drives.'
         required: false
         type: string
         default: ''
@@ -19,11 +19,11 @@ on:
         type: boolean
         default: true
       size_min_mb:
-        description: 'Minimum size (MB). Leave blank for no minimum.'
+        description: 'Minimum size (MB). Blank = no minimum.'
         required: false
         type: number
       size_max_mb:
-        description: 'Maximum size (MB). Leave blank for no maximum.'
+        description: 'Maximum size (MB). Blank = no maximum.'
         required: false
         type: number
 
@@ -32,14 +32,14 @@ jobs:
     runs-on: [self-hosted, windows]
     defaults:
       run:
-        shell: powershell   # uses Windows PowerShell (no need for pwsh)
+        shell: powershell
     steps:
       - name: Search filesystem
         run: |
           $ErrorActionPreference = 'Stop'
 
-          $pattern = "${{ inputs.pattern }}"
-          $driveInput = "${{ inputs.drives }}"
+          $pattern       = "${{ inputs.pattern }}"
+          $driveInput    = "${{ inputs.drives }}"
           $includeHidden = "${{ inputs.include_hidden }}" -eq 'true'
 
           # Build drive list
@@ -47,24 +47,24 @@ jobs:
             $drives = (Get-PSDrive -PSProvider FileSystem).Root
           } else {
             $drives = $driveInput -split '[,\s]+' | Where-Object { $_ } | ForEach-Object {
-              if ($_ -match '^[A-Za-z]:\\?$') { if ($_.EndsWith('\')) { $_ } else { "$_\" } } else { "$_\" }
+              if ($_ -match '^[A-Za-z]:\\?$') {
+                if ($_.EndsWith('\')) { $_ } else { "$_\" }
+              } else {
+                "$_\"  # normalize
+              }
             }
           }
 
-          # Optional size filters
-          $min = (${{
-            inputs.size_min_mb
-          }} -as [double])
-          $max = (${{
-            inputs.size_max_mb
-          }} -as [double])
-          if ($min) { $minBytes = [int64]([math]::Round($min * 1MB)) } else { $minBytes = $null }
-          if ($max) { $maxBytes = [int64]([math]::Round($max * 1MB)) } else { $maxBytes = $null }
+          # Size filters
+          $min = ("${{ inputs.size_min_mb }}") -as [double]
+          $max = ("${{ inputs.size_max_mb }}") -as [double]
+          $minBytes = if ($min) { [int64]([math]::Round($min * 1MB)) } else { $null }
+          $maxBytes = if ($max) { [int64]([math]::Round($max * 1MB)) } else { $null }
 
-          Write-Host "Pattern : $pattern"
-          Write-Host "Drives  : $($drives -join ', ')"
-          if ($minBytes) { Write-Host "MinSize : $min MB" }
-          if ($maxBytes) { Write-Host "MaxSize : $max MB" }
+          Write-Host ("Pattern : {0}" -f $pattern)
+          Write-Host ("Drives  : {0}" -f ($drives -join ', '))
+          if ($minBytes) { Write-Host ("MinSize : {0} MB" -f $min) }
+          if ($maxBytes) { Write-Host ("MaxSize : {0} MB" -f $max) }
           if ($includeHidden) { Write-Host "Including hidden/system items" }
 
           $results = New-Object System.Collections.Generic.List[Object]
@@ -89,14 +89,33 @@ jobs:
               }
               if ($found) { $results.AddRange($found) }
             } catch {
-              Write-Warning "Skipped $d: $($_.Exception.Message)"
+              # IMPORTANT: avoid "$d:" inside a quoted string
+              Write-Warning ("Skipped {0} due to access error: {1}" -f $d, $_.Exception.Message)
             }
           }
 
           $out = Join-Path $env:RUNNER_TEMP 'found-files.csv'
           if ($results.Count -eq 0) {
-            Write-Host "❌ No matches found."
-            # Create an empty CSV with headers so artifact upload succeeds
-            '' | Out-File -Encoding UTF8 $out
+            Write-Host "No matches found."
+            # Emit a header so artifact upload has a file
+            "Name,FullName,SizeMB,LastWriteTime" | Out-File -Encoding UTF8 $out
           } else {
-            Write-Host "✅ Found $($results.Count) file(s). Writing CSV
+            Write-Host ("Found {0} file(s). Writing CSV -> {1}" -f $results.Count, $out)
+            $results |
+              Select-Object Name, FullName,
+                @{n='SizeMB';e={[math]::Round($_.Length/1MB,2)}},
+                LastWriteTime |
+              Sort-Object SizeMB -Descending |
+              Export-Csv -NoTypeInformation -Encoding UTF8 -Path $out
+
+            Write-Host "`nTop 20 largest matches:"
+            Import-Csv $out | Select-Object -First 20 | Format-Table -AutoSize
+          }
+
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: file-finder-results
+          path: ${{ runner.temp }}/found-files.csv
+          if-no-files-found: warn
