@@ -1,0 +1,102 @@
+name: File Finder
+
+on:
+  workflow_dispatch:
+    inputs:
+      pattern:
+        description: 'Filename or wildcard (e.g. Access-Reports.txt, *.csv, Report*.*)'
+        required: true
+        type: string
+        default: 'Access-Reports.txt'
+      drives:
+        description: 'Comma/space list of drives to search (e.g. C:,D:). Leave blank to scan all local drives.'
+        required: false
+        type: string
+        default: ''
+      include_hidden:
+        description: 'Include hidden/system items'
+        required: true
+        type: boolean
+        default: true
+      size_min_mb:
+        description: 'Minimum size (MB). Leave blank for no minimum.'
+        required: false
+        type: number
+      size_max_mb:
+        description: 'Maximum size (MB). Leave blank for no maximum.'
+        required: false
+        type: number
+
+jobs:
+  find-file:
+    runs-on: [self-hosted, windows]
+    defaults:
+      run:
+        shell: powershell   # uses Windows PowerShell (no need for pwsh)
+    steps:
+      - name: Search filesystem
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          $pattern = "${{ inputs.pattern }}"
+          $driveInput = "${{ inputs.drives }}"
+          $includeHidden = "${{ inputs.include_hidden }}" -eq 'true'
+
+          # Build drive list
+          if ([string]::IsNullOrWhiteSpace($driveInput)) {
+            $drives = (Get-PSDrive -PSProvider FileSystem).Root
+          } else {
+            $drives = $driveInput -split '[,\s]+' | Where-Object { $_ } | ForEach-Object {
+              if ($_ -match '^[A-Za-z]:\\?$') { if ($_.EndsWith('\')) { $_ } else { "$_\" } } else { "$_\" }
+            }
+          }
+
+          # Optional size filters
+          $min = (${{
+            inputs.size_min_mb
+          }} -as [double])
+          $max = (${{
+            inputs.size_max_mb
+          }} -as [double])
+          if ($min) { $minBytes = [int64]([math]::Round($min * 1MB)) } else { $minBytes = $null }
+          if ($max) { $maxBytes = [int64]([math]::Round($max * 1MB)) } else { $maxBytes = $null }
+
+          Write-Host "Pattern : $pattern"
+          Write-Host "Drives  : $($drives -join ', ')"
+          if ($minBytes) { Write-Host "MinSize : $min MB" }
+          if ($maxBytes) { Write-Host "MaxSize : $max MB" }
+          if ($includeHidden) { Write-Host "Including hidden/system items" }
+
+          $results = New-Object System.Collections.Generic.List[Object]
+
+          foreach ($d in $drives) {
+            try {
+              $args = @{
+                Path        = $d
+                Recurse     = $true
+                ErrorAction = 'SilentlyContinue'
+                File        = $true
+                Filter      = $pattern
+              }
+              if ($includeHidden) { $args['Force'] = $true }
+
+              $found = Get-ChildItem @args
+              if ($minBytes -or $maxBytes) {
+                $found = $found | Where-Object {
+                  ($null -eq $minBytes -or $_.Length -ge $minBytes) -and
+                  ($null -eq $maxBytes -or $_.Length -le $maxBytes)
+                }
+              }
+              if ($found) { $results.AddRange($found) }
+            } catch {
+              Write-Warning "Skipped $d: $($_.Exception.Message)"
+            }
+          }
+
+          $out = Join-Path $env:RUNNER_TEMP 'found-files.csv'
+          if ($results.Count -eq 0) {
+            Write-Host "❌ No matches found."
+            # Create an empty CSV with headers so artifact upload succeeds
+            '' | Out-File -Encoding UTF8 $out
+          } else {
+            Write-Host "✅ Found $($results.Count) file(s). Writing CSV
