@@ -1,0 +1,171 @@
+name: Content Finder
+
+on:
+  workflow_dispatch:
+    inputs:
+      query:
+        description: 'Text or regex to search for (e.g. "invoice 2023" or ^ERROR:)'
+        required: true
+        type: string
+      use_regex:
+        description: 'Treat query as regex (true) or plain text (false)'
+        required: true
+        type: boolean
+        default: false
+      drives:
+        description: 'Comma/space list of drives (e.g. C:,D:). Blank = all local drives.'
+        required: false
+        type: string
+        default: ''
+      extensions:
+        description: 'Limit to these extensions (comma/space, e.g. .txt,.md,.log). Blank = many common text types.'
+        required: false
+        type: string
+        default: ''
+      size_max_mb:
+        description: 'Skip files larger than this (MB). Blank = 50 MB default.'
+        required: false
+        type: number
+      include_hidden:
+        description: 'Include hidden/system items'
+        required: true
+        type: boolean
+        default: true
+      context_lines:
+        description: 'Lines of context before/after each hit'
+        required: false
+        type: number
+        default: 1
+
+jobs:
+  search:
+    runs-on: [self-hosted, windows]
+    defaults:
+      run:
+        shell: powershell   # classic Windows PowerShell is fine
+    steps:
+      - name: Search file contents
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          $query         = "${{ inputs.query }}"
+          $useRegex      = "${{ inputs.use_regex }}" -eq 'true'
+          $driveInput    = "${{ inputs.drives }}"
+          $extInput      = "${{ inputs.extensions }}"
+          $includeHidden = "${{ inputs.include_hidden }}" -eq 'true'
+          $ctx           = [int]("${{ inputs.context_lines }}")
+          if ($ctx -lt 0) { $ctx = 0 }
+
+          # Drives to scan
+          if ([string]::IsNullOrWhiteSpace($driveInput)) {
+            $drives = (Get-PSDrive -PSProvider FileSystem).Root
+          } else {
+            $drives = $driveInput -split '[,\s]+' | Where-Object { $_ } | ForEach-Object {
+              if ($_ -match '^[A-Za-z]:\\?$') { if ($_.EndsWith('\')) { $_ } else { "$_\" } } else { "$_\" }
+            }
+          }
+
+          # Extension allowlist
+          if ([string]::IsNullOrWhiteSpace($extInput)) {
+            $exts = @('.txt','.md','.log','.csv','.json','.xml','.yml','.yaml','.ini','.conf','.cfg','.ps1','.bat','.cmd','.py','.js','.ts','.html','.css')
+          } else {
+            $exts = $extInput -split '[,\s]+' | Where-Object { $_ } | ForEach-Object {
+              if ($_ -notmatch '^\.') { ".$_" } else { $_ }
+            }
+          }
+
+          # Size ceiling
+          $sizeMaxMB = ("${{ inputs.size_max_mb }}")
+          if ([string]::IsNullOrWhiteSpace($sizeMaxMB)) { $sizeMaxMB = 50 }
+          $sizeMaxBytes = [int64]([math]::Round([double]$sizeMaxMB * 1MB))
+
+          Write-Host "Query     : $query"
+          Write-Host "Regex     : $useRegex"
+          Write-Host "Drives    : $($drives -join ', ')"
+          Write-Host "Exts      : $($exts -join ', ')"
+          Write-Host "Max size  : $sizeMaxMB MB"
+          if ($includeHidden) { Write-Host "Including hidden/system items" }
+
+          $candidateFiles = New-Object System.Collections.Generic.List[string]
+
+          foreach ($d in $drives) {
+            try {
+              $gciArgs = @{
+                Path        = $d
+                Recurse     = $true
+                ErrorAction = 'SilentlyContinue'
+                File        = $true
+              }
+              if ($includeHidden) { $gciArgs['Force'] = $true }
+
+              Get-ChildItem @gciArgs |
+                Where-Object { $exts -contains $_.Extension.ToLower() -and $_.Length -le $sizeMaxBytes } |
+                ForEach-Object { $candidateFiles.Add($_.FullName) }
+
+            } catch {
+              Write-Warning "Skipping $d: $($_.Exception.Message)"
+            }
+          }
+
+          Write-Host "Candidate files: $($candidateFiles.Count)"
+
+          $out = Join-Path $env:RUNNER_TEMP 'content-hits.csv'
+          $rows = New-Object System.Collections.Generic.List[object]
+
+          # Search in manageable batches to avoid command-line length limits
+          $batchSize = 500
+          for ($i=0; $i -lt $candidateFiles.Count; $i += $batchSize) {
+            $batch = $candidateFiles[$i..([Math]::Min($i+$batchSize-1,$candidateFiles.Count-1))]
+            try {
+              if ($useRegex) {
+                $hits = Select-String -Path $batch -Pattern $query -SimpleMatch:$false -Context $ctx,$ctx -ErrorAction SilentlyContinue
+              } else {
+                $hits = Select-String -Path $batch -Pattern $query -SimpleMatch -Context $ctx,$ctx -ErrorAction SilentlyContinue
+              }
+            } catch {
+              $hits = @()
+            }
+
+            foreach ($h in $hits) {
+              # Build a compact context snippet (trim lines, collapse whitespace)
+              $before = ($h.Context.PreContext -join ' ').Trim()
+              $after  = ($h.Context.PostContext -join ' ').Trim()
+              $line   = ($h.Line).Trim()
+              $match  = ($h.Matches | ForEach-Object { $_.Value }) -join ' | '
+
+              $fi = Get-Item $h.Path -ErrorAction SilentlyContinue
+              $sizeMB = if ($fi) { [math]::Round($fi.Length/1MB,2) } else { $null }
+              $time   = if ($fi) { $fi.LastWriteTime } else { $null }
+
+              $rows.Add([PSCustomObject]@{
+                Name        = $h.Filename
+                FullName    = $h.Path
+                LineNumber  = $h.LineNumber
+                Match       = $match
+                Snippet     = $line
+                Context     = ($before + (' ' * [int]([bool]$before -and [bool]$after)) + $after)
+                SizeMB      = $sizeMB
+                LastWrite   = $time
+              })
+            }
+          }
+
+          if ($rows.Count -eq 0) {
+            Write-Host "❌ No content matches."
+            "Name,FullName,LineNumber,Match,Snippet,Context,SizeMB,LastWrite" | Out-File -Encoding UTF8 $out
+          } else {
+            Write-Host "✅ Found $($rows.Count) hit(s). Saving CSV → $out"
+            $rows |
+              Sort-Object FullName, LineNumber |
+              Export-Csv -NoTypeInformation -Encoding UTF8 -Path $out
+            Write-Host "`nTop 15:"
+            $rows | Select-Object -First 15 | Format-Table -AutoSize
+          }
+
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: content-finder-results
+          path: ${{ runner.temp }}/content-hits.csv
+          if-no-files-found: warn
