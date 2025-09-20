@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       query:
-        description: 'Text or regex to search for (e.g. "invoice 2023" or ^ERROR:)'
+        description: 'Text or regex to search for (e.g. invoice 2023 or ^ERROR:)'
         required: true
         type: string
       use_regex:
@@ -18,12 +18,12 @@ on:
         type: string
         default: ''
       extensions:
-        description: 'Limit to these extensions (comma/space, e.g. .txt,.md,.log). Blank = many common text types.'
+        description: 'Limit to extensions (comma/space, e.g. .txt,.md,.log). Blank = common text types.'
         required: false
         type: string
         default: ''
       size_max_mb:
-        description: 'Skip files larger than this (MB). Blank = 50 MB default.'
+        description: 'Skip files larger than this (MB). Blank = 50.'
         required: false
         type: number
       include_hidden:
@@ -42,7 +42,7 @@ jobs:
     runs-on: [self-hosted, windows]
     defaults:
       run:
-        shell: powershell   # classic Windows PowerShell is fine
+        shell: powershell
     steps:
       - name: Search file contents
         run: |
@@ -56,7 +56,7 @@ jobs:
           $ctx           = [int]("${{ inputs.context_lines }}")
           if ($ctx -lt 0) { $ctx = 0 }
 
-          # Drives to scan
+          # Drives
           if ([string]::IsNullOrWhiteSpace($driveInput)) {
             $drives = (Get-PSDrive -PSProvider FileSystem).Root
           } else {
@@ -65,7 +65,7 @@ jobs:
             }
           }
 
-          # Extension allowlist
+          # Extensions allowlist
           if ([string]::IsNullOrWhiteSpace($extInput)) {
             $exts = @('.txt','.md','.log','.csv','.json','.xml','.yml','.yaml','.ini','.conf','.cfg','.ps1','.bat','.cmd','.py','.js','.ts','.html','.css')
           } else {
@@ -74,16 +74,16 @@ jobs:
             }
           }
 
-          # Size ceiling
+          # Size limit
           $sizeMaxMB = ("${{ inputs.size_max_mb }}")
           if ([string]::IsNullOrWhiteSpace($sizeMaxMB)) { $sizeMaxMB = 50 }
           $sizeMaxBytes = [int64]([math]::Round([double]$sizeMaxMB * 1MB))
 
-          Write-Host "Query     : $query"
-          Write-Host "Regex     : $useRegex"
-          Write-Host "Drives    : $($drives -join ', ')"
-          Write-Host "Exts      : $($exts -join ', ')"
-          Write-Host "Max size  : $sizeMaxMB MB"
+          Write-Host ("Query     : {0}" -f $query)
+          Write-Host ("Regex     : {0}" -f $useRegex)
+          Write-Host ("Drives    : {0}" -f ($drives -join ', '))
+          Write-Host ("Exts      : {0}" -f ($exts -join ', '))
+          Write-Host ("Max size  : {0} MB" -f $sizeMaxMB)
           if ($includeHidden) { Write-Host "Including hidden/system items" }
 
           $candidateFiles = New-Object System.Collections.Generic.List[string]
@@ -103,19 +103,21 @@ jobs:
                 ForEach-Object { $candidateFiles.Add($_.FullName) }
 
             } catch {
-              Write-Warning "Skipping $d: $($_.Exception.Message)"
+              # IMPORTANT: avoid "$d:" inside quotes; use a format string instead
+              Write-Warning ("Skipping {0} due to access error: {1}" -f $d, $_.Exception.Message)
             }
           }
 
-          Write-Host "Candidate files: $($candidateFiles.Count)"
+          Write-Host ("Candidate files: {0}" -f $candidateFiles.Count)
 
-          $out = Join-Path $env:RUNNER_TEMP 'content-hits.csv'
+          $out  = Join-Path $env:RUNNER_TEMP 'content-hits.csv'
           $rows = New-Object System.Collections.Generic.List[object]
 
-          # Search in manageable batches to avoid command-line length limits
+          # Batched Select-String to avoid arg length issues
           $batchSize = 500
           for ($i=0; $i -lt $candidateFiles.Count; $i += $batchSize) {
             $batch = $candidateFiles[$i..([Math]::Min($i+$batchSize-1,$candidateFiles.Count-1))]
+
             try {
               if ($useRegex) {
                 $hits = Select-String -Path $batch -Pattern $query -SimpleMatch:$false -Context $ctx,$ctx -ErrorAction SilentlyContinue
@@ -127,7 +129,6 @@ jobs:
             }
 
             foreach ($h in $hits) {
-              # Build a compact context snippet (trim lines, collapse whitespace)
               $before = ($h.Context.PreContext -join ' ').Trim()
               $after  = ($h.Context.PostContext -join ' ').Trim()
               $line   = ($h.Line).Trim()
@@ -138,27 +139,28 @@ jobs:
               $time   = if ($fi) { $fi.LastWriteTime } else { $null }
 
               $rows.Add([PSCustomObject]@{
-                Name        = $h.Filename
-                FullName    = $h.Path
-                LineNumber  = $h.LineNumber
-                Match       = $match
-                Snippet     = $line
-                Context     = ($before + (' ' * [int]([bool]$before -and [bool]$after)) + $after)
-                SizeMB      = $sizeMB
-                LastWrite   = $time
+                Name       = $h.Filename
+                FullName   = $h.Path
+                LineNumber = $h.LineNumber
+                Match      = $match
+                Snippet    = $line
+                Context    = ($before + ($(if($before -and $after){' ' } else {''})) + $after)
+                SizeMB     = $sizeMB
+                LastWrite  = $time
               })
             }
           }
 
           if ($rows.Count -eq 0) {
-            Write-Host "❌ No content matches."
+            Write-Host "No content matches."
             "Name,FullName,LineNumber,Match,Snippet,Context,SizeMB,LastWrite" | Out-File -Encoding UTF8 $out
           } else {
-            Write-Host "✅ Found $($rows.Count) hit(s). Saving CSV → $out"
+            Write-Host ("Found {0} hit(s). Saving CSV -> {1}" -f $rows.Count, $out)
             $rows |
               Sort-Object FullName, LineNumber |
               Export-Csv -NoTypeInformation -Encoding UTF8 -Path $out
-            Write-Host "`nTop 15:"
+
+            Write-Host "Top 15:"
             $rows | Select-Object -First 15 | Format-Table -AutoSize
           }
 
