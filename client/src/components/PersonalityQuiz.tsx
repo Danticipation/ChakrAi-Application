@@ -2,6 +2,7 @@
 import { ChevronRight, ChevronLeft, CheckCircle, Brain, Heart, MessageCircle, Target, Sparkles, Star, Lightbulb, Award, AlertCircle } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
+import { getAuthHeaders } from '../utils/unifiedUserSession';
 
 interface PersonalityQuizProps {
   onComplete: (profile: UserProfile) => void;
@@ -37,10 +38,11 @@ const PersonalityQuiz: React.FC<PersonalityQuizProps> = ({ onComplete, onSkip })
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
 
   // Fetch questions from server to ensure clinical validity
-  const { data: quizQuestions, isLoading: questionsLoading } = useQuery({
+  const { data: quizQuestions, isLoading: questionsLoading } = useQuery<QuizQuestion[]>({
     queryKey: ['personality-quiz-questions'],
     queryFn: async () => {
-      const response = await axios.get('/api/personality-quiz/questions');
+      const headers = await getAuthHeaders();
+      const response = await axios.get<QuizQuestion[]>('/api/personality-quiz/questions', { headers });
       return response.data;
     },
   });
@@ -145,7 +147,7 @@ const PersonalityQuiz: React.FC<PersonalityQuizProps> = ({ onComplete, onSkip })
       const nextQ = quizQuestionsArray[currentQuestion + 1];
       setSelectedOption(nextQ ? (answers[nextQ.id] || null) : null);
     } else {
-      handleSubmit();
+      void handleSubmit();
     }
   };
 
@@ -167,10 +169,11 @@ const PersonalityQuiz: React.FC<PersonalityQuizProps> = ({ onComplete, onSkip })
       }));
 
       const userId = localStorage.getItem('userId');
-      const response = await axios.post('/api/personality-quiz/complete', {
+      const headers = await getAuthHeaders();
+      const response = await axios.post<{ profile: UserProfile }>('/api/personality-quiz/complete', {
         userId: userId || 'anonymous',
         answers: formattedAnswers
-      });
+      }, { headers });
 
       onComplete(response.data.profile);
     } catch (error) {
@@ -259,7 +262,7 @@ const PersonalityQuiz: React.FC<PersonalityQuizProps> = ({ onComplete, onSkip })
 
             {/* Options */}
             <div className="space-y-4 mb-8">
-              {currentQ?.options.map((option, index) => (
+              {currentQ?.options.map((option) => (
                 <button
                   key={option.value}
                   onClick={() => handleAnswer(option.value)}

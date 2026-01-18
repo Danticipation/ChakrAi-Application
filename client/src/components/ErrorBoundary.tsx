@@ -18,6 +18,24 @@ interface State {
   retryCount: number;
 }
 
+interface ErrorData {
+  errorId: string | null; // Reverted to string | null to match State interface
+  timestamp: string;
+  error: {
+    name: string;
+    message: string;
+    stack?: string | null;
+  };
+  errorInfo: {
+    componentStack: string;
+  };
+  component: string;
+  level: 'app' | 'component' | 'feature';
+  userAgent: string;
+  url: string;
+  retryCount: number;
+}
+
 class ErrorBoundary extends Component<Props, State> {
   private maxRetries = 3;
   
@@ -60,13 +78,13 @@ class ErrorBoundary extends Component<Props, State> {
   }
 
   private logError = (error: Error, errorInfo: ErrorInfo) => {
-    const errorData = {
-      errorId: this.state.errorId,
+    const errorData: ErrorData = {
+      errorId: this.state.errorId, // No longer needs 'as string' assertion
       timestamp: new Date().toISOString(),
       error: {
         name: error.name,
         message: error.message,
-        stack: error.stack,
+        stack: typeof error.stack === 'string' ? error.stack : '',
       },
       errorInfo: {
         componentStack: errorInfo.componentStack,
@@ -91,7 +109,7 @@ class ErrorBoundary extends Component<Props, State> {
     void this.sendErrorToMonitoring(errorData);
   };
 
-  private sendErrorToMonitoring = async (errorData: any) => {
+  private sendErrorToMonitoring = async (errorData: ErrorData) => {
     try {
       // Only send non-sensitive error data to monitoring
       const sanitizedData = {

@@ -21,6 +21,15 @@ interface JournalDashboardAnalytics {
   moodTrends?: Array<{ date: string; mood: string; intensity: number }>;
 }
 
+interface AIInsight {
+  id: string;
+  riskLevel: 'high' | 'moderate' | 'low';
+  insights: string;
+  themes: string[];
+  recommendations: string[];
+  createdAt: string;
+}
+
 interface JournalDashboardProps {
   userId: number | null;
 }
@@ -70,13 +79,13 @@ const EmptyState: React.FC<{
 
 // AI Insights Section Component
 const AIInsightsSection: React.FC<{ userId: number | null }> = ({ userId }) => {
-  const { data: aiInsights, isLoading, error } = useQuery({
+  const { data: aiInsights, isLoading, error } = useQuery<AIInsight[]>({
     queryKey: ['ai-insights', userId],
     queryFn: async () => {
       if (!userId) return [];
       const response = await fetch(`/api/journal/ai-insights/${userId}`);
       if (!response.ok) throw new Error('Failed to fetch AI insights');
-      return response.json();
+      return response.json() as Promise<AIInsight[]>;
     },
     enabled: !!userId
   });
@@ -107,7 +116,7 @@ const AIInsightsSection: React.FC<{ userId: number | null }> = ({ userId }) => {
 
   return (
     <div className="space-y-4">
-      {aiInsights.slice(0, 3).map((insight: any, index: number) => (
+      {aiInsights.slice(0, 3).map((insight: AIInsight) => (
         <div key={insight.id} className="p-4 theme-surface rounded-lg border-l-4" 
              style={{ borderLeftColor: insight.riskLevel === 'high' ? '#ef4444' : insight.riskLevel === 'moderate' ? '#f59e0b' : '#10b981' }}>
           <div className="mb-2">
@@ -199,12 +208,12 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
   // Clear cache only when truly necessary (fresh start) + force refresh for device fingerprint change
   useEffect(() => {
     // Always clear cache to force fresh data fetch with correct device fingerprint
-    queryClient.removeQueries({ queryKey: ['/api/journal/user-entries'] });
-    queryClient.removeQueries({ queryKey: ['/api/journal/analytics'] });
+    void queryClient.removeQueries({ queryKey: ['/api/journal/user-entries'] });
+    void queryClient.removeQueries({ queryKey: ['/api/journal/analytics'] });
     
     if (isFreshStart) {
-      queryClient.removeQueries({ queryKey: ['/api/journal/user-entries'] });
-      queryClient.removeQueries({ queryKey: ['/api/journal/analytics'] });
+      void queryClient.removeQueries({ queryKey: ['/api/journal/user-entries'] });
+      void queryClient.removeQueries({ queryKey: ['/api/journal/analytics'] });
     }
   }, [isFreshStart, queryClient]);
 
@@ -235,7 +244,7 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
         throw new Error('Failed to fetch journal entries');
       }
       
-      return response.json();
+      return response.json() as Promise<JournalEntry[]>;
     },
     retry: 2,
     staleTime: 0, // Force fresh fetch for device fingerprint fix
@@ -267,7 +276,7 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
         throw new Error('Failed to fetch analytics data');
       }
       
-      return response.json();
+      return response.json() as Promise<JournalDashboardAnalytics>;
     },
     retry: 2,
     staleTime: 10 * 60 * 1000, // 10 minutes
@@ -311,8 +320,8 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
     setActiveView('list');
     setSelectedEntry(null);
     // Invalidate queries to refresh data
-    queryClient.invalidateQueries({ queryKey: ['/api/journal/user-entries'] });
-    queryClient.invalidateQueries({ queryKey: ['/api/journal/analytics'] });
+    void queryClient.invalidateQueries({ queryKey: ['/api/journal/user-entries'] });
+    void queryClient.invalidateQueries({ queryKey: ['/api/journal/analytics'] });
   }, [queryClient]);
 
   const handleCancelEdit = useCallback(() => {
@@ -354,10 +363,10 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
       setShowDeleteModal(false);
       setEntryToDelete(null);
       setShowEntryModal(false);
-      queryClient.invalidateQueries({ queryKey: ['/api/journal/user-entries'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/journal/analytics'] });
+      void queryClient.invalidateQueries({ queryKey: ['/api/journal/user-entries'] });
+      void queryClient.invalidateQueries({ queryKey: ['/api/journal/analytics'] });
     } catch (error) {
-      console.error('âŒ Failed to delete journal entry:', error);
+      console.error('â Œ Failed to delete journal entry:', error);
       alert('Failed to delete journal entry. Please try again.');
     }
   }, [entryToDelete, queryClient]);
@@ -372,7 +381,7 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
     const moodEmojis: Record<string, string> = {
       'very_happy': 'ðŸ˜„',
       'happy': 'ðŸ˜Š',
-      'neutral': 'ðŸ˜',
+      'neutral': 'ðŸ˜ ',
       'sad': 'ðŸ˜¢',
       'very_sad': 'ðŸ˜­',
       'angry': 'ðŸ˜ ',
@@ -381,7 +390,7 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
       'calm': 'ðŸ˜Œ',
       'frustrated': 'ðŸ˜¤'
     };
-    return moodEmojis[mood] || 'ðŸ˜';
+    return moodEmojis[mood] || 'ðŸ˜ ';
   }, []);
 
   const getMoodColor = useCallback((mood: string): string => {
@@ -526,7 +535,7 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
     // Calculate entries this month
     const currentMonth = new Date().getMonth();
     const currentYear = new Date().getFullYear();
-    const entriesThisMonth = entries.filter(entry => {
+    const _entriesThisMonth = entries.filter(entry => {
       if (!entry.createdAt) return false;
       const entryDate = new Date(entry.createdAt);
       return entryDate.getMonth() === currentMonth && entryDate.getFullYear() === currentYear;
@@ -543,7 +552,7 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
             </div>
             <p className="text-2xl font-bold theme-text">{analytics.totalEntries}</p>
             <p className="text-sm theme-text-secondary mt-1">
-              {analytics.entriesThisMonth} this month
+              {_entriesThisMonth} this month
             </p>
           </div>
 
@@ -925,7 +934,7 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
                     }}
                     className="inline-flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-md shadow-sm transition-colors duration-200"
                   >
-                    ðŸ—‘ï¸
+                    ðŸ—‘ï¸ 
                     <span className="ml-2">Delete Entry</span>
                   </button>
                   
@@ -968,4 +977,3 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
     </div>
   );
 }
-

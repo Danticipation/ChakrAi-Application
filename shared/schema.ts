@@ -9,6 +9,8 @@ export const users = pgTable("users", {
   email: text("email").unique(),
   passwordHash: text("password_hash"),
   displayName: text("display_name"),
+  // HIPAA COMPLIANCE: Role-Based Access Control
+  roles: text("roles").array().default(["user"]), // ['user', 'therapist', 'admin', 'system']
   sessionId: text("session_id").unique(),
   sessionToken: text("session_token"),
   deviceFingerprint: text("device_fingerprint"),
@@ -1368,3 +1370,37 @@ export type InsertVrSession = z.infer<typeof insertVrSessionSchema>;
 export type InsertVrProgressTracking = z.infer<typeof insertVrProgressTrackingSchema>;
 export type InsertVrTherapeuticPlan = z.infer<typeof insertVrTherapeuticPlanSchema>;
 export type InsertVrAccessibilityProfile = z.infer<typeof insertVrAccessibilityProfileSchema>;
+
+// ============================================================================
+// HIPAA COMPLIANCE - Audit Logging System
+// ============================================================================
+// CRITICAL: All PHI (Protected Health Information) access MUST be logged
+// for HIPAA compliance. This includes: reads, writes, updates, deletes.
+
+export const auditLogs = pgTable("audit_logs", {
+  id: serial("id").primaryKey(),
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+  userId: integer("user_id"), // User whose data was accessed (can be null for system actions)
+  actorUserId: integer("actor_user_id"), // Who performed the action
+  actorType: text("actor_type").notNull(), // 'user', 'admin', 'therapist', 'system'
+  action: text("action").notNull(), // 'read', 'write', 'update', 'delete', 'login', 'export'
+  resourceType: text("resource_type").notNull(), // 'journal_entry', 'mood_entry', 'message', 'user_profile', etc.
+  resourceId: integer("resource_id"), // ID of the specific record accessed
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  sessionId: text("session_id"),
+  success: boolean("success").notNull().default(true),
+  failureReason: text("failure_reason"), // If success=false, why?
+  dataSnapshot: jsonb("data_snapshot"), // Optional: snapshot of data before change (for updates/deletes)
+  changeDetails: jsonb("change_details"), // What changed (for updates)
+  accessReason: text("access_reason"), // Why was this accessed? (e.g., "user_request", "therapeutic_review")
+  complianceFlags: text("compliance_flags").array(), // Any compliance concerns flagged
+});
+
+export const insertAuditLogSchema = createInsertSchema(auditLogs).omit({
+  id: true,
+  timestamp: true,
+});
+
+export type AuditLog = typeof auditLogs.$inferSelect;
+export type InsertAuditLog = z.infer<typeof insertAuditLogSchema>;

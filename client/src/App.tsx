@@ -8,9 +8,9 @@ import { ThemeProvider, useTheme } from '@/contexts/ThemeContext';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { SubscriptionProvider } from '@/contexts/SubscriptionContext';
 
-// Import new modern components
-import ModernLayout from '@/components/ModernLayout';
+// Import ModernDashboard as the main dashboard
 import ModernDashboard from '@/components/ModernDashboard';
+import ModernLayout from '@/components/ModernLayout';
 
 // Import existing components
 import BeautifulChat from '@/components/BeautifulChat';
@@ -26,7 +26,10 @@ import ChallengeSystem from '@/components/ChallengeSystem';
 import WellnessRewards from '@/components/WellnessRewards';
 import ChakraiPlans from '@/components/ChakraiPlans';
 import PersonalityQuiz from '@/components/PersonalityQuiz';
+import AvatarCustomizer from '@/components/AvatarCustomizer';
+import type { AvatarConfig } from '@/components/AvatarCustomizer';
 import { VoiceRecorder } from '@/utils/voiceRecorder';
+import { useAuth } from '@/contexts/AuthContext';
 import { getCurrentUserId, validateUserSession, getDeviceHeaders } from '@/utils/userSession';
 import PrivacyControl from '@/components/PrivacyControl';
 
@@ -44,7 +47,14 @@ import MeditationErrorBoundary from '@/components/MeditationErrorBoundary';
 
 const ModernAppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void}> = ({ currentUserId, onDataReset }) => {
   const [activeSection, setActiveSection] = useState('dashboard');
-  const [selectedVoice, setSelectedVoice] = useState('james');
+  const [companionAvatar, setCompanionAvatar] = useState<AvatarConfig | undefined>(() => {
+    const saved = localStorage.getItem('companion_avatar');
+    return saved ? JSON.parse(saved) : undefined;
+  });
+  const [selectedVoice, setSelectedVoice] = useState(() => {
+    // Load saved voice from localStorage, default to Brandy
+    return localStorage.getItem('selectedVoice') || 'Brandy';
+  });
   const [selectedModel, setSelectedModel] = useState(() => {
     // Check if saved model is a Grok model and fallback to GPT-4o
     const savedModel = localStorage.getItem('selectedModel') || 'gpt-4o';
@@ -58,6 +68,7 @@ const ModernAppLayout: React.FC<{currentUserId: number | null, onDataReset: () =
   const [messages, setMessages] = useState<Array<{sender: 'user' | 'bot', text: string, time: string, id: string}>>([]);
   const [isAiTyping, setIsAiTyping] = useState(false);
   const [isTtsEnabled, setIsTtsEnabled] = useState(true);
+  const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const voiceRecorderRef = useRef<VoiceRecorder | null>(null);
 
@@ -105,6 +116,75 @@ const ModernAppLayout: React.FC<{currentUserId: number | null, onDataReset: () =
   // TTS toggle functionality
   const handleTtsToggle = () => {
     setIsTtsEnabled(!isTtsEnabled);
+  };
+
+  // Bot message TTS playback
+  const handleBotMessageSpeak = async (text: string) => {
+    if (!isTtsEnabled || !text.trim()) {
+      console.log('⏭️ Chat TTS skipped:', { isTtsEnabled, hasText: !!text.trim() });
+      return;
+    }
+
+    try {
+      // Stop any currently playing audio
+      if (currentAudio) {
+        currentAudio.pause();
+        currentAudio.currentTime = 0;
+        setCurrentAudio(null);
+      }
+
+      console.log('🎤 Chat Bot Message TTS:', { 
+        textPreview: text.substring(0, 50) + '...', 
+        voice: selectedVoice,
+        textLength: text.length 
+      });
+
+      const headers = await getDeviceHeaders();
+      const response = await fetch('/api/text-to-speech', {
+        method: 'POST',
+        headers: {
+          ...headers,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          text: text,
+          voice: selectedVoice,
+          stability: 0.5,
+          similarity_boost: 0.75
+        }),
+      });
+
+      console.log('📡 Chat Bot TTS Response:', { 
+        status: response.status, 
+        statusText: response.statusText 
+      });
+
+      if (response.ok) {
+        const audioBlob = await response.blob();
+        const audioUrl = URL.createObjectURL(audioBlob);
+        const audio = new Audio(audioUrl);
+
+        audio.addEventListener('ended', () => {
+          setCurrentAudio(null);
+          URL.revokeObjectURL(audioUrl);
+        });
+
+        audio.addEventListener('error', (e) => {
+          console.error('❌ Chat audio playback error:', e);
+          setCurrentAudio(null);
+          URL.revokeObjectURL(audioUrl);
+        });
+
+        setCurrentAudio(audio);
+        await audio.play();
+        console.log('✅ Chat bot message playing');
+      } else {
+        const errorText = await response.text();
+        console.error('❌ Chat Bot TTS API error:', errorText);
+      }
+    } catch (error) {
+      console.error('❌ Chat Bot TTS error:', error);
+    }
   };
 
   // Send message functionality
@@ -191,6 +271,13 @@ const ModernAppLayout: React.FC<{currentUserId: number | null, onDataReset: () =
     }
   };
 
+  // Avatar save handler
+  const handleAvatarSave = (avatar: AvatarConfig) => {
+    setCompanionAvatar(avatar);
+    localStorage.setItem('companion_avatar', JSON.stringify(avatar));
+    setActiveSection('chat'); // Navigate back to chat
+  };
+
   // Component rendering function
   const renderActiveSection = () => {
     switch (activeSection) {
@@ -209,9 +296,12 @@ const ModernAppLayout: React.FC<{currentUserId: number | null, onDataReset: () =
             isAiTyping={isAiTyping}
             isTtsEnabled={isTtsEnabled}
             onTtsToggle={handleTtsToggle}
-            onBotMessageSpeak={(text: string) => {}}
-            selectedModel={selectedModel} // Pass selected model
-            onModelChange={setSelectedModel} // Pass model change handler
+            onBotMessageSpeak={handleBotMessageSpeak}
+            selectedModel={selectedModel}
+            onModelChange={setSelectedModel}
+            onVoiceChange={setSelectedVoice}
+            onAvatarClick={() => setActiveSection('avatar')}
+            companionAvatar={companionAvatar}
           />
         );
       case 'journal':
@@ -240,6 +330,8 @@ const ModernAppLayout: React.FC<{currentUserId: number | null, onDataReset: () =
         return <AdminPortal />;
       case 'pricing':
         return <ChakraiPlans />;
+      case 'avatar':
+        return <AvatarCustomizer onAvatarSelect={handleAvatarSave} currentAvatar={companionAvatar} />;
       default:
         return <ModernDashboard userId={currentUserId} onNavigate={setActiveSection} />;
     }
@@ -268,56 +360,66 @@ const ModernAppLayout: React.FC<{currentUserId: number | null, onDataReset: () =
 // User session management wrapper
 const AppWithModernDesign = () => {
   const { currentTheme } = useTheme();
+  const { user, isLoading: authLoading } = useAuth();
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
   const [showPersonalityQuiz, setShowPersonalityQuiz] = useState(false);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+  const [isAuthReady, setIsAuthReady] = useState(false);
   
-  // User session management
+  // Ensure we have a JWT token for anonymous users - RUN IMMEDIATELY, BEFORE ANYTHING ELSE
   useEffect(() => {
-    const initializeUser = async () => {
-      try {
-        if (!validateUserSession()) {
-          console.error('Session validation failed during initialization');
-          setCurrentUserId(null);
-          setIsLoadingProfile(false);
-          return;
-        }
-        const userId = await getCurrentUserId();
-        const headers = await getDeviceHeaders();
-        
-        setCurrentUserId(userId);
-
-        // Check if user exists in backend
+    const ensureAuthToken = async () => {
+      const existingToken = localStorage.getItem('auth_token');
+      if (!existingToken) {
         try {
-          const response = await fetch('/api/users/anonymous', {
+          console.log('🎭 No token found, creating anonymous user...');
+          const response = await fetch('/api/auth/anonymous', {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              ...headers
-            },
-            body: JSON.stringify({})
+            headers: { 'Content-Type': 'application/json' }
           });
-          
-          if (!response.ok) {
-            console.warn('Backend user creation failed, continuing with calculated ID');
+          if (response.ok) {
+            const data = await response.json();
+            localStorage.setItem('auth_token', data.token);
+            console.log('✅ Anonymous JWT token created and stored');
+            setIsAuthReady(true);
+          } else {
+            console.error('❌ Failed to create anonymous user:', response.status);
+            setIsAuthReady(true); // Continue anyway
           }
-        } catch (backendError) {
-          console.warn('Backend user creation failed:', backendError);
+        } catch (error) {
+          console.error('❌ Failed to create anonymous token:', error);
+          setIsAuthReady(true); // Continue anyway
         }
-
-        setShowPersonalityQuiz(false);
-      } catch (error) {
-        console.error('Failed to initialize user:', error);
-        const fallbackUserId = await getCurrentUserId();
-        setCurrentUserId(fallbackUserId);
-        setShowPersonalityQuiz(false);
-      } finally {
-        setIsLoadingProfile(false);
+      } else {
+        console.log('✅ Existing auth token found');
+        setIsAuthReady(true);
       }
     };
+    void ensureAuthToken();
+  }, []); // Run once on mount
+  
+  // User session management - use AuthContext user
+  useEffect(() => {
+    // Wait for auth to be ready before proceeding
+    if (!isAuthReady) {
+      return;
+    }
+    
+    if (authLoading) {
+      setIsLoadingProfile(true);
+      return;
+    }
 
-    initializeUser();
-  }, []);
+    if (user) {
+      // User is authenticated via AuthContext
+      setCurrentUserId(user.id);
+      setIsLoadingProfile(false);
+    } else {
+      // No auth user - set to null
+      setCurrentUserId(null);
+      setIsLoadingProfile(false);
+    }
+  }, [user, authLoading, isAuthReady]);
 
   const handlePersonalityQuizComplete = async (profile: any) => {
     try {
@@ -352,8 +454,8 @@ const AppWithModernDesign = () => {
     }
   };
 
-  // Show loading while initializing
-  if (isLoadingProfile) {
+  // Show loading while initializing auth OR profile
+  if (!isAuthReady || isLoadingProfile) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-900">
         <div className="text-white text-center">
@@ -381,8 +483,8 @@ const AppWithModernDesign = () => {
         onDataReset={handleDataReset}
       />
       
-      {/* Privacy Control */}
-      <PrivacyControl onUserIdChange={() => {}} />
+      {/* Privacy Control - Temporarily disabled due to auth conflicts */}
+      {/* <PrivacyControl onUserIdChange={() => {}} /> */}
     </>
   );
 };
@@ -402,7 +504,7 @@ export default function App() {
           <AuthProvider>
             <SubscriptionProvider>
               <AppWithModernDesign />
-              <NeonCursor />
+              {/* <NeonCursor /> - Disabled due to SVG errors */}
             </SubscriptionProvider>
           </AuthProvider>
         </ThemeProvider>

@@ -248,4 +248,33 @@ router.get('/adaptive-preferences', async (req, res) => {
   }
 });
 
+// Factory reset endpoint - Delete ALL user data
+router.delete('/factory-reset', async (req, res) => {
+  try {
+    console.log('🔧 Factory reset requested');
+    
+    const userId = getAuthUserId(req); // Use authenticated user ID
+    
+    if (!userId) {
+      console.error('❌ No user ID found for factory reset');
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+    
+    console.log(`⚠️ Performing factory reset for user: ${userId}`);
+    
+    // Perform complete factory reset
+    await storage.factoryResetUser(userId);
+    
+    console.log(`✅ Factory reset completed for user: ${userId}`);
+    res.json({ 
+      success: true, 
+      message: 'Factory reset completed. All data has been deleted.',
+      userId: userId 
+    });
+  } catch (error) {
+    console.error('Error performing factory reset:', error);
+    res.status(500).json({ error: 'Failed to perform factory reset' });
+  }
+});
+
 export default router;

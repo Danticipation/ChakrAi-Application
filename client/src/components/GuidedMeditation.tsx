@@ -6,8 +6,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Brain, Clock, Star, Play, Volume2, Waves, Wind } from 'lucide-react';
 import { MindfulnessExercise } from './MindfulnessExercise';
 import DynamicAmbientSound from './DynamicAmbientSound';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
+
+interface SaveMeditationSessionData {
+  meditationType: string;
+  duration: number;
+  completedDuration: number;
+  isCompleted: boolean;
+  ambientSound: string | null;
+  voiceEnabled: boolean;
+  selectedVoice: string;
+}
 
 interface MeditationTemplate {
   id: string;
@@ -28,17 +38,6 @@ interface MeditationTemplate {
     exhaleSeconds: number;
     cycles: number;
   };
-}
-
-interface MeditationSession {
-  id: string;
-  meditationType: string;
-  duration: number;
-  completedDuration: number;
-  isCompleted: boolean;
-  rating?: number;
-  startedAt: string;
-  completedAt?: string;
 }
 
 const PREDEFINED_MEDITATIONS: MeditationTemplate[] = [
@@ -239,19 +238,14 @@ export function GuidedMeditation() {
 
   const queryClient = useQueryClient();
 
-  // Fetch user's meditation history
-  const { data: sessions } = useQuery({
-    queryKey: ['/api/meditation/sessions'],
-    enabled: true
-  });
 
   // Save meditation session
   const saveSessionMutation = useMutation({
-    mutationFn: async (sessionData: any) => {
+    mutationFn: async (sessionData: SaveMeditationSessionData) => {
       await axios.post('/api/meditation/sessions', sessionData);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/meditation/sessions'] });
+      void queryClient.invalidateQueries({ queryKey: ['/api/meditation/sessions'] });
     }
   });
 

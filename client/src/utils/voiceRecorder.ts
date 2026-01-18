@@ -122,8 +122,17 @@ export class VoiceRecorder {
       
       formData.append('audio', audioBlob, fileName);
 
+      // Get authentication token
+      const token = localStorage.getItem('auth_token');
+      const headers: HeadersInit = {};
+      
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const response = await fetch('/api/transcribe', {
         method: 'POST',
+        headers,
         body: formData,
       });
 

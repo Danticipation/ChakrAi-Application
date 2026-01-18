@@ -113,6 +113,33 @@ router.post('/', async (req, res) => {
   }
 });
 
+// Delete chat history endpoint
+router.delete('/history', async (req, res) => {
+  try {
+    console.log('🗑️ Request to delete chat history');
+    
+    // Get user ID from HIPAA auth middleware or request
+    const userId = (req as any).userId || (req as any).headers['x-user-id'];
+    
+    if (!userId) {
+      console.error('❌ No user ID found for chat deletion');
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+    
+    console.log('🔐 Deleting chat history for user:', userId);
+    
+    // Import storage dynamically to handle the chat deletion
+    const { storage } = await import('../storage.js');
+    await storage.clearUserChatHistory(userId);
+    
+    console.log('✅ Successfully deleted chat history for user:', userId);
+    res.json({ success: true, message: 'Chat history cleared' });
+  } catch (error) {
+    console.error('Error deleting chat history:', error);
+    res.status(500).json({ error: 'Failed to clear chat history' });
+  }
+});
+
 // Voice transcription endpoint
 router.post('/transcribe', upload.single('audio'), async (req, res) => {
   try {

@@ -1,8 +1,12 @@
-﻿import { useState, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { Save, Trash2, EyeOff, Brain, TrendingUp, FileText, Mic, Square, AlertCircle } from 'lucide-react';
 import type { JournalEntry, JournalAnalytics } from '../../../shared/schema';
+
+interface TranscriptionResponse {
+  text: string;
+}
 
 interface JournalEditorProps {
   entry?: JournalEntry;
@@ -29,24 +33,23 @@ const emotionalTags: EmotionalTag[] = [
 ];
 
 const moodOptions = [
-  { value: 'very_positive', label: 'ðŸ˜Š Very Positive', color: '#10B981' },
-  { value: 'positive', label: 'ðŸ™‚ Positive', color: '#84CC16' },
-  { value: 'neutral', label: 'ðŸ˜ Neutral', color: '#6B7280' },
-  { value: 'negative', label: 'ðŸ™ Negative', color: '#F59E0B' },
-  { value: 'very_negative', label: 'ðŸ˜¢ Very Negative', color: '#EF4444' }
+  { value: 'very_positive', label: '✨ Very Positive', color: '#10B981' },
+  { value: 'positive', label: '😊 Positive', color: '#84CC16' },
+  { value: 'neutral', label: '😐 Neutral', color: '#6B7280' },
+  { value: 'negative', label: '😕 Negative', color: '#F59E0B' },
+  { value: 'very_negative', label: '😢 Very Negative', color: '#EF4444' }
 ];
+
+interface TranscriptionErrorResponse {
+  errorType?: 'quota_exceeded' | 'auth_error';
+  error?: string;
+}
 
 export default function JournalEditor({ entry, onSave, onCancel, userId }: JournalEditorProps) {
   const [title, setTitle] = useState(entry?.title || '');
   const [content, setContent] = useState(entry?.content || '');
   const [mood, setMood] = useState(entry?.mood || '');
   const [selectedTags, setSelectedTags] = useState<string[]>(entry?.tags || []);
-  const [triggers, setTriggers] = useState<string[]>([]);
-  const [gratitude, setGratitude] = useState<string[]>([]);
-  const [goals, setGoals] = useState<string[]>([]);
-  const [newTrigger, setNewTrigger] = useState('');
-  const [newGratitude, setNewGratitude] = useState('');
-  const [newGoal, setNewGoal] = useState('');
   const [showAnalysis, setShowAnalysis] = useState(false);
   const [analytics, setAnalytics] = useState<JournalAnalytics | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -75,7 +78,7 @@ export default function JournalEditor({ entry, onSave, onCancel, userId }: Journ
       }
       
       setCurrentMimeType(mimeType);
-      console.log('ðŸŽµ JournalEditor using audio format:', mimeType);
+      console.log('🎵 JournalEditor using audio format:', mimeType);
       const mediaRecorder = new MediaRecorder(stream, { mimeType: mimeType });
       mediaRecorderRef.current = mediaRecorder;
       chunksRef.current = [];
@@ -88,8 +91,8 @@ export default function JournalEditor({ entry, onSave, onCancel, userId }: Journ
 
       mediaRecorder.onstop = async () => {
         const audioBlob = new Blob(chunksRef.current, { type: currentMimeType });
-        console.log('ðŸŽµ JournalEditor audio blob type:', audioBlob.type);
-        await sendAudioToWhisper(audioBlob);
+        console.log('🎵 JournalEditor audio blob type:', audioBlob.type);
+        void await sendAudioToWhisper(audioBlob); // Explicitly mark as ignored
         stream.getTracks().forEach(track => track.stop());
       };
 
@@ -115,7 +118,7 @@ export default function JournalEditor({ entry, onSave, onCancel, userId }: Journ
                       audioBlob.type.includes('mp4') ? 'recording.mp4' : 'recording.audio';
       formData.append('audio', audioBlob, fileName);
 
-      const response = await axios.post('/api/transcribe', formData, {
+      const response = await axios.post<TranscriptionResponse>('/api/transcribe', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
@@ -132,7 +135,7 @@ export default function JournalEditor({ entry, onSave, onCancel, userId }: Journ
       
       // Check if it's an axios error with response
       if (axios.isAxiosError(error) && error.response?.data) {
-        const responseData = error.response.data;
+        const responseData = error.response.data as TranscriptionErrorResponse;
         if (responseData.errorType === 'quota_exceeded') {
           errorMessage = 'Voice transcription temporarily unavailable due to high demand. Please try again later or type your entry manually.';
         } else if (responseData.errorType === 'auth_error') {
@@ -158,12 +161,12 @@ export default function JournalEditor({ entry, onSave, onCancel, userId }: Journ
     if (isRecording) {
       stopRecording();
     } else {
-      startRecording();
+      void startRecording();
     }
   };
 
-  const saveMutation = useMutation({
-    mutationFn: async (journalData: any) => {
+  const saveMutation = useMutation<JournalEntry, Error, Omit<JournalEntry, 'id' | 'createdAt' | 'uid' | 'moodIntensity' | 'isPrivate'>>({
+    mutationFn: async (journalData) => {
       // Healthcare-grade authentication headers
       const headers = {
         'X-Device-Fingerprint': 'healthcare-user-107',
@@ -171,19 +174,19 @@ export default function JournalEditor({ entry, onSave, onCancel, userId }: Journ
       };
       
       if (entry?.id) {
-        const response = await axios.patch(`/api/journal/${entry.id}`, journalData, { headers });
+        const response = await axios.patch<JournalEntry>(`/api/journal/${entry.id}`, journalData, { headers });
         return response.data;
       } else {
-        const response = await axios.post('/api/journal', journalData, { headers });
+        const response = await axios.post<JournalEntry>('/api/journal', journalData, { headers });
         return response.data;
       }
     },
-    onSuccess: async (savedEntry) => {
+    onSuccess: (savedEntry) => { // Removed async keyword
       console.log("Journal entry saved successfully");
       
       // Track journal activity for goal tracking
       try {
-        await axios.post('/api/users/activity', {
+        void axios.post('/api/users/activity', { // Explicitly mark as ignored
           userId: userId,
           activityType: 'journal_entry',
           timestamp: new Date().toISOString()
@@ -200,17 +203,15 @@ export default function JournalEditor({ entry, onSave, onCancel, userId }: Journ
     },
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: async () => {
-      if (!entry?.id) return;
-      
+  const deleteMutation = useMutation<void, Error, string>({
+    mutationFn: async (entryId) => {
       // Healthcare-grade authentication headers
       const headers = {
         'X-Device-Fingerprint': 'healthcare-user-107',
         'X-Session-ID': 'healthcare-session-107'
       };
       
-      await axios.delete(`/api/journal/${entry.id}`, { headers });
+      void await axios.delete(`/api/journal/${entryId}`, { headers }); // Explicitly mark as ignored
     },
     onSuccess: () => {
       console.log("Journal entry deleted successfully");
@@ -222,10 +223,10 @@ export default function JournalEditor({ entry, onSave, onCancel, userId }: Journ
     },
   });
 
-  const analyzeEntryMutation = useMutation({
+  const analyzeEntryMutation = useMutation<JournalAnalytics, Error>({
     mutationFn: async () => {
-      if (!entry?.id) return null;
-      const response = await axios.get(`/api/journal/${entry.id}/analyze`);
+      if (!entry?.id) return null as unknown as JournalAnalytics; // Cast to JournalAnalytics to satisfy return type
+      const response = await axios.get<JournalAnalytics>(`/api/journal/${entry.id}/analyze`);
       return response.data;
     },
     onSuccess: (analysisData) => {
@@ -248,13 +249,10 @@ export default function JournalEditor({ entry, onSave, onCancel, userId }: Journ
 
     const journalData = {
       userId,
-      title: title.trim() || undefined,
+      title: title.trim() || null,
       content: content.trim(),
-      mood: mood || undefined,
-      emotionalTags: selectedTags.length > 0 ? selectedTags : undefined,
-      triggers: triggers.length > 0 ? triggers : undefined,
-      gratitude: gratitude.length > 0 ? gratitude : undefined,
-      goals: goals.length > 0 ? goals : undefined,
+      mood: mood || null,
+      tags: selectedTags.length > 0 ? selectedTags : null, // Changed from emotionalTags to tags
       wordCount,
       readingTime
     };
@@ -270,43 +268,10 @@ export default function JournalEditor({ entry, onSave, onCancel, userId }: Journ
     );
   };
 
-  const addTrigger = () => {
-    if (newTrigger.trim() && !triggers.includes(newTrigger.trim())) {
-      setTriggers([...triggers, newTrigger.trim()]);
-      setNewTrigger('');
-    }
-  };
-
-  const addGratitude = () => {
-    if (newGratitude.trim() && !gratitude.includes(newGratitude.trim())) {
-      setGratitude([...gratitude, newGratitude.trim()]);
-      setNewGratitude('');
-    }
-  };
-
-  const addGoal = () => {
-    if (newGoal.trim() && !goals.includes(newGoal.trim())) {
-      setGoals([...goals, newGoal.trim()]);
-      setNewGoal('');
-    }
-  };
-
-  const removeTrigger = (index: number) => {
-    setTriggers(triggers.filter((_, i) => i !== index));
-  };
-
-  const removeGratitude = (index: number) => {
-    setGratitude(gratitude.filter((_, i) => i !== index));
-  };
-
-  const removeGoal = (index: number) => {
-    setGoals(goals.filter((_, i) => i !== index));
-  };
-
   const handleAnalyze = () => {
     if (entry?.id) {
       setIsAnalyzing(true);
-      analyzeEntryMutation.mutate();
+      void analyzeEntryMutation.mutate(); // Explicitly mark as ignored
       setIsAnalyzing(false);
     }
   };
@@ -347,7 +312,7 @@ export default function JournalEditor({ entry, onSave, onCancel, userId }: Journ
               onClick={() => setErrorMessage(null)}
               className="text-red-500 hover:text-red-700 transition-colors text-xl leading-none"
             >
-              Ã—
+              ×
             </button>
           </div>
         )}
@@ -550,7 +515,7 @@ export default function JournalEditor({ entry, onSave, onCancel, userId }: Journ
         
         {entry && (
           <button
-            onClick={() => deleteMutation.mutate()}
+            onClick={() => deleteMutation.mutate(String(entry.id))}
             disabled={deleteMutation.isPending}
             className="px-4 py-3 rounded-2xl text-sm font-medium shadow-sm flex items-center justify-center gap-2"
             style={{ 
@@ -579,4 +544,3 @@ export default function JournalEditor({ entry, onSave, onCancel, userId }: Journ
     </div>
   );
 }
-

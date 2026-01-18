@@ -1,6 +1,6 @@
 ﻿import React, { createContext, useContext, useEffect, useState } from "react";
 import type { ReactNode } from "react";
-import axios from 'axios';
+import { getAuthHeaders } from '@/utils/unifiedUserSession';
 
 // Updated interfaces to match your new tiered system
 interface SubscriptionStatus {
@@ -104,52 +104,68 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
 
   const fetchSubscriptionStatus = async () => {
     try {
-      // Try to get status from your new tiered system first
-      const response = await axios.get('/api/tiered-analysis/subscription-status');
+      // Get authenticated headers
+      const headers = await getAuthHeaders();
       
-      if (response.data.success) {
-        const data = response.data;
-        setSubscription({
-          tier: data.subscription.tier,
-          status: data.subscription.status,
-          monthlyUsage: data.usage?.remaining !== undefined ? 
-            (data.usage.limit - data.usage.remaining) : 0,
-          monthlyLimit: data.usage?.limit || 1,
-          lastUsageReset: new Date().toISOString(),
-          features: data.subscription.features.reduce((acc: SubscriptionFeatures, featureName: keyof SubscriptionFeatures) => {
-            acc[featureName] = true;
-            return acc;
-          }, { ...TIER_FEATURES.free }) // Initialize with free tier features
-        });
-      } else {
-        throw new Error('Failed to get subscription status');
+      // Try to get status from your new tiered system first
+      const response = await fetch('/api/tiered-analysis/subscription-status', {
+        headers
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setSubscription({
+            tier: data.subscription.tier,
+            status: data.subscription.status,
+            monthlyUsage: data.usage?.remaining !== undefined ? 
+              (data.usage.limit - data.usage.remaining) : 0,
+            monthlyLimit: data.usage?.limit || 1,
+            lastUsageReset: new Date().toISOString(),
+            features: data.subscription.features.reduce((acc: SubscriptionFeatures, featureName: keyof SubscriptionFeatures) => {
+              acc[featureName] = true;
+              return acc;
+            }, { ...TIER_FEATURES.free })
+          });
+          return;
+        }
       }
+      throw new Error('Failed to get subscription status');
     } catch (error) {
       console.error('Failed to fetch subscription status:', error);
       
       // Fallback to legacy endpoint
       try {
-        const legacyResponse = await axios.get('/api/subscription/status');
-        setSubscription({
-          tier: legacyResponse.data.status === 'premium' ? 'premium' : 'free',
-          status: 'active',
-          monthlyUsage: legacyResponse.data.monthlyUsage || 0,
-          monthlyLimit: legacyResponse.data.status === 'premium' ? -1 : 1,
-          lastUsageReset: legacyResponse.data.lastUsageReset || new Date().toISOString(),
-          features: TIER_FEATURES[legacyResponse.data.status === 'premium' ? 'premium' : 'free']
+        const headers = await getAuthHeaders();
+        const legacyResponse = await fetch('/api/subscription/status', {
+          headers
         });
+        
+        if (legacyResponse.ok) {
+          const legacyData = await legacyResponse.json();
+          setSubscription({
+            tier: legacyData.status === 'premium' ? 'premium' : 'free',
+            status: 'active',
+            monthlyUsage: legacyData.monthlyUsage || 0,
+            monthlyLimit: legacyData.status === 'premium' ? -1 : 1,
+            lastUsageReset: legacyData.lastUsageReset || new Date().toISOString(),
+            features: TIER_FEATURES[legacyData.status === 'premium' ? 'premium' : 'free']
+          });
+          return;
+        }
       } catch (legacyError) {
         console.error('Failed to fetch legacy subscription status:', legacyError);
-        // Default to free tier if both fail
-        setSubscription({
-          tier: 'free',
-          status: 'active',
-          monthlyUsage: 0,
-          monthlyLimit: 1,
-          lastUsageReset: new Date().toISOString(),
-          features: TIER_FEATURES.free
-        });
       }
+      
+      // Default to free tier if both fail
+      setSubscription({
+        tier: 'free',
+        status: 'active',
+        monthlyUsage: 0,
+        monthlyLimit: 1,
+        lastUsageReset: new Date().toISOString(),
+        features: TIER_FEATURES.free
+      });
     } finally {
       setIsLoading(false);
     }
@@ -157,9 +173,14 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
 
   const updateUsage = async (increment: number = 1) => {
     try {
-      // Try new system first
-      const response = await axios.post('/api/subscription/usage', { increment });
-      if (subscription) {
+      const headers = await getAuthHeaders();
+      const response = await fetch('/api/subscription/usage', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ increment })
+      });
+      
+      if (response.ok && subscription) {
         setSubscription({
           ...subscription,
           monthlyUsage: subscription.monthlyUsage + increment
@@ -206,12 +227,22 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
       }
       const deviceFingerprint = canvas.toDataURL().slice(-50);
 
-      const response = await axios.post('/api/subscription/create-checkout', {
-        planType,
-        deviceFingerprint
+      const headers = await getAuthHeaders();
+      const response = await fetch('/api/subscription/create-checkout', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          planType,
+          deviceFingerprint
+        })
       });
       
-      return response.data.sessionId;
+      if (!response.ok) {
+        throw new Error('Failed to create checkout');
+      }
+      
+      const data = await response.json();
+      return data.sessionId;
     } catch (error) {
       console.error('Failed to create checkout session:', error);
       throw error;
@@ -225,8 +256,15 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
 
   const getUpgradeInfo = async () => {
     try {
-      const response = await axios.get('/api/tiered-analysis/premium-preview');
-      return response.data;
+      const headers = await getAuthHeaders();
+      const response = await fetch('/api/tiered-analysis/premium-preview', {
+        headers
+      });
+      
+      if (response.ok) {
+        return await response.json();
+      }
+      return null;
     } catch (error) {
       console.error('Failed to get upgrade info:', error);
       return null;

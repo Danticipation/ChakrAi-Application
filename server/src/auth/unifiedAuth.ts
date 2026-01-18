@@ -1,11 +1,20 @@
 import 'dotenv/config';
 import type { Request, Response, NextFunction } from "express";
 import { jwtVerify, createRemoteJWKSet, type JWTPayload } from "jose";
+import { logAudit, logFailedAccess } from '../middleware/auditLogger.js';
 
 const COOKIE_CANDIDATES = ["sb-access-token", "access_token", "yo_access", "session"] as const;
 
 const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET!;
 const ACCESS_TOKEN_JWKS  = process.env.ACCESS_TOKEN_JWKS as string | undefined;     // https://…/.well-known/jwks.json
+
+// HIPAA COMPLIANCE: Session timeout configuration
+// Sessions must expire after 15 minutes of inactivity (HIPAA recommended)
+const SESSION_TIMEOUT_MINUTES = 15;
+const SESSION_TIMEOUT_MS = SESSION_TIMEOUT_MINUTES * 60 * 1000;
+
+// Track last activity time for each session
+const sessionActivity = new Map<string, number>();
 
 export function ensureAuthConfig() {
   if (!ACCESS_TOKEN_SECRET && !ACCESS_TOKEN_JWKS) {
@@ -52,10 +61,43 @@ async function verifyAccessToken(token: string): Promise<JWTPayload | null> {
 export async function unifiedAuthMiddleware(req: Request, res: Response, next: NextFunction) {
   try {
     const token = extractBearer(req) ?? extractCookie(req);
-    if (!token) return res.status(401).json({ error: "unauthenticated" });
+    if (!token) {
+      await logFailedAccess(req, 'authentication', 'no_token_provided');
+      return res.status(401).json({ error: "unauthenticated" });
+    }
 
     const payload = await verifyAccessToken(token);
-    if (!payload?.sub) return res.status(401).json({ error: "invalid_token" });
+    if (!payload?.sub) {
+      await logFailedAccess(req, 'authentication', 'invalid_token');
+      return res.status(401).json({ error: "invalid_token" });
+    }
+
+    // HIPAA COMPLIANCE: Check session timeout
+    const sessionKey = `${payload.sub}_${token.substring(0, 10)}`;
+    const lastActivity = sessionActivity.get(sessionKey);
+    const now = Date.now();
+
+    if (lastActivity && (now - lastActivity) > SESSION_TIMEOUT_MS) {
+      // Session expired due to inactivity
+      sessionActivity.delete(sessionKey);
+      await logAudit(req, {
+        userId: parseInt(String(payload.sub)),
+        actorUserId: parseInt(String(payload.sub)),
+        actorType: 'user',
+        action: 'logout',
+        resourceType: 'session',
+        success: true,
+        accessReason: 'session_timeout',
+        complianceFlags: ['automatic_logout_inactivity'],
+      });
+      return res.status(401).json({ 
+        error: "session_expired", 
+        message: `Session expired after ${SESSION_TIMEOUT_MINUTES} minutes of inactivity` 
+      });
+    }
+
+    // Update last activity time
+    sessionActivity.set(sessionKey, now);
 
     (req as any).auth = {
       token, // never log it
@@ -67,9 +109,13 @@ export async function unifiedAuthMiddleware(req: Request, res: Response, next: N
       }
     };
 
+    // Set userId for HIPAA compliance and backward compatibility
+    (req as any).userId = parseInt(String(payload.sub));
+
     next();
   } catch (err) {
     console.error("Auth middleware error:", err instanceof Error ? err.message : err);
+    await logFailedAccess(req, 'authentication', 'auth_middleware_error');
     res.status(401).json({ error: "auth_failed" });
   }
 }

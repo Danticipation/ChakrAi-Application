@@ -1,5 +1,6 @@
-﻿import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Mic, MicOff, Save, Plus, Calendar, Heart, Brain, BarChart3, Download, FileText, Trash2 } from 'lucide-react';
+import { moodOptions as journalMoodOptions } from '../data/journalEmojis';
 
 interface JournalEntry {
   id?: number;
@@ -61,16 +62,11 @@ const TherapeuticJournal: React.FC<TherapeuticJournalProps> = ({ userId, onEntry
   const audioChunksRef = useRef<Blob[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const moodOptions = [
-    { value: 'very_happy', label: 'Very Happy', icon: 'ðŸ˜Š', color: 'bg-green-100 text-green-800' },
-    { value: 'happy', label: 'Happy', icon: 'ðŸ™‚', color: 'bg-green-50 text-green-700' },
-    { value: 'neutral', label: 'Neutral', icon: 'ðŸ˜', color: 'bg-gray-100 text-gray-700' },
-    { value: 'sad', label: 'Sad', icon: 'ðŸ™', color: 'bg-blue-100 text-blue-700' },
-    { value: 'very_sad', label: 'Very Sad', icon: 'ðŸ˜¢', color: 'bg-blue-200 text-blue-800' },
-    { value: 'anxious', label: 'Anxious', icon: 'ðŸ˜°', color: 'bg-yellow-100 text-yellow-800' },
-    { value: 'angry', label: 'Angry', icon: 'ðŸ˜ ', color: 'bg-red-100 text-red-800' },
-    { value: 'grateful', label: 'Grateful', icon: 'ðŸ™', color: 'bg-purple-100 text-purple-800' }
-  ];
+  // Import mood options from journalEmojis which has proper emoji encoding
+  const moodOptions = journalMoodOptions.map(mood => ({
+    ...mood,
+    color: mood.bgColor + ' text-gray-700'
+  }));
 
   const commonTags = [
     'therapy', 'gratitude', 'anxiety', 'depression', 'progress', 'goals', 
@@ -142,7 +138,7 @@ const TherapeuticJournal: React.FC<TherapeuticJournalProps> = ({ userId, onEntry
         }
       }
       
-      console.log('ðŸŽµ TherapeuticJournal using audio format:', mimeType);
+      console.log('🎵 TherapeuticJournal using audio format:', mimeType);
       const mediaRecorder = new MediaRecorder(stream, { mimeType });
       
       mediaRecorderRef.current = mediaRecorder;
@@ -156,7 +152,7 @@ const TherapeuticJournal: React.FC<TherapeuticJournalProps> = ({ userId, onEntry
       
       mediaRecorder.onstop = async () => {
         const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
-        console.log('ðŸŽµ TherapeuticJournal audio blob type:', audioBlob.type);
+        console.log('🎵 TherapeuticJournal audio blob type:', audioBlob.type);
         await transcribeAudio(audioBlob);
         stream.getTracks().forEach(track => track.stop());
       };
@@ -602,7 +598,7 @@ const TherapeuticJournal: React.FC<TherapeuticJournalProps> = ({ userId, onEntry
                       <span className={`px-2 py-1 rounded-full text-xs ${
                         moodOptions.find(m => m.value === recentEntry.mood)?.color || 'bg-gray-100 text-gray-700'
                       }`}>
-                        {moodOptions.find(m => m.value === recentEntry.mood)?.icon || 'ðŸ˜'} {moodOptions.find(m => m.value === recentEntry.mood)?.label || 'Neutral'}
+                        {moodOptions.find(m => m.value === recentEntry.mood)?.icon} {moodOptions.find(m => m.value === recentEntry.mood)?.label || 'Neutral'}
                       </span>
                     </div>
                     <p className="text-white/80 text-sm line-clamp-2">
@@ -640,120 +636,31 @@ const TherapeuticJournal: React.FC<TherapeuticJournalProps> = ({ userId, onEntry
             </div>
           )}
 
-          {/* Entry Viewer Modal */}
-          {selectedEntry && (
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-              <div className="bg-white rounded-2xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-                <div className="p-6">
-                  {/* Header */}
-                  <div className="flex items-start justify-between mb-6">
-                    <div className="flex-1">
-                      <h2 className="text-2xl font-bold mb-2 text-gray-800">
-                        {selectedEntry.title || 'Untitled Entry'}
-                      </h2>
-                      <div className="flex items-center gap-4 text-sm text-gray-600">
-                        <span>{new Date(selectedEntry.createdAt || '').toLocaleDateString()}</span>
-                        {selectedEntry.mood && (
-                          <span className={`px-2 py-1 rounded-full text-xs ${
-                            moodOptions.find(m => m.value === selectedEntry.mood)?.color || 'bg-gray-100 text-gray-700'
-                          }`}>
-                            {moodOptions.find(m => m.value === selectedEntry.mood)?.icon} {moodOptions.find(m => m.value === selectedEntry.mood)?.label}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => setSelectedEntry(null)}
-                      className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
-                    >
-                      âœ•
-                    </button>
-                  </div>
-
-                  {/* Content */}
-                  <div className="prose max-w-none mb-6">
-                    <div className="bg-gray-50 rounded-lg p-4 text-gray-800 leading-relaxed">
-                      {selectedEntry.content}
-                    </div>
-                  </div>
-
-                  {/* Tags */}
-                  {selectedEntry.tags && selectedEntry.tags.length > 0 && (
-                    <div className="mb-4">
-                      <h4 className="text-sm font-medium text-gray-700 mb-2">Tags</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {selectedEntry.tags.map(tag => (
-                          <span key={tag} className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
+          {/* Mood Selection */}
+          <div className="mb-6">
+            <label className="block text-white font-medium mb-3">How are you feeling?</label>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {moodOptions.map((mood) => (
+                <button
+                  key={mood.value}
+                  onClick={() => setEntry(prev => ({ ...prev, mood: mood.value }))}
+                  className={`p-3 rounded-xl border-2 transition-all text-center relative ${
+                    entry.mood === mood.value
+                      ? 'border-theme-accent theme-primary shadow-lg ring-2 ring-theme-accent/50 scale-105'
+                      : 'border-theme-accent/50 theme-surface hover:border-theme-accent hover:theme-primary-light'
+                  }`}
+                >
+                  {entry.mood === mood.value && (
+                    <div className="absolute top-1 right-1 w-3 h-3 theme-primary rounded-full flex items-center justify-center">
+                      <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
                     </div>
                   )}
-
-                  {/* AI Analysis */}
-                  {selectedEntry.aiAnalysis && (
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                      <h4 className="text-sm font-medium text-blue-800 mb-2">AI Therapeutic Analysis</h4>
-                      <p className="text-blue-700 text-sm">{selectedEntry.aiAnalysis.insights}</p>
-                    </div>
-                  )}
-
-                  {/* Action Buttons */}
-                  <div className="flex gap-3 pt-4 border-t border-gray-200">
-                    <button
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-
-                        console.log('ðŸŸ¦ Edit Entry button clicked!', selectedEntry);
-                        console.log('ðŸŸ¦ selectedEntry has ID?', selectedEntry?.id ? 'YES' : 'NO');
-                        
-                        if (selectedEntry?.id) {
-                          console.log('ðŸŸ¦ Setting entry state...');
-                          setEntry({
-                            id: selectedEntry.id,
-                            title: selectedEntry.title || '',
-                            content: selectedEntry.content,
-                            mood: selectedEntry.mood || 'neutral',
-                            moodIntensity: selectedEntry.moodIntensity || 5,
-                            tags: selectedEntry.tags || [],
-                            isPrivate: selectedEntry.isPrivate ?? true
-                          });
-                          
-                          console.log('ðŸŸ¦ Setting editingEntry state...');
-                          setEditingEntry(selectedEntry);
-                          
-                          console.log('ðŸŸ¦ Setting viewMode to edit...');
-                          setViewMode('edit');
-                          
-                          console.log('ðŸŸ¦ Clearing selectedEntry...');
-                          setSelectedEntry(null);
-                          
-                          console.log('ðŸŸ¦ All states set successfully!');
-                        } else {
-                          console.error('ðŸ”´ Cannot edit entry: no ID found', selectedEntry);
-                        }
-                      }}
-                      className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium"
-                    >
-                      Edit Entry
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (selectedEntry.id && window.confirm('Are you sure you want to delete this journal entry? This action cannot be undone.')) {
-                          deleteEntry(selectedEntry.id);
-                        }
-                      }}
-                      className="flex-1 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors font-medium"
-                    >
-                      Delete Entry
-                    </button>
-                  </div>
-                </div>
-              </div>
+                  <div className="text-2xl mb-1">{mood.icon}</div>
+                  <div className="text-xs font-medium text-white">{mood.label}</div>
+                </button>
+              ))}
             </div>
-          )}
+          </div>
 
           {/* Write New Entry Form */}
           <div className="theme-card/30 backdrop-blur-sm rounded-2xl shadow-lg p-6 mb-6">
@@ -829,32 +736,6 @@ const TherapeuticJournal: React.FC<TherapeuticJournalProps> = ({ userId, onEntry
             )}
           </div>
 
-          {/* Mood Selection */}
-          <div className="mb-6">
-            <label className="block text-white font-medium mb-3">How are you feeling?</label>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              {moodOptions.map((mood) => (
-                <button
-                  key={mood.value}
-                  onClick={() => setEntry(prev => ({ ...prev, mood: mood.value }))}
-                  className={`p-3 rounded-xl border-2 transition-all text-center relative ${
-                    entry.mood === mood.value
-                      ? 'border-theme-accent theme-primary shadow-lg ring-2 ring-theme-accent/50 scale-105'
-                      : 'border-theme-accent/50 theme-surface hover:border-theme-accent hover:theme-primary-light'
-                  }`}
-                >
-                  {entry.mood === mood.value && (
-                    <div className="absolute top-1 right-1 w-3 h-3 theme-primary rounded-full flex items-center justify-center">
-                      <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
-                    </div>
-                  )}
-                  <div className="text-2xl mb-1">{mood.icon}</div>
-                  <div className="text-xs font-medium text-white">{mood.label}</div>
-                </button>
-              ))}
-            </div>
-          </div>
-
           {/* Mood Intensity */}
           <div className="mb-6 theme-primary/100 rounded-xl p-4">
             <label className="block text-white font-medium mb-3">
@@ -892,7 +773,7 @@ const TherapeuticJournal: React.FC<TherapeuticJournalProps> = ({ userId, onEntry
                       onClick={() => removeTag(tag)}
                       className="ml-2 text-white/80 hover:text-white"
                     >
-                      Ã—
+                      ×
                     </button>
                   </span>
                 ))}
@@ -977,66 +858,9 @@ const TherapeuticJournal: React.FC<TherapeuticJournalProps> = ({ userId, onEntry
                 </>
               )}
             </button>
-
-
-            
-
           </div>
         </div>
         </>
-        )}
-
-        {/* Recent Entries (shown only on write tab) */}
-        {activeTab === 'write' && recentEntries.length > 0 && (
-          <div className="theme-card/20 backdrop-blur-sm rounded-2xl shadow-lg p-6">
-            <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
-              <Calendar className="w-5 h-5 mr-2" />
-              Recent Entries
-            </h3>
-            <div className="space-y-3">
-              {recentEntries.map((recentEntry, index) => (
-                <div 
-                  key={recentEntry.id || index} 
-                  className="theme-primary/30 rounded-lg p-4 border border-[#000000]/30 cursor-pointer hover:bg-opacity-40 transition-all"
-                  onClick={() => {
-                    // Don't interfere with edit mode
-                    if (viewMode === 'edit') return;
-                    setSelectedEntry(recentEntry);
-                    setViewMode('view');
-                  }}
-                >
-                  <div className="flex justify-between items-start mb-2">
-                    <h4 className="font-medium text-white">
-                      {recentEntry.title || `Entry ${index + 1}`}
-                    </h4>
-                    <span className="text-xs text-white/60">
-                      {new Date(recentEntry.createdAt || '').toLocaleDateString()}
-                    </span>
-                  </div>
-                  <p className="text-white/80 text-sm line-clamp-2">
-                    {recentEntry.content.substring(0, 100)}...
-                  </p>
-                  <div className="flex items-center justify-between mt-2 text-xs">
-                    <div className="flex items-center">
-                      <span className={`px-2 py-1 rounded-full ${
-                        moodOptions.find(m => m.value === recentEntry.mood)?.color || 'theme-primary text-white'
-                      }`}>
-                        {moodOptions.find(m => m.value === recentEntry.mood)?.label || 'Unknown'}
-                      </span>
-                      {recentEntry.tags.length > 0 && (
-                        <span className="ml-2 text-white/60">
-                          +{recentEntry.tags.length} tags
-                        </span>
-                      )}
-                    </div>
-                    <span className="text-white/50 text-xs">
-                      Click to view
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
         )}
 
         {/* Analytics Tab */}
@@ -1126,58 +950,15 @@ const TherapeuticJournal: React.FC<TherapeuticJournalProps> = ({ userId, onEntry
               <Brain className="w-5 h-5 mr-2" />
               AI Insights
             </h3>
-            
-            {isAnalyzing && (
-              <div className="flex items-center justify-center py-8">
-                <div className="w-8 h-8 border-2 border-[#000000] border-t-transparent rounded-full animate-spin mr-3" />
-                <span className="text-white/70">Analyzing your entries...</span>
-              </div>
-            )}
-            
-            {aiInsights && !isAnalyzing && (
-              <div className="theme-primary/30 rounded-xl p-6">
-                <h4 className="font-medium text-white mb-3">Latest Analysis</h4>
-                <div className="prose prose-sm text-white/90">
-                  {aiInsights.split('\n').map((paragraph, index) => (
-                    <p key={index} className="mb-3">{paragraph}</p>
-                  ))}
-                </div>
-              </div>
-            )}
-            
-            {!aiInsights && !isAnalyzing && (
-              <div className="space-y-6">
-                <div className="text-center py-8">
-                  <Brain className="w-12 h-12 text-white/40 mx-auto mb-4" />
-                  <p className="text-white/70 mb-4">
-                    Recent AI insights will appear here
-                  </p>
-                  <p className="text-sm text-white/50">
-                    Save a journal entry to generate new AI therapeutic insights
-                  </p>
-                </div>
-                
-                <div className="space-y-4">
-                  <h4 className="text-lg font-semibold text-white mb-3">Sample AI Analysis</h4>
-                  <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
-                    <div className="mb-3">
-                      <span className="text-sm text-white/60">Analysis from recent entry:</span>
-                    </div>
-                    <p className="text-white/90 mb-4">
-                      "This entry reflects a positive and optimistic outlook. The individual experienced success and productivity at work, which has contributed to a strong sense of accomplishment and gratitude."
-                    </p>
-                    <div className="flex flex-wrap gap-2 mb-3">
-                      <span className="px-2 py-1 bg-blue-500/30 text-blue-200 rounded text-sm">success</span>
-                      <span className="px-2 py-1 bg-blue-500/30 text-blue-200 rounded text-sm">optimism</span>
-                      <span className="px-2 py-1 bg-blue-500/30 text-blue-200 rounded text-sm">gratitude</span>
-                    </div>
-                    <div className="text-sm">
-                      <span className="text-green-300">Risk Level: Low</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
+            <div className="text-center py-8">
+              <Brain className="w-12 h-12 text-white/40 mx-auto mb-4" />
+              <p className="text-white/70 mb-4">
+                Recent AI insights will appear here
+              </p>
+              <p className="text-sm text-white/50">
+                Save a journal entry to generate new AI therapeutic insights
+              </p>
+            </div>
           </div>
         )}
 
@@ -1224,156 +1005,6 @@ const TherapeuticJournal: React.FC<TherapeuticJournalProps> = ({ userId, onEntry
                   <Download className="w-4 h-4 mr-2" />
                   Download Personal Report
                 </button>
-              </div>
-            </div>
-
-            {/* Export Information */}
-            <div className="mt-6 theme-primary/30 border border-[#000000]/50 rounded-xl p-4">
-              <h5 className="font-medium text-white mb-2">About Your Reports</h5>
-              <ul className="text-sm text-white/80 space-y-1">
-                <li>â€¢ Reports are generated using AI analysis of your journal entries and mood data</li>
-                <li>â€¢ Therapist reports include clinical insights suitable for healthcare providers</li>
-                <li>â€¢ Personal reports focus on your growth journey and positive patterns</li>
-                <li>â€¢ All reports respect your privacy settings and only include data you've chosen to share</li>
-              </ul>
-            </div>
-          </div>
-        )}
-
-        {/* Journal Entry Viewer Modal */}
-        {selectedEntry && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="p-6">
-                {/* Header */}
-                <div className="flex items-start justify-between mb-6">
-                  <div className="flex-1">
-                    <h2 className="text-2xl font-bold mb-2 text-gray-800">
-                      {selectedEntry.title || 'Untitled Entry'}
-                    </h2>
-                    <div className="flex items-center gap-4 text-sm text-gray-600">
-                      <span>{new Date(selectedEntry.createdAt || '').toLocaleDateString()}</span>
-                      {selectedEntry.mood && (
-                        <div className="flex items-center gap-2">
-                          <span className={`px-2 py-1 rounded-full text-xs ${
-                            moodOptions.find(m => m.value === selectedEntry.mood)?.color || 'bg-gray-100 text-gray-700'
-                          }`}>
-                            {moodOptions.find(m => m.value === selectedEntry.mood)?.icon} {moodOptions.find(m => m.value === selectedEntry.mood)?.label}
-                          </span>
-                        </div>
-                      )}
-                      {selectedEntry.moodIntensity && (
-                        <span className="text-xs text-gray-500">
-                          Intensity: {selectedEntry.moodIntensity}/10
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {viewMode === 'view' && (
-                      <button
-                        onClick={() => {
-                          // Load the entry data into the form
-                          setEntry({
-                            title: selectedEntry.title || '',
-                            content: selectedEntry.content,
-                            mood: selectedEntry.mood,
-                            moodIntensity: selectedEntry.moodIntensity || 5,
-                            tags: selectedEntry.tags || [],
-                            isPrivate: selectedEntry.isPrivate
-                          });
-                          // Close the modal
-                          setSelectedEntry(null);
-                          // Switch to write tab so user can see and edit the content
-                          setActiveTab('write');
-                          // Scroll to the top of the form after a brief delay
-                          setTimeout(() => {
-                            const writeTab = document.querySelector('[data-tab="write"]');
-                            if (writeTab) {
-                              writeTab.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                            }
-                          }, 100);
-                        }}
-                        className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-                      >
-                        Edit Entry
-                      </button>
-                    )}
-                    <button
-                      onClick={() => setSelectedEntry(null)}
-                      className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
-                    >
-                      Close
-                    </button>
-                  </div>
-                </div>
-
-                {/* Content */}
-                <div className="mb-6">
-                  <div className="bg-gray-50 rounded-lg p-6">
-                    <div className="prose prose-gray max-w-none">
-                      {selectedEntry.content.split('\n').map((paragraph, index) => (
-                        <p key={index} className="mb-3 text-gray-700 leading-relaxed">
-                          {paragraph || '\u00A0'}
-                        </p>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Tags */}
-                {selectedEntry.tags && selectedEntry.tags.length > 0 && (
-                  <div className="mb-6">
-                    <h3 className="text-lg font-semibold mb-3 text-gray-800">Tags</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {selectedEntry.tags.map((tag, index) => (
-                        <span
-                          key={index}
-                          className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Privacy Status */}
-                <div className="mb-6">
-                  <div className="flex items-center gap-2">
-                    <span className={`px-3 py-1 rounded-full text-sm ${
-                      selectedEntry.isPrivate 
-                        ? 'bg-red-100 text-red-800' 
-                        : 'bg-green-100 text-green-800'
-                    }`}>
-                      {selectedEntry.isPrivate ? 'ðŸ”’ Private' : 'ðŸŒ Shared'}
-                    </span>
-                  </div>
-                </div>
-
-                {/* AI Analysis if available */}
-                {selectedEntry.aiAnalysis && (
-                  <div className="mb-6">
-                    <h3 className="text-lg font-semibold mb-3 text-gray-800">AI Analysis</h3>
-                    <div className="bg-blue-50 rounded-lg p-4">
-                      <div className="text-gray-700">
-                        {selectedEntry.aiAnalysis.insights}
-                      </div>
-                      {selectedEntry.aiAnalysis.themes && selectedEntry.aiAnalysis.themes.length > 0 && (
-                        <div className="mt-3">
-                          <h4 className="font-medium text-gray-800 mb-2">Themes:</h4>
-                          <div className="flex flex-wrap gap-2">
-                            {selectedEntry.aiAnalysis.themes.map((theme, index) => (
-                              <span key={index} className="px-2 py-1 bg-blue-200 text-blue-800 rounded text-sm">
-                                {theme}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
           </div>

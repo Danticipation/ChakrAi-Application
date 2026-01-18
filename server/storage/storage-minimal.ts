@@ -328,8 +328,79 @@ export class MinimalStorage implements IStorage {
   }
 
   async createUser(data: any): Promise<any> {
-    // DISABLED - Use HIPAA auth only
-    throw new Error('LEGACY_USER_CREATION_BLOCKED: Use HIPAA auth system');
+    try {
+      const userData = {
+        username: data.username || data.email?.split('@')[0] || `user_${Date.now()}`,
+        email: data.email,
+        name: data.name,
+        passwordHash: data.hashedPassword,
+        roles: data.roles || ['user'],
+        deviceFingerprint: data.deviceFingerprint || null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        lastActiveAt: new Date()
+      };
+      
+      const [user] = await db.insert(users).values(userData).returning();
+      console.log(`✅ Created user: ${user?.id}`);
+      return user?.id;
+    } catch (error) {
+      console.error('Error creating user:', error);
+      throw error;
+    }
+  }
+
+  async getUserByEmail(email: string): Promise<any> {
+    try {
+      const [user] = await db.select()
+        .from(users)
+        .where(eq(users.email, email))
+        .limit(1);
+      
+      return user ?? null;
+    } catch (error) {
+      console.error('Error getting user by email:', error);
+      return null;
+    }
+  }
+
+  async getUser(userId: number): Promise<any> {
+    try {
+      const [user] = await db.select()
+        .from(users)
+        .where(eq(users.id, userId))
+        .limit(1);
+      
+      return user ?? null;
+    } catch (error) {
+      console.error('Error getting user:', error);
+      return null;
+    }
+  }
+
+  async migrateAnonymousUser(anonymousUserId: number, data: any): Promise<number> {
+    try {
+      const [user] = await db.update(users)
+        .set({
+          email: data.email,
+          name: data.name,
+          passwordHash: data.hashedPassword,
+          isAnonymous: false,
+          updatedAt: new Date()
+        })
+        .where(eq(users.id, anonymousUserId))
+        .returning();
+      
+      if (!user) {
+        throw new Error('Failed to migrate anonymous user');
+      }
+      
+      console.log(`✅ Migrated anonymous user ${anonymousUserId} to registered user`);
+      return user.id;
+    } catch (error) {
+      console.error('Error migrating anonymous user:', error);
+      throw error;
+    }
   }
 
   // SUBSCRIPTION MANAGEMENT IMPLEMENTATION
@@ -477,8 +548,19 @@ export class MinimalStorage implements IStorage {
     }
   }
 
-  async deleteJournalEntry(entryId: number): Promise<void> {
+  async deleteJournalEntry(entryId: number, userId?: number): Promise<void> {
     try {
+      // If userId provided, verify ownership before deleting
+      if (userId !== undefined) {
+        const entry = await this.getJournalEntry(entryId);
+        if (!entry) {
+          throw new Error('Journal entry not found');
+        }
+        if (entry.userId !== userId) {
+          throw new Error('Unauthorized: You can only delete your own journal entries');
+        }
+      }
+      
       await db.delete(journalEntries)
         .where(eq(journalEntries.id, entryId));
       

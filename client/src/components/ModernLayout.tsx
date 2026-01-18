@@ -18,8 +18,14 @@ import {
   Users,
   FileText,
   Moon,
-  Sun
+  Sun,
+  Settings,
+  LogIn,
+  LogOut
 } from 'lucide-react';
+import SettingsPanel from './SettingsPanel';
+import AuthModal from './AuthModal';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ModernLayoutProps {
   children: React.ReactNode;
@@ -34,10 +40,28 @@ const ModernLayout: React.FC<ModernLayoutProps> = ({
   onNavigate,
   currentUserId 
 }) => {
+  const { user, logout, isAuthenticated } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(true);
-  const [notifications, setNotifications] = useState(3);
+  const [notifications] = useState(3);
+  const [showSettings, setShowSettings] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [selectedVoice, setSelectedVoice] = useState('james');
+  const [currentTheme, setCurrentTheme] = useState('blue');
+
+  const handleDataReset = () => {
+    if (currentUserId) {
+      try {
+        // Clear local storage and reload
+        localStorage.clear();
+        sessionStorage.clear();
+        window.location.reload();
+      } catch (error) {
+        console.error('Failed to reset user data:', error);
+      }
+    }
+  };
 
   // Navigation items with clean, professional structure
   const navigationSections = [
@@ -160,9 +184,47 @@ const ModernLayout: React.FC<ModernLayoutProps> = ({
               )}
             </button>
 
-            <div className={`w-8 h-8 rounded-full bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center cursor-pointer`}>
-              <User className="w-4 h-4 text-white" />
-            </div>
+            <button
+              onClick={() => setShowSettings(true)}
+              className={`p-2 rounded-lg transition-colors ${
+                darkMode 
+                  ? 'hover:bg-gray-700 text-gray-300' 
+                  : 'hover:bg-gray-100 text-gray-600'
+              }`}
+              title="Settings"
+            >
+              <Settings className="w-5 h-5" />
+            </button>
+
+            {/* Login/Logout Button */}
+            {isAuthenticated && user ? (
+              <div className="flex items-center space-x-2">
+                <div className={`w-8 h-8 rounded-full bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center cursor-pointer`}
+                  title={user.displayName || user.email}
+                >
+                  <User className="w-4 h-4 text-white" />
+                </div>
+                <button
+                  onClick={logout}
+                  className={`p-2 rounded-lg transition-colors ${
+                    darkMode 
+                      ? 'hover:bg-gray-700 text-gray-300' 
+                      : 'hover:bg-gray-100 text-gray-600'
+                  }`}
+                  title="Logout"
+                >
+                  <LogOut className="w-5 h-5" />
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setShowAuthModal(true)}
+                className="flex items-center space-x-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
+              >
+                <LogIn className="w-4 h-4" />
+                <span className="font-medium">Sign In</span>
+              </button>
+            )}
           </div>
         </div>
       </header>
@@ -314,6 +376,30 @@ const ModernLayout: React.FC<ModernLayoutProps> = ({
           })}
         </div>
       </nav>
+
+      {/* Settings Panel */}
+      {showSettings && (
+        <SettingsPanel
+          onClose={() => setShowSettings(false)}
+          onReset={handleDataReset}
+          selectedVoice={selectedVoice}
+          onVoiceChange={setSelectedVoice}
+          currentTheme={currentTheme}
+          onThemeChange={setCurrentTheme}
+        />
+      )}
+
+      {/* Auth Modal */}
+      {showAuthModal && (
+        <AuthModal
+          isOpen={showAuthModal}
+          onClose={() => setShowAuthModal(false)}
+          onAuthSuccess={(user) => {
+            console.log('Auth successful:', user);
+            setShowAuthModal(false);
+          }}
+        />
+      )}
     </div>
   );
 };

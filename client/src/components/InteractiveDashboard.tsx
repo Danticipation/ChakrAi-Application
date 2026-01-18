@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -22,6 +22,7 @@ import {
   FileSpreadsheet,
   X
 } from 'lucide-react';
+import { getAuthHeaders } from '@/utils/unifiedUserSession';
 
 // Utility Components
 const LoadingSpinner: React.FC<{ className?: string }> = ({ className = "w-5 h-5" }) => (
@@ -159,7 +160,8 @@ export function InteractiveDashboard({ userId }: InteractiveDashboardProps) {
   const [isExporting, setIsExporting] = useState(false);
 
   useEffect(() => {
-    fetchDashboardData();
+    console.log('📊 InteractiveDashboard: Fetching data for user:', userId);
+    void fetchDashboardData();
   }, [userId, dateRange]);
 
   const fetchDashboardData = useCallback(async (): Promise<void> => {
@@ -167,9 +169,16 @@ export function InteractiveDashboard({ userId }: InteractiveDashboardProps) {
       setLoading(true);
       setError(null);
       
+      console.log('📡 Dashboard: Getting auth headers from HIPAA system...');
+      
+      // Use HIPAA auth headers instead of localStorage token
+      const headers = await getAuthHeaders();
+      
+      console.log('✅ Dashboard: Sending request with HIPAA headers');
+      
       const response = await fetch('/api/analytics/dashboard', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           userId,
           dateRange: {
@@ -180,8 +189,9 @@ export function InteractiveDashboard({ userId }: InteractiveDashboardProps) {
       });
       
       if (response.ok) {
-        const result: ApiResponse<DashboardData> = await response.json();
+        const result: ApiResponse<DashboardData> = (await response.json()) as ApiResponse<DashboardData>;
         if (result.success && result.data) {
+          console.log('✅ Dashboard data loaded successfully');
           setDashboardData(result.data);
         } else {
           throw new Error(result.error || 'Failed to load dashboard data');
@@ -191,7 +201,7 @@ export function InteractiveDashboard({ userId }: InteractiveDashboardProps) {
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch dashboard data';
-      console.error('Dashboard fetch error:', err);
+      console.error('❌ Dashboard fetch error:', err);
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -208,9 +218,12 @@ export function InteractiveDashboard({ userId }: InteractiveDashboardProps) {
     
     setIsExporting(true);
     try {
+      // Use HIPAA auth headers
+      const headers = await getAuthHeaders();
+      
       const response = await fetch('/api/analytics/export', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           userId,
           format,
@@ -653,7 +666,7 @@ export function InteractiveDashboard({ userId }: InteractiveDashboardProps) {
                   <ul className="space-y-1">
                     {dashboardData.insights.personalizedTips.slice(0, 3).map((tip) => (
                       <li key={tip.id} className="text-sm flex items-start space-x-2">
-                        <span className="text-blue-500 mt-1" aria-hidden="true">â€¢</span>
+                        <span className="text-blue-500 mt-1" aria-hidden="true">•</span>
                         <span className="text-slate-700">{tip.text}</span>
                       </li>
                     ))}
@@ -664,7 +677,7 @@ export function InteractiveDashboard({ userId }: InteractiveDashboardProps) {
                   <ul className="space-y-1">
                     {dashboardData.insights.growthOpportunities.slice(0, 3).map((opportunity) => (
                       <li key={opportunity.id} className="text-sm flex items-start space-x-2">
-                        <span className="text-purple-500 mt-1" aria-hidden="true">â€¢</span>
+                        <span className="text-purple-500 mt-1" aria-hidden="true">•</span>
                         <span className="text-slate-700">{opportunity.text}</span>
                       </li>
                     ))}

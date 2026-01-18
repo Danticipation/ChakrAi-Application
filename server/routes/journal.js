@@ -134,4 +134,29 @@ router.get('/debug', async (req, res) => {
   }
 });
 
+// Delete all journal entries - USES HIPAA AUTH CONTEXT
+router.delete('/all', async (req, res) => {
+  try {
+    console.log('🗑️ Request to delete all journal entries');
+    
+    // CRITICAL: Use the user ID from HIPAA auth middleware
+    const userId = req.userId;
+    
+    if (!userId) {
+      console.error('❌ HIPAA Auth failed - no userId found');
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+    
+    console.log('🔐 Deleting all journal entries for HIPAA user:', userId);
+    
+    await storage.clearUserJournalEntries(userId);
+    
+    console.log('✅ Successfully deleted all journal entries for user:', userId);
+    res.json({ success: true, message: 'All journal entries deleted' });
+  } catch (error) {
+    console.error('Error deleting journal entries:', error);
+    res.status(500).json({ error: 'Failed to delete journal entries' });
+  }
+});
+
 export default router;

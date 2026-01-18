@@ -5,6 +5,7 @@ import {
   PenTool, Library, Search
 } from 'lucide-react';
 import { getAuthHeaders } from '../utils/unifiedUserSession';
+import { moodOptions, commonTags } from '../data/journalEmojis';
 
 interface JournalEntry {
   id?: number;
@@ -24,12 +25,21 @@ interface JournalEntry {
   };
 }
 
+interface ApiResponse<T = unknown> {
+  entries?: T[];
+  [key: string]: unknown;
+}
+
+interface TranscriptionResponse {
+  text?: string;
+  [key: string]: unknown;
+}
+
 interface EnhancedJournalInterfaceProps {
-  userId: number | null;
   onEntryCreated?: (entry: JournalEntry) => void;
 }
 
-const EnhancedJournalInterface: React.FC<EnhancedJournalInterfaceProps> = ({ userId, onEntryCreated }) => {
+const EnhancedJournalInterface: React.FC<EnhancedJournalInterfaceProps> = ({ onEntryCreated }) => {
   const [activeTab, setActiveTab] = useState('write');
   const [entry, setEntry] = useState<JournalEntry>({
     title: '',
@@ -44,7 +54,6 @@ const EnhancedJournalInterface: React.FC<EnhancedJournalInterfaceProps> = ({ use
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [recentEntries, setRecentEntries] = useState<JournalEntry[]>([]);
-  const [newTag, setNewTag] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
   const [selectedEntry, setSelectedEntry] = useState<JournalEntry | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -84,21 +93,32 @@ const EnhancedJournalInterface: React.FC<EnhancedJournalInterfaceProps> = ({ use
   ];
 
   useEffect(() => {
-    fetchRecentEntries();
+    const loadEntries = () => {
+      void fetchRecentEntries();
+    };
+    loadEntries();
   }, []);
 
   const fetchRecentEntries = async () => {
     try {
       // User authentication is handled by getAuthHeaders()
-      
+
       const headers = await getAuthHeaders();
       console.log('ðŸ“ Fetching journal entries with bulletproof headers');
-      
+
       const response = await fetch('/api/journal/user-entries', { headers });
-      
+
       if (response.ok) {
-        const entries = await response.json();
+        const data: ApiResponse<JournalEntry> = await response.json() as ApiResponse<JournalEntry>;
+        console.log('📔 API response:', data);
+
+        // Handle both array and object responses
+        const entries: JournalEntry[] = Array.isArray(data) ? (data as JournalEntry[]) : (data.entries as JournalEntry[] || []);
+        console.log('📔 Entries to display:', entries);
         setRecentEntries(entries);
+      } else {
+        console.warn('Failed to fetch entries');
+        setRecentEntries([]);
       }
     } catch (error) {
       console.error('Failed to fetch recent entries:', error);
@@ -179,7 +199,7 @@ const EnhancedJournalInterface: React.FC<EnhancedJournalInterfaceProps> = ({ use
       });
 
       if (response.ok) {
-        const data = await response.json();
+        const data: TranscriptionResponse = await response.json() as TranscriptionResponse;
         if (data.text) {
           // Append transcribed text to current content
           setEntry(prev => ({
@@ -235,7 +255,7 @@ const EnhancedJournalInterface: React.FC<EnhancedJournalInterfaceProps> = ({ use
       });
 
       if (response.ok) {
-        const savedEntry = await response.json();
+        const savedEntry: JournalEntry = await response.json() as JournalEntry;
         setShowSuccess(true);
         setTimeout(() => setShowSuccess(false), 3000);
         
@@ -250,8 +270,8 @@ const EnhancedJournalInterface: React.FC<EnhancedJournalInterfaceProps> = ({ use
         });
         
         // Refresh entries
-        fetchRecentEntries();
-        onEntryCreated?.(savedEntry);
+        void fetchRecentEntries();
+        void onEntryCreated?.(savedEntry);
         
         // Switch to entries tab to show the saved entry
         setActiveTab('entries');
@@ -529,7 +549,7 @@ const EnhancedJournalInterface: React.FC<EnhancedJournalInterfaceProps> = ({ use
         </div>
       ) : (
         <div className="grid gap-6">
-          {filteredEntries.map((journalEntry, index) => (
+          {filteredEntries.map((journalEntry) => (
             <div
               key={journalEntry.id}
               className="bg-white rounded-3xl shadow-lg border border-slate-200 overflow-hidden hover:shadow-xl transition-all duration-200 cursor-pointer group"
@@ -562,7 +582,7 @@ const EnhancedJournalInterface: React.FC<EnhancedJournalInterfaceProps> = ({ use
                     onClick={(e) => {
                       e.stopPropagation();
                       if (window.confirm('Are you sure you want to delete this journal entry? This action cannot be undone.')) {
-                        handleDeleteEntry(journalEntry.id);
+                        void handleDeleteEntry(journalEntry.id);
                       }
                     }}
                     className="opacity-0 group-hover:opacity-100 p-2 hover:bg-red-50 rounded-xl transition-all text-red-600 hover:text-red-700"
@@ -578,9 +598,9 @@ const EnhancedJournalInterface: React.FC<EnhancedJournalInterfaceProps> = ({ use
                 
                 {journalEntry.tags && journalEntry.tags.length > 0 && (
                   <div className="flex flex-wrap gap-2">
-                    {journalEntry.tags.slice(0, 3).map((tag, tagIndex) => (
+                    {journalEntry.tags.slice(0, 3).map((tag, _tagIndex) => (
                       <span
-                        key={tagIndex}
+                        key={_tagIndex}
                         className="px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-sm"
                       >
                         {tag}
@@ -677,7 +697,7 @@ const EnhancedJournalInterface: React.FC<EnhancedJournalInterfaceProps> = ({ use
                     onClick={(e) => {
                       e.stopPropagation();
                       if (window.confirm('Are you sure you want to delete this journal entry? This action cannot be undone.')) {
-                        handleDeleteEntry(selectedEntry.id);
+                        void handleDeleteEntry(selectedEntry.id);
                       }
                     }}
                     disabled={deletingEntryId === selectedEntry.id}
@@ -707,9 +727,9 @@ const EnhancedJournalInterface: React.FC<EnhancedJournalInterfaceProps> = ({ use
               
               {selectedEntry.tags && selectedEntry.tags.length > 0 && (
                 <div className="flex flex-wrap gap-2">
-                  {selectedEntry.tags.map((tag, index) => (
+                  {selectedEntry.tags.map((tag, _index) => (
                     <span
-                      key={index}
+                      key={_index}
                       className="px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-sm"
                     >
                       {tag}

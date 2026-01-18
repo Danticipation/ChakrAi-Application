@@ -1,4 +1,5 @@
 ﻿import React, { useState, useEffect, useCallback } from 'react';
+import { getAuthHeaders } from '@/utils/unifiedUserSession';
 import GlassCard from '@/components/ui/GlassCard';
 import GradientButton from '@/components/ui/GradientButton';
 import Animation, { StaggeredAnimation, TherapeuticEntrance, WellnessReveal, MindfulSlide } from '@/components/ui/Animation';
@@ -35,14 +36,48 @@ interface ModernDashboardProps {
   onNavigate: (section: string) => void;
 }
 
+interface DashboardMetrics {
+  currentStreak: number;
+  weeklyProgress: number;
+  completedSessions: number;
+  moodTrend: string;
+  moodTrendDirection: 'up' | 'down' | 'stable';
+  totalEntries?: number;
+  recentEntries?: number;
+}
+
+interface ScheduleItem {
+  time: string;
+  type: string;
+  title: string;
+  status: 'completed' | 'pending';
+}
+
+interface ActivityItem {
+  type: string;
+  title: string;
+  time: string;
+}
+
+interface InsightItem {
+  primaryFocus: string;
+  progressNote: string;
+  nextGoal: string;
+}
+
+interface DashboardData {
+  metrics: DashboardMetrics;
+  todaysSchedule: ScheduleItem[];
+  recentActivity: ActivityItem[];
+  insights: InsightItem;
+}
+
 const ModernDashboard: React.FC<ModernDashboardProps> = ({ userId, onNavigate }) => {
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [dashboardData, setDashboardData] = useState<any>(null);
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-
   // Mobile detection
   const checkMobile = useCallback(() => {
     const mobile = window.innerWidth <= 768 || 'ontouchstart' in window;
@@ -62,17 +97,33 @@ const ModernDashboard: React.FC<ModernDashboardProps> = ({ userId, onNavigate })
     return () => clearInterval(timer);
   }, []);
 
-  // Pull-to-refresh handler
-  const handleRefresh = useCallback(async () => {
-    setIsRefreshing(true);
-    await fetchDashboardData();
-    setIsRefreshing(false);
-  }, []);
+
+  interface JournalAnalyticsResponse {
+    total: number;
+    recent: number;
+    // Add other properties if available from /api/journal/analytics
+  }
+
+  interface MoodAnalyticsResponse {
+    recent: number;
+    // Add other properties if available from /api/mood/analytics
+  }
+
+  interface ChatAnalyticsResponse {
+    total: number;
+    // Add other properties if available from /api/chat/analytics
+  }
+
+  interface JournalEntry {
+    createdAt: string;
+    title?: string;
+    // Add other properties if available from /api/journal/user-entries
+  }
 
   // Fetch real data from APIs
   const fetchDashboardData = useCallback(async () => {
       if (!userId) {
-        console.log('â³ Waiting for userId...');
+        console.log('â ³ Waiting for userId...');
         return;
       }
 
@@ -81,52 +132,70 @@ const ModernDashboard: React.FC<ModernDashboardProps> = ({ userId, onNavigate })
         setError(null);
         console.log('ðŸ“Š Fetching real dashboard data for user:', userId);
 
+        // Get auth headers
+        const headers = await getAuthHeaders();
+
         // Fetch data from multiple endpoints
         const [journalResponse, moodResponse, chatResponse] = await Promise.allSettled([
-          fetch('/api/journal/analytics'),
-          fetch('/api/mood/analytics'), 
-          fetch('/api/chat/analytics')
+          fetch('/api/journal/analytics', { headers }),
+          fetch('/api/mood/analytics', { headers }), 
+          fetch('/api/chat/analytics', { headers })
         ]);
 
-        let journalData = null;
-        let moodData = null;
-        let chatData = null;
+        let journalData: JournalAnalyticsResponse | null = null;
+        let moodData: MoodAnalyticsResponse | null = null;
+        let chatData: ChatAnalyticsResponse | null = null;
 
         // Process journal analytics
-        if (journalResponse.status === 'fulfilled' && journalResponse.value.ok) {
-          journalData = await journalResponse.value.json();
-          console.log('âœ… Journal data:', journalData);
+        if (journalResponse.status === 'fulfilled') {
+          const response = journalResponse.value;
+          if (response.ok) {
+            journalData = (await response.json()) as JournalAnalyticsResponse;
+            console.log('âœ… Journal data:', journalData);
+          } else {
+            console.warn('âš ï¸  Journal analytics failed, using defaults');
+          }
         } else {
-          console.warn('âš ï¸ Journal analytics failed, using defaults');
+          console.warn('âš ï¸  Journal analytics failed, using defaults');
         }
 
         // Process mood analytics  
-        if (moodResponse.status === 'fulfilled' && moodResponse.value.ok) {
-          moodData = await moodResponse.value.json();
-          console.log('âœ… Mood data:', moodData);
+        if (moodResponse.status === 'fulfilled') {
+          const response = moodResponse.value;
+          if (response.ok) {
+            moodData = (await response.json()) as MoodAnalyticsResponse;
+            console.log('âœ… Mood data:', moodData);
+          } else {
+            console.warn('âš ï¸  Mood analytics failed, using defaults');
+          }
         } else {
-          console.warn('âš ï¸ Mood analytics failed, using defaults');
+          console.warn('âš ï¸  Mood analytics failed, using defaults');
         }
 
         // Process chat analytics
-        if (chatResponse.status === 'fulfilled' && chatResponse.value.ok) {
-          chatData = await chatResponse.value.json();
-          console.log('âœ… Chat data:', chatData);
+        if (chatResponse.status === 'fulfilled') {
+          const response = chatResponse.value;
+          if (response.ok) {
+            chatData = (await response.json()) as ChatAnalyticsResponse;
+            console.log('âœ… Chat data:', chatData);
+          } else {
+            console.warn('âš ï¸  Chat analytics failed, using defaults');
+          }
         } else {
-          console.warn('âš ï¸ Chat analytics failed, using defaults');
+          console.warn('âš ï¸  Chat analytics failed, using defaults');
         }
 
         // Fetch recent journal entries for activity feed
-        let recentEntries = [];
+        let recentEntries: JournalEntry[] = [];
         try {
-          const entriesResponse = await fetch('/api/journal/user-entries');
+          const entriesResponse = await fetch('/api/journal/user-entries', { headers });
           if (entriesResponse.ok) {
-            const entries = await entriesResponse.json();
+            const entries = (await entriesResponse.json()) as JournalEntry[];
             recentEntries = entries.slice(0, 3); // Get last 3 entries
             console.log('âœ… Recent entries:', recentEntries.length);
           }
         } catch (entriesError) {
-          console.warn('âš ï¸ Failed to fetch recent entries:', entriesError);
+          console.warn('âš ï¸  Failed to fetch recent entries:', entriesError);
         }
 
         // Calculate real metrics
@@ -138,7 +207,7 @@ const ModernDashboard: React.FC<ModernDashboardProps> = ({ userId, onNavigate })
         const moodTrend = calculateMoodTrend(moodData);
 
         // Build real dashboard data
-        const realDashboardData = {
+        const realDashboardData: DashboardData = {
           metrics: {
             currentStreak: currentStreak,
             weeklyProgress: weeklyProgress,
@@ -150,7 +219,7 @@ const ModernDashboard: React.FC<ModernDashboardProps> = ({ userId, onNavigate })
           },
           todaysSchedule: generateTodaysSchedule(),
           recentActivity: generateRecentActivity(recentEntries),
-          insights: generateInsights(totalJournalEntries, totalChatSessions, moodTrend)
+          insights: generateInsights(totalJournalEntries, totalChatSessions)
         };
 
         console.log('ðŸ“Š Real dashboard data compiled:', realDashboardData);
@@ -166,7 +235,7 @@ const ModernDashboard: React.FC<ModernDashboardProps> = ({ userId, onNavigate })
             currentStreak: 0,
             weeklyProgress: 0, 
             completedSessions: 0,
-            moodTrend: 'neutral',
+            moodTrend: 'No Data',
             moodTrendDirection: 'stable'
           },
           todaysSchedule: generateTodaysSchedule(),
@@ -188,7 +257,7 @@ const ModernDashboard: React.FC<ModernDashboardProps> = ({ userId, onNavigate })
   }, [fetchDashboardData, userId]);
 
   // Helper functions for real data calculations
-  const calculateStreak = (entries: any[]) => {
+  const calculateStreak = (entries: JournalEntry[]): number => {
     if (!entries || entries.length === 0) return 0;
     
     // Sort entries by date (newest first)
@@ -216,7 +285,7 @@ const ModernDashboard: React.FC<ModernDashboardProps> = ({ userId, onNavigate })
     return streak;
   };
 
-  const calculateWeeklyProgress = (entries: any[]) => {
+  const calculateWeeklyProgress = (entries: JournalEntry[]): number => {
     if (!entries || entries.length === 0) return 0;
     
     const oneWeekAgo = new Date();
@@ -231,25 +300,26 @@ const ModernDashboard: React.FC<ModernDashboardProps> = ({ userId, onNavigate })
     return Math.round(progress);
   };
 
-  const calculateMoodTrend = (moodData: any) => {
+  const calculateMoodTrend = (moodData: MoodAnalyticsResponse | null) => {
+    type MoodDirection = DashboardMetrics['moodTrendDirection'];
     if (!moodData || !moodData.recent) {
-      return { label: 'No Data', direction: 'stable' };
+      return { label: 'No Data', direction: 'stable' as MoodDirection };
     }
     
     // This would need real mood data structure
     // For now, return a placeholder based on activity
     if (moodData.recent > 0) {
-      return { label: 'Active', direction: 'up' };
+      return { label: 'Active', direction: 'up' as MoodDirection };
     }
     
-    return { label: 'Getting Started', direction: 'stable' };
+    return { label: 'Getting Started', direction: 'stable' as MoodDirection };
   };
 
-  const generateTodaysSchedule = () => {
+  const generateTodaysSchedule = (): ScheduleItem[] => {
     const now = new Date();
     const currentHour = now.getHours();
     
-    const schedule = [
+    const schedule: ScheduleItem[] = [
       { 
         time: '09:00', 
         type: 'check-in', 
@@ -273,7 +343,7 @@ const ModernDashboard: React.FC<ModernDashboardProps> = ({ userId, onNavigate })
     return schedule;
   };
 
-  const generateRecentActivity = (entries: any[]) => {
+  const generateRecentActivity = (entries: JournalEntry[]): ActivityItem[] => {
     if (!entries || entries.length === 0) {
       return [
         { 
@@ -284,7 +354,7 @@ const ModernDashboard: React.FC<ModernDashboardProps> = ({ userId, onNavigate })
       ];
     }
     
-    return entries.slice(0, 3).map((entry, index) => {
+    return entries.slice(0, 3).map((entry) => {
       const entryDate = new Date(entry.createdAt);
       const now = new Date();
       const diffHours = Math.floor((now.getTime() - entryDate.getTime()) / (1000 * 60 * 60));
@@ -307,7 +377,7 @@ const ModernDashboard: React.FC<ModernDashboardProps> = ({ userId, onNavigate })
     });
   };
 
-  const generateInsights = (totalEntries: number, totalSessions: number, moodTrend: any) => {
+  const generateInsights = (totalEntries: number, totalSessions: number) => {
     if (totalEntries === 0 && totalSessions === 0) {
       return {
         primaryFocus: 'Getting Started',
@@ -330,6 +400,14 @@ const ModernDashboard: React.FC<ModernDashboardProps> = ({ userId, onNavigate })
       nextGoal: 'Continue building your daily reflection habit'
     };
   };
+
+  interface QuickActionProps {
+    icon: React.ElementType;
+    title: string;
+    description: string;
+    variant: 'therapy' | 'wellness' | 'journal' | 'primary';
+    onClick: () => void;
+  }
 
   const MetricCard: React.FC<MetricCardProps> = ({ title, value, change, icon: Icon, trend }) => {
     const content = (
@@ -379,7 +457,7 @@ const ModernDashboard: React.FC<ModernDashboardProps> = ({ userId, onNavigate })
     );
   };
 
-  const QuickAction = ({ icon: Icon, title, description, variant, onClick }: any) => {
+  const QuickAction: React.FC<QuickActionProps> = ({ icon: Icon, title, description, variant, onClick }) => {
     const content = (
       <div className="flex items-center space-x-4">
         <div className={`p-4 rounded-xl bg-gradient-to-br ${
@@ -431,6 +509,26 @@ const ModernDashboard: React.FC<ModernDashboardProps> = ({ userId, onNavigate })
           <div className="text-center">
             <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-6 animate-gentle-pulse" />
             <p className="text-gray-600 dark:text-gray-400 mb-6 text-lg animate-text-reveal">{error}</p>
+            <GradientButton 
+              variant="primary" 
+              onClick={() => window.location.reload()}
+              className="animate-fade-in-up animate-delay-500"
+            >
+              Retry
+            </GradientButton>
+          </div>
+        </TherapeuticEntrance>
+      </div>
+    );
+  }
+
+  if (!dashboardData) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-slate-900 dark:to-purple-900 flex items-center justify-center">
+        <TherapeuticEntrance>
+          <div className="text-center">
+            <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-6 animate-gentle-pulse" />
+            <p className="text-gray-600 dark:text-gray-400 mb-6 text-lg animate-text-reveal">Dashboard data is not available.</p>
             <GradientButton 
               variant="primary" 
               onClick={() => window.location.reload()}
@@ -498,7 +596,7 @@ const ModernDashboard: React.FC<ModernDashboardProps> = ({ userId, onNavigate })
           <MetricCard
             title="Mood Trend"
             value={dashboardData.metrics.moodTrend}
-            change={dashboardData.metrics.recentEntries > 0 ? 'Active' : null}
+            change={(dashboardData.metrics.recentEntries && dashboardData.metrics.recentEntries > 0) ? 'Active' : null}
             icon={Heart}
             trend={dashboardData.metrics.moodTrendDirection}
           />
@@ -534,7 +632,7 @@ const ModernDashboard: React.FC<ModernDashboardProps> = ({ userId, onNavigate })
                     staggerDelay={100}
                     baseDelay={200}
                   >
-                    {dashboardData.todaysSchedule.map((item: any, index: number) => (
+                    {dashboardData.todaysSchedule.map((item: ScheduleItem, index: number) => (
                       <GlassCard key={index} variant="subtle" className="p-4 interactive-element">
                         <div className="flex items-center space-x-4">
                           <div className="text-sm font-bold text-blue-600 dark:text-blue-400 w-16">
@@ -665,7 +763,7 @@ const ModernDashboard: React.FC<ModernDashboardProps> = ({ userId, onNavigate })
                     staggerDelay={100}
                     baseDelay={200}
                   >
-                    {dashboardData.recentActivity.map((activity: any, index: number) => (
+                    {dashboardData.recentActivity.map((activity: ActivityItem, index: number) => (
                       <GlassCard key={index} variant="subtle" className="p-4 hover-lift interactive-element">
                         <div className="flex items-center space-x-4">
                           <div className={`w-3 h-3 rounded-full shadow-lg wellness-glow ${
@@ -709,4 +807,3 @@ const ModernDashboard: React.FC<ModernDashboardProps> = ({ userId, onNavigate })
 };
 
 export default ModernDashboard;
-

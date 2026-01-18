@@ -1,19 +1,39 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { RefreshCw, Brain, TrendingUp, User, RotateCcw, Volume2, Play, Pause, Settings, Sparkles, Heart, Target, BookOpen } from 'lucide-react';
-import { getCurrentUserId, getAuthHeaders } from '../utils/unifiedUserSession';
+import { RefreshCw, Brain, TrendingUp, User, RotateCcw, Volume2, Play, Pause, Settings, Sparkles, Heart, Target, BookOpen, AlertTriangle } from 'lucide-react';
+import { getAuthHeaders } from '../utils/unifiedUserSession';
 
 interface PersonalityReflectionData {
-  communicationStyle: string;
-  emotionalPatterns: string[];
-  strengths: string[];
-  growthOpportunities: string[];
-  personalityInsights: {
-    dominantTraits: string[];
-    communicationPreference: string;
-    emotionalProcessing: string;
+  // New comprehensive format
+  comprehensiveAnalysis?: {
+    bigFive?: any;
+    attachmentStyle?: any;
+    cognitivePatterns?: any;
+    emotionalIntelligence?: any;
+    defenseMechanisms?: any;
+    communicationStyle?: any;
+    coreValues?: any;
+    shadowWork?: any;
+    relationalPatterns?: any;
+    existentialThemes?: any;
   };
-  wellnessRecommendations: string[];
+  executiveSummary?: string;
+  strengthsDeepDive?: string[];
+  growthEdges?: string[];
+  wellnessRecommendations?: string[];
+  closingReflection?: string;
+  
+  // Legacy simple format (fallback)
+  communicationStyle?: string;
+  emotionalPatterns?: string[];
+  strengths?: string[];
+  growthOpportunities?: string[];
+  personalityInsights?: {
+    dominantTraits?: string[];
+    communicationPreference?: string;
+    emotionalProcessing?: string;
+  };
+  
   dataPoints: {
     journalEntries: number;
     conversationMessages: number;
@@ -29,22 +49,8 @@ interface PersonalityReflectionProps {
 
 const PersonalityReflection: React.FC<PersonalityReflectionProps> = ({ userId }) => {
   // Use unified user session system
-  const [currentUserId, setCurrentUserId] = useState<number>(0);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
-  
-  // Get authenticated user ID on component mount
-  useEffect(() => {
-    const getUser = async () => {
-      try {
-        const authenticatedUserId = await getCurrentUserId();
-        setCurrentUserId(authenticatedUserId);
-        console.log('ðŸ” PersonalityReflection: Using authenticated user ID:', authenticatedUserId);
-      } catch (error) {
-        console.error('âŒ PersonalityReflection: Failed to get user ID:', error);
-      }
-    };
-    getUser();
-  }, []);
+  const currentUserId = userId || 0;
   
   // ElevenLabs Text-to-Speech state
   const [isPlaying, setIsPlaying] = useState(false);
@@ -79,7 +85,7 @@ const PersonalityReflection: React.FC<PersonalityReflectionProps> = ({ userId })
         console.error('âŒ PersonalityReflection: Fetch failed:', response.status, errorText);
         throw new Error(`Failed to fetch personality reflection: ${response.status}`);
       }
-      return response.json();
+      return response.json() as Promise<PersonalityReflectionData>;
     },
     enabled: currentUserId > 0, // Only run query when we have a valid user ID
     refetchInterval: 300000, // Refresh every 5 minutes
@@ -97,7 +103,7 @@ const PersonalityReflection: React.FC<PersonalityReflectionProps> = ({ userId })
 
   const handleRefresh = () => {
     setRefreshTrigger(prev => prev + 1);
-    refetch();
+    void refetch();
   };
 
   // ElevenLabs Text-to-Speech functions
@@ -112,31 +118,29 @@ const PersonalityReflection: React.FC<PersonalityReflectionProps> = ({ userId })
     try {
       setIsPlaying(true);
 
-      const fullText = `
-Here is your comprehensive personality analysis.
+      // Build text from available data (comprehensive or legacy format)
+      const textParts = [
+        'Here is your comprehensive personality analysis.',
+        data.executiveSummary ? `Executive Summary: ${data.executiveSummary}` : '',
+        data.comprehensiveAnalysis?.communicationStyle?.overview ? `Communication Style: ${data.comprehensiveAnalysis.communicationStyle.overview}` : 
+          data.communicationStyle ? `Communication Style: ${data.communicationStyle}` : '',
+        (data.strengthsDeepDive || data.strengths) ? `Your Strengths: ${(data.strengthsDeepDive || data.strengths || []).join('. ')}` : '',
+        (data.growthEdges || data.growthOpportunities) ? `Growth Opportunities: ${(data.growthEdges || data.growthOpportunities || []).join('. ')}` : '',
+        data.wellnessRecommendations ? `Wellness Recommendations: ${data.wellnessRecommendations.join('. ')}` : '',
+        'This completes your personality analysis. Remember, this analysis is based on your unique journey and data.'
+      ];
 
-Communication Style: ${data.communicationStyle}
+      const fullText = textParts.filter(Boolean).join('\n\n').trim();
 
-Emotional Patterns: ${data.emotionalPatterns.join('. ')}
-
-Your Strengths: ${data.strengths.join('. ')}
-
-Growth Opportunities: ${data.growthOpportunities.join('. ')}
-
-Personality Insights: 
-Dominant Traits: ${data.personalityInsights.dominantTraits.join(', ')}.
-Communication Preference: ${data.personalityInsights.communicationPreference}
-Emotional Processing: ${data.personalityInsights.emotionalProcessing}
-
-Wellness Recommendations: ${data.wellnessRecommendations.join('. ')}
-
-This completes your personality analysis. Remember, this analysis is based on your unique journey and data.
-      `.trim();
-
+      const headers = await getAuthHeaders();
+      console.log('🎤 Calling TTS API with headers:', headers);
+      console.log('🎤 TTS Request:', { voice: selectedVoice, textLength: fullText.length });
+      
       const response = await fetch('/api/text-to-speech', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          ...headers,
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           text: fullText,
@@ -146,8 +150,12 @@ This completes your personality analysis. Remember, this analysis is based on yo
         }),
       });
 
+      console.log('🎤 TTS Response status:', response.status);
+      
       if (!response.ok) {
-        throw new Error('Failed to generate speech');
+        const errorText = await response.text();
+        console.error('❌ TTS API Error:', response.status, errorText);
+        throw new Error(`Failed to generate speech: ${response.status}`);
       }
 
       const audioBlob = await response.blob();
@@ -167,7 +175,7 @@ This completes your personality analysis. Remember, this analysis is based on yo
         console.error('Audio playback error');
       };
 
-      await audio.play();
+      void audio.play();
 
     } catch (error) {
       console.error('Text-to-speech error:', error);
@@ -180,9 +188,16 @@ This completes your personality analysis. Remember, this analysis is based on yo
   const stopSpeaking = () => {
     if (audioElement) {
       audioElement.pause();
+      audioElement.currentTime = 0;
       audioElement.src = '';
       setAudioElement(null);
     }
+    
+    // Also stop native speech synthesis if it's running
+    if (speechSynthesis.speaking) {
+      speechSynthesis.cancel();
+    }
+    
     setIsPlaying(false);
   };
 
@@ -190,19 +205,17 @@ This completes your personality analysis. Remember, this analysis is based on yo
   const fallbackToNativeTTS = () => {
     if (!data) return;
 
-    const fullText = `
-Here is your comprehensive personality analysis.
+    const textParts = [
+      'Here is your comprehensive personality analysis.',
+      data.executiveSummary ? `Executive Summary: ${data.executiveSummary}` : '',
+      data.comprehensiveAnalysis?.communicationStyle?.overview ? `Communication Style: ${data.comprehensiveAnalysis.communicationStyle.overview}` : 
+        data.communicationStyle ? `Communication Style: ${data.communicationStyle}` : '',
+      (data.strengthsDeepDive || data.strengths) ? `Your Strengths: ${(data.strengthsDeepDive || data.strengths || []).join('. ')}` : '',
+      (data.growthEdges || data.growthOpportunities) ? `Growth Opportunities: ${(data.growthEdges || data.growthOpportunities || []).join('. ')}` : '',
+      'This completes your personality analysis.'
+    ];
 
-Communication Style: ${data.communicationStyle}
-
-Emotional Patterns: ${data.emotionalPatterns.join('. ')}
-
-Your Strengths: ${data.strengths.join('. ')}
-
-Growth Opportunities: ${data.growthOpportunities.join('. ')}
-
-This completes your personality analysis.
-    `.trim();
+    const fullText = textParts.filter(Boolean).join('\n\n').trim();
 
     const utterance = new SpeechSynthesisUtterance(fullText);
     utterance.rate = 0.9;
@@ -263,6 +276,15 @@ This completes your personality analysis.
   }
 
   const formatReflectionText = (text: string) => {
+    // Safety check for undefined/null text
+    if (!text || typeof text !== 'string') {
+      return (
+        <div className="space-y-4 text-white leading-relaxed">
+          <p className="text-white/90 leading-relaxed">No analysis text available.</p>
+        </div>
+      );
+    }
+    
     // If no structured format, just display as paragraphs
     if (!text.includes('1.') && !text.includes('TRAIT')) {
       return (
@@ -446,75 +468,147 @@ This completes your personality analysis.
         
         {data ? (
           <div className="space-y-8">
-            {/* Communication Style */}
-            <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-xl p-6 border border-white/10">
-              <h4 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
-                <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
-                Communication Style
-              </h4>
-              <p className="text-white/90 leading-relaxed text-lg">{data.communicationStyle}</p>
-            </div>
-
-            {/* Emotional Patterns */}
-            <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-xl p-6 border border-white/10">
-              <h4 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
-                <Heart className="w-5 h-5 text-pink-400" />
-                Emotional Patterns
-              </h4>
-              <div className="space-y-3">
-                {data.emotionalPatterns?.map((pattern, index) => (
-                  <div key={index} className="bg-white/5 rounded-lg p-4 border border-white/10">
-                    <p className="text-white/90 leading-relaxed">{pattern}</p>
-                  </div>
-                ))}
+            {/* Executive Summary (if comprehensive analysis) */}
+            {data.executiveSummary && (
+              <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-xl p-6 border border-white/10">
+                <h4 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-purple-400" />
+                  Executive Summary
+                </h4>
+                {formatReflectionText(data.executiveSummary)}
               </div>
-            </div>
+            )}
+
+            {/* Communication Style */}
+            {(data.comprehensiveAnalysis?.communicationStyle?.overview || data.communicationStyle) && (
+              <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-xl p-6 border border-white/10">
+                <h4 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+                  <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                  Communication Style
+                </h4>
+                {formatReflectionText(data.comprehensiveAnalysis?.communicationStyle?.overview || data.communicationStyle || '')}
+              </div>
+            )}
 
             {/* Strengths */}
-            <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-xl p-6 border border-white/10">
-              <h4 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-green-400" />
-                Your Strengths
-              </h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {data.strengths?.map((strength, index) => (
-                  <div key={index} className="bg-green-500/20 border border-green-400/30 rounded-lg p-4 text-center">
-                    <p className="text-green-200 font-medium">{strength}</p>
-                  </div>
-                ))}
+            {(data.strengthsDeepDive || data.strengths) && (
+              <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-xl p-6 border border-white/10">
+                <h4 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5 text-green-400" />
+                  Your Strengths
+                </h4>
+                {formatReflectionText((data.strengthsDeepDive || data.strengths || []).join('\n\n'))}
               </div>
-            </div>
+            )}
 
             {/* Growth Opportunities */}
-            <div className="bg-gradient-to-r from-orange-500/10 to-yellow-500/10 rounded-xl p-6 border border-white/10">
-              <h4 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
-                <Target className="w-5 h-5 text-orange-400" />
-                Growth Opportunities
-              </h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {data.growthOpportunities?.map((opportunity, index) => (
-                  <div key={index} className="bg-orange-500/20 border border-orange-400/30 rounded-lg p-4 text-center">
-                    <p className="text-orange-200 font-medium">{opportunity}</p>
-                  </div>
-                ))}
+            {(data.growthEdges || data.growthOpportunities) && (
+              <div className="bg-gradient-to-r from-orange-500/10 to-yellow-500/10 rounded-xl p-6 border border-white/10">
+                <h4 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+                  <Target className="w-5 h-5 text-orange-400" />
+                  Growth Opportunities
+                </h4>
+                {formatReflectionText((data.growthEdges || data.growthOpportunities || []).join('\n\n'))}
               </div>
-            </div>
+            )}
 
             {/* Wellness Recommendations */}
-            <div className="bg-gradient-to-r from-teal-500/10 to-cyan-500/10 rounded-xl p-6 border border-white/10">
-              <h4 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-teal-400" />
-                Wellness Recommendations
-              </h4>
-              <div className="space-y-3">
-                {data.wellnessRecommendations?.map((recommendation, index) => (
-                  <div key={index} className="bg-white/5 rounded-lg p-4 border border-white/10 flex items-start gap-3">
-                    <div className="w-2 h-2 bg-teal-400 rounded-full mt-2 flex-shrink-0"></div>
-                    <p className="text-white/90 leading-relaxed">{recommendation}</p>
-                  </div>
-                ))}
+            {data.wellnessRecommendations && data.wellnessRecommendations.length > 0 && (
+              <div className="bg-gradient-to-r from-teal-500/10 to-cyan-500/10 rounded-xl p-6 border border-white/10">
+                <h4 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-teal-400" />
+                  Wellness Recommendations
+                </h4>
+                {formatReflectionText(data.wellnessRecommendations.join('\n\n'))}
               </div>
-            </div>
+            )}
+
+            {/* Big Five Personality Assessment */}
+            {data.comprehensiveAnalysis?.bigFive && (
+              <div className="bg-gradient-to-r from-indigo-500/10 to-purple-500/10 rounded-xl p-6 border border-white/10">
+                <h4 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+                  <Brain className="w-5 h-5 text-indigo-400" />
+                  Big Five Personality Assessment
+                </h4>
+                <div className="space-y-4">
+                  {Object.entries(data.comprehensiveAnalysis.bigFive).map(([trait, data]: [string, any]) => (
+                    <div key={trait} className="bg-white/5 rounded-lg p-4 border border-white/10">
+                      <div className="flex items-center justify-between mb-2">
+                        <h5 className="text-lg font-medium text-white capitalize">{trait}</h5>
+                        <span className="text-2xl font-bold text-purple-300">{data.score}/100</span>
+                      </div>
+                      {formatReflectionText(data.analysis)}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Attachment Style */}
+            {data.comprehensiveAnalysis?.attachmentStyle && (
+              <div className="bg-gradient-to-r from-pink-500/10 to-red-500/10 rounded-xl p-6 border border-white/10">
+                <h4 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+                  <Heart className="w-5 h-5 text-pink-400" />
+                  Attachment Style: {data.comprehensiveAnalysis.attachmentStyle.primaryStyle}
+                </h4>
+                {formatReflectionText(data.comprehensiveAnalysis.attachmentStyle.analysis)}
+              </div>
+            )}
+
+            {/* Shadow Work - The Hard Truths */}
+            {data.comprehensiveAnalysis?.shadowWork && (
+              <div className="bg-gradient-to-r from-gray-500/10 to-slate-500/10 rounded-xl p-6 border border-red-400/30">
+                <h4 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+                  <AlertTriangle className="w-5 h-5 text-red-400" />
+                  Shadow Work - The Hard Truths
+                </h4>
+                <div className="bg-red-900/20 border border-red-400/30 rounded-lg p-4 mb-4">
+                  <p className="text-red-200 text-sm">This section contains honest, direct feedback about patterns that may not serve you. It's meant to challenge and support your growth.</p>
+                </div>
+                {formatReflectionText(data.comprehensiveAnalysis.shadowWork.analysis)}
+              </div>
+            )}
+
+            {/* Emotional Intelligence */}
+            {data.comprehensiveAnalysis?.emotionalIntelligence && (
+              <div className="bg-gradient-to-r from-cyan-500/10 to-blue-500/10 rounded-xl p-6 border border-white/10">
+                <h4 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+                  <Heart className="w-5 h-5 text-cyan-400" />
+                  Emotional Intelligence Profile
+                </h4>
+                <div className="space-y-4">
+                  {Object.entries(data.comprehensiveAnalysis.emotionalIntelligence).map(([area, info]: [string, any]) => (
+                    <div key={area} className="bg-white/5 rounded-lg p-4 border border-white/10">
+                      <h5 className="text-lg font-medium text-white capitalize mb-2">{area.replace(/([A-Z])/g, ' $1').trim()}</h5>
+                      <div className="text-cyan-300 text-sm mb-2">Level: {info.level}</div>
+                      {formatReflectionText(info.analysis)}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Core Values */}
+            {data.comprehensiveAnalysis?.coreValues && (
+              <div className="bg-gradient-to-r from-yellow-500/10 to-orange-500/10 rounded-xl p-6 border border-white/10">
+                <h4 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+                  <Target className="w-5 h-5 text-yellow-400" />
+                  Core Values & Motivations
+                </h4>
+                {formatReflectionText(data.comprehensiveAnalysis.coreValues.analysis)}
+              </div>
+            )}
+
+            {/* Closing Reflection */}
+            {data.closingReflection && (
+              <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-xl p-6 border border-white/10">
+                <h4 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-purple-400" />
+                  Final Reflection
+                </h4>
+                {formatReflectionText(data.closingReflection)}
+              </div>
+            )}
 
             {/* Personality Insights Details */}
             {data.personalityInsights && (

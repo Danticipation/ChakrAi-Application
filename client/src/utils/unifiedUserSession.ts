@@ -133,14 +133,42 @@ class UnifiedUserSessionManager {
 
   /**
    * Get API headers for consistent authentication
-   * The HIPAA auth system uses cookies, so we just need basic headers
+   * Includes JWT token if available, plus device fingerprint for tracking
    */
   async getAuthHeaders(): Promise<Record<string, string>> {
-    return {
+    const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       'x-device-fingerprint': this.getDeviceFingerprint(),
       'x-session-id': this.getSessionId()
     };
+
+    // Get JWT token - either from storage or create anonymous user
+    let authToken = localStorage.getItem('auth_token');
+    
+    if (!authToken) {
+      // No token - create anonymous user to get one
+      try {
+        const response = await fetch('/api/auth/anonymous', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          authToken = data.token;
+          localStorage.setItem('auth_token', authToken);
+          console.log('✅ Created anonymous user and received JWT token');
+        }
+      } catch (error) {
+        console.error('Failed to create anonymous user:', error);
+      }
+    }
+    
+    if (authToken) {
+      headers['Authorization'] = `Bearer ${authToken}`;
+    }
+
+    return headers;
   }
 
   /**

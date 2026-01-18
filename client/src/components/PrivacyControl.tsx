@@ -4,7 +4,6 @@ import {
   getCurrentUserId, 
   generateNewUserId, 
   isIncognitoMode, 
-  resetUserSession,
   safeReset,
   nuklearReset
 } from '@/utils/userSession';
@@ -33,7 +32,7 @@ const PrivacyControl: React.FC<PrivacyControlProps> = ({ onUserIdChange }) => {
         sessionStorage.setItem('chakrai_privacy_choice_made', 'true');
       }
     };
-    init();
+    void init();
   }, []);
 
   const handleGenerateNewId = async () => {
@@ -46,12 +45,6 @@ const PrivacyControl: React.FC<PrivacyControlProps> = ({ onUserIdChange }) => {
   const handleKeepCurrentId = () => {
     setShowDialog(false);
     onUserIdChange?.(currentUserId);
-  };
-
-  const handleResetSession = async () => {
-    const newId = await resetUserSession();
-    setCurrentUserId(newId);
-    onUserIdChange?.(newId);
   };
 
   const handleSafeReset = async () => {
@@ -251,4 +244,3 @@ const PrivacyControl: React.FC<PrivacyControlProps> = ({ onUserIdChange }) => {
 };
 
 export default PrivacyControl;
-

@@ -8,6 +8,7 @@ vite.config.ts.*
 .env
 .env.*
 !/.env.example
+.env.production
 client/dist
 *.bak
 
@@ -20,3 +21,8 @@ client/node_modules_old/
 
 # Temporary files
 new 7.txt
+nul
+*.msi
+*.ps1
+*.sh
+*.bat

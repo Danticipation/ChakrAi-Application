@@ -4,12 +4,21 @@ import {
   Sparkles, Heart, Brain, MessageCircle, Copy, 
   MoreVertical, Settings, Zap, Loader2
 } from 'lucide-react';
+import { getAuthHeaders } from '../utils/unifiedUserSession';
+import CompanionAvatar from './CompanionAvatar';
+import type { AvatarConfig } from './AvatarCustomizer';
 
 interface Message {
   sender: 'user' | 'bot';
   text: string;
   time: string;
   id: string;
+}
+
+interface Voice {
+  id: string;
+  name: string;
+  description: string;
 }
 
 interface BeautifulChatProps {
@@ -26,13 +35,20 @@ interface BeautifulChatProps {
   onBotMessageSpeak: (text: string) => void;
   selectedModel: string;
   onModelChange: (model: string) => void;
+  onVoiceChange?: (voice: string) => void;
+  onAvatarClick?: () => void;
+  companionAvatar?: AvatarConfig;
 }
 
-const TypingIndicator = () => (
+const TypingIndicator = ({ avatar }: { avatar?: AvatarConfig }) => (
   <div className="flex items-center space-x-2 p-4 bg-white/10 backdrop-blur-sm rounded-2xl rounded-bl-md max-w-xs">
-    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
-      <Brain className="w-4 h-4 text-white" />
-    </div>
+    {avatar ? (
+      <CompanionAvatar avatar={avatar} size={32} />
+    ) : (
+      <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
+        <Brain className="w-4 h-4 text-white" />
+      </div>
+    )}
     <div className="flex space-x-1">
       <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" />
       <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
@@ -41,20 +57,21 @@ const TypingIndicator = () => (
   </div>
 );
 
-const MessageBubble = ({ message, isUser, onSpeakMessage }: { 
+const MessageBubble = ({ message, isUser, onSpeakMessage, avatar }: { 
   message: Message; 
   isUser: boolean;
-  onSpeakMessage?: (text: string) => void;
+  onSpeakMessage?: (text: string) => void | Promise<void>;
+  avatar?: AvatarConfig;
 }) => {
   const [showActions, setShowActions] = useState(false);
 
   const copyToClipboard = () => {
-    navigator.clipboard.writeText(message.text);
+    void navigator.clipboard.writeText(message.text);
   };
 
   const speakMessage = () => {
     if (onSpeakMessage) {
-      onSpeakMessage(message.text);
+      void onSpeakMessage(message.text); // Explicitly ignore the promise as errors are handled internally
     }
   };
 
@@ -66,12 +83,16 @@ const MessageBubble = ({ message, isUser, onSpeakMessage }: {
         <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
           isUser 
             ? 'bg-gradient-to-r from-purple-500 to-pink-500' 
-            : 'bg-gradient-to-r from-blue-500 to-purple-600'
+            : ''
         } shadow-lg`}>
           {isUser ? (
             <User className="w-5 h-5 text-white" />
+          ) : avatar ? (
+            <CompanionAvatar avatar={avatar} size={40} />
           ) : (
-            <Brain className="w-5 h-5 text-white" />
+            <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
+              <Brain className="w-5 h-5 text-white" />
+            </div>
           )}
         </div>
 
@@ -175,13 +196,63 @@ const BeautifulChat: React.FC<BeautifulChatProps> = ({
   onTtsToggle,
   onBotMessageSpeak,
   selectedModel,
-  onModelChange
+  onModelChange,
+  onVoiceChange,
+  onAvatarClick,
+  companionAvatar
 }) => {
   const [showQuickActions, setShowQuickActions] = useState(messages.length === 0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const lastBotMessageRef = useRef<string>('');
+  const [availableVoices, setAvailableVoices] = useState<Voice[]>([]);
+  const [isLoadingVoices, setIsLoadingVoices] = useState(true);
+
+  // Add custom styles for dropdown options
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.innerHTML = `
+      select option {
+        background-color: #1e293b !important;
+        color: white !important;
+        padding: 8px !important;
+      }
+      select option:hover {
+        background-color: #334155 !important;
+      }
+    `;
+    document.head.appendChild(style);
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+
+  // Load available voices from API
+  useEffect(() => {
+    const loadVoices = async () => {
+      try {
+        const response = await fetch('/api/voices');
+        if (response.ok) {
+          const data = await response.json();
+          setAvailableVoices(data.voices || []);
+          console.log('✅ Loaded', data.voices.length, 'voices');
+        }
+      } catch (error) {
+        console.error('Failed to load voices:', error);
+      } finally {
+        setIsLoadingVoices(false);
+      }
+    };
+    loadVoices();
+  }, []);
+
+  const handleVoiceChange = (voice: string) => {
+    localStorage.setItem('selectedVoice', voice);
+    if (onVoiceChange) {
+      onVoiceChange(voice);
+    }
+  };
 
   // Function to play text-to-speech using ElevenLabs API
   const playTTS = async (text: string) => {
@@ -199,9 +270,11 @@ const BeautifulChat: React.FC<BeautifulChatProps> = ({
 
       console.log('ðŸ”Š Requesting TTS from ElevenLabs:', text.substring(0, 50) + '...');
 
-      const response = await fetch('/api/tts/text-to-speech', {
+      const headers = await getAuthHeaders();
+      const response = await fetch('/api/text-to-speech', {
         method: 'POST',
         headers: {
+          ...headers,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -248,13 +321,16 @@ const BeautifulChat: React.FC<BeautifulChatProps> = ({
         setCurrentAudio(audio);
         await audio.play();
       } else {
-        const errorData = await response.json();
+        interface ErrorResponse {
+          error?: string;
+        }
+        const errorData: ErrorResponse = (await response.json()) as ErrorResponse;
         console.error('ElevenLabs TTS API error:', response.status, errorData);
         alert(`Text-to-speech failed: ${errorData.error || 'Unknown error'}`);
         setIsPlaying(false);
       }
-    } catch (error) {
-      console.error('Text-to-speech request failed:', error);
+    } catch (error: unknown) { // Explicitly type error as unknown
+      console.error('Text-to-speech request failed:', error instanceof Error ? error.message : error);
       alert('Failed to connect to text-to-speech service. Please check your internet connection.');
       setIsPlaying(false);
     }
@@ -284,10 +360,10 @@ const BeautifulChat: React.FC<BeautifulChatProps> = ({
     // When a new bot message arrives and TTS is enabled, play it
     const lastMessage = messages[messages.length - 1];
     if (lastMessage && lastMessage.sender === 'bot' && lastMessage.text !== lastBotMessageRef.current && isTtsEnabled) {
-      playTTS(lastMessage.text);
+      onBotMessageSpeak(lastMessage.text);
       lastBotMessageRef.current = lastMessage.text;
     }
-  }, [messages, isAiTyping, isTtsEnabled]); // Added isTtsEnabled to dependencies
+  }, [messages, isAiTyping, isTtsEnabled, onBotMessageSpeak]); // Added isTtsEnabled and onBotMessageSpeak to dependencies
 
   const handleSend = () => {
     if (!chatInput.trim()) return;
@@ -333,9 +409,13 @@ const BeautifulChat: React.FC<BeautifulChatProps> = ({
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <div className="relative">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center shadow-lg">
-                <Brain className="w-6 h-6 text-white" />
-              </div>
+              {companionAvatar ? (
+                <CompanionAvatar avatar={companionAvatar} size={48} className="shadow-lg" />
+              ) : (
+                <div className="w-12 h-12 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center shadow-lg">
+                  <Brain className="w-6 h-6 text-white" />
+                </div>
+              )}
               <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-white animate-pulse" />
             </div>
             <div>
@@ -344,20 +424,53 @@ const BeautifulChat: React.FC<BeautifulChatProps> = ({
             </div>
           </div>
           
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2">
+            {/* Voice Selection Dropdown - Prominent */}
+            <div className="relative">
+              <label className="text-xs text-blue-200 block mb-1 font-semibold">Voice</label>
+              <select
+                value={selectedVoice}
+                onChange={(e) => handleVoiceChange(e.target.value)}
+                disabled={isLoadingVoices}
+                className="px-3 py-2 rounded-xl bg-slate-700 border-2 border-purple-400/50 text-white text-sm font-medium focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all duration-300 appearance-none pr-8 min-w-[200px] hover:bg-slate-600 cursor-pointer"
+                style={{ 
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='%23ffffff' class='w-4 h-4'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19.5 8.25l-7.5 7.5-7.5-7.5' /%3E%3C/svg%3E")`, 
+                  backgroundRepeat: 'no-repeat', 
+                  backgroundPosition: 'right 0.5rem center', 
+                  backgroundSize: '1.2em' 
+                }}
+              >
+                {availableVoices.map((voice) => (
+                  <option 
+                    key={voice.id} 
+                    value={voice.id}
+                    className="bg-slate-800 text-white py-2"
+                  >
+                    {voice.name} - {voice.description}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             {/* Model Selection Dropdown */}
             <div className="relative">
+              <label className="text-xs text-blue-200 block mb-1">Model</label>
               <select
                 value={selectedModel}
                 onChange={(e) => onModelChange(e.target.value)}
-                className="p-2 rounded-xl bg-white/10 border border-white/20 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-300 appearance-none pr-8"
-                style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='%23ffffff' class='w-4 h-4'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19.5 8.25l-7.5 7.5-7.5-7.5' /%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.5rem center', backgroundSize: '1.2em' }}
+                className="px-3 py-2 rounded-xl bg-white/10 border border-white/20 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-300 appearance-none pr-8"
+                style={{ 
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='%23ffffff' class='w-4 h-4'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19.5 8.25l-7.5 7.5-7.5-7.5' /%3E%3C/svg%3E")`, 
+                  backgroundRepeat: 'no-repeat', 
+                  backgroundPosition: 'right 0.5rem center', 
+                  backgroundSize: '1.2em' 
+                }}
               >
-                <option value="gpt-4o">GPT-4o (Recommended)</option>
-                <option value="gpt-4o-mini">GPT-4o Mini (Faster)</option>
-                <option value="gpt-4-turbo">GPT-4 Turbo</option>
-                <option value="gpt-4">GPT-4</option>
-                <option value="gpt-3.5-turbo">GPT-3.5 Turbo (Budget)</option>
+                <option value="gpt-4o" className="bg-slate-800 text-white">GPT-4o</option>
+                <option value="gpt-4o-mini" className="bg-slate-800 text-white">GPT-4o Mini</option>
+                <option value="gpt-4-turbo" className="bg-slate-800 text-white">GPT-4 Turbo</option>
+                <option value="gpt-4" className="bg-slate-800 text-white">GPT-4</option>
+                <option value="gpt-3.5-turbo" className="bg-slate-800 text-white">GPT-3.5</option>
               </select>
             </div>
 
@@ -376,7 +489,11 @@ const BeautifulChat: React.FC<BeautifulChatProps> = ({
                 <VolumeX className="w-5 h-5 text-red-400" />
               )}
             </button>
-            <button className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-colors duration-300">
+            <button
+              onClick={onAvatarClick}
+              className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-colors duration-300"
+              title="Customize Avatar"
+            >
               <Settings className="w-5 h-5 text-white" />
             </button>
           </div>
@@ -389,8 +506,14 @@ const BeautifulChat: React.FC<BeautifulChatProps> = ({
         {/* Welcome Message */}
         {messages.length === 0 && (
           <div className="text-center py-12">
-            <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center animate-pulse">
-              <Brain className="w-8 h-8 text-white" />
+            <div className="w-16 h-16 mx-auto mb-6 rounded-full overflow-hidden">
+              {companionAvatar ? (
+                <CompanionAvatar avatar={companionAvatar} size={64} />
+              ) : (
+                <div className="w-16 h-16 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center animate-pulse">
+                  <Brain className="w-8 h-8 text-white" />
+                </div>
+              )}
             </div>
             <h3 className="text-2xl font-bold text-white mb-2">Welcome to your reflection journey!</h3>
             <p className="text-blue-200 max-w-md mx-auto leading-relaxed">
@@ -406,13 +529,14 @@ const BeautifulChat: React.FC<BeautifulChatProps> = ({
             message={message}
             isUser={message.sender === 'user'}
             onSpeakMessage={playTTS}
+            avatar={companionAvatar}
           />
         ))}
 
         {/* Typing Indicator */}
         {isAiTyping && (
           <div className="flex justify-start">
-            <TypingIndicator />
+            <TypingIndicator avatar={companionAvatar} />
           </div>
         )}
 
@@ -505,4 +629,3 @@ const BeautifulChat: React.FC<BeautifulChatProps> = ({
 };
 
 export default BeautifulChat;
-

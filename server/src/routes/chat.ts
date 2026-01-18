@@ -4,18 +4,26 @@ import multer from 'multer';
 import { chatCompletions, transcribeWithWhisperWebm } from '../lib/openai.js';
 import { requireUserId } from '../lib/auth.js';
 import { storage } from '../storage.ts';
+import { encryptMessage, decryptMessage, decryptMessages } from '../lib/encryptionHelpers.js';
+import { auditMiddleware } from '../middleware/auditLogger.js';
 
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
 class SimpleBulletproofMemory {
+  // HIPAA COMPLIANCE: Encrypt messages before storing
   static async saveMessageImmediately(userId: number, content: string, isBot: boolean) {
-    return storage.createMessage({ userId, content, isBot, timestamp: new Date() });
+    const encryptedMessage = encryptMessage({ userId, content, isBot, timestamp: new Date() });
+    return storage.createMessage(encryptedMessage);
   }
+  
+  // HIPAA COMPLIANCE: Decrypt messages when retrieving
   static async getConversationHistory(userId: number, limit = 30) {
-    const msgs = await storage.getUserMessages(userId, limit);
-    return msgs.reverse();
+    const encryptedMsgs = await storage.getUserMessages(userId, limit);
+    const decryptedMsgs = decryptMessages(encryptedMsgs);
+    return decryptedMsgs.reverse();
   }
+  
   static buildContextPrompt(history: any[], userText: string) {
     let sys = `You are Chakrai, a professional AI wellness companion ...\nCONVERSATION HISTORY CONTEXT:`;
     if (history.length) {
@@ -35,7 +43,9 @@ class SimpleBulletproofMemory {
 }
 
 // Chat
-router.post('/', requireUserId, async (req, res) => {
+// HIPAA AUDIT: Log chat message exchange
+// HIPAA ENCRYPTION: Messages are encrypted in SimpleBulletproofMemory
+router.post('/', requireUserId, auditMiddleware('chat_message', 'write'), async (req, res) => {
   const userId = req.userId!; // guaranteed by middleware
   let userMsgId: number | null = null, aiMsgId: number | null = null;
 

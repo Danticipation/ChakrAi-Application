@@ -7,8 +7,7 @@ import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
 import multer from "multer";
-import { identityMiddleware } from "./middleware/identity.js"; // Import identityMiddleware
-import { unifiedAuthMiddleware } from "./auth/unifiedAuth.js"; // Import unifiedAuthMiddleware
+import { hipaaAuthMiddleware } from "./auth/hipaaAuth.js"; // HIPAA-compliant authentication
 
 // ---- Routes (keep only what you truly have) ----
 // @ts-ignore
@@ -37,11 +36,11 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 // ---- Core Middleware (must run first) ----
 app.use(cookieParser(process.env.COOKIE_SECRET ?? "dev_secret"));
-app.use(identityMiddleware); // Identity middleware must run very early
-app.use(unifiedAuthMiddleware); // Unified auth middleware must run after identity
-
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
+
+// HIPAA-compliant authentication middleware (must run before routes)
+app.use(hipaaAuthMiddleware);
 
 // ---- Public / API routes ----
 app.use("/api/auth", authRoutes);
