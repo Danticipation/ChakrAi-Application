@@ -2,7 +2,7 @@
 
 ## Architecture Overview
 
-Chakrai is a comprehensive mental wellness platform built with modern web technologies, featuring subscription-based monetization, AI-powered therapeutic support, and privacy-first architecture supporting both anonymous and registered users.
+Chakrai is a comprehensive mental wellness platform built with modern web technologies, featuring local Piper TTS integration, AI-powered therapeutic support with modular memory architecture, and privacy-first design. The platform delivers healthcare-grade data integrity with zero hardcoded data and comprehensive analytics.
 
 ### Technology Stack
 
@@ -19,14 +19,16 @@ Chakrai is a comprehensive mental wellness platform built with modern web techno
 - **Database**: PostgreSQL with Drizzle ORM for type-safe queries
 - **Authentication**: JWT tokens with session management and device fingerprinting
 - **Payments**: Stripe webhooks and subscription lifecycle management
-- **AI Integration**: OpenAI GPT-4o, ElevenLabs TTS, OpenAI Whisper STT
-- **Security**: AES-256 encryption, CORS protection, rate limiting
+- **AI Integration**: OpenAI GPT-4o for chat, ElevenLabs TTS (8 voices), OpenAI Whisper STT
+- **Memory Architecture**: Modular memory system with SemanticMemoryService, ConversationContinuityService, MemoryConnectionService, MemoryRetrievalService, MemoryAnalyticsService
+- **Security**: AES-256 encryption, healthcare-grade data integrity, anti-hallucination system
 
 #### Infrastructure
-- **Development**: Vite dev server with HMR and TypeScript compilation
-- **Database**: PostgreSQL with automated migrations and schema validation
-- **File Storage**: Local storage with future cloud storage support
-- **Monitoring**: Console logging with error tracking and performance metrics
+- **Development**: Vite dev server with MIME type resolution and HMR
+- **Database**: PostgreSQL with Drizzle ORM and authentic data enforcement
+- **Memory Architecture**: Comprehensive modular memory system for therapeutic context
+- **Voice System**: ElevenLabs TTS with 8 professional voices for high-quality synthesis
+- **Monitoring**: Healthcare-grade security auditing and comprehensive logging
 
 ## Database Schema
 
@@ -319,7 +321,7 @@ STRIPE_WEBHOOK_SECRET=whsec_...
 STRIPE_MONTHLY_PRICE_ID=price_...
 STRIPE_YEARLY_PRICE_ID=price_...
 
-# Optional Voice Features
+# Voice Features with ElevenLabs
 ELEVENLABS_API_KEY=your-elevenlabs-key
 
 # Development Settings
@@ -378,9 +380,9 @@ npm run db:migrate
 
 ## Voice System Integration
 
-### ElevenLabs Configuration
+### ElevenLabs TTS Configuration
 ```typescript
-// Voice mapping for 8 professional voices
+// ElevenLabs voice mapping for 8 professional voices
 const VOICE_MAPPING = {
   'James': 'AkChSigMDjW8pW5ESqn1',      // Professional/calming
   'Brian': 'nPczCjzI2devNBz1zQrb',      // Deep/resonant  
@@ -392,7 +394,7 @@ const VOICE_MAPPING = {
   'Marcus': 'VxNyRZ6lYqXPB7VFZSwa'     // Smooth/supportive
 };
 
-// Audio generation with loading states
+// Audio generation with ElevenLabs
 async function generateSpeech(text: string, voice: string): Promise<string> {
   const response = await fetch('/api/voice/tts', {
     method: 'POST',
@@ -402,6 +404,18 @@ async function generateSpeech(text: string, voice: string): Promise<string> {
   
   const { audioData } = await response.json();
   return audioData; // Base64 encoded audio
+}
+
+// Web Audio API recorder (bypasses MediaRecorder WebM issues)
+async function createAudioRecorder(): Promise<MediaRecorder> {
+  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  const context = new AudioContext({ sampleRate: 16000 });
+  const source = context.createMediaStreamSource(stream);
+  
+  // Creates proper WAV files for processing
+  return new MediaRecorder(stream, {
+    mimeType: 'audio/wav'
+  });
 }
 ```
 

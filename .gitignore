@@ -4,3 +4,25 @@ dist
 server/public
 vite.config.ts.*
 *.tar.gz
+.local
+.env
+.env.*
+!/.env.example
+.env.production
+client/dist
+*.bak
+
+# Backup folders (from troubleshooting)
+node_modules_backup/
+client/node_modules_old/
+
+# IDE settings
+.vscode/
+
+# Temporary files
+new 7.txt
+nul
+*.msi
+*.ps1
+*.sh
+*.bat

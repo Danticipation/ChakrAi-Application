@@ -22,10 +22,16 @@ export class ResponseService {
   ): void {
     const response: ApiResponse<T> = {
       success: true,
-      data,
-      message,
       timestamp: new Date().toISOString()
     };
+    
+    if (data !== undefined) {
+      response.data = data;
+    }
+    
+    if (message !== undefined) {
+      response.message = message;
+    }
     
     res.status(statusCode).json(response);
   }
@@ -63,10 +69,13 @@ export class ResponseService {
     const response: ApiResponse<T[]> = {
       success: true,
       data,
-      message,
       meta,
       timestamp: new Date().toISOString()
     };
+    
+    if (message !== undefined) {
+      response.message = message;
+    }
     
     res.json(response);
   }

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+﻿import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -288,12 +288,12 @@ export function AdaptiveRecommendations({
 
   const getTypeIcon = useMemo(() => (type: string) => {
     switch (type) {
-      case 'breathing': return '🫁';
-      case 'meditation': return '🧘';
-      case 'exercise': return '💪';
-      case 'journaling': return '📝';
-      case 'activity': return '🎯';
-      default: return '💡';
+      case 'breathing': return 'ðŸ«';
+      case 'meditation': return 'ðŸ§˜';
+      case 'exercise': return 'ðŸ’ª';
+      case 'journaling': return 'ðŸ“';
+      case 'activity': return 'ðŸŽ¯';
+      default: return 'ðŸ’¡';
     }
   }, []);
 

@@ -21,7 +21,7 @@ export const requestTimer = (req: Request, res: Response, next: NextFunction) =>
     PerformanceMonitor.timeExecution(route, () => Promise.resolve(duration));
   });
   
-  next();
+  return next();
 };
 
 // Memory monitoring middleware
@@ -40,7 +40,7 @@ export const memoryMonitor = (req: Request, res: Response, next: NextFunction) =
     }
   }
   
-  next();
+  return next();
 };
 
 // Response compression optimization
@@ -59,7 +59,7 @@ export const compressionOptimizer = (req: Request, res: Response, next: NextFunc
     return originalJson.call(this, data);
   };
   
-  next();
+  return next();
 };
 
 // Database connection pooling monitor
@@ -75,7 +75,7 @@ export const dbConnectionMonitor = (req: Request, res: Response, next: NextFunct
     }
   });
   
-  next();
+  return next();
 };
 
 // Cache optimization middleware
@@ -101,5 +101,5 @@ export const cacheOptimizer = (req: Request, res: Response, next: NextFunction) 
     return originalJson.call(this, data);
   };
   
-  next();
+  return next();
 };

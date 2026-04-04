@@ -1,6 +1,7 @@
 import express from 'express';
 import multer from 'multer';
 import { openai } from '../openaiRetry.js';
+import { getVoiceIdFromFrontend, defaultVoiceId } from '../voiceConfig.ts';
 
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
@@ -54,7 +55,7 @@ function scrubTextForTTS(text) {
     .replace(/\s+/g, ' ');            // Normalize all whitespace
 }
 
-// Text-to-speech endpoint with ElevenLabs integration
+// Text-to-speech endpoint with ElevenLabs
 router.post('/text-to-speech', async (req, res) => {
   try {
     const { text, voice = 'james', emotionalContext = 'neutral' } = req.body;
@@ -63,54 +64,48 @@ router.post('/text-to-speech', async (req, res) => {
       return res.status(400).json({ error: 'Text is required' });
     }
 
-    const voiceMap = {
-      // Original voices
-      'james': 'EkK5I93UQWFDigLMpZcX',  // Male
-      'brian': 'nPczCjzI2devNBz1zQrb',  // Male
-      'alexandra': 'kdmDKE6EkgrWrrykO9Qt', // Female
-      'carla': 'l32B8XDoylOsZKiSdfhE',  // Female
-      // New voices added
-      'hope': 'iCrDUkL56s3C8sCRl7wb',   // Female
-      'charlotte': 'XB0fDUnXU5powFXDhCwa', // Female
-      'bronson': 'Yko7PKHZNXotIFUBG7I9', // Male
-      'marcus': 'y3kKRaK2dnn3OgKDBckk'   // Male
-    };
+    if (!process.env.ELEVENLABS_API_KEY) {
+      console.error('❌ ElevenLabs API key not found');
+      return res.status(500).json({ 
+        error: 'ElevenLabs API key not configured',
+        fallback: 'Check your .env file for ELEVENLABS_API_KEY'
+      });
+    }
 
-    const voiceId = voiceMap[voice] || voiceMap['james'];
+    // Get the ElevenLabs voice ID from the frontend voice name
+    const voiceId = getVoiceIdFromFrontend(voice);
+    console.log(`🎤 Generating speech with ElevenLabs for voice: ${voice} (ID: ${voiceId})`);
+    
+    // Scrub text before sending to ElevenLabs
+    const scrubbedText = scrubTextForTTS(text);
+    console.log(`Original text: "${text.substring(0, 100)}..."`);
+    console.log(`Scrubbed text: "${scrubbedText.substring(0, 100)}..."`);
     
     try {
-      console.log(`Making ElevenLabs request for voice: ${voice} (ID: ${voiceId})`);
-      
-      // Scrub text before sending to ElevenLabs
-      const scrubbedText = scrubTextForTTS(text);
-      console.log(`Original text: "${text.substring(0, 100)}..."`);
-      console.log(`Scrubbed text: "${scrubbedText.substring(0, 100)}..."`);
-      
-      const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+      // Call ElevenLabs API
+      const elevenLabsResponse = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
         method: 'POST',
         headers: {
           'Accept': 'audio/mpeg',
+          'xi-api-key': process.env.ELEVENLABS_API_KEY,
           'Content-Type': 'application/json',
-          'xi-api-key': process.env.ELEVENLABS_API_KEY || ''
         },
         body: JSON.stringify({
           text: scrubbedText,
-          model_id: 'eleven_monolingual_v1',
+          model_id: "eleven_monolingual_v1",
           voice_settings: {
             stability: 0.5,
-            similarity_boost: 0.8,
-            style: 0.3,
-            use_speaker_boost: true
+            similarity_boost: 0.5
           }
         })
       });
 
-      if (response.ok) {
-        const audioBuffer = await response.arrayBuffer();
+      if (elevenLabsResponse.ok) {
+        const audioBuffer = await elevenLabsResponse.arrayBuffer();
         
-        console.log(`Generated audio for voice ${voice}: ${audioBuffer.byteLength} bytes`);
+        console.log(`✅ Generated audio with ElevenLabs: ${audioBuffer.byteLength} bytes`);
         
-        // Return audio as blob instead of JSON with base64
+        // Return audio as MP3 from ElevenLabs
         res.set({
           'Content-Type': 'audio/mpeg',
           'Content-Length': audioBuffer.byteLength.toString(),
@@ -119,24 +114,24 @@ router.post('/text-to-speech', async (req, res) => {
         
         res.send(Buffer.from(audioBuffer));
       } else {
-        const errorText = await response.text();
-        console.error('ElevenLabs API error:', response.status, errorText);
-        throw new Error(`ElevenLabs API error: ${response.status}`);
+        const errorText = await elevenLabsResponse.text();
+        console.error('❌ ElevenLabs API error:', elevenLabsResponse.status, errorText);
+        throw new Error(`ElevenLabs API error: ${elevenLabsResponse.status}`);
       }
     } catch (error) {
-      console.error('TTS generation failed:', error);
+      console.error('❌ ElevenLabs TTS generation failed:', error);
       throw error;
     }
   } catch (error) {
-    console.error('Text-to-speech error:', error);
+    console.error('❌ Text-to-speech error:', error);
     res.status(500).json({ 
-      error: 'Failed to generate speech',
-      fallback: 'Browser TTS will be used instead'
+      error: 'Failed to generate speech with ElevenLabs',
+      details: error.message
     });
   }
 });
 
-// Enhanced transcription endpoint with audio details
+// Enhanced transcription endpoint with local Whisper fallback
 router.post('/transcribe-enhanced', upload.single('audio'), async (req, res) => {
   try {
     console.log('🎯 Enhanced transcribe endpoint called');
@@ -152,10 +147,11 @@ router.post('/transcribe-enhanced', upload.single('audio'), async (req, res) => 
     console.log('  - Type:', req.file.mimetype);
     console.log('  - Buffer length:', req.file.buffer.length);
 
+    // Use OpenAI Whisper API for transcription
     if (!process.env.OPENAI_API_KEY) {
       console.error('❌ No OpenAI API key found');
       return res.status(503).json({ 
-        error: 'Voice transcription temporarily unavailable',
+        error: 'Voice transcription unavailable. OpenAI API key required.',
         errorType: 'auth_error'
       });
     }
@@ -189,36 +185,24 @@ router.post('/transcribe-enhanced', upload.single('audio'), async (req, res) => 
 
     const result = await response.json();
     const transcription = result.text;
-    console.log('✅ Transcription successful:', transcription);
+    console.log('✅ OpenAI transcription successful:', transcription);
 
     // Enhanced response with audio quality assessment
     const audioQualityScore = req.file.size > 10000 ? 'good' : 'fair';
     const hasLowQuality = transcription.length < 10 && req.file.size < 5000;
 
-    if (hasLowQuality) {
-      res.json({ 
-        success: true, 
-        transcription: transcription,
-        text: transcription,
-        warning: 'Speech may have been unclear. Try speaking louder and more clearly.',
-        audioDetails: {
-          size: req.file.buffer.length,
-          qualityScore: audioQualityScore,
-          mimeType: req.file.mimetype
-        }
-      });
-    } else {
-      res.json({ 
-        success: true, 
-        transcription: transcription,
-        text: transcription,
-        audioDetails: {
-          size: req.file.buffer.length,
-          qualityScore: audioQualityScore,
-          mimeType: req.file.mimetype
-        }
-      });
-    }
+    res.json({ 
+      success: true, 
+      transcription: transcription,
+      text: transcription,
+      source: 'openai_whisper',
+      warning: hasLowQuality ? 'Speech may have been unclear. Try speaking louder and more clearly.' : undefined,
+      audioDetails: {
+        size: req.file.buffer.length,
+        qualityScore: audioQualityScore,
+        mimeType: req.file.mimetype
+      }
+    });
 
   } catch (error) {
     console.error('❌ Enhanced transcription error:', error);

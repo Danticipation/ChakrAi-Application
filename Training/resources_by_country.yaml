@@ -1,0 +1,48 @@
+fallback:
+  emergency: Contact your local emergency number immediately if you are in danger.
+  notes: Verify local resources regularly; hours and availability can change.
+US:
+  country_name: United States
+  emergency_number: '911'
+  suicide_crisis:
+    name: 988 Suicide & Crisis Lifeline
+    phone: '988'
+    text: Text 988
+    chat_url: https://988lifeline.org/chat
+    notes: 24/7; for hearing impaired, use your preferred relay service or dial 711
+      then 988.
+  domestic_violence:
+    name: National Domestic Violence Hotline
+    phone: 1-800-799-7233
+    text: Text START to 88788
+    chat_url: https://www.thehotline.org/
+CA:
+  country_name: Canada
+  emergency_number: '911'
+  suicide_crisis:
+    name: Talk Suicide / 988
+    phone: '988'
+    text: Text 988
+    chat_url: https://988.ca/
+UK:
+  country_name: United Kingdom
+  emergency_number: '999'
+  suicide_crisis:
+    name: Samaritans
+    phone: 116 123
+    email: jo@samaritans.org
+    notes: Free from any phone.
+AU:
+  country_name: Australia
+  emergency_number: '000'
+  suicide_crisis:
+    name: Lifeline
+    phone: 13 11 14
+    chat_url: https://www.lifeline.org.au/
+IN:
+  country_name: India
+  emergency_number: '112'
+  suicide_crisis:
+    name: Kiran Mental Health Rehabilitation Helpline
+    phone: 1800-599-0019
+    notes: Government-supported; verify local availability.

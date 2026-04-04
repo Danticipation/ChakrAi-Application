@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CHAKRAI REVOLUTION - Mental Wellness Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body, html {
+            height: 100vh;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            overflow: hidden;
+            background: #0a0a0a;
+            color: white;
+        }
+
+        /* 🌌 REVOLUTIONARY DARK GALAXY BACKGROUND */
+        .galaxy-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(135deg, 
+                #0a0a0a 0%, 
+                #1a1a2e 20%, 
+                #16213e 40%, 
+                #1a1a2e 60%, 
+                #0a0a0a 100%);
+            animation: galaxyShift 10s ease-in-out infinite;
+            z-index: 1;
+        }
+
+        @keyframes galaxyShift {
+            0%, 100% { 
+                background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 20%, #16213e 40%, #1a1a2e 60%, #0a0a0a 100%);
+            }
+            50% { 
+                background: linear-gradient(135deg, #16213e 0%, #0f0f1a 20%, #1a1a2e 40%, #16213e 60%, #0f0f1a 100%);
+            }
+        }
+
+        /* ✨ FLOATING PARTICLES SYSTEM */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 2;
+            overflow: hidden;
+        }
+
+        .particle {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            animation: particleFloat 8s linear infinite;
+        }
+
+        .particle:nth-child(odd) {
+            background: rgba(96, 165, 250, 0.6);
+            animation-duration: 10s;
+        }
+
+        .particle:nth-child(3n) {
+            background: rgba(168, 85, 247, 0.5);
+            animation-duration: 12s;
+        }
+
+        @keyframes particleFloat {
+            0% {
+                transform: translateY(100vh) scale(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100px) scale(1);
+                opacity: 0;
+            }
+        }
+
+        /* 🔷 FLOATING GEOMETRIC SHAPES */
+        .geometric-shapes {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 3;
+            overflow: hidden;
+        }
+
+        .shape {
+            position: absolute;
+            opacity: 0.1;
+            animation: shapeFloat 15s ease-in-out infinite;
+        }
+
+        .shape.circle {
+            border-radius: 50%;
+            background: linear-gradient(45deg, #60a5fa, #a855f7);
+        }
+
+        .shape.square {
+            background: linear-gradient(45deg, #10b981, #3b82f6);
+            transform: rotate(45deg);
+        }
+
+        .shape.triangle {
+            width: 0;
+            height: 0;
+            border-left: 25px solid transparent;
+            border-right: 25px solid transparent;
+            border-bottom: 50px solid #f59e0b;
+            background: none;
+        }
+
+        @keyframes shapeFloat {
+            0%, 100% {
+                transform: translateY(0) rotate(0deg) scale(1);
+                opacity: 0.1;
+            }
+            33% {
+                transform: translateY(-30px) rotate(120deg) scale(1.2);
+                opacity: 0.3;
+            }
+            66% {
+                transform: translateY(-10px) rotate(240deg) scale(0.8);
+                opacity: 0.2;
+            }
+        }
+
+        /* 🌟 MAIN CONTAINER */
+        .main-container {
+            position: relative;
+            z-index: 10;
+            height: 100vh;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        /* 🎨 RAINBOW ANIMATED TITLE */
+        .rainbow-title {
+            font-size: 3.5rem;
+            font-weight: 900;
+            text-align: center;
+            margin-bottom: 2rem;
+            background: linear-gradient(
+                45deg,
+                #ff6b6b,
+                #4ecdc4,
+                #45b7d1,
+                #96ceb4,
+                #feca57,
+                #ff9ff3,
+                #54a0ff
+            );
+            background-size: 400% 400%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: rainbowShift 3s ease-in-out infinite;
+            text-shadow: 0 0 30px rgba(255, 255, 255, 0.5);
+        }
+
+        @keyframes rainbowShift {
+            0%, 100% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+        }
+
+        /* 💎 REVOLUTIONARY DASHBOARD CARDS */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .dashboard-card {
+            background: rgba(255, 255, 255, 0.08);
+            border: 2px solid transparent;
+            border-radius: 20px;
+            padding: 2rem;
+            position: relative;
+            backdrop-filter: blur(10px);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        /* 🌈 ANIMATED RAINBOW BORDERS */
+        .dashboard-card::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(
+                45deg,
+                #ff6b6b,
+                #4ecdc4,
+                #45b7d1,
+                #96ceb4,
+                #feca57,
+                #ff9ff3,
+                #54a0ff,
+                #ff6b6b
+            );
+            background-size: 400% 400%;
+            border-radius: 22px;
+            z-index: -1;
+            animation: borderRainbow 4s linear infinite;
+        }
+
+        @keyframes borderRainbow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* 🎭 3D HOVER EFFECTS */
+        .dashboard-card:hover {
+            transform: translateY(-15px) scale(1.05) rotateX(5deg);
+            box-shadow: 
+                0 25px 50px rgba(0, 0, 0, 0.5),
+                0 0 50px rgba(96, 165, 250, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        .dashboard-card:hover::before {
+            animation-duration: 1s;
+        }
+
+        /* 💥 EXPLOSIVE MOOD BUTTONS */
+        .mood-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .mood-btn {
+            padding: 1rem;
+            border: none;
+            border-radius: 15px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .mood-btn::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, transparent 70%);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: all 0.6s ease;
+        }
+
+        .mood-btn:hover::after,
+        .mood-btn.clicked::after {
+            width: 200px;
+            height: 200px;
+        }
+
+        .mood-btn:hover {
+            transform: scale(1.1) rotate(5deg);
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+        }
+
+        /* 🌟 PERSONALITY MATRIX BACKGROUND */
+        .personality-matrix {
+            background: conic-gradient(
+                from 0deg,
+                #ff6b6b,
+                #4ecdc4,
+                #45b7d1,
+                #96ceb4,
+                #feca57,
+                #ff9ff3,
+                #54a0ff,
+                #ff6b6b
+            );
+            animation: matrixRotate 8s linear infinite;
+        }
+
+        @keyframes matrixRotate {
+            from {
+                background: conic-gradient(
+                    from 0deg,
+                    #ff6b6b,
+                    #4ecdc4,
+                    #45b7d1,
+                    #96ceb4,
+                    #feca57,
+                    #ff9ff3,
+                    #54a0ff,
+                    #ff6b6b
+                );
+            }
+            to {
+                background: conic-gradient(
+                    from 360deg,
+                    #ff6b6b,
+                    #4ecdc4,
+                    #45b7d1,
+                    #96ceb4,
+                    #feca57,
+                    #ff9ff3,
+                    #54a0ff,
+                    #ff6b6b
+                );
+            }
+        }
+
+        /* 📊 STATS NUMBERS */
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 900;
+            background: linear-gradient(45deg, #60a5fa, #a855f7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-label {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+
+        /* 🎯 RESPONSIVE */
+        @media (max-width: 768px) {
+            .rainbow-title {
+                font-size: 2.5rem;
+            }
+            
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+                padding: 0 1rem;
+            }
+            
+            .main-container {
+                padding: 1rem;
+            }
+        }
+
+        /* ⚡ PERFORMANCE OPTIMIZATIONS */
+        .dashboard-card,
+        .mood-btn,
+        .particle,
+        .shape {
+            will-change: transform;
+            backface-visibility: hidden;
+            perspective: 1000px;
+        }
+    </style>
+</head>
+<body>
+    <!-- 🌌 REVOLUTIONARY BACKGROUND LAYERS -->
+    <div class="galaxy-background"></div>
+    
+    <!-- ✨ FLOATING PARTICLES -->
+    <div class="particles" id="particles"></div>
+    
+    <!-- 🔷 FLOATING GEOMETRIC SHAPES -->
+    <div class="geometric-shapes" id="shapes"></div>
+    
+    <!-- 🌟 MAIN DASHBOARD -->
+    <div class="main-container">
+        <!-- 🎨 RAINBOW ANIMATED TITLE -->
+        <h1 class="rainbow-title">CHAKRAI REVOLUTION</h1>
+        
+        <!-- 💎 DASHBOARD CARDS GRID -->
+        <div class="dashboard-grid">
+            <!-- 📊 WELLNESS STATS CARD -->
+            <div class="dashboard-card">
+                <h2 style="margin-bottom: 1rem; font-size: 1.5rem;">🎯 Wellness Dashboard</h2>
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+                    <div style="text-align: center;">
+                        <div class="stat-number">85</div>
+                        <div class="stat-label">Wellness Score</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div class="stat-number">7</div>
+                        <div class="stat-label">Day Streak</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div class="stat-number">25</div>
+                        <div class="stat-label">AI Sessions</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div class="stat-number">150</div>
+                        <div class="stat-label">Mindful Minutes</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 💥 EXPLOSIVE MOOD TRACKER -->
+            <div class="dashboard-card">
+                <h2 style="margin-bottom: 1rem; font-size: 1.5rem;">😊 Mood Tracker</h2>
+                <p style="margin-bottom: 1rem; opacity: 0.8;">How are you feeling today?</p>
+                <div class="mood-grid">
+                    <button class="mood-btn" onclick="explodeMood(this)">😊</button>
+                    <button class="mood-btn" onclick="explodeMood(this)">😢</button>
+                    <button class="mood-btn" onclick="explodeMood(this)">😴</button>
+                    <button class="mood-btn" onclick="explodeMood(this)">🤗</button>
+                </div>
+            </div>
+            
+            <!-- 🌟 PERSONALITY MATRIX -->
+            <div class="dashboard-card personality-matrix">
+                <h2 style="margin-bottom: 1rem; font-size: 1.5rem;">🧠 Personality Insights</h2>
+                <div style="background: rgba(0,0,0,0.3); padding: 1rem; border-radius: 10px;">
+                    <p><strong>Growth Orientation:</strong> High - proactive approach</p>
+                    <p><strong>Emotional Awareness:</strong> Developing</p>
+                    <p><strong>Therapeutic Receptivity:</strong> Open</p>
+                    <p><strong>Communication Style:</strong> Reflective</p>
+                </div>
+            </div>
+            
+            <!-- 🏆 ACHIEVEMENTS -->
+            <div class="dashboard-card">
+                <h2 style="margin-bottom: 1rem; font-size: 1.5rem;">🏆 Recent Achievements</h2>
+                <div style="space-y: 1rem;">
+                    <div style="display: flex; align-items: center; margin-bottom: 0.5rem;">
+                        <span style="margin-right: 0.5rem;">🔥</span>
+                        <span>7-day wellness streak!</span>
+                    </div>
+                    <div style="display: flex; align-items: center; margin-bottom: 0.5rem;">
+                        <span style="margin-right: 0.5rem;">📝</span>
+                        <span>Completed 5 journal entries</span>
+                    </div>
+                    <div style="display: flex; align-items: center; margin-bottom: 0.5rem;">
+                        <span style="margin-right: 0.5rem;">🧘</span>
+                        <span>150 mindful minutes logged</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 🎨 AFFIRMATION CARD -->
+            <div class="dashboard-card">
+                <h2 style="margin-bottom: 1rem; font-size: 1.5rem;">✨ Daily Affirmation</h2>
+                <p style="font-style: italic; font-size: 1.1rem; text-align: center; line-height: 1.6;">
+                    "You are capable of amazing things. Trust in your journey and embrace every step forward."
+                </p>
+            </div>
+            
+            <!-- 🚀 QUICK ACTIONS -->
+            <div class="dashboard-card">
+                <h2 style="margin-bottom: 1rem; font-size: 1.5rem;">🚀 Quick Actions</h2>
+                <div style="display: grid; gap: 0.75rem;">
+                    <button class="mood-btn" onclick="showFeature('chat')">💬 Start AI Chat</button>
+                    <button class="mood-btn" onclick="showFeature('journal')">📝 Write Journal</button>
+                    <button class="mood-btn" onclick="showFeature('meditate')">🧘 Meditate</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ✨ CREATE FLOATING PARTICLES
+        function createParticles() {
+            const particlesContainer = document.getElementById('particles');
+            
+            for (let i = 0; i < 50; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + 'vw';
+                particle.style.width = particle.style.height = (Math.random() * 4 + 1) + 'px';
+                particle.style.animationDelay = Math.random() * 8 + 's';
+                particle.style.animationDuration = (Math.random() * 6 + 6) + 's';
+                particlesContainer.appendChild(particle);
+            }
+        }
+
+        // 🔷 CREATE FLOATING GEOMETRIC SHAPES
+        function createShapes() {
+            const shapesContainer = document.getElementById('shapes');
+            const shapeTypes = ['circle', 'square', 'triangle'];
+            
+            for (let i = 0; i < 15; i++) {
+                const shape = document.createElement('div');
+                const shapeType = shapeTypes[Math.floor(Math.random() * shapeTypes.length)];
+                shape.className = 'shape ' + shapeType;
+                
+                if (shapeType !== 'triangle') {
+                    shape.style.width = shape.style.height = (Math.random() * 50 + 30) + 'px';
+                }
+                
+                shape.style.left = Math.random() * 100 + 'vw';
+                shape.style.top = Math.random() * 100 + 'vh';
+                shape.style.animationDelay = Math.random() * 15 + 's';
+                shape.style.animationDuration = (Math.random() * 10 + 10) + 's';
+                shapesContainer.appendChild(shape);
+            }
+        }
+
+        // 💥 EXPLOSIVE MOOD BUTTON EFFECT
+        function explodeMood(button) {
+            button.classList.add('clicked');
+            
+            // Create explosion effect
+            for (let i = 0; i < 8; i++) {
+                const spark = document.createElement('div');
+                spark.style.position = 'absolute';
+                spark.style.width = spark.style.height = '4px';
+                spark.style.background = '#fff';
+                spark.style.borderRadius = '50%';
+                spark.style.pointerEvents = 'none';
+                spark.style.left = '50%';
+                spark.style.top = '50%';
+                
+                const angle = (i / 8) * Math.PI * 2;
+                const distance = 50;
+                
+                spark.animate([
+                    { transform: 'translate(-50%, -50%)', opacity: 1 },
+                    { 
+                        transform: `translate(${Math.cos(angle) * distance - 50}%, ${Math.sin(angle) * distance - 50}%)`, 
+                        opacity: 0 
+                    }
+                ], {
+                    duration: 800,
+                    easing: 'ease-out'
+                });
+                
+                button.parentElement.appendChild(spark);
+                setTimeout(() => spark.remove(), 800);
+            }
+            
+            setTimeout(() => button.classList.remove('clicked'), 600);
+        }
+
+        // 🚀 FEATURE DEMONSTRATIONS
+        function showFeature(feature) {
+            const messages = {
+                chat: "🤖 AI Chat would open here with revolutionary conversational interface!",
+                journal: "📝 Journal interface would appear with mood-based prompts!",
+                meditate: "🧘 Guided meditation would start with ambient soundscapes!"
+            };
+            
+            alert(messages[feature]);
+        }
+
+        // 🎯 INITIALIZE REVOLUTIONARY EFFECTS
+        document.addEventListener('DOMContentLoaded', function() {
+            createParticles();
+            createShapes();
+            
+            // Add click effects to all cards
+            document.querySelectorAll('.dashboard-card').forEach(card => {
+                card.addEventListener('click', function() {
+                    this.style.transform = 'scale(0.98)';
+                    setTimeout(() => {
+                        this.style.transform = '';
+                    }, 100);
+                });
+            });
+            
+            console.log('🚀 CHAKRAI REVOLUTION DASHBOARD LOADED!');
+            console.log('✨ Features: Animated backgrounds, floating particles, 3D cards, rainbow borders');
+            console.log('💎 This is completely different from any other wellness app!');
+        });
+    </script>
+</body>
+</html>

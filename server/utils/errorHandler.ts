@@ -31,7 +31,7 @@ export const formatErrorResponse = (error: ApiError, includeStack: boolean = fal
     }
   };
 
-  if (includeStack && process.env.NODE_ENV === 'development') {
+  if (includeStack && process.env['NODE_ENV'] === 'development') {
     response.error.stack = error.stack;
   }
 
@@ -48,7 +48,7 @@ export const errorHandler = (
   let { statusCode = 500, message, code } = error;
 
   // Don't log sensitive information in production
-  if (process.env.NODE_ENV === 'production') {
+  if (process.env['NODE_ENV'] === 'production') {
     // Filter out sensitive errors
     if (statusCode === 500) {
       message = 'Internal server error';
@@ -71,7 +71,7 @@ export const errorHandler = (
     message,
     code,
     statusCode
-  } as ApiError, process.env.NODE_ENV === 'development'));
+  } as ApiError, process.env['NODE_ENV'] === 'development'));
 };
 
 // Async wrapper for route handlers

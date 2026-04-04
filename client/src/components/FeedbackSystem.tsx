@@ -1,8 +1,9 @@
-import React, { useState, useCallback } from 'react';
+﻿import React, { useState, useCallback, useEffect } from 'react';
 import { MessageSquare, Bug, Lightbulb, Send, CheckCircle, AlertCircle, Star, Loader2, RefreshCw } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import axios, { AxiosResponse } from 'axios';
-import { getCurrentUserId } from '../utils/userSession';
+import axios from "axios";
+import type { AxiosResponse } from "axios";
+import { getCurrentUserId } from '../utils/unifiedUserSession';
 
 // Types and Interfaces
 interface FeedbackItem {
@@ -128,7 +129,16 @@ const FeedbackSystem: React.FC = () => {
   const [formErrors, setFormErrors] = useState<FeedbackFormErrors>({});
   const [showSuccess, setShowSuccess] = useState(false);
 
-  const userId = getCurrentUserId();
+  const [userId, setUserId] = useState<number | null>(null);
+
+  // Initialize userId
+  useEffect(() => {
+    const initUserId = async () => {
+      const id = await getCurrentUserId();
+      setUserId(id);
+    };
+    initUserId();
+  }, []);
   const queryClient = useQueryClient();
 
   // Validation functions
@@ -366,7 +376,10 @@ const FeedbackSystem: React.FC = () => {
                     onChange={(e) => {
                       setTitle(e.target.value);
                       if (formErrors.title) {
-                        setFormErrors(prev => ({ ...prev, title: undefined }));
+                        setFormErrors(prev => {
+                          const { title, ...rest } = prev;
+                          return rest;
+                        });
                       }
                     }}
                     placeholder={
@@ -402,7 +415,10 @@ const FeedbackSystem: React.FC = () => {
                     onChange={(e) => {
                       setDescription(e.target.value);
                       if (formErrors.description) {
-                        setFormErrors(prev => ({ ...prev, description: undefined }));
+                        setFormErrors(prev => {
+                          const { description, ...rest } = prev;
+                          return rest;
+                        });
                       }
                     }}
                     placeholder={

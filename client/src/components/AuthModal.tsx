@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { X, Mail, Lock, User, Eye, EyeOff, RefreshCw } from 'lucide-react';
 
 interface AuthModalProps {
@@ -61,6 +61,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuccess })
     setIsLoading(true);
     try {
       const endpoint = mode === 'login' ? '/api/auth/login' : '/api/auth/register';
+      console.log('🔐 Attempting authentication:', endpoint);
+      
       const resp = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -70,18 +72,46 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuccess })
           ...(mode === 'register' && { name: formData.name })
         })
       });
+      
+      console.log('📡 Response status:', resp.status);
+      
       const data = await resp.json();
+      console.log('📦 Response data:', data);
+      
       if (!resp.ok) throw new Error(data.error || 'Authentication failed.');
 
-      // Save token & user
-      localStorage.setItem('auth_token', data.token);
+      // CRITICAL: Save token & user
+      console.log('💾 Saving auth token:', data.token ? 'Token received' : 'NO TOKEN!');
+      
+      if (data.token) {
+        localStorage.setItem('auth_token', data.token);
+        console.log('✅ Token saved to localStorage');
+      } else {
+        console.error('❌ No token in response!');
+        throw new Error('No token received from server');
+      }
+      
       localStorage.setItem('user_id', data.user.id.toString());
       localStorage.setItem('auth_type', mode);
+      
+      // Verify token was saved
+      const savedToken = localStorage.getItem('auth_token');
+      console.log('🔍 Verification - Token in localStorage:', savedToken ? 'YES' : 'NO');
 
       onAuthSuccess(data.user);
       setIsLoading(false);
       onClose();
+      
+      // Trigger a custom event to notify components about authentication
+      window.dispatchEvent(new Event('auth-changed'));
+      
+      // Small delay then reload to ensure state is saved
+      setTimeout(() => {
+        console.log('🔄 Reloading page...');
+        window.location.reload();
+      }, 100);
     } catch (err) {
+      console.error('❌ Auth error:', err);
       setError(err instanceof Error ? err.message : 'Authentication failed.');
       setIsLoading(false);
     }
@@ -266,3 +296,4 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuccess })
 };
 
 export default AuthModal;
+

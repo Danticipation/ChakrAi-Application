@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+﻿import React, { useState, useCallback, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Users, MessageSquare, Heart, Calendar, Star, Plus, Shield, UserCheck, Flag, Send, Loader2, AlertCircle, RefreshCw, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -646,7 +646,7 @@ const CommunitySupport: React.FC<CommunitySupportProps> = ({ currentUser }) => {
                   onClick={() => setSelectedForum(null)}
                   className="text-blue-500 hover:text-blue-600 font-medium flex items-center gap-2"
                 >
-                  ← Back to Forums
+                  â† Back to Forums
                 </button>
                 <div>
                   <h3 className="text-xl font-semibold text-gray-800">
@@ -659,7 +659,7 @@ const CommunitySupport: React.FC<CommunitySupportProps> = ({ currentUser }) => {
               </div>
               <button 
                 onClick={() => {
-                  console.log('📝 New Post button clicked!');
+                  console.log('ðŸ“ New Post button clicked!');
                   console.log('Current showNewPost state:', showNewPost);
                   setShowNewPost(true);
                 }}
@@ -674,17 +674,17 @@ const CommunitySupport: React.FC<CommunitySupportProps> = ({ currentUser }) => {
             {showNewPost && (
               <div className="mb-6 p-6 border-2 border-blue-500 bg-blue-50 rounded-lg">
                 <div className="flex items-center justify-between mb-4">
-                  <h4 className="text-lg font-semibold text-blue-900">✏️ Create New Post</h4>
+                  <h4 className="text-lg font-semibold text-blue-900">âœï¸ Create New Post</h4>
                   <button
                     onClick={() => {
-                      console.log('❌ Cancel new post clicked');
+                      console.log('âŒ Cancel new post clicked');
                       setShowNewPost(false);
                       setNewPostTitle('');
                       setNewPostContent('');
                     }}
                     className="text-blue-600 hover:text-blue-800"
                   >
-                    ✕ Cancel
+                    âœ• Cancel
                   </button>
                 </div>
                 
@@ -724,13 +724,13 @@ const CommunitySupport: React.FC<CommunitySupportProps> = ({ currentUser }) => {
                   <div className="flex gap-3">
                     <button
                       onClick={() => {
-                        console.log('📤 Submit post clicked!');
+                        console.log('ðŸ“¤ Submit post clicked!');
                         console.log('Title:', newPostTitle);
                         console.log('Content:', newPostContent);
                         console.log('Forum ID:', selectedForum);
                         
                         if (!newPostTitle.trim()) {
-                          console.log('❌ Title is empty');
+                          console.log('âŒ Title is empty');
                           toast({
                             title: "Title Required",
                             description: "Please enter a title for your post",
@@ -740,7 +740,7 @@ const CommunitySupport: React.FC<CommunitySupportProps> = ({ currentUser }) => {
                         }
                         
                         if (!newPostContent.trim()) {
-                          console.log('❌ Content is empty');
+                          console.log('âŒ Content is empty');
                           toast({
                             title: "Content Required", 
                             description: "Please enter some content for your post",
@@ -749,7 +749,7 @@ const CommunitySupport: React.FC<CommunitySupportProps> = ({ currentUser }) => {
                           return;
                         }
                         
-                        console.log('✅ Validation passed, calling mutation...');
+                        console.log('âœ… Validation passed, calling mutation...');
                         createPostMutation.mutate({ 
                           title: newPostTitle.trim(), 
                           content: newPostContent.trim(), 
@@ -799,7 +799,7 @@ const CommunitySupport: React.FC<CommunitySupportProps> = ({ currentUser }) => {
                   </p>
                   <button
                     onClick={() => {
-                      console.log('🚀 Create First Post clicked!');
+                      console.log('ðŸš€ Create First Post clicked!');
                       console.log('Current showNewPost state:', showNewPost);
                       console.log('Setting showNewPost to true...');
                       setShowNewPost(true);
@@ -925,7 +925,7 @@ const CommunitySupport: React.FC<CommunitySupportProps> = ({ currentUser }) => {
                         Joining...
                       </div>
                     ) : (
-                      'Join Discussion →'
+                      'Join Discussion â†’'
                     )}
                   </button>
                 </div>

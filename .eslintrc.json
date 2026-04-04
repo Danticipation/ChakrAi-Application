@@ -16,6 +16,12 @@
   },
   "plugins": ["@typescript-eslint"],
   "rules": {
+    "no-restricted-imports": ["error", {
+      "paths": [
+        { "name": "jsonwebtoken", "message": "Forbidden. Use `jose` exclusively." },
+        { "name": "crypto-js", "message": "Not for JWTs. Use `jose`." }
+      ]
+    }],
     "prefer-const": "error",
     "no-var": "error",
     "no-console": "off",

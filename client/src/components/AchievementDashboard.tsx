@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Award, Trophy, Star, Target, Calendar, Flame, TrendingUp, Lock, Loader2, AlertCircle } from 'lucide-react';
 import axios from 'axios';
@@ -192,21 +192,21 @@ export default function AchievementDashboard({ userId }: AchievementDashboardPro
     
     // Fallback icon mapping based on category and name
     const iconMap: Record<string, string> = {
-      'first-chat': '💬',
-      'early-bird': '🌅',
-      'night-owl': '🌙',
-      'journal-starter': '📝',
-      'mood-tracker': '😊',
-      'wellness-warrior': '🏆',
-      'mindful-master': '🧘',
-      'streak-keeper': '🔥',
-      'goal-getter': '🎯',
-      'community-helper': '🤝',
-      'growth-mindset': '🌱',
-      'reflection-master': '🪞',
-      'therapeutic-ally': '💙',
-      'progress-champion': '📈',
-      'milestone-achiever': '🏅'
+      'first-chat': 'ðŸ’¬',
+      'early-bird': 'ðŸŒ…',
+      'night-owl': 'ðŸŒ™',
+      'journal-starter': 'ðŸ“',
+      'mood-tracker': 'ðŸ˜Š',
+      'wellness-warrior': 'ðŸ†',
+      'mindful-master': 'ðŸ§˜',
+      'streak-keeper': 'ðŸ”¥',
+      'goal-getter': 'ðŸŽ¯',
+      'community-helper': 'ðŸ¤',
+      'growth-mindset': 'ðŸŒ±',
+      'reflection-master': 'ðŸªž',
+      'therapeutic-ally': 'ðŸ’™',
+      'progress-champion': 'ðŸ“ˆ',
+      'milestone-achiever': 'ðŸ…'
     };
 
     // Try to find by badge ID first
@@ -216,13 +216,13 @@ export default function AchievementDashboard({ userId }: AchievementDashboardPro
 
     // Fallback by category
     const categoryIcons: Record<string, string> = {
-      'engagement': '💬',
-      'milestone': '🏆',
-      'wellness': '🌟',
-      'achievement': '🎖️'
+      'engagement': 'ðŸ’¬',
+      'milestone': 'ðŸ†',
+      'wellness': 'ðŸŒŸ',
+      'achievement': 'ðŸŽ–ï¸'
     };
 
-    return categoryIcons[badge.category] || '🏅';
+    return categoryIcons[badge.category] || 'ðŸ…';
   };
 
   const getStreakIcon = (type: string) => {

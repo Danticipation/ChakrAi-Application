@@ -3,7 +3,7 @@ import {
   supportForums, forumPosts,
   type SupportForum, type InsertSupportForum,
   type ForumPost, type InsertForumPost,
-} from "@shared/schema";
+} from "../../shared/schema.ts";
 import { eq, desc } from "drizzle-orm";
 
 export interface ICommunityStorage {
@@ -28,6 +28,11 @@ export class CommunityStorage implements ICommunityStorage {
       ...data,
       createdAt: new Date(),
     }).returning();
+    
+    if (!result[0]) {
+      throw new Error('Failed to create forum post');
+    }
+    
     return result[0];
   }
 }

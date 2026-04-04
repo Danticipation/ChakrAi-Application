@@ -1,4 +1,4 @@
-// Web Audio API-based voice recorder for OpenAI Whisper compatibility
+﻿// Web Audio API-based voice recorder for OpenAI Whisper compatibility
 // Uses proper WAV encoding to avoid transcription issues
 
 import { WebAudioRecorder } from './webAudioRecorder';
@@ -30,7 +30,7 @@ export class VoiceRecorder {
     try {
       this.options.onStatusChange?.('recording');
       
-      console.log('🎵 Starting WebAudioRecorder for proper WAV generation');
+      console.log('ðŸŽµ Starting WebAudioRecorder for proper WAV generation');
       
       this.webAudioRecorder = new WebAudioRecorder();
       await this.webAudioRecorder.startRecording();
@@ -90,7 +90,7 @@ export class VoiceRecorder {
         return;
       }
 
-      console.log('🎵 Processing WebAudio-generated WAV:', {
+      console.log('ðŸŽµ Processing WebAudio-generated WAV:', {
         size: audioBlob.size,
         duration: duration,
         type: audioBlob.type
@@ -122,8 +122,17 @@ export class VoiceRecorder {
       
       formData.append('audio', audioBlob, fileName);
 
+      // Get authentication token
+      const token = localStorage.getItem('auth_token');
+      const headers: HeadersInit = {};
+      
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const response = await fetch('/api/transcribe', {
         method: 'POST',
+        headers,
         body: formData,
       });
 
@@ -133,7 +142,7 @@ export class VoiceRecorder {
 
       const data = await response.json();
       
-      console.log('🎵 Raw transcription result:', data);
+      console.log('ðŸŽµ Raw transcription result:', data);
       
       if (data.text && data.text.trim()) {
         const transcription = data.text.trim();
@@ -141,7 +150,7 @@ export class VoiceRecorder {
         if (transcription !== 'you' && transcription !== 'You' && transcription.length > 0) {
           this.options.onTranscription(transcription);
         } else {
-          console.log('🚫 Rejected OpenAI Whisper artifact:', transcription);
+          console.log('ðŸš« Rejected OpenAI Whisper artifact:', transcription);
           this.options.onError?.('OpenAI Whisper returned artifact "you". Try speaking more slowly and distinctly, closer to microphone.');
         }
       } else {

@@ -1,5 +1,19 @@
 // Phase 2: Analytics business logic service
-import { JournalEntry } from '../storage.js';
+
+// Define JournalEntry interface locally since it's not exported from storage
+interface JournalEntry {
+  id: number;
+  userId: number;
+  title?: string;
+  content: string;
+  mood?: string;
+  moodScore?: number;
+  moodIntensity?: number;
+  emotionalTags?: string[];
+  tags?: string[];
+  createdAt: Date;
+  updatedAt?: Date;
+}
 
 export interface TriggerPattern {
   trigger: string;
@@ -57,13 +71,13 @@ export class AnalyticsService {
 
     // Convert to result format
     const patterns: TriggerPattern[] = [];
-    for (const [trigger, data] of triggers.entries()) {
+    for (const [trigger, data] of Array.from(triggers.entries())) {
       if (data.count >= 2) { // Only include triggers that appear multiple times
         patterns.push({
           trigger,
           frequency: data.count,
-          avgMoodBefore: data.moodsBefore.reduce((a, b) => a + b, 0) / data.moodsBefore.length || 0,
-          avgMoodAfter: data.moodsAfter.reduce((a, b) => a + b, 0) / data.moodsAfter.length || 0,
+          avgMoodBefore: data.moodsBefore.reduce((a: number, b: number) => a + b, 0) / data.moodsBefore.length || 0,
+          avgMoodAfter: data.moodsAfter.reduce((a: number, b: number) => a + b, 0) / data.moodsAfter.length || 0,
           contexts: data.contexts.slice(0, 3) // Top 3 contexts
         });
       }
@@ -104,23 +118,23 @@ export class AnalyticsService {
     });
 
     const patterns: TemporalPattern[] = [];
-    for (const [timeSlot, data] of timeSlots.entries()) {
+    for (const [timeSlot, data] of Array.from(timeSlots.entries())) {
       if (data.count >= 2) {
         // Count emotion frequency
-        const emotionCounts = data.emotions.reduce((acc, emotion) => {
+        const emotionCounts = data.emotions.reduce((acc: Record<string, number>, emotion: string) => {
           acc[emotion] = (acc[emotion] || 0) + 1;
           return acc;
         }, {} as Record<string, number>);
         
         const commonEmotions = Object.entries(emotionCounts)
-          .sort(([,a], [,b]) => b - a)
+          .sort(([,a], [,b]) => (b as number) - (a as number))
           .slice(0, 3)
           .map(([emotion]) => emotion);
 
         patterns.push({
           timeOfDay: timeSlot,
           frequency: data.count,
-          avgMood: data.moods.reduce((a, b) => a + b, 0) / data.moods.length || 0,
+          avgMood: data.moods.reduce((a: number, b: number) => a + b, 0) / data.moods.length || 0,
           commonEmotions
         });
       }

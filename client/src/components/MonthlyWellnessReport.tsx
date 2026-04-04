@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -57,6 +57,10 @@ interface MonthlyReport {
   };
 }
 
+interface MonthlyReportResponse {
+  report: MonthlyReport;
+}
+
 interface MonthlyWellnessReportProps {
   userId: number;
 }
@@ -68,7 +72,10 @@ export function MonthlyWellnessReport({ userId }: MonthlyWellnessReportProps) {
   const [generating, setGenerating] = useState(false);
 
   useEffect(() => {
-    fetchMonthlyReport();
+    const loadReport = async () => {
+      await fetchMonthlyReport();
+    };
+    void loadReport();
   }, [userId, currentDate]);
 
   const fetchMonthlyReport = async () => {
@@ -80,7 +87,7 @@ export function MonthlyWellnessReport({ userId }: MonthlyWellnessReportProps) {
       const response = await fetch(`/api/analytics/monthly-report/${userId}/${year}/${month}`);
       
       if (response.ok) {
-        const data = await response.json();
+        const data = await response.json() as MonthlyReportResponse;
         setReport(data.report);
       } else if (response.status === 404) {
         // Report doesn't exist, show option to generate
@@ -106,7 +113,7 @@ export function MonthlyWellnessReport({ userId }: MonthlyWellnessReportProps) {
       });
       
       if (response.ok) {
-        const data = await response.json();
+        const data = await response.json() as MonthlyReportResponse;
         setReport(data.report);
       }
     } catch (error) {
@@ -188,7 +195,7 @@ export function MonthlyWellnessReport({ userId }: MonthlyWellnessReportProps) {
         <div className="flex items-center space-x-2">
           {report && (
             <>
-              <Button variant="outline" size="sm" onClick={downloadReport}>
+              <Button variant="outline" size="sm" onClick={() => void downloadReport()}>
                 <Download className="w-4 h-4 mr-2" />
                 Download
               </Button>
@@ -241,7 +248,7 @@ export function MonthlyWellnessReport({ userId }: MonthlyWellnessReportProps) {
             <p className="text-gray-600 mb-6">
               Generate your monthly wellness report for {format(currentDate, 'MMMM yyyy')}
             </p>
-            <Button onClick={generateReport} disabled={generating}>
+            <Button onClick={() => void generateReport()} disabled={generating}>
               {generating ? 'Generating...' : 'Generate Report'}
               <BarChart3 className="w-4 h-4 ml-2" />
             </Button>

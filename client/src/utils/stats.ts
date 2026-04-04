@@ -1,5 +1,4 @@
-import { getCurrentUserId } from '@/utils/userSession';
-import { QueryClient } from '@tanstack/react-query';
+﻿import type { QueryClient } from '@tanstack/react-query';
 
 interface StreakStats {
   consecutiveDaysJournaling: number;

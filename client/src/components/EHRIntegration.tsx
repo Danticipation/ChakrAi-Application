@@ -1,25 +1,19 @@
-import { useState, useEffect } from 'react';
+﻿import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { 
   Shield, 
   FileText, 
   Download, 
   Database, 
-  Building2, 
   CreditCard,
   CheckCircle2,
-  AlertCircle,
-  Clock,
   Activity,
   FileDown,
-  Settings,
   Users,
   Lock
 } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
 import { getCurrentUserId } from '../utils/userSession';
 
 interface EHRIntegration {
@@ -393,7 +387,7 @@ export function EHRIntegration() {
                             {export_.exportType.replace('_', ' ').toUpperCase()}
                           </div>
                           <div className="text-sm text-white/70">
-                            {formatFileSize(export_.fileSize)} • {export_.downloadCount} downloads
+                            {formatFileSize(export_.fileSize)} â€¢ {export_.downloadCount} downloads
                           </div>
                         </div>
                       </div>

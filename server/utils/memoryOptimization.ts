@@ -31,11 +31,13 @@ export class MemoryManager {
 
   static clearExpired(): void {
     const now = Date.now();
-    for (const [key, item] of this.cache.entries()) {
+    const keysToDelete: string[] = [];
+    this.cache.forEach((item, key) => {
       if (now - item.timestamp > item.ttl) {
-        this.cache.delete(key);
+        keysToDelete.push(key);
       }
-    }
+    });
+    keysToDelete.forEach(key => this.cache.delete(key));
   }
 
   static clearAll(): void {
@@ -166,7 +168,8 @@ export class ResourcePool<T> {
   }
 
   async destroy(): Promise<void> {
-    const allResources = [...this.available, ...this.inUse];
+    const allResources = this.available.slice();
+    this.inUse.forEach(resource => allResources.push(resource));
     await Promise.all(allResources.map(resource => this.destroyer(resource)));
     this.available = [];
     this.inUse.clear();

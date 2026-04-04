@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Users, Shield, AlertTriangle, FileText, UserCheck, Calendar, Activity } from 'lucide-react';
+﻿import React, { useState, useEffect } from 'react';
+import { Users, AlertTriangle, FileText, UserCheck, Calendar, Activity } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
@@ -216,7 +216,7 @@ const TherapistPortal: React.FC = () => {
                   </Badge>
                   <div>
                     <p className="text-sm font-medium text-white">{alert.description}</p>
-                    <p className="text-xs text-white/70">Client {alert.clientUserId} • {formatDate(alert.createdAt)}</p>
+                    <p className="text-xs text-white/70">Client {alert.clientUserId} â€¢ {formatDate(alert.createdAt)}</p>
                   </div>
                 </div>
                 {!alert.acknowledged && (

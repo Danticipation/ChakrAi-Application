@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { MessageSquare, Bug, Lightbulb, AlertCircle, CheckCircle, Clock, Eye, MessageCircleReply } from 'lucide-react';
+﻿import React, { useState, useEffect } from 'react';
+import { MessageSquare, Bug, Lightbulb, AlertCircle, CheckCircle, Clock, Eye } from 'lucide-react';
 import axios from 'axios';
 
 interface FeedbackItem {
@@ -148,7 +148,7 @@ const AdminFeedbackDashboard: React.FC = () => {
               <Clock className="w-8 h-8 text-yellow-400" />
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-400">Pending</p>
-                <p className="text-2xl font-bold text-white">{stats.byStatus.submitted || 0}</p>
+                <p className="text-2xl font-bold text-white">{stats.byStatus['submitted'] || 0}</p>
               </div>
             </div>
           </div>
@@ -158,7 +158,7 @@ const AdminFeedbackDashboard: React.FC = () => {
               <Bug className="w-8 h-8 text-red-400" />
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-400">Bug Reports</p>
-                <p className="text-2xl font-bold text-white">{stats.byType.bug || 0}</p>
+                <p className="text-2xl font-bold text-white">{stats.byType['bug'] || 0}</p>
               </div>
             </div>
           </div>
@@ -168,7 +168,7 @@ const AdminFeedbackDashboard: React.FC = () => {
               <Lightbulb className="w-8 h-8 text-yellow-400" />
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-400">Feature Requests</p>
-                <p className="text-2xl font-bold text-white">{stats.byType.feature || 0}</p>
+                <p className="text-2xl font-bold text-white">{stats.byType['feature'] || 0}</p>
               </div>
             </div>
           </div>
@@ -254,11 +254,11 @@ const AdminFeedbackDashboard: React.FC = () => {
                     
                     <div className="flex items-center space-x-4 text-xs text-gray-500">
                       <span>User #{item.userId}</span>
-                      <span>•</span>
+                      <span>â€¢</span>
                       <span>{new Date(item.createdAt).toLocaleDateString()}</span>
                       {item.rating && (
                         <>
-                          <span>•</span>
+                          <span>â€¢</span>
                           <span>Rating: {item.rating}/5</span>
                         </>
                       )}
@@ -293,7 +293,7 @@ const AdminFeedbackDashboard: React.FC = () => {
                   <div>
                     <h2 className="text-xl font-bold text-white">{selectedFeedback.title}</h2>
                     <p className="text-gray-400 text-sm">
-                      {selectedFeedback.feedbackType} • {selectedFeedback.priority} priority • User #{selectedFeedback.userId}
+                      {selectedFeedback.feedbackType} â€¢ {selectedFeedback.priority} priority â€¢ User #{selectedFeedback.userId}
                     </p>
                   </div>
                 </div>
@@ -301,7 +301,7 @@ const AdminFeedbackDashboard: React.FC = () => {
                   onClick={() => setSelectedFeedback(null)}
                   className="text-gray-400 hover:text-white"
                 >
-                  ×
+                  Ã—
                 </button>
               </div>
 
@@ -320,7 +320,7 @@ const AdminFeedbackDashboard: React.FC = () => {
                           key={star}
                           className={star <= selectedFeedback.rating! ? 'text-yellow-400' : 'text-gray-600'}
                         >
-                          ★
+                          â˜…
                         </span>
                       ))}
                       <span className="ml-2 text-gray-400">({selectedFeedback.rating}/5)</span>

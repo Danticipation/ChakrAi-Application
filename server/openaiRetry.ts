@@ -1,6 +1,10 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import OpenAI from "openai";
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+console.log('🔑 OpenAI API Key loaded:', process.env['OPENAI_API_KEY'] ? 'Yes' : 'No');
+const openai = new OpenAI({ apiKey: process.env['OPENAI_API_KEY'] });
 
 export async function retryOpenAIRequest<T>(
   requestFn: () => Promise<T>,

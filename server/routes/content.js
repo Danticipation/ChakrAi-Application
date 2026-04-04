@@ -1,5 +1,10 @@
 import express from 'express';
-import { openai } from '../openaiRetry.js';
+import OpenAI from 'openai';
+
+// Initialize OpenAI client
+const openai = new OpenAI({
+  apiKey: process.env['OPENAI_API_KEY'],
+});
 
 const router = express.Router();
 
@@ -8,19 +13,29 @@ router.get('/daily-affirmation', async (req, res) => {
   try {
     const today = new Date().toDateString();
     
+    console.log('🔑 Checking OpenAI API key:', process.env.OPENAI_API_KEY ? 'EXISTS' : 'MISSING');
+    
     if (process.env.OPENAI_API_KEY) {
-      const response = await openai.chat.completions.create({
-        model: "gpt-4o",
-        messages: [{
-          role: "user",
-          content: "Generate a thoughtful, therapeutic daily affirmation focused on mental wellness, self-compassion, and personal growth. Keep it concise and meaningful."
-        }],
-        max_tokens: 100,
-        temperature: 0.8
-      });
-      
-      const affirmation = response.choices[0].message.content?.trim() || "Today I choose to embrace my journey with compassion and openness.";
-      res.json({ affirmation, date: today });
+      console.log('🎯 Generating fresh daily affirmation with OpenAI...');
+      try {
+        const response = await openai.chat.completions.create({
+          model: "gpt-4o",
+          messages: [{
+            role: "user",
+            content: "Generate a unique, thoughtful daily affirmation focused on mental wellness, self-compassion, and personal growth. Make it inspiring and meaningful - avoid generic phrases. Be specific and personal. Keep it concise but powerful."
+          }],
+          max_tokens: 120,
+          temperature: 0.9
+        });
+        
+        const affirmation = response.choices[0]?.message?.content?.trim() || "Today I choose to embrace my journey with compassion and openness.";
+        console.log('✅ Generated affirmation:', affirmation);
+        res.json({ affirmation, date: today, source: 'openai' });
+      } catch (openaiError) {
+        console.error('❌ OpenAI API Error:', openaiError.message);
+        const fallbackAffirmation = "I trust in my ability to navigate today with wisdom and kindness toward myself.";
+        res.json({ affirmation: fallbackAffirmation, date: today, source: 'openai_error' });
+      }
     } else {
       const affirmations = [
         "Today I choose to embrace my journey with compassion and openness.",
@@ -31,13 +46,15 @@ router.get('/daily-affirmation', async (req, res) => {
       ];
       
       const randomAffirmation = affirmations[Math.floor(Math.random() * affirmations.length)];
-      res.json({ affirmation: randomAffirmation, date: today });
+      console.log('⚠️ Using fallback affirmation (no OpenAI key):', randomAffirmation);
+      res.json({ affirmation: randomAffirmation, date: today, source: 'fallback' });
     }
   } catch (error) {
-    console.error('Daily affirmation error:', error);
+    console.error('❌ Daily affirmation error:', error);
     res.json({ 
       affirmation: "Today I choose to be gentle with myself and embrace growth with patience.", 
-      date: today 
+      date: today,
+      source: 'error_fallback'
     });
   }
 });

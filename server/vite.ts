@@ -3,7 +3,7 @@ import fs from "fs";
 import path from "path";
 import { createServer as createViteServer, createLogger } from "vite";
 import { type Server } from "http";
-import viteConfig from "../vite.config";
+import viteConfig from "../vite.config.ts";
 import { nanoid } from "nanoid";
 
 const viteLogger = createLogger();
@@ -41,8 +41,23 @@ export async function setupVite(app: Express, server: Server) {
   });
 
   app.use(vite.middlewares);
+  
+  // Only serve HTML for non-API, non-asset routes
   app.use("*", async (req, res, next) => {
     const url = req.originalUrl;
+
+    // Skip HTML serving for API routes, assets, and static files
+    if (url.startsWith('/api/') || 
+        url.startsWith('/assets/') || 
+        url.includes('.css') || 
+        url.includes('.js') || 
+        url.includes('.svg') || 
+        url.includes('.png') || 
+        url.includes('.ico') || 
+        url.includes('manifest.json') ||
+        url.includes('sw.js')) {
+      return next();
+    }
 
     try {
       const clientTemplate = path.resolve(

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+﻿import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -85,17 +85,22 @@ export function MindfulnessExercise({
 
   // Step progression
   useEffect(() => {
-    if (!isActive) return;
+    if (!isActive) {
+      return;
+    }
 
     const elapsed = totalTime - timeRemaining;
     let cumulativeTime = 0;
     let newStep = 0;
 
     for (let i = 0; i < exercise.guidedSteps.length; i++) {
-      cumulativeTime += exercise.guidedSteps[i].duration;
-      if (elapsed < cumulativeTime) {
-        newStep = i;
-        break;
+      const step = exercise.guidedSteps[i];
+      if (step) {
+        cumulativeTime += step.duration;
+        if (elapsed < cumulativeTime) {
+          newStep = i;
+          break;
+        }
       }
     }
 
@@ -112,16 +117,18 @@ export function MindfulnessExercise({
 
     try {
       const step = exercise.guidedSteps[stepIndex];
-      const response = await fetch('/api/voice/emotional-generate', {
+      if (!step) return;
+      
+      console.log(`Playing audio for step ${stepIndex + 1}:`, step.audioText.substring(0, 50) + '...');
+      
+      // Use local Piper TTS server
+      const response = await fetch('http://localhost:5005/speak', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          text: step.audioText,
-          voice: selectedVoice,
-          emotionalContext: 'calming',
-          intensity: 0.8
+          text: step.audioText
         })
       });
 
@@ -281,7 +288,7 @@ export function MindfulnessExercise({
           <div className="flex justify-center">
             <Button
               onClick={onClose}
-              variant="ghost"
+              variant="outline"
               className="text-gray-500 hover:text-gray-700"
             >
               Close Exercise
@@ -300,3 +307,4 @@ export function MindfulnessExercise({
     </div>
   );
 }
+

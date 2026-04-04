@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { 
-  Heart, Brain, TrendingUp, Target, Award, Calendar, 
+  Heart, Brain, Target, 
   Activity, RefreshCw, BarChart3, Users, BookOpen, 
-  Zap, Moon, Settings, AlertCircle, CheckCircle,
-  ArrowUpRight, ArrowDownRight, Minus, Sparkles
+  Zap, AlertCircle, CheckCircle
 } from 'lucide-react';
+import { getCurrentUserId, getAuthHeaders } from '../utils/unifiedUserSession';
 
 interface WellnessMetrics {
   currentWellnessScore: number;
@@ -22,39 +22,86 @@ interface ChartData {
   progressTracking: Array<{ period: string; journalEntries: number; moodEntries: number; engagement: number }>;
 }
 
+interface JournalEntry {
+  id: string;
+  content: string;
+  createdAt: string;
+}
+
+interface MoodEntry {
+  id: string;
+  intensity: number;
+  mood: string;
+  createdAt: string;
+}
+
 interface DashboardData {
   overview: WellnessMetrics;
   charts: ChartData;
   insights: string;
 }
 
+interface AnalyticsApiResponse {
+  dashboard?: DashboardData;
+  overview?: WellnessMetrics;
+  charts?: ChartData;
+  insights?: string;
+}
+
 interface AnalyticsDashboardProps {
-  userId: number | null;
   onNavigate?: (section: string) => void;
 }
 
-export default function AnalyticsDashboard({ userId, onNavigate }: AnalyticsDashboardProps) {
+export default function AnalyticsDashboard({ onNavigate }: AnalyticsDashboardProps) {
+  const [userId, setUserId] = useState<number>(0);
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeView, setActiveView] = useState<'overview' | 'detailed'>('overview');
 
-  // Fetch dashboard data with multiple fallback strategies
+  // Get authenticated user ID
+  useEffect(() => {
+    const getUser = async () => {
+      try {
+        const authenticatedUserId = await getCurrentUserId();
+        if (authenticatedUserId === 0) {
+          setError('Authentication failed. Please refresh the page.');
+          return;
+        }
+        setUserId(authenticatedUserId);
+        console.log('ðŸ”  AnalyticsDashboard: Using authenticated user:', authenticatedUserId);
+      } catch (error) {
+        console.error('â Œ AnalyticsDashboard: Auth failed:', error);
+        setError('Authentication failed. Please refresh the page.');
+      }
+    };
+    void getUser(); // Explicitly mark as ignored
+  }, []);
+
+  // Fetch dashboard data with unified auth
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      if (!userId) {
-        setDashboardData(createFallbackData());
+      if (userId === 0) {
+        setError('Authentication required');
         setLoading(false);
         return;
       }
 
-      let response = await fetch(`/api/analytics/simple/${userId}`);
+      // Use unified auth headers
+      const authHeaders = await getAuthHeaders();
+      console.log('ðŸ” AnalyticsDashboard: Using auth headers for user:', userId);
+
+      let response: Response = await fetch(`/api/analytics/simple/${userId}`, {
+        headers: authHeaders
+      });
       
       if (!response.ok) {
-        response = await fetch(`/api/analytics/dashboard/${userId}`);
+        response = await fetch(`/api/analytics/dashboard/${userId}`, {
+          headers: authHeaders
+        });
       }
 
       if (!response.ok) {
@@ -64,12 +111,12 @@ export default function AnalyticsDashboard({ userId, onNavigate }: AnalyticsDash
         return;
       }
 
-      const data = await response.json();
+      const data = await response.json() as AnalyticsApiResponse;
       
       if (data.dashboard) {
         setDashboardData(data.dashboard);
       } else if (data.overview && data.charts) {
-        setDashboardData(data);
+        setDashboardData(data as DashboardData);
       } else {
         setDashboardData(transformDataFormat(data));
       }
@@ -88,20 +135,20 @@ export default function AnalyticsDashboard({ userId, onNavigate }: AnalyticsDash
     try {
       // Temporarily disabled journal fetch to prevent NaN errors - will implement device fingerprint later
       const [journalResponse, moodResponse] = await Promise.allSettled([
-        Promise.resolve({ ok: false, status: 'rejected' } as any),
+        Promise.resolve(new Response(JSON.stringify([]), { status: 400 })), // Mock a failed response for journal
         fetch(`/api/mood/${userId}`)
       ]);
 
-      let journalEntries = [];
-      let moodEntries = [];
+      let journalEntries: JournalEntry[] = [];
+      let moodEntries: MoodEntry[] = [];
 
       if (journalResponse.status === 'fulfilled' && journalResponse.value.ok) {
-        journalEntries = await journalResponse.value.json();
+        journalEntries = (await journalResponse.value.json()) as JournalEntry[];
       }
 
       if (moodResponse.status === 'fulfilled' && moodResponse.value.ok) {
-        const moodData = await moodResponse.value.json();
-        moodEntries = moodData.moodEntries || moodData || [];
+        const moodData = (await moodResponse.value.json()) as { moodEntries: MoodEntry[] } | MoodEntry[];
+        moodEntries = Array.isArray(moodData) ? moodData : moodData.moodEntries || [];
       }
 
       return createDashboardFromRawData(journalEntries, moodEntries);
@@ -111,12 +158,12 @@ export default function AnalyticsDashboard({ userId, onNavigate }: AnalyticsDash
     }
   };
 
-  const createDashboardFromRawData = (journalEntries: any[], moodEntries: any[]): DashboardData => {
+  const createDashboardFromRawData = (journalEntries: JournalEntry[], moodEntries: MoodEntry[]): DashboardData => {
     const totalJournalEntries = journalEntries.length;
     const totalMoodEntries = moodEntries.length;
     
     const averageMood = moodEntries.length > 0 
-      ? moodEntries.reduce((sum, entry) => sum + (entry.intensity || 5), 0) / moodEntries.length 
+      ? moodEntries.reduce((sum, entry) => sum + entry.intensity, 0) / moodEntries.length 
       : 7.0;
 
     const engagementScore = Math.min(100, (totalJournalEntries + totalMoodEntries) * 5);
@@ -128,20 +175,29 @@ export default function AnalyticsDashboard({ userId, onNavigate }: AnalyticsDash
 
     const emotionDistribution: Record<string, number> = {};
     moodEntries.forEach(entry => {
-      const mood = entry.mood || 'neutral';
+      const mood = entry.mood;
       emotionDistribution[mood] = (emotionDistribution[mood] || 0) + 1;
     });
 
     const moodTrend = moodEntries.slice(-7).map(entry => ({
-      date: entry.createdAt ? new Date(entry.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-      value: entry.intensity || 5,
-      emotion: entry.mood || 'neutral'
+      date: new Date(entry.createdAt).toISOString().split('T')[0],
+      value: entry.intensity,
+      emotion: entry.mood
     }));
+
+    // Calculate emotional volatility from actual mood data
+    const emotionalVolatility = moodEntries.length > 1 
+      ? Math.round(Math.abs(moodEntries.reduce((acc, entry, index) => {
+          if (index === 0) return 0;
+          const previous = moodEntries[index - 1];
+          return acc + Math.abs(entry.intensity - previous.intensity);
+        }, 0) / (moodEntries.length - 1)) * 10)
+      : 0;
 
     return {
       overview: {
         currentWellnessScore: wellnessScore,
-        emotionalVolatility: Math.round(Math.random() * 30 + 10),
+        emotionalVolatility: Math.min(100, emotionalVolatility),
         therapeuticEngagement: engagementScore,
         totalJournalEntries,
         totalMoodEntries,
@@ -161,24 +217,24 @@ export default function AnalyticsDashboard({ userId, onNavigate }: AnalyticsDash
     let insights = "Based on your wellness activity:\n\n";
     
     if (journalCount === 0 && moodCount === 0) {
-      insights += "• Start your wellness journey by tracking your mood or writing a journal entry\n";
-      insights += "• Regular check-ins help build self-awareness and emotional intelligence\n";
-      insights += "• Even small steps can lead to meaningful progress over time";
+      insights += "â€¢ Start your wellness journey by tracking your mood or writing a journal entry\n";
+      insights += "â€¢ Regular check-ins help build self-awareness and emotional intelligence\n";
+      insights += "â€¢ Even small steps can lead to meaningful progress over time";
     } else {
       if (journalCount > 0) {
-        insights += `• You've written ${journalCount} journal ${journalCount === 1 ? 'entry' : 'entries'} - excellent for self-reflection!\n`;
+        insights += `â€¢ You've written ${journalCount} journal ${journalCount === 1 ? 'entry' : 'entries'} - excellent for self-reflection!\n`;
       }
       if (moodCount > 0) {
-        insights += `• You've tracked your mood ${moodCount} ${moodCount === 1 ? 'time' : 'times'} with an average of ${avgMood.toFixed(1)}/10\n`;
+        insights += `â€¢ You've tracked your mood ${moodCount} ${moodCount === 1 ? 'time' : 'times'} with an average of ${avgMood.toFixed(1)}/10\n`;
       }
       if (wellnessScore >= 75) {
-        insights += "• Your wellness score shows excellent engagement with your mental health journey\n";
+        insights += "â€¢ Your wellness score shows excellent engagement with your mental health journey\n";
       } else if (wellnessScore >= 50) {
-        insights += "• Your wellness score shows good progress - keep building momentum\n";
+        insights += "â€¢ Your wellness score shows good progress - keep building momentum\n";
       } else {
-        insights += "• Consider increasing your wellness activities for better mental health insights\n";
+        insights += "â€¢ Consider increasing your wellness activities for better mental health insights\n";
       }
-      insights += "• Consistency in tracking helps identify patterns and growth opportunities";
+      insights += "â€¢ Consistency in tracking helps identify patterns and growth opportunities";
     }
     
     return insights;
@@ -186,12 +242,12 @@ export default function AnalyticsDashboard({ userId, onNavigate }: AnalyticsDash
 
   const createFallbackData = (): DashboardData => ({
     overview: {
-      currentWellnessScore: 75,
-      emotionalVolatility: 25,
-      therapeuticEngagement: 60,
+      currentWellnessScore: 0,
+      emotionalVolatility: 0,
+      therapeuticEngagement: 0,
       totalJournalEntries: 0,
       totalMoodEntries: 0,
-      averageMood: 7.0
+      averageMood: 0
     },
     charts: {
       moodTrend: [],
@@ -202,28 +258,30 @@ export default function AnalyticsDashboard({ userId, onNavigate }: AnalyticsDash
     insights: "Welcome to your wellness analytics! Start by tracking your mood or writing a journal entry to see personalized insights about your mental health journey."
   });
 
-  const transformDataFormat = (data: any): DashboardData => {
+  const transformDataFormat = (data: AnalyticsApiResponse): DashboardData => {
     return {
       overview: {
-        currentWellnessScore: data.wellnessScore || data.currentWellnessScore || 50,
-        emotionalVolatility: data.volatility || data.emotionalVolatility || 20,
-        therapeuticEngagement: data.engagement || data.therapeuticEngagement || 40,
-        totalJournalEntries: data.journalEntries || data.totalJournalEntries || 0,
-        totalMoodEntries: data.moodEntries || data.totalMoodEntries || 0,
-        averageMood: data.averageMood || 5.0
+        currentWellnessScore: data.overview?.currentWellnessScore || data.dashboard?.overview.currentWellnessScore || 0,
+        emotionalVolatility: data.overview?.emotionalVolatility || data.dashboard?.overview.emotionalVolatility || 0,
+        therapeuticEngagement: data.overview?.therapeuticEngagement || data.dashboard?.overview.therapeuticEngagement || 0,
+        totalJournalEntries: data.overview?.totalJournalEntries || data.dashboard?.overview.totalJournalEntries || 0,
+        totalMoodEntries: data.overview?.totalMoodEntries || data.dashboard?.overview.totalMoodEntries || 0,
+        averageMood: data.overview?.averageMood || data.dashboard?.overview.averageMood || 0
       },
       charts: {
-        moodTrend: data.moodTrend || [],
-        wellnessTrend: data.wellnessTrend || [],
-        emotionDistribution: data.emotionDistribution || {},
-        progressTracking: data.progressTracking || []
+        moodTrend: data.charts?.moodTrend || data.dashboard?.charts.moodTrend || [],
+        wellnessTrend: data.charts?.wellnessTrend || data.dashboard?.charts.wellnessTrend || [],
+        emotionDistribution: data.charts?.emotionDistribution || data.dashboard?.charts.emotionDistribution || {},
+        progressTracking: data.charts?.progressTracking || data.dashboard?.charts.progressTracking || []
       },
-      insights: data.insights || "Your wellness journey is just beginning. Keep tracking to see personalized insights!"
+      insights: data.insights || data.dashboard?.insights || "Your wellness journey is just beginning. Keep tracking to see personalized insights!"
     };
   };
 
   useEffect(() => {
-    fetchDashboardData();
+    if (userId > 0) {
+      void fetchDashboardData(); // Explicitly mark as ignored
+    }
   }, [userId]);
 
   const getMoodColor = (score: number) => {
@@ -428,7 +486,7 @@ export default function AnalyticsDashboard({ userId, onNavigate }: AnalyticsDash
                         onClick={() => handleNavigation('mood')}
                         className="text-xs text-blue-300 hover:underline mt-1"
                       >
-                        Start tracking your mood →
+                        Start tracking your mood â†’
                       </button>
                     </div>
                   )}

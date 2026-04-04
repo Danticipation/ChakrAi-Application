@@ -1,0 +1,13 @@
+Lines to fix in EnhancedJournalInterface.tsx:
+
+Line 127: const headers = await getAuthHeaders();
+→ Change to: const headers = getAuthHeaders();
+
+Line 263: const headers = await getAuthHeaders();
+→ Change to: const headers = getAuthHeaders();
+
+Line 295: const headers = await getAuthHeaders();
+→ Change to: const headers = getAuthHeaders();
+
+Line 320: const headers = await getAuthHeaders();
+→ Change to: const headers = getAuthHeaders();

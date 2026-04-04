@@ -1,25 +1,15 @@
-import React, { useState, useCallback, useEffect } from 'react';
+﻿import React, { useState, useCallback, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Plus, BookOpen, TrendingUp, Download, Calendar, Search, Filter, Edit3, Eye, Clock, BarChart3, Star, MessageCircle, Loader2, RefreshCw, AlertCircle, Trash2 } from 'lucide-react';
+import { Plus, BookOpen, TrendingUp, Search, Edit3, Eye, Clock, BarChart3, Star, MessageCircle, Loader2, RefreshCw, AlertCircle, Trash2 } from 'lucide-react';
 import JournalEditor from './JournalEditor';
 import DeleteEntryModal from './DeleteEntryModal';
+import type { JournalEntry } from '../../../shared/schema';
 
 import { format } from 'date-fns';
 
-// Types based on actual database schema
-interface JournalEntry {
-  id: number;
-  userId: number;
-  title: string | null;
-  content: string;
-  mood: string | null;
-  moodIntensity: number | null;
-  tags: string[] | null;
-  isPrivate: boolean | null;
-  createdAt: Date | null;
-}
-
-interface JournalAnalytics {
+// This is a local type for the dashboard's aggregated analytics.
+// The `JournalAnalytics` from schema.ts is for single-entry analysis.
+interface JournalDashboardAnalytics {
   totalEntries: number;
   entriesThisMonth: number;
   averageMoodIntensity: number;
@@ -29,6 +19,15 @@ interface JournalAnalytics {
   averageWordsPerEntry: number;
   moodDistribution?: { [mood: string]: number };
   moodTrends?: Array<{ date: string; mood: string; intensity: number }>;
+}
+
+interface AIInsight {
+  id: string;
+  riskLevel: 'high' | 'moderate' | 'low';
+  insights: string;
+  themes: string[];
+  recommendations: string[];
+  createdAt: string;
 }
 
 interface JournalDashboardProps {
@@ -80,13 +79,13 @@ const EmptyState: React.FC<{
 
 // AI Insights Section Component
 const AIInsightsSection: React.FC<{ userId: number | null }> = ({ userId }) => {
-  const { data: aiInsights, isLoading, error } = useQuery({
+  const { data: aiInsights, isLoading, error } = useQuery<AIInsight[]>({
     queryKey: ['ai-insights', userId],
     queryFn: async () => {
       if (!userId) return [];
       const response = await fetch(`/api/journal/ai-insights/${userId}`);
       if (!response.ok) throw new Error('Failed to fetch AI insights');
-      return response.json();
+      return response.json() as Promise<AIInsight[]>;
     },
     enabled: !!userId
   });
@@ -117,7 +116,7 @@ const AIInsightsSection: React.FC<{ userId: number | null }> = ({ userId }) => {
 
   return (
     <div className="space-y-4">
-      {aiInsights.slice(0, 3).map((insight: any, index: number) => (
+      {aiInsights.slice(0, 3).map((insight: AIInsight) => (
         <div key={insight.id} className="p-4 theme-surface rounded-lg border-l-4" 
              style={{ borderLeftColor: insight.riskLevel === 'high' ? '#ef4444' : insight.riskLevel === 'moderate' ? '#f59e0b' : '#10b981' }}>
           <div className="mb-2">
@@ -149,7 +148,7 @@ const AIInsightsSection: React.FC<{ userId: number | null }> = ({ userId }) => {
               <ul className="text-xs theme-text-secondary space-y-1">
                 {insight.recommendations.slice(0, 2).map((rec: string, i: number) => (
                   <li key={i} className="flex items-start">
-                    <span className="mr-1">•</span>
+                    <span className="mr-1">â€¢</span>
                     <span>{rec}</span>
                   </li>
                 ))}
@@ -193,10 +192,7 @@ const useIsFreshStart = () => {
 
 // Main Component
 export default function JournalDashboard({ userId }: JournalDashboardProps) {
-  const [activeView, setActiveView] = useState<'list' | 'editor' | 'analytics'>('list'); // Default to list to show journal entries with delete buttons
-  
-  // Debug log to verify the view
-  console.log("Active view is:", activeView);
+  const [activeView, setActiveView] = useState<'list' | 'editor' | 'analytics'>('list');
   const [selectedEntry, setSelectedEntry] = useState<JournalEntry | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [moodFilter, setMoodFilter] = useState('all');
@@ -212,12 +208,12 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
   // Clear cache only when truly necessary (fresh start) + force refresh for device fingerprint change
   useEffect(() => {
     // Always clear cache to force fresh data fetch with correct device fingerprint
-    queryClient.removeQueries({ queryKey: ['/api/journal/user-entries'] });
-    queryClient.removeQueries({ queryKey: ['/api/journal/analytics'] });
+    void queryClient.removeQueries({ queryKey: ['/api/journal/user-entries'] });
+    void queryClient.removeQueries({ queryKey: ['/api/journal/analytics'] });
     
     if (isFreshStart) {
-      queryClient.removeQueries({ queryKey: ['/api/journal/user-entries'] });
-      queryClient.removeQueries({ queryKey: ['/api/journal/analytics'] });
+      void queryClient.removeQueries({ queryKey: ['/api/journal/user-entries'] });
+      void queryClient.removeQueries({ queryKey: ['/api/journal/analytics'] });
     }
   }, [isFreshStart, queryClient]);
 
@@ -248,7 +244,7 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
         throw new Error('Failed to fetch journal entries');
       }
       
-      return response.json();
+      return response.json() as Promise<JournalEntry[]>;
     },
     retry: 2,
     staleTime: 0, // Force fresh fetch for device fingerprint fix
@@ -259,7 +255,7 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
     isLoading: analyticsLoading,
     error: analyticsError,
     refetch: refetchAnalytics
-  } = useQuery<JournalAnalytics>({
+  } = useQuery<JournalDashboardAnalytics>({
     queryKey: ['/api/journal/analytics'],
     queryFn: async () => {
       // Healthcare-grade consistent device fingerprint for user 107
@@ -280,7 +276,7 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
         throw new Error('Failed to fetch analytics data');
       }
       
-      return response.json();
+      return response.json() as Promise<JournalDashboardAnalytics>;
     },
     retry: 2,
     staleTime: 10 * 60 * 1000, // 10 minutes
@@ -324,9 +320,9 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
     setActiveView('list');
     setSelectedEntry(null);
     // Invalidate queries to refresh data
-    queryClient.invalidateQueries({ queryKey: ['/api/journal/user-entries'] });
-    queryClient.invalidateQueries({ queryKey: ['/api/journal/analytics'] });
-  }, [queryClient, userId]);
+    void queryClient.invalidateQueries({ queryKey: ['/api/journal/user-entries'] });
+    void queryClient.invalidateQueries({ queryKey: ['/api/journal/analytics'] });
+  }, [queryClient]);
 
   const handleCancelEdit = useCallback(() => {
     setActiveView('list');
@@ -361,16 +357,16 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
         throw new Error('Failed to delete journal entry');
       }
 
-      console.log(`✅ Journal entry ${entryToDelete.id} deleted successfully with healthcare authentication`);
+      console.log(`âœ… Journal entry ${entryToDelete.id} deleted successfully with healthcare authentication`);
 
       // Close modals and refresh data
       setShowDeleteModal(false);
       setEntryToDelete(null);
       setShowEntryModal(false);
-      queryClient.invalidateQueries({ queryKey: ['/api/journal/user-entries'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/journal/analytics'] });
+      void queryClient.invalidateQueries({ queryKey: ['/api/journal/user-entries'] });
+      void queryClient.invalidateQueries({ queryKey: ['/api/journal/analytics'] });
     } catch (error) {
-      console.error('❌ Failed to delete journal entry:', error);
+      console.error('â Œ Failed to delete journal entry:', error);
       alert('Failed to delete journal entry. Please try again.');
     }
   }, [entryToDelete, queryClient]);
@@ -383,18 +379,18 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
   // Mood utility functions (single implementation)
   const getMoodEmoji = useCallback((mood: string): string => {
     const moodEmojis: Record<string, string> = {
-      'very_happy': '😄',
-      'happy': '😊',
-      'neutral': '😐',
-      'sad': '😢',
-      'very_sad': '😭',
-      'angry': '😠',
-      'anxious': '😰',
-      'excited': '🤩',
-      'calm': '😌',
-      'frustrated': '😤'
+      'very_happy': 'ðŸ˜„',
+      'happy': 'ðŸ˜Š',
+      'neutral': 'ðŸ˜ ',
+      'sad': 'ðŸ˜¢',
+      'very_sad': 'ðŸ˜­',
+      'angry': 'ðŸ˜ ',
+      'anxious': 'ðŸ˜°',
+      'excited': 'ðŸ¤©',
+      'calm': 'ðŸ˜Œ',
+      'frustrated': 'ðŸ˜¤'
     };
-    return moodEmojis[mood] || '😐';
+    return moodEmojis[mood] || 'ðŸ˜ ';
   }, []);
 
   const getMoodColor = useCallback((mood: string): string => {
@@ -415,23 +411,13 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
 
   // Entry Card Component
   const renderEntryCard = useCallback((entry: JournalEntry) => {
-    console.log("Rendering entry card for:", entry.title);
-    const wordCount = entry.content.split(/\s+/).filter(word => word.length > 0).length;
+    const wordCount = entry.content.split(/\s+/).filter((word: string) => word.length > 0).length;
     
     return (
       <div
         key={`entry-${entry.id}`}
-        style={{
-          border: '3px solid lime',
-          padding: 20,
-          position: 'relative',
-          overflow: 'visible',
-          zIndex: 1000,
-        }}
+        className="theme-card rounded-lg p-4 border border-[var(--theme-accent)]/30 hover:border-[var(--theme-accent)]/50 transition-all hover-lift"
       >
-        <div
-          className="theme-card rounded-lg p-4 border border-[var(--theme-accent)]/30 hover:border-[var(--theme-accent)]/50 transition-all hover-lift"
-        >
         <div className="flex items-start justify-between mb-3">
           <div className="flex-1">
             <h3 className="font-semibold theme-text mb-1">
@@ -456,7 +442,7 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
               )}
             </div>
           </div>
-          <div className="flex items-center gap-2 bg-yellow-100">
+          <div className="flex items-center gap-2">
             <button
               onClick={() => handleViewEntry(entry)}
               className="p-1 rounded theme-text-secondary hover:theme-text transition-colors"
@@ -472,19 +458,11 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
               <Edit3 size={16} />
             </button>
             <button
-              onClick={() => alert("DELETE CLICKED")}
-              style={{
-                background: 'red',
-                color: 'white',
-                padding: '12px 24px',
-                fontWeight: 'bold',
-                fontSize: '16px',
-                zIndex: 10000,
-                position: 'relative',
-                border: '3px solid black'
-              }}
+              onClick={() => handleDeleteClick(entry)}
+              className="p-1 rounded text-red-500 hover:text-red-700 transition-colors"
+              title="Delete entry"
             >
-              🗑️ DELETE
+              <Trash2 size={16} />
             </button>
           </div>
         </div>
@@ -511,10 +489,9 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
             )}
           </div>
         )}
-        </div> {/* inner theme-card */}
-      </div>   {/* lime wrapper */
+      </div>
     );
-  }, []);
+  }, [getMoodEmoji, getMoodColor, handleViewEntry, handleEditEntry, handleDeleteClick]);
 
   // Analytics View
   const renderAnalytics = () => {
@@ -551,14 +528,14 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
 
     // Calculate word count from entries for more accurate stats
     const totalWords = entries.reduce((sum, entry) => {
-      return sum + entry.content.split(/\s+/).filter(word => word.length > 0).length;
+      return sum + (entry.content ? entry.content.split(/\s+/).filter((word: string) => word.length > 0).length : 0);
     }, 0);
     const avgWordsPerEntry = entries.length > 0 ? Math.round(totalWords / entries.length) : 0;
     
     // Calculate entries this month
     const currentMonth = new Date().getMonth();
     const currentYear = new Date().getFullYear();
-    const entriesThisMonth = entries.filter(entry => {
+    const _entriesThisMonth = entries.filter(entry => {
       if (!entry.createdAt) return false;
       const entryDate = new Date(entry.createdAt);
       return entryDate.getMonth() === currentMonth && entryDate.getFullYear() === currentYear;
@@ -573,9 +550,9 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
               <h3 className="font-semibold theme-text">Total Entries</h3>
               <BookOpen className="theme-text-secondary" size={20} />
             </div>
-            <p className="text-2xl font-bold theme-text">{analytics.totalEntries || 0}</p>
+            <p className="text-2xl font-bold theme-text">{analytics.totalEntries}</p>
             <p className="text-sm theme-text-secondary mt-1">
-              {analytics.entriesThisMonth || entriesThisMonth || 0} this month
+              {_entriesThisMonth} this month
             </p>
           </div>
 
@@ -593,7 +570,7 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
               <h3 className="font-semibold theme-text">Mood Intensity</h3>
               <Star className="theme-text-secondary" size={20} />
             </div>
-            <p className="text-2xl font-bold theme-text">{Math.round((analytics.averageMoodIntensity || 5) * 10)}%</p>
+            <p className="text-2xl font-bold theme-text">{Math.round(analytics.averageMoodIntensity * 10)}%</p>
             <p className="text-sm theme-text-secondary mt-1">average intensity</p>
           </div>
 
@@ -613,8 +590,8 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
             <div className="theme-card rounded-lg p-6 border border-[var(--theme-accent)]/30">
               <h3 className="font-semibold theme-text mb-4">Mood Distribution</h3>
               <div className="space-y-3">
-                {Object.entries(analytics.moodDistribution).map(([mood, count]) => {
-                  const percentage = Math.round((count as number / analytics.totalEntries) * 100);
+                {Object.entries(analytics.moodDistribution).map(([mood, count]: [string, number]) => {
+                  const percentage = Math.round((count / analytics.totalEntries) * 100);
                   return (
                     <div key={`mood-${mood}`} className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
@@ -647,7 +624,7 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
             <div className="theme-card rounded-lg p-6 border border-[var(--theme-accent)]/30">
               <h3 className="font-semibold theme-text mb-4">Recent Mood Trends</h3>
               <div className="space-y-3">
-                {analytics.moodTrends.slice(-5).map((trend, index) => (
+                {analytics.moodTrends.slice(-5).map((trend: { date: string; mood: string; intensity: number }, index: number) => (
                   <div key={`trend-${index}`} className="flex items-center justify-between p-3 theme-surface rounded-lg">
                     <div className="flex items-center gap-3">
                       <span className="text-lg">{getMoodEmoji(trend.mood)}</span>
@@ -687,7 +664,7 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
             <h3 className="font-semibold theme-text mb-4">Recurring Themes & Tags</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {Object.entries(analytics.themes)
-                .sort(([,a], [,b]) => b - a)
+                .sort(([, a], [, b]) => (b) - (a))
                 .slice(0, 8)
                 .map(([theme, count]) => (
                   <div key={`theme-${theme}`} className="flex items-center justify-between p-3 theme-surface rounded-lg">
@@ -712,16 +689,16 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
           <h3 className="font-semibold theme-text mb-4">Writing Statistics</h3>
           <div className="prose max-w-none theme-text-secondary">
             <p className="mb-3">
-              Based on your {analytics.totalEntries} journal entries, you've written a total of {totalWords.toLocaleString()} words, 
+              Based on your {analytics.totalEntries} journal entries, you've written a total of {totalWords.toLocaleString()} words,
               averaging {avgWordsPerEntry} words per entry.
             </p>
             <p className="mb-3">
-              Your average mood intensity is {(analytics.averageMoodIntensity || 5).toFixed(1)}/10, 
+              Your average mood intensity is {analytics.averageMoodIntensity.toFixed(1)}/10,
               {analytics.entriesThisMonth > 0 && ` with ${analytics.entriesThisMonth} entries this month`}.
             </p>
-            {Object.keys(analytics.themes || {}).length > 0 && (
+            {analytics.themes && Object.keys(analytics.themes).length > 0 && (
               <p>
-                Your most common themes include {Object.keys(analytics.themes).slice(0, 3).join(', ')}, 
+                Your most common themes include {Object.keys(analytics.themes).slice(0, 3).join(', ')},
                 showing consistent reflection on important life areas.
               </p>
             )}
@@ -745,7 +722,7 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
       <div className="h-full">
         <JournalEditor
           userId={userId}
-          entry={selectedEntry || undefined}
+          {...(selectedEntry && { entry: selectedEntry })}
           onSave={handleSaveEntry}
           onCancel={handleCancelEdit}
         />
@@ -774,7 +751,6 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
 
   return (
     <div className="h-full flex flex-col theme-background">
-
       {/* Header */}
       <div className="p-6 border-b border-[var(--theme-accent)]/20">
         <div className="flex items-center justify-between mb-4">
@@ -852,43 +828,7 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
           />
         ) : (
           <>
-            <div
-              className="grid gap-4 mb-6"
-              style={{
-                overflow: 'visible',
-                position: 'relative',
-                zIndex: 99999,
-                padding: '20px',
-                border: '5px solid magenta',
-                background: '#111',
-                color: 'white'
-              }}
-            >
-              <div style={{
-                padding: '20px',
-                marginBottom: '20px',
-                border: '3px dashed red',
-                background: '#111',
-                color: 'white',
-                zIndex: 99999999,
-                position: 'relative',
-              }}>
-                <h2>🧪 Debug Card</h2>
-                <p>This is a hardcoded test outside of renderEntryCard().</p>
-                <button
-                  onClick={() => alert('Manual Delete Works!')}
-                  style={{
-                    background: 'red',
-                    color: 'white',
-                    fontSize: '18px',
-                    padding: '10px 20px',
-                    marginTop: '10px',
-                    border: '3px solid white',
-                  }}
-                >
-                  🗑️ Big Red DELETE
-                </button>
-              </div>
+            <div className="grid gap-4 mb-6">
               {paginatedEntries.map(renderEntryCard)}
             </div>
 
@@ -936,7 +876,7 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
                   <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
                     <span className="flex items-center gap-1">
                       <Clock size={14} />
-                      {selectedEntry.createdAt ? format(new Date(selectedEntry.createdAt), 'MMMM dd, yyyy • h:mm a') : 'Unknown date'}
+                      {selectedEntry.createdAt ? format(new Date(selectedEntry.createdAt), 'MMMM dd, yyyy â€¢ h:mm a') : 'Unknown date'}
                     </span>
                     {selectedEntry.mood && (
                       <span 
@@ -955,7 +895,7 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
                   onClick={handleCloseModal}
                   className="p-2 rounded text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
                 >
-                  ✕
+                  âœ•
                 </button>
               </div>
               
@@ -980,7 +920,7 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
                 </div>
               )}
 
-              {/* CRITICAL: Action Buttons Section */}
+              {/* Action Buttons Section */}
               <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-4">
                 <div className="flex justify-between items-center">
                   {/* DELETE BUTTON - LEFT SIDE */}
@@ -994,7 +934,7 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
                     }}
                     className="inline-flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-md shadow-sm transition-colors duration-200"
                   >
-                    🗑️
+                    ðŸ—‘ï¸ 
                     <span className="ml-2">Delete Entry</span>
                   </button>
                   

@@ -1,0 +1,631 @@
+﻿import React, { useState, useEffect, useRef } from 'react';
+import { 
+  Send, Mic, MicOff, Volume2, VolumeX, User, 
+  Sparkles, Heart, Brain, MessageCircle, Copy, 
+  MoreVertical, Settings, Zap, Loader2
+} from 'lucide-react';
+import { getAuthHeaders } from '../utils/unifiedUserSession';
+import CompanionAvatar from './CompanionAvatar';
+import type { AvatarConfig } from './AvatarCustomizer';
+
+interface Message {
+  sender: 'user' | 'bot';
+  text: string;
+  time: string;
+  id: string;
+}
+
+interface Voice {
+  id: string;
+  name: string;
+  description: string;
+}
+
+interface BeautifulChatProps {
+  selectedVoice: string;
+  voiceStatus: 'idle' | 'recording' | 'processing';
+  onVoiceToggle: () => void;
+  onSendMessage: (message: string) => void;
+  messages: Message[];
+  chatInput: string;
+  setChatInput: (input: string) => void;
+  isAiTyping?: boolean;
+  isTtsEnabled: boolean;
+  onTtsToggle: () => void;
+  onBotMessageSpeak: (text: string) => void;
+  selectedModel: string;
+  onModelChange: (model: string) => void;
+  onVoiceChange?: (voice: string) => void;
+  onAvatarClick?: () => void;
+  companionAvatar?: AvatarConfig;
+}
+
+const TypingIndicator = ({ avatar }: { avatar?: AvatarConfig }) => (
+  <div className="flex items-center space-x-2 p-4 bg-white/10 backdrop-blur-sm rounded-2xl rounded-bl-md max-w-xs">
+    {avatar ? (
+      <CompanionAvatar avatar={avatar} size={32} />
+    ) : (
+      <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
+        <Brain className="w-4 h-4 text-white" />
+      </div>
+    )}
+    <div className="flex space-x-1">
+      <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" />
+      <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
+      <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+    </div>
+  </div>
+);
+
+const MessageBubble = ({ message, isUser, onSpeakMessage, avatar }: { 
+  message: Message; 
+  isUser: boolean;
+  onSpeakMessage?: (text: string) => void | Promise<void>;
+  avatar?: AvatarConfig;
+}) => {
+  const [showActions, setShowActions] = useState(false);
+
+  const copyToClipboard = () => {
+    void navigator.clipboard.writeText(message.text);
+  };
+
+  const speakMessage = () => {
+    if (onSpeakMessage) {
+      void onSpeakMessage(message.text); // Explicitly ignore the promise as errors are handled internally
+    }
+  };
+
+  return (
+    <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-6 group`}>
+      <div className={`flex max-w-xs lg:max-w-md xl:max-w-lg ${isUser ? 'flex-row-reverse' : 'flex-row'} items-end space-x-2`}>
+        
+        {/* Avatar */}
+        <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
+          isUser 
+            ? 'bg-gradient-to-r from-purple-500 to-pink-500' 
+            : ''
+        } shadow-lg`}>
+          {isUser ? (
+            <User className="w-5 h-5 text-white" />
+          ) : avatar ? (
+            <CompanionAvatar avatar={avatar} size={40} />
+          ) : (
+            <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
+              <Brain className="w-5 h-5 text-white" />
+            </div>
+          )}
+        </div>
+
+        {/* Message Container */}
+        <div 
+          className="relative"
+          onMouseEnter={() => setShowActions(true)}
+          onMouseLeave={() => setShowActions(false)}
+        >
+          {/* Message Bubble */}
+          <div className={`relative p-4 rounded-2xl backdrop-blur-sm border transition-all duration-300 ${
+            isUser 
+              ? 'bg-gradient-to-r from-purple-500/20 to-pink-500/20 border-purple-400/30 rounded-br-md' 
+              : 'bg-white/10 border-white/20 rounded-bl-md hover:bg-white/15'
+          } shadow-lg`}>
+            
+            {/* Message Text */}
+            <p className="text-white text-sm leading-relaxed whitespace-pre-wrap">
+              {message.text}
+            </p>
+            
+            {/* Time */}
+            <div className={`text-xs mt-2 ${
+              isUser ? 'text-purple-200' : 'text-white/60'
+            }`}>
+              {message.time}
+            </div>
+
+            {/* Message Actions */}
+            {showActions && (
+              <div className={`absolute top-2 ${isUser ? 'left-2' : 'right-2'} opacity-0 group-hover:opacity-100 transition-opacity duration-300`}>
+                <div className="flex space-x-1">
+                  <button
+                    onClick={copyToClipboard}
+                    className="p-1 rounded-lg bg-black/20 hover:bg-black/40 transition-colors duration-200"
+                    title="Copy message"
+                  >
+                    <Copy className="w-3 h-3 text-white/80" />
+                  </button>
+                  {!isUser && onSpeakMessage && (
+                    <button
+                      onClick={speakMessage}
+                      className="p-1 rounded-lg bg-black/20 hover:bg-black/40 transition-colors duration-200"
+                      title="Speak message"
+                    >
+                      <Volume2 className="w-3 h-3 text-white/80" />
+                    </button>
+                  )}
+                  <button className="p-1 rounded-lg bg-black/20 hover:bg-black/40 transition-colors duration-200">
+                    <MoreVertical className="w-3 h-3 text-white/80" />
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const QuickActions = ({ onActionClick }: { onActionClick: (action: string) => void }) => {
+  const actions = [
+    { id: 'feelings', label: 'Share my feelings', icon: Heart, color: 'from-rose-500 to-pink-500' },
+    { id: 'goal', label: 'Set a wellness goal', icon: Zap, color: 'from-yellow-500 to-orange-500' },
+    { id: 'thoughts', label: 'Journal my thoughts', icon: MessageCircle, color: 'from-green-500 to-teal-500' },
+    { id: 'meditation', label: 'Guided meditation', icon: Sparkles, color: 'from-purple-500 to-indigo-500' }
+  ];
+
+  return (
+    <div className="grid grid-cols-2 gap-3 mb-4">
+      {actions.map((action) => {
+        const Icon = action.icon;
+        return (
+          <button
+            key={action.id}
+            onClick={() => onActionClick(action.label)}
+            className={`p-3 rounded-xl bg-gradient-to-r ${action.color} bg-opacity-20 border border-white/20 hover:bg-opacity-30 transition-all duration-300 transform hover:scale-105`}
+          >
+            <div className="flex items-center space-x-2">
+              <Icon className="w-4 h-4 text-white" />
+              <span className="text-white text-sm font-medium">{action.label}</span>
+            </div>
+          </button>
+        );
+      })}
+    </div>
+  );
+};
+
+const BeautifulChat: React.FC<BeautifulChatProps> = ({
+  selectedVoice,
+  voiceStatus,
+  onVoiceToggle,
+  onSendMessage,
+  messages,
+  chatInput,
+  setChatInput,
+  isAiTyping = false,
+  isTtsEnabled,
+  onTtsToggle,
+  onBotMessageSpeak,
+  selectedModel,
+  onModelChange,
+  onVoiceChange,
+  onAvatarClick,
+  companionAvatar
+}) => {
+  const [showQuickActions, setShowQuickActions] = useState(messages.length === 0);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const lastBotMessageRef = useRef<string>('');
+  const [availableVoices, setAvailableVoices] = useState<Voice[]>([]);
+  const [isLoadingVoices, setIsLoadingVoices] = useState(true);
+
+  // Add custom styles for dropdown options
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.innerHTML = `
+      select option {
+        background-color: #1e293b !important;
+        color: white !important;
+        padding: 8px !important;
+      }
+      select option:hover {
+        background-color: #334155 !important;
+      }
+    `;
+    document.head.appendChild(style);
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+
+  // Load available voices from API
+  useEffect(() => {
+    const loadVoices = async () => {
+      try {
+        const response = await fetch('/api/voices');
+        if (response.ok) {
+          const data = await response.json();
+          setAvailableVoices(data.voices || []);
+          console.log('✅ Loaded', data.voices.length, 'voices');
+        }
+      } catch (error) {
+        console.error('Failed to load voices:', error);
+      } finally {
+        setIsLoadingVoices(false);
+      }
+    };
+    loadVoices();
+  }, []);
+
+  const handleVoiceChange = (voice: string) => {
+    localStorage.setItem('selectedVoice', voice);
+    if (onVoiceChange) {
+      onVoiceChange(voice);
+    }
+  };
+
+  // Function to play text-to-speech using ElevenLabs API
+  const playTTS = async (text: string) => {
+    if (!isTtsEnabled || !text.trim()) return;
+
+    try {
+      setIsPlaying(true);
+
+      // Stop any currently playing audio
+      if (currentAudio) {
+        currentAudio.pause();
+        currentAudio.currentTime = 0;
+        setCurrentAudio(null);
+      }
+
+      console.log('ðŸ”Š Requesting TTS from ElevenLabs:', text.substring(0, 50) + '...');
+
+      const headers = await getAuthHeaders();
+      const response = await fetch('/api/text-to-speech', {
+        method: 'POST',
+        headers: {
+          ...headers,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          text: text,
+          voice: selectedVoice, // Use the selected voice from props
+        }),
+      });
+
+      if (response.ok) {
+        const audioBlob = await response.blob();
+        const audioUrl = URL.createObjectURL(audioBlob);
+        const audio = new Audio(audioUrl);
+
+        audio.addEventListener('ended', () => {
+          setIsPlaying(false);
+          setCurrentAudio(null);
+        });
+        audio.addEventListener('error', (e) => {
+          console.error('Chat audio playback error:', e, 'Audio URL:', audioUrl);
+          if (audio.error) {
+            console.error('Audio error code:', audio.error.code, 'message:', audio.error.message);
+            switch (audio.error.code) {
+              case audio.error.MEDIA_ERR_ABORTED:
+                console.error('Chat audio playback aborted.');
+                break;
+              case audio.error.MEDIA_ERR_NETWORK:
+                console.error('Chat audio network error: A network error caused the audio download to fail.');
+                break;
+              case audio.error.MEDIA_ERR_DECODE:
+                console.error('Chat audio decode error: The audio playback was aborted due to a decoding error.');
+                break;
+              case audio.error.MEDIA_ERR_SRC_NOT_SUPPORTED:
+                console.error('Chat audio source not supported: The audio format is not supported.');
+                break;
+              default:
+                console.error('An unknown chat audio error occurred.');
+            }
+          }
+          setIsPlaying(false);
+          setCurrentAudio(null);
+          alert('Failed to play audio. Please try again or check your network connection.');
+        });
+
+        setCurrentAudio(audio);
+        await audio.play();
+      } else {
+        interface ErrorResponse {
+          error?: string;
+        }
+        const errorData: ErrorResponse = (await response.json()) as ErrorResponse;
+        console.error('ElevenLabs TTS API error:', response.status, errorData);
+        alert(`Text-to-speech failed: ${errorData.error || 'Unknown error'}`);
+        setIsPlaying(false);
+      }
+    } catch (error: unknown) { // Explicitly type error as unknown
+      console.error('Text-to-speech request failed:', error instanceof Error ? error.message : error);
+      alert('Failed to connect to text-to-speech service. Please check your internet connection.');
+      setIsPlaying(false);
+    }
+  };
+
+  // Function to stop TTS
+  const stopTTS = () => {
+    if (currentAudio) {
+      currentAudio.pause();
+      currentAudio.currentTime = 0;
+      setCurrentAudio(null);
+    }
+    setIsPlaying(false);
+    console.log('âœ… Chat TTS stopped');
+  };
+
+  // Function to toggle TTS on/off
+  const toggleTTS = () => {
+    if (isPlaying) {
+      stopTTS();
+    }
+    onTtsToggle();
+  };
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    // When a new bot message arrives and TTS is enabled, play it
+    const lastMessage = messages[messages.length - 1];
+    if (lastMessage && lastMessage.sender === 'bot' && lastMessage.text !== lastBotMessageRef.current && isTtsEnabled) {
+      onBotMessageSpeak(lastMessage.text);
+      lastBotMessageRef.current = lastMessage.text;
+    }
+  }, [messages, isAiTyping, isTtsEnabled, onBotMessageSpeak]); // Added isTtsEnabled and onBotMessageSpeak to dependencies
+
+  const handleSend = () => {
+    if (!chatInput.trim()) return;
+
+    setShowQuickActions(false);
+    onSendMessage(chatInput);
+    setChatInput('');
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
+
+  const handleQuickAction = (action: string) => {
+    setChatInput(action);
+    setShowQuickActions(false);
+  };
+
+  return (
+    <div className="h-full flex flex-col bg-gradient-to-br from-slate-900 via-blue-900 to-purple-900 relative overflow-hidden">
+      
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        {Array.from({ length: 15 }).map((_, i) => (
+          <div
+            key={i}
+            className="absolute w-2 h-2 bg-blue-400/20 rounded-full animate-pulse"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              animationDelay: `${i * 0.5}s`,
+              animationDuration: `${3 + Math.random() * 2}s`
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Header */}
+      <div className="relative z-10 p-6 border-b border-white/10 bg-white/5 backdrop-blur-sm">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <div className="relative">
+              {companionAvatar ? (
+                <CompanionAvatar avatar={companionAvatar} size={48} className="shadow-lg" />
+              ) : (
+                <div className="w-12 h-12 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center shadow-lg">
+                  <Brain className="w-6 h-6 text-white" />
+                </div>
+              )}
+              <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-white animate-pulse" />
+            </div>
+            <div>
+              <h2 className="text-xl font-semibold text-white">Chakrai</h2>
+              <p className="text-blue-200 text-sm">Your AI Wellness Companion</p>
+            </div>
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            {/* Voice Selection Dropdown - Prominent */}
+            <div className="relative">
+              <label className="text-xs text-blue-200 block mb-1 font-semibold">Voice</label>
+              <select
+                value={selectedVoice}
+                onChange={(e) => handleVoiceChange(e.target.value)}
+                disabled={isLoadingVoices}
+                className="px-3 py-2 rounded-xl bg-slate-700 border-2 border-purple-400/50 text-white text-sm font-medium focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all duration-300 appearance-none pr-8 min-w-[200px] hover:bg-slate-600 cursor-pointer"
+                style={{ 
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='%23ffffff' class='w-4 h-4'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19.5 8.25l-7.5 7.5-7.5-7.5' /%3E%3C/svg%3E")`, 
+                  backgroundRepeat: 'no-repeat', 
+                  backgroundPosition: 'right 0.5rem center', 
+                  backgroundSize: '1.2em' 
+                }}
+              >
+                {availableVoices.map((voice) => (
+                  <option 
+                    key={voice.id} 
+                    value={voice.id}
+                    className="bg-slate-800 text-white py-2"
+                  >
+                    {voice.name} - {voice.description}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Model Selection Dropdown */}
+            <div className="relative">
+              <label className="text-xs text-blue-200 block mb-1">Model</label>
+              <select
+                value={selectedModel}
+                onChange={(e) => onModelChange(e.target.value)}
+                className="px-3 py-2 rounded-xl bg-white/10 border border-white/20 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-300 appearance-none pr-8"
+                style={{ 
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='%23ffffff' class='w-4 h-4'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19.5 8.25l-7.5 7.5-7.5-7.5' /%3E%3C/svg%3E")`, 
+                  backgroundRepeat: 'no-repeat', 
+                  backgroundPosition: 'right 0.5rem center', 
+                  backgroundSize: '1.2em' 
+                }}
+              >
+                <option value="gpt-4o" className="bg-slate-800 text-white">GPT-4o</option>
+                <option value="gpt-4o-mini" className="bg-slate-800 text-white">GPT-4o Mini</option>
+                <option value="gpt-4-turbo" className="bg-slate-800 text-white">GPT-4 Turbo</option>
+                <option value="gpt-4" className="bg-slate-800 text-white">GPT-4</option>
+                <option value="gpt-3.5-turbo" className="bg-slate-800 text-white">GPT-3.5</option>
+              </select>
+            </div>
+
+            <button
+              onClick={toggleTTS}
+              className={`p-2 rounded-xl transition-colors duration-300 ${
+                isTtsEnabled ? 'bg-blue-500/20 hover:bg-blue-500/30' : 'bg-red-500/20 hover:bg-red-500/30'
+              }`}
+              title={isTtsEnabled ? 'Disable voice' : 'Enable voice'}
+            >
+              {isPlaying ? (
+                <Volume2 className="w-5 h-5 text-blue-400 animate-pulse" />
+              ) : isTtsEnabled ? (
+                <Volume2 className="w-5 h-5 text-white" />
+              ) : (
+                <VolumeX className="w-5 h-5 text-red-400" />
+              )}
+            </button>
+            <button
+              onClick={onAvatarClick}
+              className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-colors duration-300"
+              title="Customize Avatar"
+            >
+              <Settings className="w-5 h-5 text-white" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Messages Area */}
+      <div className="flex-1 relative z-10 overflow-y-auto p-6 space-y-1">
+        
+        {/* Welcome Message */}
+        {messages.length === 0 && (
+          <div className="text-center py-12">
+            <div className="w-16 h-16 mx-auto mb-6 rounded-full overflow-hidden">
+              {companionAvatar ? (
+                <CompanionAvatar avatar={companionAvatar} size={64} />
+              ) : (
+                <div className="w-16 h-16 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center animate-pulse">
+                  <Brain className="w-8 h-8 text-white" />
+                </div>
+              )}
+            </div>
+            <h3 className="text-2xl font-bold text-white mb-2">Welcome to your reflection journey!</h3>
+            <p className="text-blue-200 max-w-md mx-auto leading-relaxed">
+              I'm Chakrai, your personal AI wellness companion. I'm here to listen and help you explore your thoughts and emotions.
+            </p>
+          </div>
+        )}
+
+        {/* Messages */}
+        {messages.map((message) => (
+          <MessageBubble
+            key={message.id || `${message.sender}-${message.time}`}
+            message={message}
+            isUser={message.sender === 'user'}
+            onSpeakMessage={playTTS}
+            avatar={companionAvatar}
+          />
+        ))}
+
+        {/* Typing Indicator */}
+        {isAiTyping && (
+          <div className="flex justify-start">
+            <TypingIndicator avatar={companionAvatar} />
+          </div>
+        )}
+
+        <div ref={messagesEndRef} />
+      </div>
+
+      {/* Input Area */}
+      <div className="relative z-10 p-6 bg-white/5 backdrop-blur-sm border-t border-white/10">
+        
+        {/* Quick Actions */}
+        {showQuickActions && (
+          <div className="mb-4">
+            <QuickActions onActionClick={handleQuickAction} />
+          </div>
+        )}
+
+        {/* Input */}
+        <div className="flex items-end space-x-3">
+          <div className="flex-1 relative">
+            <textarea
+              value={chatInput}
+              onChange={(e) => setChatInput(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="Share your thoughts, feelings, or ask me anything..."
+              className="w-full p-4 pr-12 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 text-white placeholder-white/50 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-300"
+              rows={1}
+              style={{ 
+                minHeight: '56px',
+                maxHeight: '120px',
+                height: Math.min(120, Math.max(56, chatInput.split('\n').length * 24 + 32))
+              }}
+            />
+            
+            {/* Character count */}
+            {chatInput.length > 0 && (
+              <div className="absolute bottom-2 right-2 text-xs text-white/40">
+                {chatInput.length}
+              </div>
+            )}
+          </div>
+
+          {/* Voice Button */}
+          <button
+            onClick={onVoiceToggle}
+            className={`p-4 rounded-2xl transition-all duration-300 transform hover:scale-105 ${
+              voiceStatus === 'recording' 
+                ? 'bg-red-500 shadow-lg shadow-red-500/30 animate-pulse' 
+                : voiceStatus === 'processing'
+                ? 'bg-yellow-500 shadow-lg shadow-yellow-500/30'
+                : 'bg-white/10 hover:bg-white/20'
+            }`}
+          >
+            {voiceStatus === 'recording' ? (
+              <MicOff className="w-6 h-6 text-white" />
+            ) : voiceStatus === 'processing' ? (
+              <Loader2 className="w-6 h-6 text-white animate-spin" />
+            ) : (
+              <Mic className="w-6 h-6 text-white" />
+            )}
+          </button>
+
+          {/* Send Button */}
+          <button
+            onClick={handleSend}
+            disabled={!chatInput.trim()}
+            className={`p-4 rounded-2xl transition-all duration-300 transform hover:scale-105 ${
+              chatInput.trim()
+                ? 'bg-gradient-to-r from-blue-600 to-purple-600 shadow-lg shadow-blue-500/30 hover:shadow-xl'
+                : 'bg-white/10 cursor-not-allowed opacity-50'
+            }`}
+          >
+            <Send className="w-6 h-6 text-white" />
+          </button>
+        </div>
+
+        {/* Voice Status */}
+        {voiceStatus !== 'idle' && (
+          <div className="mt-3 flex items-center justify-center space-x-2 text-sm">
+            <div className={`w-2 h-2 rounded-full ${
+              voiceStatus === 'recording' ? 'bg-red-400 animate-pulse' : 'bg-yellow-400 animate-spin'
+            }`} />
+            <span className="text-white/70">
+              {voiceStatus === 'recording' ? 'Recording...' : 'Processing...'}
+            </span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default BeautifulChat;

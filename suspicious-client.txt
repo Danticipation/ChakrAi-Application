@@ -1,0 +1,43 @@
+C:\8-14-Chakrai-App\client\src\components\AdaptiveLearning.tsx:105: // Fetch data with React Query (properly typed)
+C:\8-14-Chakrai-App\client\src\components\AdaptiveLearningProgressTracker.tsx:169: // Fetch progress overview
+C:\8-14-Chakrai-App\client\src\components\AdaptiveLearningProgressTracker.tsx:180: // Fetch milestones
+C:\8-14-Chakrai-App\client\src\components\AdaptiveLearningProgressTracker.tsx:191: // Fetch progress metrics
+C:\8-14-Chakrai-App\client\src\components\AdaptiveLearningProgressTracker.tsx:202: // Fetch learning insights
+C:\8-14-Chakrai-App\client\src\components\AdaptiveLearningProgressTracker.tsx:213: // Fetch journey events
+C:\8-14-Chakrai-App\client\src\components\AiPerformanceMonitoringDashboard.tsx:104: // Fetch performance overview
+C:\8-14-Chakrai-App\client\src\components\AiPerformanceMonitoringDashboard.tsx:109: // Fetch recent metrics (conditional loading based on active tab)
+C:\8-14-Chakrai-App\client\src\components\AiPerformanceMonitoringDashboard.tsx:114: // Fetch flagged response analyses (conditional loading)
+C:\8-14-Chakrai-App\client\src\components\AiPerformanceMonitoringDashboard.tsx:119: // Fetch unreviewed crisis detection logs (conditional loading)
+C:\8-14-Chakrai-App\client\src\components\AnalyticsDashboard.tsx:62: // Fetch dashboard data with unified auth
+C:\8-14-Chakrai-App\client\src\components\CommunityPortal.tsx:80: // Fetch functions for React Query
+C:\8-14-Chakrai-App\client\src\components\DailyAffirmation.tsx:76: // Fetch voice preferences
+C:\8-14-Chakrai-App\client\src\components\DailyAffirmation.tsx:465: // Fetch if no cached data for today
+C:\8-14-Chakrai-App\client\src\components\DynamicAmbientSound.tsx:46: // Fetch user's current mood data for adaptive recommendations
+C:\8-14-Chakrai-App\client\src\components\DynamicAmbientSound.tsx:52: // Fetch ambient sounds from server-based configuration
+C:\8-14-Chakrai-App\client\src\components\EmotionalIntelligenceDashboard.tsx:123: // Fetch dashboard overview
+C:\8-14-Chakrai-App\client\src\components\EmotionalIntelligenceDashboard.tsx:140: // Fetch mood forecasts
+C:\8-14-Chakrai-App\client\src\components\EmotionalIntelligenceDashboard.tsx:157: // Fetch predictive insights
+C:\8-14-Chakrai-App\client\src\components\EmotionalIntelligenceDashboard.tsx:174: // Fetch response adaptations
+C:\8-14-Chakrai-App\client\src\components\EngagingDashboard.tsx:51: // Fetch data from real endpoints that exist
+C:\8-14-Chakrai-App\client\src\components\EnhancedGamificationDashboard.tsx:254: // Fetch gamification dashboard data
+C:\8-14-Chakrai-App\client\src\components\EnhancedGamificationDashboard.tsx:275: // Fetch rewards shop
+C:\8-14-Chakrai-App\client\src\components\EnhancedGamificationDashboard.tsx:292: // Fetch community challenges
+C:\8-14-Chakrai-App\client\src\components\GuidedMeditation.tsx:242: // Fetch user's meditation history
+C:\8-14-Chakrai-App\client\src\components\MoodTracker.tsx:62: // Fetch recent mood entries
+C:\8-14-Chakrai-App\client\src\components\MoodTracker.tsx:74: // Fetch emotional patterns
+C:\8-14-Chakrai-App\client\src\components\PersonalityQuiz.tsx:39: // Fetch questions from server to ensure clinical validity
+C:\8-14-Chakrai-App\client\src\components\PrivacyComplianceDashboard.tsx:50: // Fetch encryption status
+C:\8-14-Chakrai-App\client\src\components\PrivacyComplianceDashboard.tsx:56: // Fetch anonymized reports
+C:\8-14-Chakrai-App\client\src\components\PWAManager.tsx:119: // Dispatch custom event to open mood tracking
+C:\8-14-Chakrai-App\client\src\components\PWAManager.tsx:126: // Dispatch custom event to open voice journal
+C:\8-14-Chakrai-App\client\src\components\PWAManager.tsx:133: // Dispatch custom event to show affirmation
+C:\8-14-Chakrai-App\client\src\components\TherapeuticJournal.tsx:96: // Fetch entries using device fingerprint to get correct user
+C:\8-14-Chakrai-App\client\src\components\VRTherapyDashboard.tsx:74: // Fetch VR environments
+C:\8-14-Chakrai-App\client\src\components\VRTherapyDashboard.tsx:84: // Fetch user's VR sessions
+C:\8-14-Chakrai-App\client\src\components\VRTherapyDashboard.tsx:94: // Fetch user's VR progress
+C:\8-14-Chakrai-App\client\src\components\VRTherapyDashboard.tsx:104: // Fetch VR therapeutic plans
+C:\8-14-Chakrai-App\client\src\components\VRTherapyDashboard.tsx:114: // Fetch accessibility profile
+C:\8-14-Chakrai-App\client\src\components\WellnessDashboard.tsx:274: // Fetch real dashboard data from APIs
+C:\8-14-Chakrai-App\client\src\components\WellnessDashboard.tsx:289: // Fetch comprehensive dashboard data from our new UID-based endpoint
+C:\8-14-Chakrai-App\client\src\components\WellnessDashboard.tsx:366: // Fetch current mood if exists
+C:\8-14-Chakrai-App\client\src\hooks\useAlarm.ts:25: // Fetch user's alarms

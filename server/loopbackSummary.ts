@@ -1,5 +1,5 @@
 // Loopback summary generation for enhanced memory reflection
-import { openai, retryOpenAIRequest } from "./openaiRetry";
+import { openai, retryOpenAIRequest } from "./openaiRetry.js";
 
 export interface SummaryContext {
   userMessages: string[];
@@ -41,7 +41,7 @@ export async function generateLoopbackSummary(context: SummaryContext): Promise<
       })
     );
 
-    const summary = JSON.parse(response.choices[0].message.content || "{}");
+    const summary = JSON.parse(response.choices[0]?.message?.content || "{}");
     
     return {
       keyThemes: summary.keyThemes || [],

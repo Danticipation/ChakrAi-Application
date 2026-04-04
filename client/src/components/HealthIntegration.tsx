@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { getCurrentUserId } from '../utils/userSession';
@@ -149,13 +149,13 @@ const HealthIntegration: React.FC = () => {
 
   const getDeviceIcon = (deviceType: string) => {
     switch (deviceType) {
-      case 'apple_watch': return '⌚';
-      case 'pixel_watch': return '⌚'; 
-      case 'fitbit': return '📱';
-      case 'garmin': return '🏃';
-      case 'samsung_health': return '📲';
-      case 'polar': return '❤️';
-      default: return '📱';
+      case 'apple_watch': return 'âŒš';
+      case 'pixel_watch': return 'âŒš'; 
+      case 'fitbit': return 'ðŸ“±';
+      case 'garmin': return 'ðŸƒ';
+      case 'samsung_health': return 'ðŸ“²';
+      case 'polar': return 'â¤ï¸';
+      default: return 'ðŸ“±';
     }
   };
 
@@ -333,12 +333,12 @@ const HealthIntegration: React.FC = () => {
               <h3 className="text-lg font-semibold theme-text mb-4">Connect New Device</h3>
               <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
                 {[
-                  { type: 'apple_watch', name: 'Apple Watch', icon: '⌚' },
-                  { type: 'pixel_watch', name: 'Pixel Watch', icon: '⌚' },
-                  { type: 'fitbit', name: 'Fitbit', icon: '📱' },
-                  { type: 'garmin', name: 'Garmin', icon: '🏃' },
-                  { type: 'samsung_health', name: 'Samsung Health', icon: '📲' },
-                  { type: 'polar', name: 'Polar', icon: '❤️' }
+                  { type: 'apple_watch', name: 'Apple Watch', icon: 'âŒš' },
+                  { type: 'pixel_watch', name: 'Pixel Watch', icon: 'âŒš' },
+                  { type: 'fitbit', name: 'Fitbit', icon: 'ðŸ“±' },
+                  { type: 'garmin', name: 'Garmin', icon: 'ðŸƒ' },
+                  { type: 'samsung_health', name: 'Samsung Health', icon: 'ðŸ“²' },
+                  { type: 'polar', name: 'Polar', icon: 'â¤ï¸' }
                 ].map((deviceType) => (
                   <button
                     key={deviceType.type}

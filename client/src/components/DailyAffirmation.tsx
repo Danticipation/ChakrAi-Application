@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+﻿import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Heart, RefreshCw, Volume2, VolumeX, Loader2, Settings, Keyboard } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -46,7 +46,7 @@ export default function DailyAffirmation({ onBack, currentUser }: DailyAffirmati
 
   // Get today's date as cache key
   const getTodayKey = useCallback(() => {
-    return new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+    return new Date().toISOString().split('T')[0] ?? ''; // YYYY-MM-DD format
   }, []);
 
   // Load cached affirmations on mount
@@ -81,9 +81,10 @@ export default function DailyAffirmation({ onBack, currentUser }: DailyAffirmati
         return;
       }
 
+      const authToken = localStorage.getItem('authToken') ?? '';
       const response = await fetch('/api/user/voice-preferences', {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+          'Authorization': `Bearer ${authToken}`
         }
       });
       
@@ -149,10 +150,12 @@ export default function DailyAffirmation({ onBack, currentUser }: DailyAffirmati
               // Clean old entries (keep last 7 days)
               const sevenDaysAgo = new Date();
               sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-              const cleanupDate = sevenDaysAgo.toISOString().split('T')[0];
+              const cleanupDate = sevenDaysAgo.toISOString().split('T')[0] ?? '';
               
-              const keysToDelete = Array.from(newCache.keys()).filter(key => key < cleanupDate);
-              keysToDelete.forEach(key => newCache.delete(key));
+              if (cleanupDate) {
+                const keysToDelete = Array.from(newCache.keys()).filter(key => key < cleanupDate);
+                keysToDelete.forEach(key => newCache.delete(key));
+              }
               
               // Save to localStorage
               try {
@@ -177,7 +180,7 @@ export default function DailyAffirmation({ onBack, currentUser }: DailyAffirmati
           console.error('Failed to fetch daily affirmation:', fetchError);
           
           // Try to use yesterday's affirmation as fallback
-          const yesterdayKey = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+          const yesterdayKey = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0] ?? '';
           const fallback = currentCache.get(yesterdayKey);
           
           if (fallback) {
@@ -376,11 +379,12 @@ export default function DailyAffirmation({ onBack, currentUser }: DailyAffirmati
     
     try {
       // Try with user's preferred voice first
+      const authToken = localStorage.getItem('authToken') ?? '';
       const response = await fetch('/api/text-to-speech', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+          'Authorization': `Bearer ${authToken}`
         },
         body: JSON.stringify({
           text: affirmationData.affirmation,
@@ -476,6 +480,7 @@ export default function DailyAffirmation({ onBack, currentUser }: DailyAffirmati
       const timer = setTimeout(() => setAnnouncement(''), 3000);
       return () => clearTimeout(timer);
     }
+    return;
   }, [affirmationData, loading]);
 
   // Keyboard navigation and shortcuts
@@ -524,13 +529,17 @@ export default function DailyAffirmation({ onBack, currentUser }: DailyAffirmati
 
   // Debug function to clear cache
   const clearCache = useCallback(() => {
-    localStorage.removeItem('daily-affirmations');
-    setCachedAffirmations(new Map());
-    toast({
-      title: "Cache Cleared",
-      description: "All cached affirmations have been cleared.",
-      duration: 2000,
-    });
+    try {
+      localStorage.removeItem('daily-affirmations');
+      setCachedAffirmations(new Map());
+      toast({
+        title: "Cache Cleared",
+        description: "All cached affirmations have been cleared.",
+        duration: 2000,
+      });
+    } catch (error) {
+      console.error('Failed to clear cache:', error);
+    }
   }, [toast]);
 
   return (
@@ -568,7 +577,7 @@ export default function DailyAffirmation({ onBack, currentUser }: DailyAffirmati
                   aria-label="Back to Home"
                   title="Back to Home"
                 >
-                  <span className="text-white text-xl" aria-hidden="true">×</span>
+                  <span className="text-white text-xl" aria-hidden="true">Ã—</span>
                 </button>
               )}
             </div>
@@ -659,7 +668,7 @@ export default function DailyAffirmation({ onBack, currentUser }: DailyAffirmati
                 <div className="mt-4 text-center">
                   <div className="inline-flex items-center space-x-2 text-sm text-white/60 bg-blue-500/20 rounded-lg px-3 py-1">
                     <Settings className="w-4 h-4" aria-hidden="true" />
-                    <span>Voice: {voicePreferences.selectedVoice} • Rate: {voicePreferences.speechRate}x</span>
+                    <span>Voice: {voicePreferences.selectedVoice} â€¢ Rate: {voicePreferences.speechRate}x</span>
                   </div>
                 </div>
               </div>
@@ -684,11 +693,11 @@ export default function DailyAffirmation({ onBack, currentUser }: DailyAffirmati
               How to Use Your Affirmation
             </h3>
             <ul className="text-sm text-white/80 space-y-2" role="list">
-              <li role="listitem">• Read it slowly and mindfully</li>
-              <li role="listitem">• Repeat it three times with intention</li>
-              <li role="listitem">• Listen to the audio for deeper connection</li>
-              <li role="listitem">• Carry this message with you throughout the day</li>
-              <li role="listitem">• Return to it when you need encouragement</li>
+              <li role="listitem">â€¢ Read it slowly and mindfully</li>
+              <li role="listitem">â€¢ Repeat it three times with intention</li>
+              <li role="listitem">â€¢ Listen to the audio for deeper connection</li>
+              <li role="listitem">â€¢ Carry this message with you throughout the day</li>
+              <li role="listitem">â€¢ Return to it when you need encouragement</li>
             </ul>
           </div>
 
@@ -697,10 +706,10 @@ export default function DailyAffirmation({ onBack, currentUser }: DailyAffirmati
             <div className="inline-flex items-center space-x-2 text-xs text-white/50">
               <span>
                 {Array.from(cachedAffirmations.keys()).includes(getTodayKey())
-                  ? "✓ Cached for today" 
-                  : "◦ Fresh content"}
+                  ? "âœ“ Cached for today" 
+                  : "â—¦ Fresh content"}
               </span>
-              <span>•</span>
+              <span>â€¢</span>
               <span>{cachedAffirmations.size} affirmations stored</span>
             </div>
           </div>
@@ -709,3 +718,4 @@ export default function DailyAffirmation({ onBack, currentUser }: DailyAffirmati
     </div>
   );
 }
+

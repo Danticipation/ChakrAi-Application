@@ -1,0 +1,19 @@
+0 verbose cli C:\Program Files\nodejs\node.exe C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js
+1 info using npm@11.5.2
+2 info using node@v22.16.0
+3 silly config load:file:C:\nvm\v22.16.0\node_modules\npm\npmrc
+4 warn Unknown cli config "--fix". This will stop working in the next major version of npm.
+5 silly config load:file:C:\8-14-Chakrai-App\client\.npmrc
+6 silly config load:file:C:\Users\sharp\.npmrc
+7 silly config load:file:C:\8-14-Chakrai-App\client\etc\npmrc
+8 verbose title npm exec eslint src/**/*.{ts,tsx} content
+9 verbose argv "--prefix" "client" "exec" "eslint" "src/**/*.{ts,tsx}" "--fix" "--cache" "--cache-strategy" "content"
+10 verbose logfile logs-max:10 dir:C:\8-14-Chakrai-App\--cache-strategy\_logs\2025-09-11T17_06_59_833Z-
+11 verbose logfile C:\8-14-Chakrai-App\--cache-strategy\_logs\2025-09-11T17_06_59_833Z-debug-0.log
+12 silly logfile done cleaning log files
+13 verbose cwd C:\8-14-Chakrai-App
+14 verbose os Windows_NT 10.0.26100
+15 verbose node v22.16.0
+16 verbose npm  v11.5.2
+17 verbose exit 2
+18 verbose code 2

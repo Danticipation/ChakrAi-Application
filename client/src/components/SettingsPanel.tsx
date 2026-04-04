@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { X, Settings, RefreshCw, Volume2, Palette, Database, Download, Upload, Info, Shield, User, LogIn, LogOut } from 'lucide-react';
-import { getCurrentUserId } from '../utils/userSession';
+﻿import React, { useState } from 'react';
+import { X, Settings, RefreshCw, Volume2, Palette, Database, Download, Info, User, LogIn, LogOut, Trash2, AlertTriangle, BookOpen, MessageSquare } from 'lucide-react';
+import { getAuthHeaders } from '../utils/unifiedUserSession';
 import { useAuth } from '../contexts/AuthContext';
 import AuthModal from './AuthModal';
 
@@ -47,21 +47,30 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
   ];
 
   const handleDataExport = async () => {
-    const userId = getCurrentUserId();
     try {
-      const response = await fetch(`/api/users/${userId}/export`);
+      const headers = await getAuthHeaders();
+      const response = await fetch('/api/data-management/export', { headers });
+      
+      if (!response.ok) {
+        alert('Failed to export data. Please try again.');
+        return;
+      }
+      
       const data = await response.json();
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `trai-data-export-${new Date().toISOString().split('T')[0]}.json`;
+      a.download = `chakrai-data-export-${new Date().toISOString().split('T')[0]}.json`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
+      
+      alert('Data exported successfully!');
     } catch (error) {
       console.error('Export failed:', error);
+      alert('Failed to export data. Please try again.');
     }
   };
 
@@ -314,6 +323,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                 <div>
                   <h3 className="text-lg md:text-xl font-semibold theme-text mb-3 md:mb-4">Data Management</h3>
                   <div className="space-y-3 md:space-y-4">
+                    {/* Export Data */}
                     <div className="theme-card p-3 md:p-4 rounded-lg border border-[var(--theme-accent)]/30">
                       <h4 className="font-semibold theme-text mb-2">Export Data</h4>
                       <p className="theme-text-secondary text-sm mb-3 md:mb-4">
@@ -326,6 +336,127 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                         <Download className="w-4 h-4" />
                         <span>Export Data</span>
                       </button>
+                    </div>
+
+                    {/* Clear Specific Data */}
+                    <div className="theme-card p-3 md:p-4 rounded-lg border border-[var(--theme-accent)]/30">
+                      <h4 className="font-semibold theme-text mb-2">Clear Specific Data</h4>
+                      <p className="theme-text-secondary text-sm mb-3 md:mb-4">
+                        Delete specific types of data while keeping the rest of your information.
+                      </p>
+                      <div className="space-y-3">
+                        <button
+                          onClick={async () => {
+                            if (confirm('Are you sure you want to delete ALL journal entries? This action cannot be undone.')) {
+                              try {
+                                const headers = await getAuthHeaders();
+                                const response = await fetch('/api/data-management/clear-journals', {
+                                  method: 'DELETE',
+                                  headers
+                                });
+                                if (response.ok) {
+                                  alert('All journal entries have been deleted successfully.');
+                                  window.location.reload();
+                                } else {
+                                  alert('Failed to delete journal entries. Please try again.');
+                                }
+                              } catch (error) {
+                                console.error('Error clearing journal entries:', error);
+                                alert('Failed to delete journal entries. Please try again.');
+                              }
+                            }
+                          }}
+                          className="w-full bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center justify-center space-x-2 text-sm md:text-base"
+                        >
+                          <BookOpen className="w-4 h-4" />
+                          <span>Clear All Journal Entries</span>
+                        </button>
+                        <button
+                          onClick={async () => {
+                            if (confirm('Are you sure you want to delete ALL chat messages? This action cannot be undone.')) {
+                              try {
+                                const headers = await getAuthHeaders();
+                                const response = await fetch('/api/data-management/clear-chats', {
+                                  method: 'DELETE',
+                                  headers
+                                });
+                                if (response.ok) {
+                                  alert('Chat history has been cleared successfully.');
+                                  window.location.reload();
+                                } else {
+                                  alert('Failed to clear chat history. Please try again.');
+                                }
+                              } catch (error) {
+                                console.error('Error clearing chat history:', error);
+                                alert('Failed to clear chat history. Please try again.');
+                              }
+                            }
+                          }}
+                          className="w-full bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center justify-center space-x-2 text-sm md:text-base"
+                        >
+                          <MessageSquare className="w-4 h-4" />
+                          <span>Clear Chat History</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Factory Reset */}
+                    <div className="theme-card p-3 md:p-4 rounded-lg border-2 border-red-500/50 bg-red-500/10">
+                      <div className="flex items-start space-x-3">
+                        <AlertTriangle className="w-6 h-6 text-red-400 mt-1 flex-shrink-0" />
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-red-300 mb-2">Factory Reset</h4>
+                          <p className="text-red-200/80 text-sm mb-3 md:mb-4">
+                            <strong>DANGER ZONE:</strong> This will permanently delete ALL your data including chat history, 
+                            journal entries, mood tracking, memories, insights, and all progress. This action cannot be undone.
+                          </p>
+                          <button
+                            onClick={async () => {
+                              const firstConfirm = confirm(
+                                '⚠️ WARNING: Factory Reset will DELETE ALL your data including:\n\n' +
+                                '• All journal entries\n' +
+                                '• All chat history\n' +
+                                '• All mood tracking data\n' +
+                                '• All memories and insights\n' +
+                                '• All progress and milestones\n\n' +
+                                'This action CANNOT be undone. Are you sure you want to continue?'
+                              );
+                              
+                              if (firstConfirm) {
+                                const secondConfirm = prompt('Type "DELETE ALL" to confirm factory reset:');
+                                
+                                if (secondConfirm === 'DELETE ALL') {
+                                  try {
+                                    const headers = await getAuthHeaders();
+                                    const response = await fetch('/api/data-management/factory-reset', {
+                                      method: 'DELETE',
+                                      headers
+                                    });
+                                    
+                                    if (response.ok) {
+                                      alert('Factory reset completed. The app will now reload.');
+                                      localStorage.clear();
+                                      sessionStorage.clear();
+                                      window.location.reload();
+                                    } else {
+                                      alert('Failed to perform factory reset. Please try again.');
+                                    }
+                                  } catch (error) {
+                                    console.error('Error performing factory reset:', error);
+                                    alert('Failed to perform factory reset. Please try again.');
+                                  }
+                                } else if (secondConfirm !== null) {
+                                  alert('Factory reset cancelled. Your data is safe.');
+                                }
+                              }
+                            }}
+                            className="bg-red-600 hover:bg-red-700 text-white px-4 md:px-6 py-2 rounded-lg transition-colors flex items-center space-x-2 text-sm md:text-base border-2 border-red-400"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            <span>Factory Reset - Delete Everything</span>
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -362,7 +493,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
         <AuthModal
           isOpen={showAuthModal}
           onClose={() => setShowAuthModal(false)}
-          mode={authMode}
+          onAuthSuccess={() => setShowAuthModal(false)}
         />
       )}
     </div>

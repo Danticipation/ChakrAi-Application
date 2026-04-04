@@ -333,7 +333,7 @@ export function selectMindfulnessExercise(
   
   if (suitableExercises.length === 0) {
     // Default to box breathing for general stress
-    return mindfulnessExercises.find(ex => ex.id === 'box-breathing') || null;
+    return mindfulnessExercises.find(ex => ex.id === 'box-breathing') ?? null;
   }
   
   // If duration preference is specified, prioritize exercises within that range
@@ -342,7 +342,7 @@ export function selectMindfulnessExercise(
       Math.abs(ex.duration - preferredDuration) <= 3
     );
     if (durationMatches.length > 0) {
-      return durationMatches[0];
+      return durationMatches[0] ?? null;
     }
   }
   
@@ -359,7 +359,7 @@ export function selectMindfulnessExercise(
   }
   
   // Return the first suitable exercise
-  return suitableExercises[0];
+  return suitableExercises[0] ?? null;
 }
 
 // Check if mindfulness intervention should be triggered

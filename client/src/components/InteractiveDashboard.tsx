@@ -16,13 +16,13 @@ import {
   PieChart,
   LineChart,
   Download,
-  Filter,
   AlertCircle,
   RefreshCw,
   FileText,
   FileSpreadsheet,
   X
 } from 'lucide-react';
+import { getAuthHeaders } from '@/utils/unifiedUserSession';
 
 // Utility Components
 const LoadingSpinner: React.FC<{ className?: string }> = ({ className = "w-5 h-5" }) => (
@@ -160,7 +160,8 @@ export function InteractiveDashboard({ userId }: InteractiveDashboardProps) {
   const [isExporting, setIsExporting] = useState(false);
 
   useEffect(() => {
-    fetchDashboardData();
+    console.log('📊 InteractiveDashboard: Fetching data for user:', userId);
+    void fetchDashboardData();
   }, [userId, dateRange]);
 
   const fetchDashboardData = useCallback(async (): Promise<void> => {
@@ -168,9 +169,16 @@ export function InteractiveDashboard({ userId }: InteractiveDashboardProps) {
       setLoading(true);
       setError(null);
       
+      console.log('📡 Dashboard: Getting auth headers from HIPAA system...');
+      
+      // Use HIPAA auth headers instead of localStorage token
+      const headers = await getAuthHeaders();
+      
+      console.log('✅ Dashboard: Sending request with HIPAA headers');
+      
       const response = await fetch('/api/analytics/dashboard', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           userId,
           dateRange: {
@@ -181,8 +189,9 @@ export function InteractiveDashboard({ userId }: InteractiveDashboardProps) {
       });
       
       if (response.ok) {
-        const result: ApiResponse<DashboardData> = await response.json();
+        const result: ApiResponse<DashboardData> = (await response.json()) as ApiResponse<DashboardData>;
         if (result.success && result.data) {
+          console.log('✅ Dashboard data loaded successfully');
           setDashboardData(result.data);
         } else {
           throw new Error(result.error || 'Failed to load dashboard data');
@@ -192,7 +201,7 @@ export function InteractiveDashboard({ userId }: InteractiveDashboardProps) {
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch dashboard data';
-      console.error('Dashboard fetch error:', err);
+      console.error('❌ Dashboard fetch error:', err);
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -209,9 +218,12 @@ export function InteractiveDashboard({ userId }: InteractiveDashboardProps) {
     
     setIsExporting(true);
     try {
+      // Use HIPAA auth headers
+      const headers = await getAuthHeaders();
+      
       const response = await fetch('/api/analytics/export', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           userId,
           format,
@@ -368,8 +380,8 @@ export function InteractiveDashboard({ userId }: InteractiveDashboardProps) {
                       from: dateRange.start,
                       to: dateRange.end,
                     }}
-                    onSelect={(range: { from?: Date; to?: Date } | undefined) => {
-                      if (range && typeof range === 'object' && 'from' in range && range.from && range.to) {
+                    onSelect={(range) => {
+                      if (range?.from && range?.to) {
                         handleDateRangeChange({ start: range.from, end: range.to });
                       }
                     }}

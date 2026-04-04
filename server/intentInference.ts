@@ -105,19 +105,19 @@ function extractPersonalInfo(message: string): Record<string, any> {
   
   // Extract names
   const nameMatch = message.match(/my name is (\w+)/i);
-  if (nameMatch) entities.name = nameMatch[1];
+  if (nameMatch) entities['name'] = nameMatch[1];
   
   // Extract occupation
   const jobMatch = message.match(/i work (?:as |at |in )?([^.!?]+)/i);
-  if (jobMatch) entities.occupation = jobMatch[1].trim();
+  if (jobMatch) entities['occupation'] = jobMatch[1]?.trim();
   
   // Extract location
   const locationMatch = message.match(/i live (?:in |at |near )?([^.!?]+)/i);
-  if (locationMatch) entities.location = locationMatch[1].trim();
+  if (locationMatch) entities['location'] = locationMatch[1]?.trim();
   
   // Extract interests
   const interestMatch = message.match(/i (?:like|love|enjoy) ([^.!?]+)/i);
-  if (interestMatch) entities.interest = interestMatch[1].trim();
+  if (interestMatch) entities['interest'] = interestMatch[1]?.trim();
   
   return entities;
 }

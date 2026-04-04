@@ -11,7 +11,7 @@ import {
   type ConversationSession, type InsertConversationSession,
   type ConversationThread, type InsertConversationThread,
   type SessionContinuity, type InsertSessionContinuity,
-} from "@shared/schema";
+} from "../../shared/schema.ts";
 import { eq, desc } from "drizzle-orm";
 
 export interface IMemoryStorage {
@@ -36,6 +36,11 @@ export class MemoryStorage implements IMemoryStorage {
       ...data,
       createdAt: new Date(),
     }).returning();
+    
+    if (!result[0]) {
+      throw new Error('Failed to create user memory');
+    }
+    
     return result[0];
   }
 
@@ -50,6 +55,11 @@ export class MemoryStorage implements IMemoryStorage {
       ...data,
       createdAt: new Date(),
     }).returning();
+    
+    if (!result[0]) {
+      throw new Error('Failed to create user fact');
+    }
+    
     return result[0];
   }
 

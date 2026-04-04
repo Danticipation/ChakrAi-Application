@@ -97,7 +97,7 @@ export const VOICE_MAPPING: Record<string, string> = {
 // Helper functions
 export function getVoiceId(voiceName: string): string {
   const normalizedName = voiceName.toLowerCase();
-  return VOICE_MAPPING[normalizedName] || VOICE_MAPPING.james;
+  return VOICE_MAPPING[normalizedName] || VOICE_MAPPING['james']!;
 }
 
 export function getVoiceConfig(voiceName: string): VoiceConfig | undefined {
@@ -106,7 +106,7 @@ export function getVoiceConfig(voiceName: string): VoiceConfig | undefined {
 }
 
 export function getDefaultVoice(): VoiceConfig {
-  return VOICE_CONFIGS.find(config => config.default) || VOICE_CONFIGS[0];
+  return VOICE_CONFIGS.find(config => config.default) || VOICE_CONFIGS[0]!;
 }
 
 export function getAllVoiceNames(): string[] {

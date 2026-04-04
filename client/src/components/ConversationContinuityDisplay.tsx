@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import { Clock, MessageCircle, ArrowRight, Brain, Sparkles, Calendar, GitBranch } from 'lucide-react';
 
 interface ConversationSession {
@@ -14,6 +13,9 @@ interface ConversationSession {
   messageCount: number;
   lastActivity: string;
   isActive: boolean;
+  topicsSummary?: string;
+  endTime?: string;
+  keyInsights?: string[];
 }
 
 interface ConversationThread {
@@ -24,6 +26,7 @@ interface ConversationThread {
   contextSummary: string;
   nextSessionPrompt?: string;
   lastMentioned: string;
+  context?: string;
 }
 
 interface ContinuityData {

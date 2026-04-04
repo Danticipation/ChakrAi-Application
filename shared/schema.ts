@@ -1,4 +1,4 @@
-import { pgTable, serial, text, integer, boolean, timestamp, jsonb, decimal } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, integer, boolean, timestamp, jsonb, decimal, uuid as uuidCol, real, primaryKey } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -9,6 +9,8 @@ export const users = pgTable("users", {
   email: text("email").unique(),
   passwordHash: text("password_hash"),
   displayName: text("display_name"),
+  // HIPAA COMPLIANCE: Role-Based Access Control
+  roles: text("roles").array().default(["user"]), // ['user', 'therapist', 'admin', 'system']
   sessionId: text("session_id").unique(),
   sessionToken: text("session_token"),
   deviceFingerprint: text("device_fingerprint"),
@@ -110,6 +112,38 @@ export const userFacts = pgTable("user_facts", {
   fact: text("fact").notNull(),
   category: text("category").default("general"),
   createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Guided Meditation System
+export const meditationSessions = pgTable("meditation_sessions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  meditationType: text("meditation_type").notNull(), // guided, breathing, mindfulness, visualization, body_scan
+  duration: integer("duration").notNull(), // in seconds
+  completedDuration: integer("completed_duration").default(0),
+  isCompleted: boolean("is_completed").default(false),
+  rating: integer("rating"), // 1-5 user rating
+  notes: text("notes"),
+  ambientSound: text("ambient_sound"), // ocean, rain, forest, etc.
+  voiceEnabled: boolean("voice_enabled").default(true),
+  selectedVoice: text("selected_voice").default("amy"),
+  startedAt: timestamp("started_at").defaultNow(),
+  completedAt: timestamp("completed_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const meditationTemplates = pgTable("meditation_templates", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description").notNull(),
+  type: text("type").notNull(), // guided, breathing, mindfulness, visualization, body_scan
+  duration: integer("duration").notNull(),
+  difficulty: text("difficulty").notNull(), // beginner, intermediate, advanced
+  guidedSteps: jsonb("guided_steps").notNull(), // Array of step objects
+  breathingPattern: jsonb("breathing_pattern"), // Optional breathing pattern
+  isDefault: boolean("is_default").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 // Conversation Continuity Enhancer - Cross-Session Context Preservation
@@ -221,7 +255,7 @@ export const memoryConnections = pgTable("memory_connections", {
   userId: integer("user_id").notNull(),
   fromMemoryId: integer("from_memory_id").notNull(),
   toMemoryId: integer("to_memory_id").notNull(),
-  connectionType: text("connection_type").notNull(), // "follows_up", "contradicts", "reinforces", "relates_to"
+  connectionType: text("connection_type").notNull(), // "relates_to", "contradicts", "builds_on", "resolves", "triggers"
   strength: decimal("strength", { precision: 3, scale: 2 }).default("0.50"), // Connection strength 0-1
   automaticConnection: boolean("automatic_connection").default(true), // AI-detected vs manual
   createdAt: timestamp("created_at").defaultNow(),
@@ -243,6 +277,7 @@ export const memoryInsights = pgTable("memory_insights", {
 // Therapeutic features - Journal
 export const journalEntries = pgTable("journal_entries", {
   id: serial("id").primaryKey(),
+  uid: text("uid"), // Added for UID-first system
   userId: integer("user_id").notNull(),
   title: text("title"),
   content: text("content").notNull(),
@@ -270,6 +305,7 @@ export const journalAnalytics = pgTable("journal_analytics", {
 // Therapeutic features - Mood tracking
 export const moodEntries = pgTable("mood_entries", {
   id: serial("id").primaryKey(),
+  uid: text("uid"), // Added for UID-first system
   userId: integer("user_id").notNull(),
   mood: text("mood").notNull(),
   intensity: integer("intensity").notNull(),
@@ -515,6 +551,18 @@ export const insertUserFactSchema = createInsertSchema(userFacts).omit({
   createdAt: true,
 });
 
+export const insertMeditationSessionSchema = createInsertSchema(meditationSessions).omit({
+  id: true,
+  startedAt: true,
+  createdAt: true,
+});
+
+export const insertMeditationTemplateSchema = createInsertSchema(meditationTemplates).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export const insertJournalEntrySchema = createInsertSchema(journalEntries).omit({
   id: true,
   createdAt: true,
@@ -609,6 +657,8 @@ export type Message = typeof messages.$inferSelect;
 
 export type UserMemory = typeof userMemories.$inferSelect;
 export type UserFact = typeof userFacts.$inferSelect;
+export type MeditationSession = typeof meditationSessions.$inferSelect;
+export type MeditationTemplate = typeof meditationTemplates.$inferSelect;
 export type JournalEntry = typeof journalEntries.$inferSelect;
 export type JournalAnalytics = typeof journalAnalytics.$inferSelect;
 export type MoodEntry = typeof moodEntries.$inferSelect;
@@ -1134,6 +1184,50 @@ export const alarms = pgTable("alarms", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// HIPAA-compliant identity tables
+export const installs = pgTable('installs', {
+  adid: text('adid').primaryKey(),
+  didHash: text('did_hash').notNull(),
+  platform: text('platform').notNull(),
+  attested: boolean('attested').default(false),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+})
+
+export const sessions = pgTable('sessions', {
+  sid: uuidCol('sid').primaryKey(),
+  adid: text('adid').notNull().references(() => installs.adid),
+  uid: text('uid'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  revoked: boolean('revoked').default(false),
+})
+
+export const userDevices = pgTable('user_devices', {
+  uid: text('uid').notNull(),
+  adid: text('adid').notNull().references(() => installs.adid),
+  udid: text('udid').notNull().unique(),
+  firstSeen: timestamp('first_seen', { withTimezone: true }).defaultNow(),
+  lastSeen: timestamp('last_seen', { withTimezone: true }).defaultNow(),
+}, (t) => ({ pk: primaryKey({ columns: [t.uid, t.adid] }) }))
+
+export const agentMemoryFacts = pgTable('agent_memory_facts', {
+  uid: text('uid').notNull(),
+  factId: text('fact_id').notNull(),
+  type: text('type').notNull(),
+  value: jsonb('value').notNull(),
+  source: text('source').notNull(),
+  confidence: real('confidence').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+}, (t) => ({ pk: primaryKey({ columns: [t.uid, t.factId] }) }))
+
+export const agentMemorySummaries = pgTable('agent_memory_summaries', {
+  uid: text('uid').notNull(),
+  period: text('period').notNull(),
+  version: text('version').notNull(),
+  text: text('text').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+}, (t) => ({ pk: primaryKey({ columns: [t.uid, t.period, t.version] }) }))
+
 // Create Zod schemas for alarms
 export const insertAlarmSchema = createInsertSchema(alarms).omit({
   id: true,
@@ -1276,3 +1370,37 @@ export type InsertVrSession = z.infer<typeof insertVrSessionSchema>;
 export type InsertVrProgressTracking = z.infer<typeof insertVrProgressTrackingSchema>;
 export type InsertVrTherapeuticPlan = z.infer<typeof insertVrTherapeuticPlanSchema>;
 export type InsertVrAccessibilityProfile = z.infer<typeof insertVrAccessibilityProfileSchema>;
+
+// ============================================================================
+// HIPAA COMPLIANCE - Audit Logging System
+// ============================================================================
+// CRITICAL: All PHI (Protected Health Information) access MUST be logged
+// for HIPAA compliance. This includes: reads, writes, updates, deletes.
+
+export const auditLogs = pgTable("audit_logs", {
+  id: serial("id").primaryKey(),
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+  userId: integer("user_id"), // User whose data was accessed (can be null for system actions)
+  actorUserId: integer("actor_user_id"), // Who performed the action
+  actorType: text("actor_type").notNull(), // 'user', 'admin', 'therapist', 'system'
+  action: text("action").notNull(), // 'read', 'write', 'update', 'delete', 'login', 'export'
+  resourceType: text("resource_type").notNull(), // 'journal_entry', 'mood_entry', 'message', 'user_profile', etc.
+  resourceId: integer("resource_id"), // ID of the specific record accessed
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  sessionId: text("session_id"),
+  success: boolean("success").notNull().default(true),
+  failureReason: text("failure_reason"), // If success=false, why?
+  dataSnapshot: jsonb("data_snapshot"), // Optional: snapshot of data before change (for updates/deletes)
+  changeDetails: jsonb("change_details"), // What changed (for updates)
+  accessReason: text("access_reason"), // Why was this accessed? (e.g., "user_request", "therapeutic_review")
+  complianceFlags: text("compliance_flags").array(), // Any compliance concerns flagged
+});
+
+export const insertAuditLogSchema = createInsertSchema(auditLogs).omit({
+  id: true,
+  timestamp: true,
+});
+
+export type AuditLog = typeof auditLogs.$inferSelect;
+export type InsertAuditLog = z.infer<typeof insertAuditLogSchema>;

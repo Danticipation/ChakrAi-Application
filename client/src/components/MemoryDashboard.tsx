@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Brain, RefreshCw, Calendar, MessageCircle, TrendingUp, Users, Clock, Lightbulb } from 'lucide-react';
 import { getCurrentUserId } from '../utils/userSession';
@@ -78,10 +78,10 @@ export default function MemoryDashboard() {
   const { data: dashboard, isLoading, refetch } = useQuery<MemoryDashboard>({
     queryKey: ['/api/memory-dashboard', currentUserId],
     queryFn: async () => {
-      console.log(`🔍 Frontend fetching memory dashboard for user ID: ${currentUserId}`);
+      console.log(`ðŸ” Frontend fetching memory dashboard for user ID: ${currentUserId}`);
       const response = await fetch(`/api/memory-dashboard?userId=${currentUserId}`);
       const data = await response.json();
-      console.log(`📊 Frontend received dashboard data:`, data);
+      console.log(`ðŸ“Š Frontend received dashboard data:`, data);
       return data;
     }
   });

@@ -163,7 +163,7 @@ export async function translateTherapeuticMessage(
   }
 
   try {
-    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
+    const openai = new OpenAI({ apiKey: process.env['OPENAI_API_KEY']! });
 
     const contextInstructions = {
       therapeutic: 'This is therapeutic mental health content. Maintain professional, supportive, and culturally sensitive tone.',
@@ -172,7 +172,7 @@ export async function translateTherapeuticMessage(
       supportive: 'This is supportive encouragement. Focus on hope, validation, and positive reinforcement.'
     };
 
-    const culturalNotes = {
+    const culturalNotes: Record<string, string> = {
       es: 'Consider Latin American and Spanish cultural approaches to mental health. Use formal "usted" for therapeutic contexts.',
       fr: 'Consider French cultural attitudes toward mental health and well-being. Maintain appropriate formality.',
       de: 'Consider German cultural directness while maintaining therapeutic sensitivity.',
@@ -218,7 +218,7 @@ Translation:`;
       max_tokens: 1000
     });
 
-    return response.choices[0].message.content?.trim() || message;
+    return response.choices[0]?.message?.content?.trim() || message;
   } catch (error) {
     console.error('Translation error:', error);
     return message; // Fallback to original message
@@ -265,7 +265,7 @@ export async function generateMultilingualVoice(
     const translatedText = await translateTherapeuticMessage(text, language, 'therapeutic');
     
     // Generate voice using ElevenLabs with language-specific voice
-    const { generateEmotionalVoice } = await import('./emotionalVoice');
+    const { generateEmotionalVoice } = await import('./emotionalVoice.js');
     
     const voiceBuffer = await generateEmotionalVoice({
       text: translatedText,
@@ -287,7 +287,7 @@ export async function detectLanguage(text: string): Promise<string> {
   }
 
   try {
-    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
+    const openai = new OpenAI({ apiKey: process.env['OPENAI_API_KEY']! });
 
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
@@ -305,7 +305,7 @@ export async function detectLanguage(text: string): Promise<string> {
       max_tokens: 10
     });
 
-    const detectedLanguage = response.choices[0].message.content?.trim().toLowerCase() || 'en';
+    const detectedLanguage = response.choices[0]?.message?.content?.trim().toLowerCase() || 'en';
     
     // Validate against supported languages
     const supportedCodes = supportedLanguages.map(lang => lang.code);

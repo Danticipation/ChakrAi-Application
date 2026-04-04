@@ -1,4 +1,4 @@
-// Web Audio API-based recorder that creates actual WAV files
+﻿// Web Audio API-based recorder that creates actual WAV files
 // This bypasses MediaRecorder limitations and creates proper audio for OpenAI Whisper
 
 export class WebAudioRecorder {
@@ -78,7 +78,7 @@ export class WebAudioRecorder {
         this.workletNode = processorNode as any; // Store for cleanup
       }
 
-      console.log('🎵 WebAudioRecorder started successfully');
+      console.log('ðŸŽµ WebAudioRecorder started successfully');
       
     } catch (error) {
       console.error('Failed to start WebAudioRecorder:', error);
@@ -115,7 +115,7 @@ export class WebAudioRecorder {
 
     // Convert captured audio data to WAV
     const wavBlob = this.createWAVBlob();
-    console.log('🎵 WebAudioRecorder created WAV blob:', wavBlob.size, 'bytes');
+    console.log('ðŸŽµ WebAudioRecorder created WAV blob:', wavBlob.size, 'bytes');
     
     return wavBlob;
   }
@@ -135,7 +135,7 @@ export class WebAudioRecorder {
     // Convert to 16-bit PCM
     const pcmData = new Int16Array(mergedData.length);
     for (let i = 0; i < mergedData.length; i++) {
-      const sample = Math.max(-1, Math.min(1, mergedData[i]));
+      const sample = Math.max(-1, Math.min(1, mergedData[i] || 0));
       pcmData[i] = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
     }
 
@@ -185,3 +185,4 @@ export class WebAudioRecorder {
     return this.recording;
   }
 }
+

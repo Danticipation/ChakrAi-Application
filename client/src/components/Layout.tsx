@@ -1,23 +1,33 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import NeonCursor from '@/components/neon-cursor';
-import { QueryClient, QueryClientProvider, useQuery, useQueryClient } from '@tanstack/react-query';
-import { MessageCircle, Brain, BookOpen, Mic, User, Square, Send, Target, RotateCcw, Sun, Star, Heart, BarChart3, Gift, Headphones, Shield, X, Palette, Settings, ChevronDown, ChevronRight } from 'lucide-react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Brain, X, Settings, Menu } from 'lucide-react';
 import axios from 'axios';
-import { useTheme, ThemeProvider } from '@/contexts/ThemeContext';
-import { AuthProvider, useAuth } from '@/contexts/AuthContext';
-import { SubscriptionProvider, useSubscription } from '@/contexts/SubscriptionContext';
+// Removed problematic theme context import
+// import { useTheme, ThemeProvider } from '@/contexts/ThemeContext';
+import { AuthProvider } from '@/contexts/AuthContext';
+import { SubscriptionProvider } from '@/contexts/SubscriptionContext';
+// Removed problematic layout component imports
+// import CleanLayout from '@/components/layouts/CleanLayout';
+// import CleanHome from '@/components/layouts/CleanHome';
 // import { SubscriptionModal } from '@/components/SubscriptionModal';
 // import { UsageLimitModal } from '@/components/UsageLimitModal';
 import MemoryDashboard from '@/components/MemoryDashboard';
 import ConversationContinuityDisplay from '@/components/ConversationContinuityDisplay';
 import VoiceSelector from '@/components/VoiceSelector';
 import ThemeSelector from '@/components/ThemeSelector';
+// Import comprehensive engaging components
+import BeautifulChat from '@/components/BeautifulChat';
+import ChakraiPlans from '@/components/ChakraiPlans';
+import GlassmorphismShowcase from '@/components/GlassmorphismShowcase';
+import CleanShowcase from '@/components/CleanShowcase';
+
 // import AuthModal from '@/components/AuthModal';
 
 import PersonalityQuiz from '@/components/PersonalityQuiz';
 import VoluntaryQuestionDeck from '@/components/VoluntaryQuestionDeck';
 import FeedbackSystem from '@/components/FeedbackSystem';
-import TherapeuticJournal from '@/components/TherapeuticJournal';
+import EnhancedJournalInterface from '@/components/EnhancedJournalInterface';
 import PersonalityReflection from '@/components/PersonalityReflection';
 import MicrophoneTest from '@/components/MicrophoneTest';
 import AnalyticsDashboard from '@/components/AnalyticsDashboard';
@@ -30,17 +40,23 @@ import AgentSystem from '@/components/AgentSystem';
 import VRTherapy from '@/components/VRTherapy';
 import HealthIntegration from '@/components/HealthIntegration';
 import PrivacyCompliance from '@/components/PrivacyCompliance';
+import BeautifulMeditation from '@/components/BeautifulMeditation';
 import TherapistPortal from '@/components/TherapistPortal';
 import AiPerformanceMonitoringDashboard from '@/components/AiPerformanceMonitoringDashboard';
 import AdminFeedbackDashboard from '@/components/AdminFeedbackDashboard';
 import AdminPortal from '@/components/AdminPortal';
 import Horoscope from '@/components/Horoscope';
 import DailyAffirmation from '@/components/DailyAffirmation';
+import PilotAnalyticsDashboard from '@/components/PilotAnalyticsDashboard';
+import StarsAndStudiesPage from '@/components/StarsAndStudiesPage';
+import SubscriptionTierDemo from '@/components/SubscriptionTierDemo';
 // Removed duplicate chat components - using only main chat interface
 import ChallengeSystem from '@/components/ChallengeSystem';
 import SupabaseSetup from '@/components/SupabaseSetup';
 import { VoiceRecorder } from '@/utils/voiceRecorder';
-import { getCurrentUserId, generateDeviceFingerprint } from '@/utils/userSession';
+import { getCurrentUserId, getAuthHeaders } from '../utils/unifiedUserSession';
+import PrivacyControl from '@/components/PrivacyControl';
+import OnboardingTour from '@/components/OnboardingTour';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -58,19 +74,11 @@ function ErrorBoundary({ children }: { children: React.ReactNode }) {
 }
 
 const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void}> = ({ currentUserId, onDataReset }) => {
-  const { currentTheme } = useTheme();
+  // Removed problematic theme context usage
+  // const { currentTheme, isLightMode, toggleTheme } = useTheme();
   const [activeSection, setActiveSection] = useState('home');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [selectedVoice, setSelectedVoice] = useState('james');
-  const [collapsedSections, setCollapsedSections] = useState({
-    core: false,
-    mirrors: true,
-    guided: true,
-    healthcare: true,
-    wellness: true,
-    settings: true,
-    community: true
-  });
   const [showSettings, setShowSettings] = useState(false);
   const [showThemeModal, setShowThemeModal] = useState(false);
   
@@ -78,6 +86,9 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
   const [chatInput, setChatInput] = useState('');
   const [voiceStatus, setVoiceStatus] = useState<'idle' | 'recording' | 'processing'>('idle');
   const [messages, setMessages] = useState<Array<{sender: 'user' | 'bot', text: string, time: string}>>([]);
+  const [isAiTyping, setIsAiTyping] = useState(false);
+  const [isTtsEnabled, setIsTtsEnabled] = useState(true);
+  const [selectedModel, setSelectedModel] = useState('gpt-4o'); // Added selectedModel state
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const voiceRecorderRef = useRef<VoiceRecorder | null>(null);
 
@@ -86,10 +97,10 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
     voiceRecorderRef.current = new VoiceRecorder({
       onTranscription: (text) => {
         setChatInput(text);
-        console.log('✅ Voice transcription received:', text);
+        console.log('âœ… Voice transcription received:', text);
       },
       onError: (error) => {
-        console.error('❌ Voice recording error:', error);
+        console.error('âŒ Voice recording error:', error);
         // More user-friendly error display
         const errorDiv = document.createElement('div');
         errorDiv.style.cssText = 'position:fixed;top:20px;right:20px;background:red;color:white;padding:15px;border-radius:8px;z-index:10000;max-width:300px;';
@@ -99,7 +110,7 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
       },
       onStatusChange: (status) => {
         setVoiceStatus(status);
-        console.log('🎵 Voice status changed to:', status);
+        console.log('ðŸŽµ Voice status changed to:', status);
       },
       maxDuration: 30, // Shorter duration for better success
       minDuration: 2   // Longer minimum for clearer speech
@@ -123,54 +134,83 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
     }
   };
 
-  // Device fingerprint generation
-  const generateDeviceFingerprint = () => {
-    const stored = localStorage.getItem('chakrai_device_fingerprint');
-    if (stored) return stored;
-    
-    const fingerprint = `device_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
-    localStorage.setItem('chakrai_device_fingerprint', fingerprint);
-    return fingerprint;
+  // Async TTS generation function (non-blocking)
+  // Async TTS generation function (non-blocking)
+  const generateAndPlayTTS = async (text: string, voice: string) => {
+    try {
+      const startTime = Date.now();
+      console.log('ðŸ”Š Starting TTS generation...');
+      
+      const ttsResponse = await fetch('/api/text-to-speech', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ text, voice }),
+      });
+
+      if (ttsResponse.ok) {
+        const audioBlob = await ttsResponse.blob();
+        const audioUrl = URL.createObjectURL(audioBlob);
+        const audio = new Audio(audioUrl);
+        
+        const generationTime = Date.now() - startTime;
+        console.log(`ðŸ”Š TTS generated in ${generationTime}ms`);
+        
+        audio.addEventListener('ended', () => {
+          URL.revokeObjectURL(audioUrl);
+        });
+        
+        audio.addEventListener('error', (e) => {
+          console.error('ðŸ”Š TTS playback error:', e);
+          URL.revokeObjectURL(audioUrl);
+        });
+        
+        audio.volume = 0.8;
+        await audio.play();
+        console.log('ðŸ”Š TTS playback started');
+      } else {
+        console.error('ðŸ”Š TTS request failed:', ttsResponse.statusText);
+      }
+    } catch (error) {
+      console.error('ðŸ”Š TTS generation failed:', error);
+    }
   };
 
-  const generateSessionId = () => {
-    const stored = sessionStorage.getItem('chakrai_session_id');
-    if (stored) return stored;
-    
-    const sessionId = `session_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
-    sessionStorage.setItem('chakrai_session_id', sessionId);
-    return sessionId;
-  };
+
 
   // Send message functionality
-  const handleSendMessage = async () => {
-    if (!chatInput.trim()) return;
+  const handleSendMessage = async (message?: string) => {
+    const messageText = message || chatInput;
+    if (!messageText.trim()) return;
+    
+    console.log(`ðŸŽµ Frontend - Sending message with voice: ${selectedVoice}`);
+    
+    // Validate session before sending (note: unified system handles this internally)
     
     const userMessage = {
       sender: 'user' as const,
-      text: chatInput,
+      text: messageText,
       time: new Date().toLocaleTimeString()
     };
     
     setMessages(prev => [...prev, userMessage]);
+    setChatInput('');
+    setIsAiTyping(true); // Show typing indicator
     
-    // Send to AI API with device fingerprint headers and voice parameter
+    // Send to AI API with authenticated headers and voice parameter
     try {
-      const deviceFingerprint = generateDeviceFingerprint();
-      const sessionId = generateSessionId();
+      const headers = await getAuthHeaders();
+      console.log('ðŸ”’ Sending chat message with authenticated headers');
       
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout for audio responses
       
       const response = await fetch('/api/chat', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Device-Fingerprint': deviceFingerprint,
-          'X-Session-Id': sessionId
-        },
+        headers,
         body: JSON.stringify({
-          message: chatInput,
+          message: messageText,
           voice: selectedVoice // Use the selected voice from state
         }),
         signal: controller.signal
@@ -180,15 +220,12 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
       
       if (response.ok) {
         const data = await response.json();
-        console.log('✅ Chat API success - Status:', response.status);
-        console.log('📥 Main Chat API response:', data);
-        console.log('🔍 Main Chat - audioUrl exists:', !!data.audioUrl);
-        console.log('🔍 Main Chat - audioUrl length:', data.audioUrl?.length);
-        console.log('🔍 Main Chat - response keys:', Object.keys(data));
-        console.log('🔍 Main Chat - message content:', data.message);
-        
-        // Clear input first
-        setChatInput('');
+        console.log('âœ… Chat API success - Status:', response.status);
+        console.log('ðŸ“¥ Main Chat API response:', data);
+        console.log('ðŸ” Main Chat - audioUrl exists:', !!data.audioUrl);
+        console.log('ðŸ” Main Chat - audioUrl length:', data.audioUrl?.length);
+        console.log('ðŸ” Main Chat - response keys:', Object.keys(data));
+        console.log('ðŸ” Main Chat - message content:', data.message);
         
         const botMessage = {
           sender: 'bot' as const,
@@ -196,53 +233,18 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
           time: new Date().toLocaleTimeString()
         };
         setMessages(prev => [...prev, botMessage]);
+        setIsAiTyping(false); // Hide typing indicator
         
-        // Play audio if available
-        if (data.audioUrl) {
-          console.log('🔊 Main Chat - Playing audio response...');
-          console.log('🔊 Audio data length:', data.audioUrl.length);
-          try {
-            // Convert base64 to audio blob and play
-            const binaryString = atob(data.audioUrl);
-            const bytes = new Uint8Array(binaryString.length);
-            for (let i = 0; i < binaryString.length; i++) {
-              bytes[i] = binaryString.charCodeAt(i);
-            }
-            const audioBlob = new Blob([bytes], { type: 'audio/mpeg' });
-            const audioUrl = URL.createObjectURL(audioBlob);
-            const audio = new Audio(audioUrl);
-            
-            // Add event listeners for debugging
-            audio.addEventListener('loadstart', () => console.log('🔊 Audio loading started'));
-            audio.addEventListener('canplay', () => console.log('🔊 Audio can play'));
-            audio.addEventListener('playing', () => console.log('🔊 Audio is playing'));
-            audio.addEventListener('ended', () => console.log('🔊 Audio playback ended'));
-            audio.addEventListener('error', (e) => console.error('🔊 Audio error event:', e));
-            
-            // Set volume and attempt to play
-            audio.volume = 0.8;
-            const playPromise = audio.play();
-            
-            if (playPromise) {
-              playPromise
-                .then(() => {
-                  console.log('🔊 Audio playback started successfully');
-                })
-                .catch(error => {
-                  console.error('🔊 Audio playback failed:', error);
-                  console.error('🔊 Error details:', error.name, error.message);
-                });
-            }
-          } catch (audioError) {
-            console.error('🔊 Audio processing failed:', audioError);
-          }
-        } else {
-          console.log('🔇 Main Chat - No audio in response');
+        // Start TTS generation immediately (don't await)
+        if (isTtsEnabled && botMessage.text) {
+          console.log('ðŸ”Š Generating TTS for bot response...');
+          // Fire and forget - don't block UI
+          generateAndPlayTTS(botMessage.text, selectedVoice);
         }
       } else {
-        console.error('❌ Chat API error - Status:', response.status, response.statusText);
+        console.error('âŒ Chat API error - Status:', response.status, response.statusText);
         const errorText = await response.text();
-        console.error('❌ Error details:', errorText);
+        console.error('âŒ Error details:', errorText);
         // Show error message to user
         const errorMessage = {
           sender: 'bot' as const,
@@ -250,11 +252,12 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
           time: new Date().toLocaleTimeString()
         };
         setMessages(prev => [...prev, errorMessage]);
+        setIsAiTyping(false); // Hide typing indicator on error
       }
     } catch (error) {
-      console.error('❌ Error sending message - Network/Parse error:', error);
-      console.error('❌ Error type:', error instanceof Error ? error.name : typeof error);
-      console.error('❌ Error message:', error instanceof Error ? error.message : String(error));
+      console.error('âŒ Error sending message - Network/Parse error:', error);
+      console.error('âŒ Error type:', error instanceof Error ? error.name : typeof error);
+      console.error('âŒ Error message:', error instanceof Error ? error.message : String(error));
       
       let errorText = 'Sorry, I had trouble processing your message. Please try again.';
       if (error instanceof Error && error.name === 'AbortError') {
@@ -267,6 +270,7 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
         time: new Date().toLocaleTimeString()
       };
       setMessages(prev => [...prev, errorMessage]);
+      setIsAiTyping(false); // Hide typing indicator on error
     }
   };
 
@@ -284,35 +288,185 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
 
   // Component rendering function
   const renderActiveSection = () => {
+    console.log('ðŸ” Rendering section:', activeSection); // Debug log
     switch (activeSection) {
       case 'home':
+        console.log('ðŸ  Rendering Clean Home Design'); // Debug log
         return (
-          <div className="p-6 space-y-6 max-h-full overflow-y-auto">
-            <div className="text-center space-y-4 mb-8">
-              <h1 className="text-4xl font-bold theme-text font-serif tracking-wide">
-                Welcome to <span className="font-samarkan">Chakrai</span>
-              </h1>
-              <p className="theme-text-secondary text-xl font-light max-w-2xl mx-auto leading-relaxed">
-                Your Personal AI Wellness Companion
-              </p>
-              <p className="theme-text text-lg max-w-3xl mx-auto leading-relaxed font-light opacity-90">
-                Connect with your inner wisdom through AI-powered reflection and growth. Click "Chat with Chakrai" to begin your wellness journey.
+          <div className="space-y-20">
+            {/* Hero Section */}
+            <div className="relative">
+              <div className="grid lg:grid-cols-2 gap-12 items-center">
+                
+                {/* Left Column - Hero Content */}
+                <div className="space-y-8">
+                  <div className="space-y-4">
+                    <h1 className="text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
+                      Discover Your True
+                      <span className="block">
+                        Self with <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">AI-Powered</span>
+                      </span>
+                      <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">
+                        Wellness Coaching
+                      </span>
+                    </h1>
+                    
+                    <p className="text-xl text-gray-600 leading-relaxed">
+                      Experience the world's most comprehensive 190-point personality analysis. 
+                      Get personalized insights, therapeutic recommendations, and AI-powered 
+                      conversations designed for your mental wellness journey.
+                    </p>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <button 
+                      onClick={() => setActiveSection('190-analysis')}
+                      className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-xl font-medium hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center group"
+                    >
+                      Start Free Analysis
+                      <span className="ml-2 group-hover:translate-x-1 transition-transform">â†’</span>
+                    </button>
+                    
+                    <button 
+                      onClick={() => setActiveSection('chat')}
+                      className="border border-gray-300 text-gray-700 px-8 py-4 rounded-xl font-medium hover:bg-gray-50 transition-colors duration-200"
+                    >
+                      Try Chat Demo
+                    </button>
+                  </div>
+
+                  <div className="flex items-center space-x-8 text-sm text-gray-500">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-green-500">âœ“</span>
+                      <span>HIPAA Compliant</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-green-500">âœ“</span>
+                      <span>End-to-End Encrypted</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-green-500">âœ“</span>
+                      <span>20k+ Users</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Column - Personality Analysis Preview */}
+                <div className="relative">
+                  <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-8 shadow-xl border border-white/20">
+                    <div className="flex items-center space-x-4 mb-6">
+                      <div className="w-16 h-16 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center">
+                        <Brain className="w-8 h-8 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-bold text-gray-900">Your Personality Analysis</h3>
+                        <p className="text-gray-600">190+ psychological dimensions</p>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-700 font-medium">Emotional Intelligence</span>
+                        <div className="flex items-center space-x-2">
+                          <div className="w-24 h-2 bg-gray-200 rounded-full">
+                            <div className="w-20 h-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"></div>
+                          </div>
+                          <span className="text-sm font-medium text-gray-900">8.3/10</span>
+                        </div>
+                      </div>
+                      
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-700 font-medium">Creative Problem Solving</span>
+                        <div className="flex items-center space-x-2">
+                          <div className="w-24 h-2 bg-gray-200 rounded-full">
+                            <div className="w-22 h-2 bg-gradient-to-r from-green-500 to-blue-500 rounded-full"></div>
+                          </div>
+                          <span className="text-sm font-medium text-gray-900">9.1/10</span>
+                        </div>
+                      </div>
+                      
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-700 font-medium">Stress Resilience</span>
+                        <div className="flex items-center space-x-2">
+                          <div className="w-24 h-2 bg-gray-200 rounded-full">
+                            <div className="w-18 h-2 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full"></div>
+                          </div>
+                          <span className="text-sm font-medium text-gray-900">7.5/10</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-6 p-4 bg-blue-50 rounded-xl">
+                      <p className="text-sm text-blue-800 font-medium">
+                        <strong>Your Type:</strong> Empathetic Innovator
+                      </p>
+                      <p className="text-sm text-blue-700 mt-1">
+                        You excel at creative problem-solving while maintaining strong emotional awareness...
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 190 Points Section */}
+            <div className="text-center space-y-12">
+              <div className="space-y-4">
+                <h2 className="text-4xl lg:text-5xl font-bold text-gray-900">
+                  <span className="text-blue-600">190 Points.</span> 
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400"> One True You.</span>
+                </h2>
+                <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+                  Discover the 190 Points That Make You, You
+                </p>
+              </div>
+
+              <p className="text-gray-600 max-w-4xl mx-auto leading-relaxed">
+                Chakrai doesn't settle for surface-level personality quizzes. Our proprietary 190-point 
+                analysis engine dives across 9 domains of thought, emotion, and behavior to reveal a living, 
+                evolving portrait of who you are. <strong>It's not a label â€” it's the most in-depth 
+                self-reflection system ever built.</strong>
               </p>
             </div>
-            <div className="flex justify-center mb-8">
-              <button
-                onClick={() => setActiveSection('chat')}
-                className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold text-lg rounded-2xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 border-2 border-white/20"
-              >
-                🧘 Start Your Reflection Journey
-              </button>
+
+            {/* CTA Section */}
+            <div className="text-center bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-12 text-white">
+              <div className="space-y-6">
+                <h2 className="text-3xl lg:text-4xl font-bold">
+                  Ready to Discover Your True Self?
+                </h2>
+                <p className="text-xl opacity-90 max-w-2xl mx-auto">
+                  Join thousands of users who have transformed their mental wellness journey with AI-powered insights.
+                </p>
+                <button 
+                  onClick={() => setActiveSection('chat')}
+                  className="bg-white text-blue-600 px-8 py-4 rounded-xl font-bold hover:bg-gray-100 transition-colors duration-200 shadow-lg hover:shadow-xl"
+                >
+                  Start Your Free Analysis
+                </button>
+              </div>
             </div>
           </div>
         );
+      case '190-analysis':
+        return (
+          <div className="text-center py-20">
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">190-Point Personality Analysis</h1>
+            <p className="text-xl text-gray-600 mb-8">Coming Soon - The most comprehensive personality assessment available</p>
+            <button 
+              onClick={() => setActiveSection('chat')}
+              className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-xl font-medium"
+            >
+              Try Chat Demo Instead
+            </button>
+          </div>
+        );
+      case 'pricing':
+        return <ChakraiPlans />;
       case 'questions':
         return <VoluntaryQuestionDeck />;
       case 'journal':
-        return <TherapeuticJournal userId={currentUserId} onEntryCreated={() => {}} />;
+        return <EnhancedJournalInterface userId={currentUserId} onEntryCreated={() => {}} />;
       case 'memory':
         return <MemoryDashboard />;
       case 'conversation-continuity':
@@ -322,7 +476,9 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
       case 'progress-tracker':
         return <AdaptiveLearningProgressTracker />;
       case 'analytics':
-        return <AnalyticsDashboard userId={currentUserId} onNavigate={setActiveSection} />;
+        return <AnalyticsDashboard onNavigate={setActiveSection} />;
+      case 'meditation':
+        return <BeautifulMeditation />;
       case 'health':
         return <HealthIntegration />;
       case 'challenges':
@@ -359,157 +515,39 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
         return <Horoscope />;
       case 'affirmation':
         return <DailyAffirmation />;
+      case 'pilot-analytics':
+        return <PilotAnalyticsDashboard />;
+      case 'stars-studies':
+        return <StarsAndStudiesPage onBack={() => setActiveSection('home')} />;
+      case 'subscription-demo':
+        return <SubscriptionTierDemo />;
+      case 'glassmorphism-showcase':
+        return <GlassmorphismShowcase />;
+      case 'clean-showcase':
+        return <CleanShowcase />;
       case 'chat':
         return (
-          <div className="h-full flex flex-col relative overflow-hidden">
-            {/* AI Companion Header */}
-            <div className="flex-shrink-0 theme-card border-b border-white/10 p-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <div className="relative">
-                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-xl">
-                      <Brain className="w-8 h-8 text-white" />
-                    </div>
-                    <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white animate-pulse"></div>
-                  </div>
-                  <div>
-                    <h2 className="text-2xl font-bold theme-text font-serif">
-                      <span className="font-samarkan">Chakrai</span>
-                    </h2>
-                    <p className="theme-text-secondary text-sm">Your AI Wellness Companion</p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setActiveSection('home')}
-                  className="p-2 theme-text-secondary hover:theme-text rounded-lg transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-
-            {/* Chat Interface */}
-            <div className="flex-1 flex flex-col min-h-0">
-              {/* Chat Messages Area */}
-              <div className="flex-1 p-6 overflow-y-auto space-y-6">
-                {/* Welcome Message */}
-                <div className="flex items-start space-x-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center flex-shrink-0">
-                    <Brain className="w-5 h-5 text-white" />
-                  </div>
-                  <div className="theme-card max-w-2xl p-4 rounded-2xl rounded-tl-sm shadow-lg">
-                    <p className="theme-text leading-relaxed">
-                      🌟 Welcome to your reflection journey! I'm Chakrai, your personal AI wellness companion. 
-                      I'm here to support your mental wellness through thoughtful conversation, insights, and guidance.
-                    </p>
-                    <p className="theme-text leading-relaxed mt-3">
-                      How are you feeling today? What's on your mind? I'm here to listen and help you explore your thoughts and emotions.
-                    </p>
-                  </div>
-                </div>
-                
-                {/* Chat Messages */}
-                {messages.map((message, index) => (
-                  <div key={index} className={`flex items-start space-x-3 ${message.sender === 'user' ? 'flex-row-reverse space-x-reverse' : ''}`}>
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                      message.sender === 'user' 
-                        ? 'bg-gradient-to-br from-green-500 to-blue-500' 
-                        : 'bg-gradient-to-br from-blue-500 to-purple-600'
-                    }`}>
-                      {message.sender === 'user' ? (
-                        <User className="w-5 h-5 text-white" />
-                      ) : (
-                        <Brain className="w-5 h-5 text-white" />
-                      )}
-                    </div>
-                    <div className={`theme-card max-w-2xl p-4 rounded-2xl shadow-lg ${
-                      message.sender === 'user' ? 'rounded-tr-sm' : 'rounded-tl-sm'
-                    }`}>
-                      <p className="theme-text leading-relaxed">{message.text}</p>
-                      <p className="theme-text-secondary text-xs mt-2">{message.time}</p>
-                    </div>
-                  </div>
-                ))}
-                <div ref={messagesEndRef} />
-              </div>
-
-              {/* Chat Input Area */}
-              <div className="flex-shrink-0 theme-card border-t border-white/10 p-6">
-                <div className="max-w-4xl mx-auto">
-                  <div className="flex items-end space-x-4">
-                    <div className="flex-1">
-                      <div className="relative">
-                        <textarea
-                          value={chatInput}
-                          onChange={(e) => setChatInput(e.target.value)}
-                          onKeyPress={handleKeyPress}
-                          placeholder="Share your thoughts, feelings, or ask me anything..."
-                          className="w-full theme-input resize-none rounded-2xl pl-4 pr-12 py-4 min-h-[60px] max-h-32 focus:ring-2 focus:ring-blue-500/50 transition-all"
-                          rows={2}
-                        />
-                        <button 
-                          onClick={handleSendMessage}
-                          disabled={!chatInput.trim()}
-                          className="absolute right-3 bottom-3 p-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-full hover:shadow-lg transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          <Send className="w-5 h-5" />
-                        </button>
-                        {voiceStatus === 'recording' && (
-                          <div className="absolute top-2 left-3 flex items-center space-x-2 bg-red-500 text-white px-2 py-1 rounded-full text-xs">
-                            <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-                            <span>Recording...</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <button 
-                      onClick={handleVoiceToggle}
-                      disabled={voiceStatus === 'processing'}
-                      className={`p-3 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-                        voiceStatus === 'recording'
-                          ? 'bg-red-500 text-white animate-pulse' 
-                          : voiceStatus === 'processing'
-                          ? 'bg-yellow-500 text-white'
-                          : 'theme-text-secondary hover:theme-text'
-                      }`}
-                    >
-                      <Mic className="w-6 h-6" />
-                    </button>
-                  </div>
-                  
-                  {/* Quick Actions */}
-                  <div className="flex flex-wrap gap-2 mt-4">
-                    <button 
-                      onClick={() => setChatInput("I'm feeling a bit overwhelmed today")}
-                      className="px-4 py-2 theme-card-hover rounded-full text-sm theme-text-secondary hover:theme-text transition-colors border border-white/10"
-                    >
-                      💭 Share my feelings
-                    </button>
-                    <button 
-                      onClick={() => setChatInput("I want to set a wellness goal for myself")}
-                      className="px-4 py-2 theme-card-hover rounded-full text-sm theme-text-secondary hover:theme-text transition-colors border border-white/10"
-                    >
-                      🎯 Set a wellness goal
-                    </button>
-                    <button 
-                      onClick={() => setChatInput("I'd like to journal about what happened today")}
-                      className="px-4 py-2 theme-card-hover rounded-full text-sm theme-text-secondary hover:theme-text transition-colors border border-white/10"
-                    >
-                      📝 Journal my thoughts
-                    </button>
-                    <button 
-                      onClick={() => setChatInput("Can you guide me through a calming meditation?")}
-                      className="px-4 py-2 theme-card-hover rounded-full text-sm theme-text-secondary hover:theme-text transition-colors border border-white/10"
-                    >
-                      🧘 Guided meditation
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          <BeautifulChat
+            selectedVoice={selectedVoice}
+            voiceStatus={voiceStatus}
+            onVoiceToggle={handleVoiceToggle}
+            onSendMessage={handleSendMessage}
+            messages={messages.map((msg, index) => ({
+              ...msg,
+              id: `${msg.sender}-${index}-${msg.time}`
+            }))}
+            chatInput={chatInput}
+            setChatInput={setChatInput}
+            isAiTyping={isAiTyping}
+            isTtsEnabled={isTtsEnabled}
+            onTtsToggle={() => setIsTtsEnabled(!isTtsEnabled)}
+            onBotMessageSpeak={(text: string) => generateAndPlayTTS(text, selectedVoice)} // Pass the TTS function with selectedVoice
+            selectedModel={selectedModel} // Pass selectedModel
+            onModelChange={setSelectedModel} // Pass onModelChange handler
+          />
         );
       default:
+        console.log('âŒ DEFAULT CASE - activeSection:', activeSection); // Debug log
         return (
           <div className="p-6 space-y-6 max-h-full overflow-y-auto">
             <div className="text-center space-y-4 mb-8">
@@ -519,6 +557,16 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
               <p className="theme-text-secondary text-xl font-light max-w-2xl mx-auto leading-relaxed">
                 Your Personal AI Wellness Companion
               </p>
+              <div className="mt-8">
+                <p className="text-sm theme-text-secondary">Debug: activeSection = {activeSection}</p>
+                <p className="text-sm theme-text-secondary">Debug: currentUserId = {currentUserId}</p>
+                <button 
+                  onClick={() => setActiveSection('home')} 
+                  className="mt-4 px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                >
+                  ðŸ  Go to Dashboard
+                </button>
+              </div>
             </div>
           </div>
         );
@@ -526,501 +574,112 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
   };
 
   return (
-    <div className="min-h-screen theme-background flex flex-col">
-      {/* Sparkling Stars Background */}
-      <div className="stars-background">
-        {[...Array(30)].map((_, i) => (
-          <div key={i} className="star"></div>
-        ))}
+    <div className="min-h-screen bg-red-500">
+      <div className="p-8 text-white text-4xl font-bold">
+        TEST - NEW LAYOUT IS LOADING
       </div>
-
-      {/* Desktop Layout */}
-      <div className="hidden lg:block">
-        <div className="flex">
-          {/* Collapsible Sidebar */}
-          <div className="w-72 fixed left-0 top-0 h-full theme-card border-r border-white/10 z-10 overflow-y-auto">
-            <div className="p-3">
-              
-              {/* Chakrai Logo */}
-              <div className="flex items-center justify-center mb-6 p-4">
-                <img src={chakraiLogo} alt="Chakrai" className="h-12 w-auto" />
-                <span className="ml-3 text-2xl font-bold text-blue-400">Chakrai</span>
-              </div>
-              
-              {/* Core Companion Section - Collapsible */}
-              <div className="mb-2">
-                <button
-                  onClick={() => setCollapsedSections(prev => ({ ...prev, core: !prev.core }))}
-                  className="w-full flex items-center justify-between theme-text-secondary text-xs font-medium px-3 py-2 hover:theme-text transition-colors rounded-lg mb-1"
-                >
-                  <span>🟦 Core Companion</span>
-                  {collapsedSections.core ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
-                </button>
-                {!collapsedSections.core && (
-                  <div className="space-y-1">
-                    {[
-                      { id: 'home', label: 'Home' },
-                      { id: 'chat', label: 'Chat with Chakrai' },
-                      { id: 'challenges', label: 'Reflection Goals' },
-                      { id: 'rewards', label: 'Reflection Rewards' }
-                    ].map((tab) => (
-                      <button
-                        key={tab.id}
-                        onClick={() => {
-                          setActiveSection(tab.id);
-                          // Removed floating chat - using only main chat
-                        }}
-                        className={`w-full h-9 px-3 text-xs font-medium transition-all rounded text-left ${
-                          activeSection === tab.id
-                            ? 'bg-blue-500/20 border border-blue-500/30 theme-text'
-                            : 'theme-text hover:bg-white/5'
-                        }`}
-                      >
-                        {tab.label}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Mirrors of You Section - Collapsible */}
-              <div className="mb-2 border-t border-white/10 pt-2">
-                <button
-                  onClick={() => setCollapsedSections(prev => ({ ...prev, mirrors: !prev.mirrors }))}
-                  className="w-full flex items-center justify-between theme-text-secondary text-xs font-medium px-3 py-2 hover:theme-text transition-colors rounded-lg mb-1"
-                >
-                  <span>💠 Mirrors of You</span>
-                  {collapsedSections.mirrors ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
-                </button>
-                {!collapsedSections.mirrors && (
-                  <div className="space-y-1">
-                    {[
-                      { id: 'questions', label: 'Get to Know Me' },
-                      { id: 'journal', label: 'Journal' },
-                      { id: 'daily', label: 'Reflection' },
-                      { id: 'memory', label: 'Insight Vault' },
-                      { id: 'conversation-continuity', label: 'Context Threads' },
-                      { id: 'adaptive', label: 'Mind Mirror' },
-                      { id: 'progress-tracker', label: 'Progress Journey' },
-                      { id: 'analytics', label: 'State of Self' },
-                      { id: 'health', label: 'Somatic Mirror' }
-                    ].map((tab) => (
-                      <button
-                        key={tab.id}
-                        onClick={() => setActiveSection(tab.id)}
-                        className={`w-full h-9 px-3 text-xs font-medium transition-all rounded text-left ${
-                          activeSection === tab.id
-                            ? 'bg-blue-500/20 border border-blue-500/30 theme-text'
-                            : 'theme-text hover:bg-white/5'
-                        }`}
-                      >
-                        {tab.label}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Guided Support Section - Collapsible */}
-              <div className="mb-2 border-t border-white/10 pt-2">
-                <button
-                  onClick={() => setCollapsedSections(prev => ({ ...prev, guided: !prev.guided }))}
-                  className="w-full flex items-center justify-between theme-text-secondary text-xs font-medium px-3 py-2 hover:theme-text transition-colors rounded-lg mb-1"
-                >
-                  <span>🧘 Guided Support</span>
-                  {collapsedSections.guided ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
-                </button>
-                {!collapsedSections.guided && (
-                  <div className="space-y-1">
-                    {[
-                      { id: 'agents', label: 'Reflective Allies' },
-                      { id: 'vr', label: 'InnerScape' },
-                      { id: 'therapy-plans', label: 'Therapy Plans' },
-                      { id: 'community', label: 'Community' }
-                    ].map((tab) => (
-                      <button
-                        key={tab.id}
-                        onClick={() => setActiveSection(tab.id)}
-                        className={`w-full h-9 px-3 text-xs font-medium transition-all rounded text-left ${
-                          activeSection === tab.id
-                            ? 'bg-blue-500/20 border border-blue-500/30 theme-text'
-                            : 'theme-text hover:bg-white/5'
-                        }`}
-                      >
-                        {tab.label}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Healthcare Section - Starts Collapsed */}
-              <div className="mb-2 border-t border-white/10 pt-2">
-                <button
-                  onClick={() => setCollapsedSections(prev => ({ ...prev, healthcare: !prev.healthcare }))}
-                  className="w-full flex items-center justify-between theme-text-secondary text-xs font-medium px-3 py-2 hover:theme-text transition-colors rounded-lg mb-1"
-                >
-                  <span>🏥 Healthcare</span>
-                  {collapsedSections.healthcare ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
-                </button>
-                {!collapsedSections.healthcare && (
-                  <div className="space-y-1">
-                    {[
-                      { id: 'health', label: 'Health Integration' },
-                      { id: 'feedback', label: 'Feedback System' },
-                      { id: 'admin-portal', label: 'Admin Portal' },
-                      { id: 'therapist', label: 'Therapist Portal' }
-                    ].map((tab) => (
-                      <button
-                        key={tab.id}
-                        onClick={() => setActiveSection(tab.id)}
-                        className={`w-full h-9 px-3 text-xs font-medium transition-all rounded text-left ${
-                          activeSection === tab.id
-                            ? 'bg-blue-500/20 border border-blue-500/30 theme-text'
-                            : 'theme-text hover:bg-white/5'
-                        }`}
-                      >
-                        {tab.label}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Community Section - Starts Collapsed */}
-              <div className="mb-2 border-t border-white/10 pt-2">
-                <button
-                  onClick={() => setCollapsedSections(prev => ({ ...prev, community: !prev.community }))}
-                  className="w-full flex items-center justify-between theme-text-secondary text-xs font-medium px-3 py-2 hover:theme-text transition-colors rounded-lg mb-1"
-                >
-                  <span>🏘️ Community</span>
-                  {collapsedSections.community ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
-                </button>
-                {!collapsedSections.community && (
-                  <div className="space-y-1">
-                    {[
-                      { id: 'community', label: 'Community Support' }
-                    ].map((tab) => (
-                      <button
-                        key={tab.id}
-                        onClick={() => setActiveSection(tab.id)}
-                        className={`w-full h-9 px-3 text-xs font-medium transition-all rounded text-left ${
-                          activeSection === tab.id
-                            ? 'bg-blue-500/20 border border-blue-500/30 theme-text'
-                            : 'theme-text hover:bg-white/5'
-                        }`}
-                      >
-                        {tab.label}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Settings & Tools Section - Starts Collapsed */}
-              <div className="mb-2 border-t border-white/10 pt-2">
-                <button
-                  onClick={() => setCollapsedSections(prev => ({ ...prev, settings: !prev.settings }))}
-                  className="w-full flex items-center justify-between theme-text-secondary text-xs font-medium px-3 py-2 hover:theme-text transition-colors rounded-lg mb-1"
-                >
-                  <span>⚙️ Settings & Tools</span>
-                  {collapsedSections.settings ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
-                </button>
-                {!collapsedSections.settings && (
-                  <div className="space-y-1">
-                    {[
-                      { id: 'voice', label: 'Voice Settings' },
-                      { id: 'themes', label: 'Themes' },
-                      { id: 'feedback', label: 'Feedback' },
-                      { id: 'privacy', label: 'Privacy' }
-                    ].map((tab) => (
-                      <button
-                        key={tab.id}
-                        onClick={() => {
-                          if (tab.id === 'themes') {
-                            setShowThemeModal(true);
-                          } else if (tab.id === 'voice') {
-                            setShowSettings(true);
-                          } else {
-                            setActiveSection(tab.id);
-                          }
-                        }}
-                        className={`w-full h-9 px-3 text-xs font-medium transition-all rounded text-left ${
-                          activeSection === tab.id
-                            ? 'bg-blue-500/20 border border-blue-500/30 theme-text'
-                            : 'theme-text hover:bg-white/5'
-                        }`}
-                      >
-                        {tab.label}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-              
-              {/* Section Status Indicator */}
-              <div className="mt-4 pt-2 border-t border-white/10">
-                <div className="text-xs theme-text-secondary text-center opacity-60">
-                  {Object.values(collapsedSections).filter(collapsed => !collapsed).length} of 6 sections expanded
-                </div>
-              </div>
-              
-            </div>
-          </div>
-
-          {/* Main Content Area */}
-          <div className="ml-72 flex-1 min-h-screen">
-            <div className="theme-card backdrop-blur-sm rounded-xl p-6 border border-[var(--theme-accent)]/30 shadow-lg m-6">
-              <h2 className="text-2xl font-bold theme-text text-center mb-4">
-                Chakrai Mental Wellness Platform
-              </h2>
-            </div>
+      {/* Clean Top Navigation Bar */}
+      <nav className="bg-white/80 backdrop-blur-md border-b border-white/20 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
             
-            <div className="p-6">
-              <ErrorBoundary>
-                {renderActiveSection()}
-              </ErrorBoundary>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Mobile Layout - Full Featured */}
-      <div className="block lg:hidden">
-        {/* Mobile Header */}
-        <div className="fixed top-0 left-0 right-0 z-50 theme-card border-b border-white/10 p-4">
-          <div className="flex items-center justify-between">
+            {/* Logo */}
             <div className="flex items-center space-x-3">
-              <img src={chakraiLogo} alt="Chakrai" className="h-8 w-auto" />
-              <div>
-                <p className="text-white font-bold text-lg">Chakrai</p>
-                <p className="text-white/70 text-xs">Mental Wellness</p>
+              <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center">
+                <span className="text-white font-bold text-lg">C</span>
               </div>
+              <span className="text-xl font-bold text-gray-900">Chakrai</span>
             </div>
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 theme-text rounded-lg hover:bg-white/10 transition-colors"
-            >
-              <Settings className="w-6 h-6" />
-            </button>
+
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex space-x-8">
+              {[
+                { id: 'home', label: 'Home' },
+                { id: '190-analysis', label: '190-Point Analysis' },
+                { id: 'chat', label: 'Chat' },
+                { id: 'journal', label: 'Journal' },
+                { id: 'meditation', label: 'Wellness' },
+                { id: 'pricing', label: 'Pricing' }
+              ].map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveSection(item.id)}
+                  className={`px-3 py-2 text-sm font-medium transition-colors duration-200 ${
+                    activeSection === item.id
+                      ? 'text-blue-600 border-b-2 border-blue-600'
+                      : 'text-gray-700 hover:text-blue-600'
+                  }`}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Right Side Actions */}
+            <div className="flex items-center space-x-4">
+              <button 
+                onClick={() => setShowSettings(true)}
+                className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <Settings className="w-5 h-5" />
+              </button>
+              
+              {/* Get Started Button */}
+              <button 
+                onClick={() => setActiveSection('pricing')}
+                className="hidden md:block bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-lg font-medium hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+              >
+                Get Started Free
+              </button>
+
+              {/* Mobile Menu Button */}
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="md:hidden p-2 text-gray-600"
+              >
+                {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Mobile Navigation Drawer */}
+        {/* Mobile Navigation */}
         {mobileMenuOpen && (
-          <div className="fixed inset-0 z-40 lg:hidden">
-            <div className="fixed inset-0 bg-black/50" onClick={() => setMobileMenuOpen(false)} />
-            <div className="fixed top-0 right-0 h-full w-80 theme-card border-l border-white/10 overflow-y-auto">
-              <div className="p-4">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold theme-text">Navigation</h3>
-                  <button
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="p-2 theme-text-secondary hover:theme-text rounded-lg"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
-                
-                {/* Mobile Navigation Items - Complete Feature Set */}
-                <div className="space-y-4">
-                  {/* Core Companion */}
-                  <div>
-                    <h4 className="text-sm font-medium theme-text-secondary mb-2">🟦 Core Companion</h4>
-                    <div className="space-y-1">
-                      {[
-                        { id: 'home', label: 'Home', icon: '🏠' },
-                        { id: 'chat', label: 'Chat with Chakrai', icon: '💬' },
-                        { id: 'challenges', label: 'Reflection Goals', icon: '🎯' },
-                        { id: 'rewards', label: 'Reflection Rewards', icon: '🎁' }
-                      ].map((item) => (
-                        <button
-                          key={item.id}
-                          onClick={() => {
-                            setActiveSection(item.id);
-                            setMobileMenuOpen(false);
-                          }}
-                          className={`w-full flex items-center space-x-3 p-2 rounded-lg text-left transition-colors ${
-                            activeSection === item.id
-                              ? 'bg-blue-500/20 border border-blue-500/30 theme-text'
-                              : 'theme-text hover:bg-white/5'
-                          }`}
-                        >
-                          <span>{item.icon}</span>
-                          <span className="text-sm">{item.label}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Mirrors of You */}
-                  <div>
-                    <h4 className="text-sm font-medium theme-text-secondary mb-2">💠 Mirrors of You</h4>
-                    <div className="space-y-1">
-                      {[
-                        { id: 'questions', label: 'Get to Know Me', icon: '❓' },
-                        { id: 'journal', label: 'Journal', icon: '📔' },
-                        { id: 'daily', label: 'Reflection', icon: '🌅' },
-                        { id: 'memory', label: 'Insight Vault', icon: '🧠' },
-                        { id: 'conversation-continuity', label: 'Context Threads', icon: '🧵' },
-                        { id: 'adaptive', label: 'Mind Mirror', icon: '🪞' },
-                        { id: 'progress-tracker', label: 'Progress Journey', icon: '📈' },
-                        { id: 'analytics', label: 'State of Self', icon: '📊' },
-                        { id: 'health', label: 'Somatic Mirror', icon: '💓' }
-                      ].map((item) => (
-                        <button
-                          key={item.id}
-                          onClick={() => {
-                            setActiveSection(item.id);
-                            setMobileMenuOpen(false);
-                          }}
-                          className={`w-full flex items-center space-x-3 p-2 rounded-lg text-left transition-colors ${
-                            activeSection === item.id
-                              ? 'bg-blue-500/20 border border-blue-500/30 theme-text'
-                              : 'theme-text hover:bg-white/5'
-                          }`}
-                        >
-                          <span>{item.icon}</span>
-                          <span className="text-sm">{item.label}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Guided Support */}
-                  <div>
-                    <h4 className="text-sm font-medium theme-text-secondary mb-2">🧘 Guided Support</h4>
-                    <div className="space-y-1">
-                      {[
-                        { id: 'agents', label: 'Reflective Allies', icon: '🤝' },
-                        { id: 'vr', label: 'InnerScape', icon: '🌐' },
-                        { id: 'therapy-plans', label: 'Therapy Plans', icon: '📋' },
-                        { id: 'community', label: 'Community', icon: '👥' }
-                      ].map((item) => (
-                        <button
-                          key={item.id}
-                          onClick={() => {
-                            setActiveSection(item.id);
-                            setMobileMenuOpen(false);
-                          }}
-                          className={`w-full flex items-center space-x-3 p-2 rounded-lg text-left transition-colors ${
-                            activeSection === item.id
-                              ? 'bg-blue-500/20 border border-blue-500/30 theme-text'
-                              : 'theme-text hover:bg-white/5'
-                          }`}
-                        >
-                          <span>{item.icon}</span>
-                          <span className="text-sm">{item.label}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Healthcare */}
-                  <div>
-                    <h4 className="text-sm font-medium theme-text-secondary mb-2">🏥 Healthcare</h4>
-                    <div className="space-y-1">
-                      {[
-                        { id: 'admin-portal', label: 'Admin Portal', icon: '🛡️' },
-                        { id: 'therapist', label: 'Therapist Portal', icon: '👨‍⚕️' }
-                      ].map((item) => (
-                        <button
-                          key={item.id}
-                          onClick={() => {
-                            setActiveSection(item.id);
-                            setMobileMenuOpen(false);
-                          }}
-                          className={`w-full flex items-center space-x-3 p-2 rounded-lg text-left transition-colors ${
-                            activeSection === item.id
-                              ? 'bg-blue-500/20 border border-blue-500/30 theme-text'
-                              : 'theme-text hover:bg-white/5'
-                          }`}
-                        >
-                          <span>{item.icon}</span>
-                          <span className="text-sm">{item.label}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Wellness */}
-                  <div>
-                    <h4 className="text-sm font-medium theme-text-secondary mb-2">🌟 Wellness</h4>
-                    <div className="space-y-1">
-                      {[
-                        { id: 'horoscope', label: 'Daily Horoscope', icon: '⭐' },
-                        { id: 'affirmation', label: 'Daily Affirmation', icon: '💫' }
-                      ].map((item) => (
-                        <button
-                          key={item.id}
-                          onClick={() => {
-                            setActiveSection(item.id);
-                            setMobileMenuOpen(false);
-                          }}
-                          className={`w-full flex items-center space-x-3 p-2 rounded-lg text-left transition-colors ${
-                            activeSection === item.id
-                              ? 'bg-blue-500/20 border border-blue-500/30 theme-text'
-                              : 'theme-text hover:bg-white/5'
-                          }`}
-                        >
-                          <span>{item.icon}</span>
-                          <span className="text-sm">{item.label}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Settings */}
-                  <div>
-                    <h4 className="text-sm font-medium theme-text-secondary mb-2">⚙️ Settings</h4>
-                    <div className="space-y-1">
-                      {[
-                        { id: 'voice', label: 'Voice Settings', icon: '🎤' },
-                        { id: 'themes', label: 'Themes', icon: '🎨' },
-                        { id: 'feedback', label: 'Feedback', icon: '💬' },
-                        { id: 'privacy', label: 'Privacy', icon: '🔒' }
-                      ].map((item) => (
-                        <button
-                          key={item.id}
-                          onClick={() => {
-                            if (item.id === 'themes') {
-                              setShowThemeModal(true);
-                              setMobileMenuOpen(false);
-                            } else if (item.id === 'voice') {
-                              setShowSettings(true);
-                              setMobileMenuOpen(false);
-                            } else {
-                              setActiveSection(item.id);
-                              setMobileMenuOpen(false);
-                            }
-                          }}
-                          className={`w-full flex items-center space-x-3 p-2 rounded-lg text-left transition-colors ${
-                            activeSection === item.id
-                              ? 'bg-blue-500/20 border border-blue-500/30 theme-text'
-                              : 'theme-text hover:bg-white/5'
-                          }`}
-                        >
-                          <span>{item.icon}</span>
-                          <span className="text-sm">{item.label}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
+          <div className="md:hidden bg-white/95 backdrop-blur-md border-t border-gray-200">
+            <div className="px-4 py-3 space-y-2">
+              {[
+                { id: 'home', label: 'Home' },
+                { id: 'chat', label: 'Chat' },
+                { id: 'journal', label: 'Journal' },
+                { id: 'meditation', label: 'Wellness' },
+                { id: 'pricing', label: 'Pricing' }
+              ].map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    setActiveSection(item.id);
+                    setMobileMenuOpen(false);
+                  }}
+                  className={`block w-full text-left px-3 py-2 rounded-lg text-base font-medium transition-colors ${
+                    activeSection === item.id
+                      ? 'bg-blue-50 text-blue-600'
+                      : 'text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  {item.label}
+                </button>
+              ))}
             </div>
           </div>
         )}
+      </nav>
 
-        {/* Mobile Content */}
-        <div className="pt-20 min-h-screen">
-          <div className="p-4">
-            <ErrorBoundary>
-              {renderActiveSection()}
-            </ErrorBoundary>
-          </div>
-        </div>
-      </div>
+      {/* Main Content Area */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <ErrorBoundary>
+          {renderActiveSection()}
+        </ErrorBoundary>
+      </main>
 
       {/* Voice Settings Modal */}
       {showSettings && (
@@ -1035,8 +694,6 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
       {showThemeModal && (
         <ThemeSelector onClose={() => setShowThemeModal(false)} />
       )}
-
-      {/* Removed duplicate chat components - using only main chat interface in "Chat with Chakrai" section */}
     </div>
   );
 };
@@ -1046,52 +703,85 @@ const AppWithOnboarding = () => {
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
   const [showPersonalityQuiz, setShowPersonalityQuiz] = useState(false);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+  const [showOnboardingTour, setShowOnboardingTour] = useState(false);
+  
+  // Privacy control handler
+  const handleUserIdChange = (newUserId: number) => {
+    console.log('ðŸ”„ Privacy Control: User ID changed to', newUserId);
+    // Could trigger data refresh here if needed
+  };
 
   // User session management
   useEffect(() => {
     const initializeUser = async () => {
       try {
-        // Use the robust user identification system from userSession.ts
-        const userId = getCurrentUserId();
-        const deviceFingerprint = generateDeviceFingerprint();
-
-        console.log('Using device fingerprint:', deviceFingerprint);
-        console.log('Calculated user ID:', userId);
+        console.log('ðŸ”’ Initializing bulletproof user session...');
+        
+        // Get authenticated user session
+        const userId = await getCurrentUserId();
+        if (userId === 0) {
+          console.error('âŒ User authentication failed during initialization');
+          setCurrentUserId(null);
+          setIsLoadingProfile(false);
+          return;
+        }
+        
+        const headers = await getAuthHeaders();
+        
+        console.log('âœ… User authentication successful. User ID:', userId);
+        
         setCurrentUserId(userId);
 
         // Check if user exists in backend or create anonymous user
         try {
-          const response = await axios.post('/api/users/anonymous', {
-            deviceFingerprint
+          const response = await fetch('/api/users/anonymous', {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({})
           });
           
-          // Verify backend user ID matches our calculation
-          if (response.data.user && response.data.user.id) {
-            console.log('Backend confirmed user ID:', response.data.user.id);
+          if (response.ok) {
+            const userData = await response.json();
+            console.log('âœ… Backend user verified:', userData.user?.id);
+          } else {
+            console.warn('âš ï¸ Backend user creation failed, continuing with calculated ID');
           }
         } catch (backendError) {
-          console.warn('Backend user creation failed, continuing with calculated ID:', backendError);
+          console.warn('âš ï¸ Backend user creation failed, continuing with calculated ID:', backendError);
         }
 
         // Check if this specific user needs personality quiz
         try {
-          const profileResponse = await axios.get(`/api/user-profile-check/${userId}`);
-          console.log('Profile check response:', profileResponse.data);
+          const profileHeaders = await getAuthHeaders();
+          const profileResponse = await fetch(`/api/user-profile-check/${userId}`, { headers: profileHeaders });
+          console.log('Profile check response:', profileResponse.status);
 
-          if (profileResponse.data.needsQuiz) {
-            console.log('User needs personality quiz');
-            setShowPersonalityQuiz(false); // Bypass quiz for main app access
-          } else {
-            console.log('User has completed personality quiz');
+          if (profileResponse.ok) {
+            const profileData = await profileResponse.json();
+            if (profileData.needsQuiz) {
+              console.log('User needs personality quiz');
+              setShowPersonalityQuiz(false); // Bypass quiz for main app access
+            } else {
+              console.log('User has completed personality quiz');
+            }
           }
         } catch (profileError) {
           console.warn('Profile check failed, defaulting to main app:', profileError);
           setShowPersonalityQuiz(false);
         }
+
+        // Check if user needs onboarding tour
+        const tourCompleted = localStorage.getItem('chakrai_tour_completed');
+        if (!tourCompleted) {
+          // Small delay to ensure UI is fully loaded
+          setTimeout(() => {
+            setShowOnboardingTour(true);
+          }, 2000);
+        }
       } catch (error) {
         console.error('Failed to initialize user:', error);
         // Robust fallback using getCurrentUserId which never fails
-        const fallbackUserId = getCurrentUserId();
+        const fallbackUserId = await getCurrentUserId();
         console.log('Using fallback user ID:', fallbackUserId);
         setCurrentUserId(fallbackUserId);
         setShowPersonalityQuiz(false); // Go directly to main app on errors
@@ -1164,20 +854,40 @@ const AppWithOnboarding = () => {
     );
   }
 
-  return <AppLayout currentUserId={currentUserId} onDataReset={handleDataReset} />;
+  return (
+    <>
+      <AppLayout 
+        currentUserId={currentUserId} 
+        onDataReset={handleDataReset}
+      />
+      
+      {/* Privacy Control - Shows in top-right corner */}
+      <PrivacyControl onUserIdChange={handleUserIdChange} />
+      
+      {/* Onboarding Tour at App Level */}
+      {showOnboardingTour && (
+        <OnboardingTour
+          onComplete={() => setShowOnboardingTour(false)}
+          onSkip={() => setShowOnboardingTour(false)}
+          currentSection="home"
+          onNavigate={() => {}}
+        />
+      )}
+    </>
+  );
 };
 
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <AuthProvider>
-          <SubscriptionProvider>
-            <AppWithOnboarding />
-            <NeonCursor />
-          </SubscriptionProvider>
-        </AuthProvider>
-      </ThemeProvider>
+      {/* Removed ThemeProvider that was causing errors */}
+      <AuthProvider>
+        <SubscriptionProvider>
+          <AppWithOnboarding />
+          <NeonCursor />
+        </SubscriptionProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }
+

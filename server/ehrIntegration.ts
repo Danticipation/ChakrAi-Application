@@ -1,4 +1,4 @@
-import { storage } from './storage';
+import { storage } from './src/storage.js';
 import { 
   EhrIntegration, InsertEhrIntegration, 
   FhirResource, InsertFhirResource,
@@ -6,12 +6,13 @@ import {
   SessionBilling, InsertSessionBilling,
   ClinicalExport, InsertClinicalExport,
   AuditLog, InsertAuditLog
-} from '../shared/ehrSchema';
+} from '../shared/ehrSchema.js';
 import crypto from 'crypto';
 import PDFDocument from 'pdfkit';
 import { createObjectCsvWriter } from 'csv-writer';
-import fs from 'fs/promises';
+import * as fs from 'fs'; // Use commonjs fs for createWriteStream
 import path from 'path';
+import { promises as fsPromises } from 'fs'; // Use promises for mkdir and stat
 
 // FHIR R4 Resource Templates
 export class FHIRService {
@@ -342,9 +343,9 @@ export class InsuranceService {
 
     const sessionCodes = codes[sessionType] || codes['individual'];
     
-    if (duration <= 37) return sessionCodes['30'] || '90834';
-    if (duration <= 52) return sessionCodes['45'] || '90837';
-    return sessionCodes['60'] || '90837';
+    if (duration <= 37) return sessionCodes?.['30'] || '90834';
+    if (duration <= 52) return sessionCodes?.['45'] || '90837';
+    return sessionCodes?.['60'] || '90837';
   }
 
   static calculateBillableAmount(cptCode: string, insuranceProvider: string): string {
@@ -359,7 +360,7 @@ export class InsuranceService {
     };
 
     const providerRates = rates[insuranceProvider] || rates['default'];
-    const amount = providerRates[cptCode] || 120.00;
+    const amount = providerRates?.[cptCode] || 120.00;
     
     return `$${amount.toFixed(2)}`;
   }
@@ -380,9 +381,9 @@ export class ClinicalExportService {
     const filePath = path.join(process.cwd(), 'exports', fileName);
     
     // Ensure exports directory exists
-    await fs.mkdir(path.dirname(filePath), { recursive: true });
+    await fsPromises.mkdir(path.dirname(filePath), { recursive: true });
     
-    const stream = doc.pipe(require('fs').createWriteStream(filePath));
+    const stream = doc.pipe(fs.createWriteStream(filePath));
     
     // Header
     doc.fontSize(20).text('Clinical Summary Report', { align: 'center' });
@@ -463,7 +464,7 @@ export class ClinicalExportService {
     return new Promise((resolve, reject) => {
       stream.on('finish', async () => {
         try {
-          const stats = await fs.stat(filePath);
+          const stats = await fsPromises.stat(filePath);
           resolve({ filePath, fileSize: stats.size });
         } catch (error) {
           reject(error);
@@ -482,7 +483,7 @@ export class ClinicalExportService {
     const fileName = `clinical_data_${userId}_${Date.now()}.csv`;
     const filePath = path.join(process.cwd(), 'exports', fileName);
     
-    await fs.mkdir(path.dirname(filePath), { recursive: true });
+    await fsPromises.mkdir(path.dirname(filePath), { recursive: true });
     
     // Mock session data - would fetch real data from database
     const records = [
@@ -527,7 +528,7 @@ export class ClinicalExportService {
 
     await csvWriter.writeRecords(records);
     
-    const stats = await fs.stat(filePath);
+    const stats = await fsPromises.stat(filePath);
     return { filePath, fileSize: stats.size };
   }
 
@@ -539,7 +540,7 @@ export class ClinicalExportService {
     const fileName = `fhir_bundle_${userId}_${Date.now()}.json`;
     const filePath = path.join(process.cwd(), 'exports', fileName);
     
-    await fs.mkdir(path.dirname(filePath), { recursive: true });
+    await fsPromises.mkdir(path.dirname(filePath), { recursive: true });
     
     // Generate FHIR Bundle
     const bundle = {
@@ -585,9 +586,9 @@ export class ClinicalExportService {
       ]
     };
 
-    await fs.writeFile(filePath, JSON.stringify(bundle, null, 2));
+    await fsPromises.writeFile(filePath, JSON.stringify(bundle, null, 2));
     
-    const stats = await fs.stat(filePath);
+    const stats = await fsPromises.stat(filePath);
     return { filePath, fileSize: stats.size };
   }
 }
@@ -628,10 +629,12 @@ export class AuditService {
 export class EncryptionService {
   
   private static readonly algorithm = 'aes-256-gcm';
-  
+  private static readonly ivLength = 16; // For AES-256-GCM
+  private static readonly authTagLength = 16; // For AES-256-GCM
+
   static encrypt(text: string, key: string): { encryptedData: string; authTag: string; iv: string } {
-    const iv = crypto.randomBytes(16);
-    const cipher = crypto.createCipher(this.algorithm, key);
+    const iv = crypto.randomBytes(this.ivLength);
+    const cipher = crypto.createCipheriv(this.algorithm, Buffer.from(key, 'hex'), iv);
     cipher.setAAD(Buffer.from('TraI-EHR-Integration'));
     
     let encrypted = cipher.update(text, 'utf8', 'hex');
@@ -647,7 +650,7 @@ export class EncryptionService {
   }
   
   static decrypt(encryptedData: string, authTag: string, iv: string, key: string): string {
-    const decipher = crypto.createDecipher(this.algorithm, key);
+    const decipher = crypto.createDecipheriv(this.algorithm, Buffer.from(key, 'hex'), Buffer.from(iv, 'hex'));
     decipher.setAAD(Buffer.from('TraI-EHR-Integration'));
     decipher.setAuthTag(Buffer.from(authTag, 'hex'));
     

@@ -1,0 +1,37 @@
+name: AI PR Review
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: ai-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    # Skip unsafe fork PRs (no secrets there)
+    if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+    runs-on: [self-hosted, windows, gpu-rtx4070]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install deps
+        shell: pwsh
+        run: pip install openai requests
+
+      - name: Run AI review
+        shell: pwsh
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OPENAI_MODEL: gpt-4o-mini
+        run: python scripts/ai_review.py

@@ -1,13 +1,13 @@
-import React, { useState, useEffect, useMemo } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   TrendingUp, Trophy, Target, Calendar, Brain, Heart, 
   Star, Award, ChevronRight, RefreshCw, Sparkles,
   BarChart3, LineChart, Zap, CheckCircle, Clock,
-  ArrowUp, ArrowDown, Minus, User, MessageCircle,
+  ArrowUp, ArrowDown, Minus, MessageCircle,
   BookOpen, Activity, Smile, ArrowRight, ExternalLink
 } from 'lucide-react';
-import { format, subDays, startOfWeek, endOfWeek, isWithinInterval } from 'date-fns';
+import { format } from 'date-fns';
 
 interface LearningMilestone {
   id: number;
@@ -440,7 +440,7 @@ const AdaptiveLearningProgressTracker: React.FC = () => {
                       <ul className="text-xs space-y-1">
                         {insight.actionableRecommendations.slice(0, 2).map((rec, index) => (
                           <li key={index} className="flex items-start space-x-1">
-                            <span>•</span>
+                            <span>â€¢</span>
                             <span>{rec}</span>
                           </li>
                         ))}
@@ -845,7 +845,7 @@ const AdaptiveLearningProgressTracker: React.FC = () => {
                 <div className="w-16 h-16 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Trophy className="w-8 h-8 text-yellow-600" />
                 </div>
-                <h3 className="text-xl font-bold theme-text mb-2">🎉 Celebration! 🎉</h3>
+                <h3 className="text-xl font-bold theme-text mb-2">ðŸŽ‰ Celebration! ðŸŽ‰</h3>
                 <h4 className="text-lg font-semibold text-yellow-600 mb-2">{celebrationModal.title}</h4>
                 <p className="theme-text-secondary">{celebrationModal.description}</p>
               </div>

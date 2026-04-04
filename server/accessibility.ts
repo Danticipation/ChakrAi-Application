@@ -69,7 +69,7 @@ export async function generateVoiceDescription(
   userLanguage: string = 'en'
 ): Promise<VoiceDescription> {
   try {
-    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
+    const openai = new OpenAI({ apiKey: process.env['OPENAI_API_KEY']! });
 
     const prompt = `Generate a clear, concise voice description for a visually impaired user in a mental health therapy app.
 
@@ -109,7 +109,7 @@ Provide JSON response:
       temperature: 0.3
     });
 
-    const result = JSON.parse(response.choices[0].message.content || '{}');
+    const result = JSON.parse(response.choices[0]?.message?.content || '{}');
     
     return {
       elementType: elementType as any,
@@ -138,7 +138,7 @@ export async function generateClosedCaptions(
   language: string = 'en'
 ): Promise<ClosedCaption[]> {
   try {
-    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
+    const openai = new OpenAI({ apiKey: process.env['OPENAI_API_KEY']! });
 
     const prompt = `Generate closed captions for therapeutic audio content in a mental health app.
 
@@ -182,7 +182,7 @@ Provide JSON array of captions:
       temperature: 0.3
     });
 
-    const result = JSON.parse(response.choices[0].message.content || '{"captions": []}');
+    const result = JSON.parse(response.choices[0]?.message?.content || '{"captions": []}');
     const captions = result.captions || [];
     
     return captions.map((caption: any, index: number) => ({
@@ -203,7 +203,7 @@ Provide JSON array of captions:
     let startTime = 0;
     
     for (let i = 0; i < words.length; i++) {
-      if (currentSegment.length + words[i].length > 40) {
+      if (currentSegment.length + (words[i]?.length || 0) > 40) {
         segments.push({
           id: `caption-${Date.now()}-${segments.length}`,
           startTime,
@@ -213,14 +213,14 @@ Provide JSON array of captions:
           emotionalTone: emotionalContext,
           confidence: 0.7
         });
-        currentSegment = words[i] + ' ';
+        currentSegment = (words[i] || '') + ' ';
         startTime += 3;
       } else {
-        currentSegment += words[i] + ' ';
+        currentSegment += (words[i] || '') + ' ';
       }
     }
     
-    if (currentSegment.trim()) {
+    if (currentSegment?.trim()) {
       segments.push({
         id: `caption-${Date.now()}-${segments.length}`,
         startTime,
@@ -244,7 +244,7 @@ export async function generateChartAccessibilityDescription(
   language: string = 'en'
 ): Promise<string> {
   try {
-    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
+    const openai = new OpenAI({ apiKey: process.env['OPENAI_API_KEY']! });
 
     const prompt = `Generate an accessible description of a therapeutic data visualization for visually impaired users.
 
@@ -279,7 +279,7 @@ Focus on what the data means for the user's wellness journey rather than just nu
       temperature: 0.4
     });
 
-    return response.choices[0].message.content?.trim() || `${chartType} chart showing data for ${timeframe}`;
+    return response.choices[0]?.message?.content?.trim() || `${chartType} chart showing data for ${timeframe}`;
   } catch (error) {
     console.error('Error generating chart accessibility description:', error);
     return `${chartType} chart displaying your wellness data for ${timeframe}. Please use the data table view for detailed information.`;
@@ -297,37 +297,27 @@ export async function simplifyTherapeuticLanguage(
   }
 
   try {
-    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
+    const openai = new OpenAI({ apiKey: process.env['OPENAI_API_KEY']! });
 
-    const simplificationLevels = {
-      medium: 'Use simpler words while maintaining therapeutic meaning. Remove jargon but keep supportive tone.',
-      low: 'Use very simple words and short sentences. Break complex ideas into small steps. Maintain warmth and support.'
-    };
+    const prompt = `Simplify this therapeutic text for cognitive accessibility:
 
-    const prompt = `Simplify this therapeutic text for cognitive accessibility while preserving its supportive intent.
-
-Original text: "${text}"
-Simplification level: ${complexityLevel}
+Original: "${text}"
+Complexity Level: ${complexityLevel}
 Language: ${language}
 
-Instructions: ${simplificationLevels[complexityLevel]}
-
 Requirements:
-1. Maintain therapeutic value and emotional support
-2. Use clear, concrete language
-3. Avoid medical jargon
-4. Keep encouraging tone
-5. Break into shorter sentences if needed
-6. Preserve key mental health concepts in simple terms
-
-Simplified text:`;
+1. Use simple, clear language
+2. Maintain therapeutic meaning
+3. Break complex sentences into shorter ones
+4. Use common vocabulary
+5. Keep supportive tone`;
 
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
       messages: [
         {
           role: "system",
-          content: "You are an expert in cognitive accessibility for mental health content. Simplify therapeutic language while maintaining its supportive and healing intent."
+          content: "You simplify therapeutic content for cognitive accessibility while preserving meaning and supportive tone."
         },
         {
           role: "user",
@@ -337,7 +327,7 @@ Simplified text:`;
       temperature: 0.3
     });
 
-    return response.choices[0].message.content?.trim() || text;
+    return response.choices[0]?.message?.content?.trim() || text;
   } catch (error) {
     console.error('Error simplifying language:', error);
     return text;

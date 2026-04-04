@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { Brain, MessageCircle, Heart, Zap, Users, CheckCircle, ArrowRight, X, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
+﻿import { useState, useEffect, useRef, useCallback } from 'react';
+import { Brain, Heart, Zap, Users, CheckCircle, ArrowRight, X, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';

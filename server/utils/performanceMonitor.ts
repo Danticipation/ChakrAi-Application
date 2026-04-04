@@ -64,7 +64,7 @@ export class PerformanceMonitor {
 
     // Return all metrics
     const allStats: any[] = [];
-    for (const [metricName, metric] of this.metrics.entries()) {
+    this.metrics.forEach((metric, metricName) => {
       allStats.push({
         name: metricName,
         count: metric.count,
@@ -74,7 +74,7 @@ export class PerformanceMonitor {
         totalTime: metric.totalTime,
         lastRun: new Date(metric.lastRun).toISOString()
       });
-    }
+    });
 
     return allStats.sort((a, b) => b.totalTime - a.totalTime);
   }

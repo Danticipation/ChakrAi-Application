@@ -57,7 +57,7 @@ export async function analyzeConversationPatterns(
   existingPreferences?: UserPreferences
 ): Promise<AdaptationInsight> {
   try {
-    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
+    const openai = new OpenAI({ apiKey: process.env['OPENAI_API_KEY']! });
     
     const userMessages = recentMessages
       .filter(msg => msg.sender === 'user')
@@ -106,7 +106,7 @@ Focus on:
       temperature: 0.3
     });
 
-    const analysis = JSON.parse(response.choices[0].message.content || '{}');
+    const analysis = JSON.parse(response.choices[0]?.message?.content || '{}');
     
     return {
       userId,
@@ -245,7 +245,7 @@ export async function adaptConversationResponse(
   }
   
   try {
-    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
+    const openai = new OpenAI({ apiKey: process.env['OPENAI_API_KEY']! });
     
     const adaptationPrompt = `Adapt the following therapeutic response to match the user's learned preferences and communication style.
 
@@ -283,7 +283,7 @@ Please provide the adapted response that maintains therapeutic effectiveness whi
       temperature: 0.4
     });
 
-    return response.choices[0].message.content || originalResponse;
+    return response.choices[0]?.message?.content || originalResponse;
   } catch (error) {
     console.error('Error adapting conversation response:', error);
     return originalResponse;
@@ -320,7 +320,7 @@ export function updatePersonalizationFromFeedback(
     const styles = ['formal', 'casual', 'warm', 'direct', 'supportive'] as const;
     const currentIndex = styles.indexOf(preferences.communicationStyle);
     const nextIndex = (currentIndex + 1) % styles.length;
-    preferences.communicationStyle = styles[nextIndex];
+    preferences.communicationStyle = styles[nextIndex] || 'supportive';
   }
   
   preferences.lastUpdated = new Date();

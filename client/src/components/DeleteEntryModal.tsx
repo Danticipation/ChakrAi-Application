@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Trash2, X } from 'lucide-react';
 
 interface DeleteEntryModalProps {

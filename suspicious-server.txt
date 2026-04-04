@@ -1,0 +1,33 @@
+C:\8-14-Chakrai-App\server\memory\BasicPersonalityAnalyzer.ts:309: // Export singleton instance
+C:\8-14-Chakrai-App\server\memory\BulletproofMemoryManager.ts:261: // Return minimal session fallback
+C:\8-14-Chakrai-App\server\memory\BulletproofMemoryManager.ts:549: // Export singleton instance
+C:\8-14-Chakrai-App\server\memory\MemoryManager.ts:318: // Export singleton instance
+C:\8-14-Chakrai-App\server\routes\adaptiveLearningRoutes.ts:7: // import { authMiddleware } from '../middleware/security';
+C:\8-14-Chakrai-App\server\routes\analytics.js:238: // Return comprehensive analysis with data points
+C:\8-14-Chakrai-App\server\routes\analytics.js:431: // Return comprehensive analysis with data points
+C:\8-14-Chakrai-App\server\routes\analytics.js:578: // Return working analytics patterns data
+C:\8-14-Chakrai-App\server\routes\analytics.js:787: // Return baseline metrics if data collection fails
+C:\8-14-Chakrai-App\server\routes\analytics.js:1115: // Fetch all analytics data
+C:\8-14-Chakrai-App\server\routes\comprehensiveAnalytics.js:247: // Return specific insight type or all
+C:\8-14-Chakrai-App\server\routes\debug-clean.ts:18: // Return clean JSON response without calling next()
+C:\8-14-Chakrai-App\server\routes\medicalStudies.ts:89: // Return fallback data on error
+C:\8-14-Chakrai-App\server\routes\memory.js:69: // Return minimal working data instead of empty
+C:\8-14-Chakrai-App\server\routes\memory.js:102: // Return working continuity data that prevents frontend crashes
+C:\8-14-Chakrai-App\server\routes\subscription.js:10: // Return format that matches frontend SubscriptionContext expectations
+C:\8-14-Chakrai-App\server\routes\voice.js:108: // Return audio as MP3 from ElevenLabs
+C:\8-14-Chakrai-App\server\storage\storage-minimal.ts:437: // Return semantic memories as facts for now
+C:\8-14-Chakrai-App\server\utils\performanceMonitor.ts:65: // Return all metrics
+C:\8-14-Chakrai-App\server\adaptiveLearning.ts:123: // Return basic insight with low confidence
+C:\8-14-Chakrai-App\server\emotionalIntelligenceEngine.ts:428: // Return safe default response context
+C:\8-14-Chakrai-App\server\enhancedGamificationEngine.ts:107: // Return default balance for new users
+C:\8-14-Chakrai-App\server\getMemoryDashboard.js:5: // Return actual non-zero data that shows the system is working
+C:\8-14-Chakrai-App\server\index.ts:76: // app.use(requireUser);
+C:\8-14-Chakrai-App\server\mindfulnessExercises.ts:361: // Return the first suitable exercise
+C:\8-14-Chakrai-App\server\ollamaIntegration.ts:144: // Return fallback structure
+C:\8-14-Chakrai-App\server\privacyCompliance.ts:372: // Export singleton instances
+C:\8-14-Chakrai-App\server\routes.js:7: // Export the modular routes system
+C:\8-14-Chakrai-App\server\storage.ts:4: // Import the modular memory system
+C:\8-14-Chakrai-App\server\storage.ts:12: // Export types
+C:\8-14-Chakrai-App\server\storage.ts:53: // Export enhanced storage as the default
+C:\8-14-Chakrai-App\server\supabaseClient.ts:96: // Return empty array for fallback mode
+C:\8-14-Chakrai-App\server\vrTherapyEngine.ts:371: // Return a basic fallback environment if available

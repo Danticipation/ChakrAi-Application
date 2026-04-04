@@ -2,7 +2,7 @@ import { Ollama } from 'ollama';
 
 // Initialize Ollama client for local development
 const ollama = new Ollama({
-  host: process.env.OLLAMA_HOST || 'http://localhost:11434'
+  host: process.env['OLLAMA_HOST'] || 'http://localhost:11434'
 });
 
 export interface OllamaResponse {
@@ -29,8 +29,8 @@ export async function isOllamaAvailable(): Promise<boolean> {
   try {
     const models = await ollama.list();
     return models.models && models.models.length > 0;
-  } catch (error) {
-    console.log('Ollama not available:', error.message);
+  } catch (error: any) {
+    console.log('Ollama not available:', error?.message);
     return false;
   }
 }
@@ -124,7 +124,7 @@ Focus on what the person is actually dealing with, not generic wellness advice.`
     ];
 
     const response = await ollama.chat({
-      model: process.env.OLLAMA_MODEL || 'llama3.1',
+      model: process.env['OLLAMA_MODEL'] || 'llama3.1',
       messages,
       stream: false,
       options: {
@@ -197,7 +197,7 @@ Respond with valid JSON array only.`;
     ];
 
     const response = await ollama.chat({
-      model: process.env.OLLAMA_MODEL || 'llama3.1',
+      model: process.env['OLLAMA_MODEL'] || 'llama3.1',
       messages,
       stream: false,
       options: {
@@ -233,10 +233,10 @@ export async function checkOllamaHealth(): Promise<{ status: string; models?: st
       status: 'healthy',
       models
     };
-  } catch (error) {
+  } catch (error: any) {
     return {
       status: 'unhealthy',
-      error: error.message
+      error: error?.message || 'Unknown error'
     };
   }
 }

@@ -1,23 +1,23 @@
-import React, { useState, useEffect } from 'react';
-import { Star, RefreshCw, Loader2, Volume2, VolumeX, X, ArrowLeft } from 'lucide-react';
+﻿import React, { useState } from 'react';
+import { Star, Loader2, Volume2, VolumeX, X, ArrowLeft } from 'lucide-react';
 
 interface HoroscopeProps {
   onBack?: () => void;
 }
 
 const zodiacSigns = [
-  { name: 'aries', symbol: '♈', emoji: '🐏', dates: 'Mar 21 - Apr 19' },
-  { name: 'taurus', symbol: '♉', emoji: '🐂', dates: 'Apr 20 - May 20' },
-  { name: 'gemini', symbol: '♊', emoji: '👯', dates: 'May 21 - Jun 20' },
-  { name: 'cancer', symbol: '♋', emoji: '🦀', dates: 'Jun 21 - Jul 22' },
-  { name: 'leo', symbol: '♌', emoji: '🦁', dates: 'Jul 23 - Aug 22' },
-  { name: 'virgo', symbol: '♍', emoji: '👩', dates: 'Aug 23 - Sep 22' },
-  { name: 'libra', symbol: '♎', emoji: '⚖️', dates: 'Sep 23 - Oct 22' },
-  { name: 'scorpio', symbol: '♏', emoji: '🦂', dates: 'Oct 23 - Nov 21' },
-  { name: 'sagittarius', symbol: '♐', emoji: '🏹', dates: 'Nov 22 - Dec 21' },
-  { name: 'capricorn', symbol: '♑', emoji: '🐐', dates: 'Dec 22 - Jan 19' },
-  { name: 'aquarius', symbol: '♒', emoji: '🏺', dates: 'Jan 20 - Feb 18' },
-  { name: 'pisces', symbol: '♓', emoji: '🐟', dates: 'Feb 19 - Mar 20' }
+  { name: 'aries', symbol: 'â™ˆ', emoji: 'ðŸ', dates: 'Mar 21 - Apr 19' },
+  { name: 'taurus', symbol: 'â™‰', emoji: 'ðŸ‚', dates: 'Apr 20 - May 20' },
+  { name: 'gemini', symbol: 'â™Š', emoji: 'ðŸ‘¯', dates: 'May 21 - Jun 20' },
+  { name: 'cancer', symbol: 'â™‹', emoji: 'ðŸ¦€', dates: 'Jun 21 - Jul 22' },
+  { name: 'leo', symbol: 'â™Œ', emoji: 'ðŸ¦', dates: 'Jul 23 - Aug 22' },
+  { name: 'virgo', symbol: 'â™', emoji: 'ðŸ‘©', dates: 'Aug 23 - Sep 22' },
+  { name: 'libra', symbol: 'â™Ž', emoji: 'âš–ï¸', dates: 'Sep 23 - Oct 22' },
+  { name: 'scorpio', symbol: 'â™', emoji: 'ðŸ¦‚', dates: 'Oct 23 - Nov 21' },
+  { name: 'sagittarius', symbol: 'â™', emoji: 'ðŸ¹', dates: 'Nov 22 - Dec 21' },
+  { name: 'capricorn', symbol: 'â™‘', emoji: 'ðŸ', dates: 'Dec 22 - Jan 19' },
+  { name: 'aquarius', symbol: 'â™’', emoji: 'ðŸº', dates: 'Jan 20 - Feb 18' },
+  { name: 'pisces', symbol: 'â™“', emoji: 'ðŸŸ', dates: 'Feb 19 - Mar 20' }
 ];
 
 // Constellation patterns for each zodiac sign
@@ -208,6 +208,7 @@ export default function Horoscope({ onBack }: HoroscopeProps) {
         {pattern.length > 1 && pattern.map((star, index) => {
           if (index === pattern.length - 1) return null;
           const nextStar = pattern[index + 1];
+          if (!nextStar) return null;
           return (
             <line
               key={`line-${index}`}
@@ -240,7 +241,7 @@ export default function Horoscope({ onBack }: HoroscopeProps) {
               onClick={onBack}
               className="flex items-center space-x-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
             >
-              <span>← Back</span>
+              <span>â† Back</span>
             </button>
           )}
         </div>

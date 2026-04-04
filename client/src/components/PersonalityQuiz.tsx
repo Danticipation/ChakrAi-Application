@@ -1,5 +1,8 @@
-import React, { useState } from 'react';
-import { ChevronRight, ChevronLeft, CheckCircle, Brain, Heart, MessageCircle, Target } from 'lucide-react';
+﻿import React, { useState } from 'react';
+import { ChevronRight, ChevronLeft, CheckCircle, Brain, Heart, MessageCircle, Target, Sparkles, Star, Lightbulb, Award, AlertCircle } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import axios from 'axios';
+import { getAuthHeaders } from '../utils/unifiedUserSession';
 
 interface PersonalityQuizProps {
   onComplete: (profile: UserProfile) => void;
@@ -28,357 +31,341 @@ interface UserProfile {
   personalityTraits: string[];
 }
 
-const quizQuestions: QuizQuestion[] = [
-  {
-    id: 1,
-    category: 'communication',
-    question: "How do you prefer to receive feedback or guidance?",
-    options: [
-      { value: 'direct', label: 'Direct and straightforward', weight: 1 },
-      { value: 'gentle', label: 'Gentle and encouraging', weight: 2 },
-      { value: 'detailed', label: 'Detailed explanations with examples', weight: 3 },
-      { value: 'supportive', label: 'Warm and emotionally supportive', weight: 4 }
-    ]
-  },
-  {
-    id: 2,
-    category: 'emotional',
-    question: "When you're feeling overwhelmed, what helps you most?",
-    options: [
-      { value: 'practical', label: 'Practical steps to solve the problem', weight: 1 },
-      { value: 'validation', label: 'Someone to listen and validate my feelings', weight: 2 },
-      { value: 'distraction', label: 'Activities to distract and reset my mind', weight: 3 },
-      { value: 'reflection', label: 'Quiet time for self-reflection', weight: 4 }
-    ]
-  },
-  {
-    id: 3,
-    category: 'goals',
-    question: "What's your primary wellness goal?",
-    options: [
-      { value: 'stress', label: 'Managing stress and anxiety', weight: 1 },
-      { value: 'mood', label: 'Improving overall mood and happiness', weight: 2 },
-      { value: 'relationships', label: 'Better relationships and communication', weight: 3 },
-      { value: 'growth', label: 'Personal growth and self-understanding', weight: 4 }
-    ]
-  },
-  {
-    id: 4,
-    category: 'communication',
-    question: "How do you like to process difficult emotions?",
-    options: [
-      { value: 'talking', label: 'Talking through them with someone', weight: 1 },
-      { value: 'writing', label: 'Writing or journaling about them', weight: 2 },
-      { value: 'thinking', label: 'Thinking them through quietly', weight: 3 },
-      { value: 'activity', label: 'Working through them with activities', weight: 4 }
-    ]
-  },
-  {
-    id: 5,
-    category: 'support',
-    question: "What type of encouragement motivates you most?",
-    options: [
-      { value: 'achievement', label: 'Recognition of progress and achievements', weight: 1 },
-      { value: 'potential', label: 'Reminders of your strengths and potential', weight: 2 },
-      { value: 'understanding', label: 'Feeling truly understood and heard', weight: 3 },
-      { value: 'challenge', label: 'Gentle challenges to grow and improve', weight: 4 }
-    ]
-  },
-  {
-    id: 6,
-    category: 'goals',
-    question: "How do you prefer to set and track goals?",
-    options: [
-      { value: 'specific', label: 'Specific, measurable targets with deadlines', weight: 1 },
-      { value: 'flexible', label: 'Flexible intentions that adapt to life', weight: 2 },
-      { value: 'small', label: 'Small daily habits that build over time', weight: 3 },
-      { value: 'intuitive', label: 'Following what feels right in the moment', weight: 4 }
-    ]
-  },
-  {
-    id: 7,
-    category: 'emotional',
-    question: "When facing a challenge, you typically:",
-    options: [
-      { value: 'analyze', label: 'Analyze the situation logically', weight: 1 },
-      { value: 'feel', label: 'Process the emotions it brings up', weight: 2 },
-      { value: 'act', label: 'Take action to address it immediately', weight: 3 },
-      { value: 'seek', label: 'Seek advice from others', weight: 4 }
-    ]
-  },
-  {
-    id: 8,
-    category: 'support',
-    question: "How much emotional support do you typically need?",
-    options: [
-      { value: 'minimal', label: 'I prefer to handle things independently', weight: 1 },
-      { value: 'occasional', label: 'I like check-ins when things get tough', weight: 2 },
-      { value: 'regular', label: 'I appreciate regular emotional support', weight: 3 },
-      { value: 'frequent', label: 'I thrive with frequent encouragement', weight: 4 }
-    ]
-  },
-  {
-    id: 9,
-    category: 'communication',
-    question: "What session length works best for you?",
-    options: [
-      { value: 'short', label: 'Quick check-ins (5-10 minutes)', weight: 1 },
-      { value: 'medium', label: 'Moderate conversations (15-20 minutes)', weight: 2 },
-      { value: 'long', label: 'Deep discussions (30+ minutes)', weight: 3 },
-      { value: 'variable', label: 'It depends on what I need that day', weight: 4 }
-    ]
-  },
-  {
-    id: 10,
-    category: 'goals',
-    question: "What would success in your wellness journey look like?",
-    options: [
-      { value: 'peace', label: 'Feeling more at peace and centered', weight: 1 },
-      { value: 'confident', label: 'Being more confident and self-assured', weight: 2 },
-      { value: 'resilient', label: 'Handling life\'s ups and downs better', weight: 3 },
-      { value: 'fulfilled', label: 'Living a more authentic, fulfilled life', weight: 4 }
-    ]
-  }
-];
-
-const categoryIcons = {
-  communication: MessageCircle,
-  emotional: Heart,
-  goals: Target,
-  support: Brain
-};
-
-export default function PersonalityQuiz({ onComplete, onSkip }: PersonalityQuizProps) {
+const PersonalityQuiz: React.FC<PersonalityQuizProps> = ({ onComplete, onSkip }) => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<Record<number, string>>({});
-  const [isComplete, setIsComplete] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedOption, setSelectedOption] = useState<string | null>(null);
 
-  const handleAnswer = (questionId: number, value: string) => {
-    setAnswers(prev => ({
-      ...prev,
-      [questionId]: value
-    }));
-  };
+  // Fetch questions from server to ensure clinical validity
+  const { data: quizQuestions, isLoading: questionsLoading } = useQuery<QuizQuestion[]>({
+    queryKey: ['personality-quiz-questions'],
+    queryFn: async () => {
+      const headers = await getAuthHeaders();
+      const response = await axios.get<QuizQuestion[]>('/api/personality-quiz/questions', { headers });
+      return response.data;
+    },
+  });
 
-  const handleNext = () => {
-    if (currentQuestion < quizQuestions.length - 1) {
-      setCurrentQuestion(prev => prev + 1);
-    } else {
-      completeQuiz();
-    }
-  };
+  const quizQuestionsArray: QuizQuestion[] = quizQuestions || [];
 
-  const handlePrevious = () => {
-    if (currentQuestion > 0) {
-      setCurrentQuestion(prev => prev - 1);
-    }
-  };
-
-  const completeQuiz = () => {
-    const profile = analyzeAnswers(answers);
-    setIsComplete(true);
-    setTimeout(() => {
-      onComplete(profile);
-    }, 2000);
-  };
-
-  const analyzeAnswers = (answers: Record<number, string>): UserProfile => {
-    // Analyze communication style
-    const commAnswers = [answers[1], answers[4], answers[9]];
-    const communicationStyle = determineCommunicationStyle(commAnswers);
-    
-    // Analyze emotional support needs
-    const emotionalAnswers = [answers[2], answers[7], answers[8]];
-    const emotionalSupport = determineEmotionalSupport(emotionalAnswers);
-    
-    // Analyze preferred tone
-    const preferredTone = determinePreferredTone([answers[1], answers[5]]);
-    
-    // Extract goals and traits
-    const primaryGoals = extractGoals([answers[3], answers[6], answers[10]]);
-    const stressResponses = [answers[2]];
-    const motivationFactors = [answers[5]];
-    const sessionPreference = determineSessionPreference(answers[9]);
-    const personalityTraits = extractPersonalityTraits(answers);
-
-    return {
-      communicationStyle,
-      emotionalSupport,
-      preferredTone,
-      primaryGoals,
-      stressResponses,
-      motivationFactors,
-      sessionPreference,
-      personalityTraits
-    };
-  };
-
-  const determineCommunicationStyle = (answers: string[]): 'direct' | 'gentle' | 'encouraging' | 'analytical' => {
-    if (answers.includes('direct') || answers.includes('analyze')) return 'direct';
-    if (answers.includes('gentle') || answers.includes('supportive')) return 'gentle';
-    if (answers.includes('detailed') || answers.includes('thinking')) return 'analytical';
-    return 'encouraging';
-  };
-
-  const determineEmotionalSupport = (answers: string[]): 'high' | 'moderate' | 'minimal' => {
-    if (answers.includes('frequent') || answers.includes('regular')) return 'high';
-    if (answers.includes('minimal')) return 'minimal';
-    return 'moderate';
-  };
-
-  const determinePreferredTone = (answers: string[]): 'casual' | 'professional' | 'warm' | 'straightforward' => {
-    if (answers.includes('supportive') || answers.includes('understanding')) return 'warm';
-    if (answers.includes('direct') || answers.includes('achievement')) return 'straightforward';
-    if (answers.includes('detailed') || answers.includes('analyze')) return 'professional';
-    return 'casual';
-  };
-
-  const extractGoals = (answers: string[]): string[] => {
-    const goalMap: Record<string, string> = {
-      'stress': 'Stress Management',
-      'mood': 'Mood Improvement',
-      'relationships': 'Better Relationships',
-      'growth': 'Personal Growth',
-      'specific': 'Goal Achievement',
-      'flexible': 'Adaptive Wellness',
-      'small': 'Habit Building',
-      'peace': 'Inner Peace',
-      'confident': 'Self-Confidence',
-      'resilient': 'Emotional Resilience',
-      'fulfilled': 'Authentic Living'
-    };
-    
-    return answers.map(answer => goalMap[answer]).filter(Boolean);
-  };
-
-  const determineSessionPreference = (answer: string): 'short' | 'medium' | 'long' => {
-    if (answer === 'short') return 'short';
-    if (answer === 'long') return 'long';
-    return 'medium';
-  };
-
-  const extractPersonalityTraits = (answers: Record<number, string>): string[] => {
-    const traits: string[] = [];
-    
-    if (answers[7] === 'analyze') traits.push('Analytical');
-    if (answers[7] === 'feel') traits.push('Emotionally Aware');
-    if (answers[4] === 'writing') traits.push('Reflective');
-    if (answers[4] === 'talking') traits.push('Verbal Processor');
-    if (answers[2] === 'practical') traits.push('Solution-Oriented');
-    if (answers[8] === 'minimal') traits.push('Independent');
-    if (answers[8] === 'frequent') traits.push('Community-Oriented');
-    
-    return traits;
-  };
-
-  const currentQ = quizQuestions[currentQuestion];
-  const IconComponent = categoryIcons[currentQ.category];
-  const progress = ((currentQuestion + 1) / quizQuestions.length) * 100;
-  const selectedAnswer = answers[currentQ.id];
-
-  if (isComplete) {
+  if (questionsLoading) {
     return (
-      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-        <div className="bg-gradient-to-br from-blue-900 to-purple-900 rounded-3xl p-8 max-w-md w-full text-center border border-blue-400/30">
-          <div className="animate-bounce mb-6">
-            <CheckCircle className="w-16 h-16 text-green-400 mx-auto" />
-          </div>
-          <h3 className="text-2xl font-bold text-white mb-4">Profile Complete!</h3>
-          <p className="text-blue-200">
-            Creating your personalized wellness companion experience...
-          </p>
-          <div className="mt-6">
-            <div className="animate-spin w-8 h-8 border-2 border-blue-400 border-t-transparent rounded-full mx-auto"></div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-purple-900 p-6 flex items-center justify-center">
+        <div className="max-w-2xl w-full">
+          <div className="bg-white/10 backdrop-blur-sm rounded-3xl p-8 border border-white/20">
+            <div className="text-center">
+              <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center animate-pulse">
+                <Brain className="w-8 h-8 text-white" />
+              </div>
+              <h2 className="text-2xl font-bold text-white mb-4">Preparing Your Assessment</h2>
+              <div className="space-y-4">
+                <div className="h-4 bg-white/20 rounded-full overflow-hidden">
+                  <div className="h-full bg-gradient-to-r from-blue-400 to-purple-500 rounded-full animate-pulse w-3/4"></div>
+                </div>
+                <p className="text-white/70">Loading personalized questions...</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     );
   }
 
-  return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-gradient-to-br from-blue-900 to-purple-900 rounded-3xl p-8 max-w-2xl w-full border border-blue-400/30">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center space-x-3">
-              <IconComponent className="w-6 h-6 text-blue-300" />
-              <h2 className="text-2xl font-bold text-white">Personality Assessment</h2>
+  if (!quizQuestionsArray.length) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-purple-900 p-6 flex items-center justify-center">
+        <div className="max-w-2xl w-full text-center">
+          <div className="bg-white/10 backdrop-blur-sm rounded-3xl p-8 border border-white/20">
+            <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-gradient-to-r from-red-500 to-orange-500 flex items-center justify-center">
+              <AlertCircle className="w-8 h-8 text-white" />
             </div>
-            <span className="text-blue-300 text-sm font-medium">
-              {currentQuestion + 1} of {quizQuestions.length}
-            </span>
-          </div>
-          
-          {/* Progress Bar */}
-          <div className="w-full bg-blue-800/30 rounded-full h-2">
-            <div 
-              className="bg-gradient-to-r from-blue-400 to-purple-400 h-2 rounded-full transition-all duration-300"
-              style={{ width: `${progress}%` }}
-            ></div>
-          </div>
-        </div>
-
-        {/* Question */}
-        <div className="mb-8">
-          <h3 className="text-xl font-semibold text-white mb-6 leading-relaxed">
-            {currentQ.question}
-          </h3>
-          
-          <div className="space-y-4">
-            {currentQ.options.map((option) => (
-              <button
-                key={option.value}
-                onClick={() => handleAnswer(currentQ.id, option.value)}
-                className={`w-full p-4 rounded-xl text-left transition-all duration-200 border-2 ${
-                  selectedAnswer === option.value
-                    ? 'bg-blue-600/50 border-blue-400 text-white shadow-lg'
-                    : 'bg-blue-800/20 border-blue-600/30 text-blue-100 hover:bg-blue-700/30 hover:border-blue-500/50'
-                }`}
+            <h2 className="text-2xl font-bold text-white mb-4">Assessment Unavailable</h2>
+            <p className="text-white/70 mb-6">Unable to load personality assessment questions.</p>
+            {onSkip && (
+              <button 
+                onClick={onSkip} 
+                className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-2xl font-semibold hover:shadow-lg transition-all duration-300 transform hover:scale-105"
               >
-                <div className="flex items-center justify-between">
-                  <span className="font-medium">{option.label}</span>
-                  {selectedAnswer === option.value && (
-                    <CheckCircle className="w-5 h-5 text-blue-300" />
-                  )}
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Navigation */}
-        <div className="flex items-center justify-between">
-          <button
-            onClick={handlePrevious}
-            disabled={currentQuestion === 0}
-            className="flex items-center space-x-2 px-6 py-3 bg-blue-700/50 hover:bg-blue-600/50 disabled:bg-blue-800/30 disabled:text-blue-400 text-white rounded-xl transition-colors disabled:cursor-not-allowed"
-          >
-            <ChevronLeft size={20} />
-            <span>Previous</span>
-          </button>
-
-          <div className="flex items-center space-x-4">
-            {onSkip && currentQuestion === 0 && (
-              <button
-                onClick={onSkip}
-                className="px-6 py-3 text-blue-300 hover:text-white transition-colors"
-              >
-                Skip for now
+                Continue to Chakrai
               </button>
             )}
-            
-            <button
-              onClick={handleNext}
-              disabled={!selectedAnswer}
-              className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 disabled:from-blue-800 disabled:to-purple-800 disabled:text-blue-400 text-white rounded-xl transition-all disabled:cursor-not-allowed"
-            >
-              <span>{currentQuestion === quizQuestions.length - 1 ? 'Complete' : 'Next'}</span>
-              <ChevronRight size={20} />
-            </button>
           </div>
         </div>
       </div>
+    );
+  }
+
+  const getCategoryInfo = (category: string) => {
+    const categories = {
+      communication: { 
+        icon: MessageCircle, 
+        color: 'from-blue-500 to-cyan-500', 
+        bgColor: 'bg-blue-500/10',
+        title: 'Communication Style',
+        description: 'How you prefer to express and receive information'
+      },
+      emotional: { 
+        icon: Heart, 
+        color: 'from-pink-500 to-rose-500', 
+        bgColor: 'bg-pink-500/10',
+        title: 'Emotional Support',
+        description: 'Your emotional processing and support preferences'
+      },
+      goals: { 
+        icon: Target, 
+        color: 'from-green-500 to-emerald-500', 
+        bgColor: 'bg-green-500/10',
+        title: 'Goals & Motivation',
+        description: 'What drives and motivates your wellness journey'
+      },
+      support: { 
+        icon: Brain, 
+        color: 'from-purple-500 to-indigo-500', 
+        bgColor: 'bg-purple-500/10',
+        title: 'Support Preferences',
+        description: 'How you prefer to receive guidance and feedback'
+      }
+    };
+    return categories[category as keyof typeof categories] || categories.communication;
+  };
+
+  const handleAnswer = (value: string) => {
+    setSelectedOption(value);
+    const currentQ = quizQuestionsArray[currentQuestion];
+    if (currentQ) {
+      setAnswers(prev => ({
+        ...prev,
+        [currentQ.id]: value
+      }));
+    }
+  };
+
+  const handleNext = () => {
+    if (currentQuestion < quizQuestionsArray.length - 1) {
+      setCurrentQuestion(prev => prev + 1);
+      const nextQ = quizQuestionsArray[currentQuestion + 1];
+      setSelectedOption(nextQ ? (answers[nextQ.id] || null) : null);
+    } else {
+      void handleSubmit();
+    }
+  };
+
+  const handlePrevious = () => {
+    if (currentQuestion > 0) {
+      setCurrentQuestion(prev => prev - 1);
+      const prevQ = quizQuestionsArray[currentQuestion - 1];
+      setSelectedOption(prevQ ? (answers[prevQ.id] || null) : null);
+    }
+  };
+
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+    try {
+      // Convert answers to expected format
+      const formattedAnswers = Object.entries(answers).map(([questionId, selectedValue]) => ({
+        questionId: parseInt(questionId),
+        selectedValue
+      }));
+
+      const userId = localStorage.getItem('userId');
+      const headers = await getAuthHeaders();
+      const response = await axios.post<{ profile: UserProfile }>('/api/personality-quiz/complete', {
+        userId: userId || 'anonymous',
+        answers: formattedAnswers
+      }, { headers });
+
+      onComplete(response.data.profile);
+    } catch (error) {
+      console.error('Failed to submit quiz:', error);
+    }
+    setIsSubmitting(false);
+  };
+
+  const currentQ = quizQuestionsArray[currentQuestion];
+  const selectedAnswer = (currentQ ? answers[currentQ.id] : null) || selectedOption;
+  const progress = ((currentQuestion + 1) / quizQuestionsArray.length) * 100;
+  const categoryInfo = getCategoryInfo(currentQ?.category || 'communication');
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-purple-900 p-6">
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        {Array.from({ length: 20 }).map((_, i) => (
+          <div
+            key={i}
+            className="absolute w-2 h-2 bg-blue-400/20 rounded-full animate-pulse"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              animationDelay: `${i * 0.5}s`,
+              animationDuration: `${3 + Math.random() * 2}s`
+            }}
+          />
+        ))}
+      </div>
+
+      <div className="max-w-4xl mx-auto relative z-10">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="flex items-center justify-center mb-4">
+            <div className="w-16 h-16 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
+              <Brain className="w-8 h-8 text-white" />
+            </div>
+          </div>
+          <h1 className="text-4xl font-bold text-white mb-2">Personality Assessment</h1>
+          <p className="text-blue-200 text-lg">Help us understand how to best support your wellness journey</p>
+        </div>
+
+        {/* Progress Section */}
+        <div className="mb-8">
+          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-3">
+                <Star className="w-5 h-5 text-yellow-400" />
+                <span className="text-white font-semibold">Question {currentQuestion + 1} of {quizQuestionsArray.length}</span>
+              </div>
+              <span className="text-blue-200 text-sm font-medium">
+                {Math.round(progress)}% Complete
+              </span>
+            </div>
+            
+            <div className="w-full bg-white/20 rounded-full h-3 overflow-hidden">
+              <div 
+                className="h-full bg-gradient-to-r from-blue-400 to-purple-500 rounded-full transition-all duration-500 ease-out"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Question Card */}
+        <div className="bg-white/10 backdrop-blur-sm rounded-3xl border border-white/20 overflow-hidden mb-8">
+          {/* Category Header */}
+          <div className={`${categoryInfo.bgColor} p-6 border-b border-white/10`}>
+            <div className="flex items-center space-x-4">
+              <div className={`p-3 rounded-xl bg-gradient-to-r ${categoryInfo.color}`}>
+                <categoryInfo.icon className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h3 className="text-xl font-semibold text-white">{categoryInfo.title}</h3>
+                <p className="text-white/70 text-sm">{categoryInfo.description}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Question Content */}
+          <div className="p-8">
+            <h2 className="text-2xl font-semibold text-white mb-8 leading-relaxed">
+              {currentQ?.question}
+            </h2>
+
+            {/* Options */}
+            <div className="space-y-4 mb-8">
+              {currentQ?.options.map((option) => (
+                <button
+                  key={option.value}
+                  onClick={() => handleAnswer(option.value)}
+                  className={`w-full text-left p-6 rounded-2xl border-2 transition-all duration-300 transform hover:scale-102 ${
+                    selectedAnswer === option.value
+                      ? 'border-blue-400 bg-blue-500/20 shadow-lg shadow-blue-500/25'
+                      : 'border-white/20 hover:border-white/40 hover:bg-white/5'
+                  }`}
+                >
+                  <div className="flex items-center">
+                    <div className={`w-6 h-6 rounded-full border-2 mr-4 flex items-center justify-center transition-colors ${
+                      selectedAnswer === option.value
+                        ? 'border-blue-400 bg-blue-500'
+                        : 'border-white/40'
+                    }`}>
+                      {selectedAnswer === option.value && (
+                        <CheckCircle className="w-4 h-4 text-white" />
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between">
+                        <span className="text-white font-medium text-lg">{option.label}</span>
+                        {selectedAnswer === option.value && (
+                          <Sparkles className="w-5 h-5 text-blue-400" />
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            {/* Navigation */}
+            <div className="flex justify-between items-center">
+              <button
+                onClick={handlePrevious}
+                disabled={currentQuestion === 0}
+                className={`flex items-center px-6 py-3 rounded-xl font-medium transition-all transform hover:scale-105 ${
+                  currentQuestion === 0
+                    ? 'bg-white/10 text-white/40 cursor-not-allowed'
+                    : 'bg-white/20 text-white hover:bg-white/30'
+                }`}
+              >
+                <ChevronLeft className="w-5 h-5 mr-2" />
+                Previous
+              </button>
+
+              <div className="text-center">
+                <div className="text-white/60 text-sm">
+                  {currentQuestion + 1} / {quizQuestionsArray.length}
+                </div>
+              </div>
+
+              <button
+                onClick={handleNext}
+                disabled={!selectedAnswer || isSubmitting}
+                className={`flex items-center px-8 py-4 rounded-xl font-semibold transition-all transform hover:scale-105 ${
+                  !selectedAnswer || isSubmitting
+                    ? 'bg-white/10 text-white/40 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:shadow-lg shadow-blue-500/25'
+                }`}
+              >
+                {isSubmitting ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                    Analyzing...
+                  </>
+                ) : currentQuestion === quizQuestionsArray.length - 1 ? (
+                  <>
+                    <Award className="w-5 h-5 mr-2" />
+                    Complete Assessment
+                  </>
+                ) : (
+                  <>
+                    Next Question
+                    <ChevronRight className="w-5 h-5 ml-2" />
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Skip Option */}
+        {onSkip && (
+          <div className="text-center">
+            <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10">
+              <div className="flex items-center justify-center space-x-3 mb-3">
+                <Lightbulb className="w-5 h-5 text-yellow-400" />
+                <span className="text-white/80 text-sm">Want to explore Chakrai first?</span>
+              </div>
+              <button
+                onClick={onSkip}
+                className="text-blue-300 hover:text-blue-200 text-sm font-medium hover:underline transition-colors"
+              >
+                Skip assessment and continue to your wellness companion
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
-}
+};
+
+export default PersonalityQuiz;

@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -18,7 +18,7 @@ export default function SettingsModal({ isOpen, onClose, animate }: SettingsModa
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700 text-xl"
           >
-            ×
+            Ã—
           </button>
         </div>
         <div className="space-y-4">

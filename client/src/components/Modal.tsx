@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 
 interface ModalProps {
   isOpen: boolean;
@@ -19,7 +19,7 @@ export default function Modal({ isOpen, onClose, title, children }: ModalProps) 
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-2xl font-bold"
           >
-            ×
+            Ã—
           </button>
         </div>
         <div className="p-6">

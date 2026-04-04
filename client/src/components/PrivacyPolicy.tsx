@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Shield, Lock, Eye, FileText, AlertTriangle, Phone } from 'lucide-react';
 
 export default function PrivacyPolicy() {
@@ -78,9 +78,9 @@ export default function PrivacyPolicy() {
             <div className="ml-9">
               <p className="mb-4">We utilize third-party processors who adhere to strict data privacy requirements:</p>
               <ul className="list-disc list-inside space-y-2 text-blue-100 mb-4">
-                <li><strong>OpenAI</strong> – for natural language understanding and generation</li>
-                <li><strong>ElevenLabs</strong> – for voice synthesis</li>
-                <li><strong>Neon</strong> – for secure, serverless database storage</li>
+                <li><strong>OpenAI</strong> â€“ for natural language understanding and generation</li>
+                <li><strong>ElevenLabs</strong> â€“ for voice synthesis</li>
+                <li><strong>Neon</strong> â€“ for secure, serverless database storage</li>
               </ul>
               <p className="text-blue-200">
                 All third-party services are under strict contractual obligations not to use your data for any other purposes.
@@ -240,7 +240,7 @@ export default function PrivacyPolicy() {
 
         {/* Footer */}
         <div className="text-center mt-8 text-blue-300">
-          <p>© 2025 TrAI. All rights reserved.</p>
+          <p>Â© 2025 TrAI. All rights reserved.</p>
         </div>
 
       </div>

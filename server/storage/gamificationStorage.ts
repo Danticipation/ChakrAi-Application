@@ -3,7 +3,7 @@ import {
   userWellnessPoints, pointsTransactions, achievements, userPurchases,
   dailyActivities, communityChallenges, userChallengeProgress, userLevels, userStreaks,
   type DailyActivity, type InsertDailyActivity,
-} from "@shared/schema";
+} from "../../shared/schema.ts";
 import { eq, desc } from "drizzle-orm";
 
 export interface IGamificationStorage {

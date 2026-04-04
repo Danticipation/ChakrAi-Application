@@ -2,7 +2,7 @@ import { db } from "../db.js";
 import { 
   journalEntries, journalAnalytics,
   type JournalEntry, type InsertJournalEntry,
-} from "@shared/schema";
+} from "../../shared/schema.ts";
 import { eq, desc } from "drizzle-orm";
 
 export interface IJournalStorage {

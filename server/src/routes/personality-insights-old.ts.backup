@@ -1,0 +1,284 @@
+import { Router } from 'express';
+import { requireUserId } from '../lib/auth.js';
+import { storage } from '../storage.ts';
+import OpenAI from 'openai';
+
+const router = Router();
+
+// Lazy-load OpenAI client
+let openaiClient: OpenAI | null = null;
+function getOpenAI(): OpenAI {
+  if (!openaiClient) {
+    if (!process.env.OPENAI_API_KEY) {
+      throw new Error('OpenAI API key not configured');
+    }
+    openaiClient = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  }
+  return openaiClient;
+}
+
+// Get comprehensive personality insights based on user's interactions
+router.get('/', requireUserId, async (req, res) => {
+  try {
+    const userId = req.userId!;
+
+    // Get ALL available data from the database
+    const journalEntries = await storage.getJournalEntries(userId, 1000);
+    const chatMessages = await storage.getUserMessages(userId, 1000);
+    const moodEntries = await storage.getMoodEntries(userId);
+
+    // Filter user messages only
+    const userMessages = chatMessages.filter((msg: any) => !msg.isBot);
+    const userMessageCount = userMessages.length;
+
+    console.log(`📊 Generating comprehensive personality insights for user ${userId}:`, {
+      journals: journalEntries.length,
+      messages: userMessageCount,
+      moods: moodEntries.length
+    });
+
+    // Check if we have enough data for meaningful analysis
+    const totalDataPoints = journalEntries.length + userMessageCount + moodEntries.length;
+    
+    if (totalDataPoints < 3) {
+      return res.json({
+        communicationStyle: 'Continue engaging with Chakrai to unlock your comprehensive personality analysis. We need more data to provide the deep, accurate insights you deserve.',
+        emotionalPatterns: ['Not enough data for analysis yet'],
+        strengths: ['Willingness to begin self-exploration'],
+        growthOpportunities: ['Building consistency in self-reflection practices'],
+        personalityInsights: {
+          dominantTraits: ['Early stage of self-discovery'],
+          communicationPreference: 'Not enough conversational data to assess communication patterns yet.',
+          emotionalProcessing: 'Not enough emotional data to assess processing style yet.'
+        },
+        wellnessRecommendations: [
+          'Start journaling regularly to build a foundation for analysis',
+          'Engage in meaningful conversations with the AI therapist',
+          'Track your moods daily to identify patterns',
+          'Reflect on your experiences and emotional responses',
+          'Be honest and vulnerable in your writing - the more authentic your input, the more accurate your analysis'
+        ],
+        dataPoints: {
+          journalEntries: journalEntries.length,
+          conversationMessages: userMessageCount,
+          moodDataPoints: moodEntries.length
+        },
+        analysisStatus: 'insufficient_data',
+        lastUpdated: new Date().toISOString()
+      });
+    }
+
+    // Prepare comprehensive data for deep analysis
+    // Take more data for comprehensive analysis
+    const analysisJournals = journalEntries.slice(0, 50);
+    const analysisMessages = userMessages.slice(0, 100);
+    const analysisMoods = moodEntries.slice(0, 50);
+
+    // Build comprehensive data summary
+    const journalText = analysisJournals
+      .map((entry: any) => entry.content)
+      .join('\n\n---\n\n');
+
+    const conversationText = analysisMessages
+      .map((msg: any) => msg.content || msg.text)
+      .join('\n\n');
+
+    const moodSummary = analysisMoods
+      .map((mood: any) => `${mood.mood} (${mood.intensity}/10): ${mood.notes || 'no notes'}`)
+      .join('\n');
+
+    console.log(`🧠 Analyzing ${journalText.length + conversationText.length} characters of user data...`);
+
+    // Generate COMPREHENSIVE multi-dimensional personality analysis
+    const openai = getOpenAI();
+    
+    const comprehensivePrompt = `You are a deeply experienced clinical psychologist conducting the most comprehensive personality assessment possible. You are providing a therapeutic "mirror" - showing this person who they truly are, including difficult truths. Be honest, direct, and insightful.
+
+THERAPEUTIC DATA TO ANALYZE:
+
+=== JOURNAL ENTRIES (${analysisJournals.length} entries) ===
+${journalText}
+
+=== CONVERSATION MESSAGES (${analysisMessages.length} messages) ===
+${conversationText}
+
+=== MOOD PATTERNS (${analysisMoods.length} entries) ===
+${moodSummary}
+
+Conduct a COMPREHENSIVE multi-dimensional analysis across these psychological frameworks:
+
+1. **BIG FIVE PERSONALITY ASSESSMENT**
+   - Analyze their Openness, Conscientiousness, Extraversion, Agreeableness, Neuroticism
+   - For each trait, provide a score estimate (0-100), detailed description (2-3 paragraphs), and specific evidence from their writing
+   - Be precise about where they fall and what this means for their life
+
+2. **ATTACHMENT STYLE ANALYSIS**
+   - Identify their attachment patterns in relationships (secure, anxious, avoidant, disorganized)
+   - Explain how this manifests in their relationships and self-concept
+   - Reference specific examples from their writing
+
+3. **COGNITIVE PATTERNS & THINKING STYLE**
+   - Identify their cognitive patterns, biases, and problem-solving approaches
+   - Note any cognitive distortions or particularly healthy thought patterns
+   - How do they make sense of their experiences?
+
+4. **EMOTIONAL INTELLIGENCE PROFILE**
+   - Self-awareness level
+   - Emotional regulation strategies
+   - Empathy and social awareness
+   - Relationship management
+   - Be specific about strengths and deficits
+
+5. **DEFENSE MECHANISMS**
+   - What defense mechanisms do they use? (denial, projection, intellectualization, etc.)
+   - Are these adaptive or maladaptive?
+   - How do they cope with stress and difficult emotions?
+
+6. **COMMUNICATION STYLE DEEP DIVE**
+   - Linguistic patterns, vocabulary choices, sentence structure
+   - How they express emotions, needs, boundaries
+   - Communication strengths and blind spots
+   - How others likely experience them
+
+7. **CORE VALUES & MOTIVATIONS**
+   - What truly matters to them? (look at what they write about repeatedly)
+   - What drives their behavior?
+   - Any conflicts between stated and revealed values?
+
+8. **SHADOW WORK - THE HARD TRUTHS**
+   - Blind spots they may not see about themselves
+   - Patterns they repeat that don't serve them
+   - Uncomfortable truths about their behavior or thinking
+   - Areas where they deceive themselves
+   - BE HONEST. This is the "hard mirror" they need.
+
+9. **RELATIONAL PATTERNS**
+   - How do they show up in relationships?
+   - Patterns of connection and disconnection
+   - What they need from others vs what they provide
+   - Recurring relationship dynamics
+
+10. **EXISTENTIAL & MEANING-MAKING**
+    - How do they make meaning of their life?
+    - Relationship with purpose, identity, mortality
+    - Existential themes in their writing
+
+For EACH dimension, provide:
+- Deep, detailed analysis (multiple paragraphs where needed)
+- Specific quotes or examples from their actual writing
+- Both strengths AND limitations
+- Honest, direct feedback - don't sugar coat
+- Compassionate but truthful framing
+
+This analysis should feel like someone has truly SEEN them - their brilliance and their struggles. It should validate what they know about themselves and reveal what they don't. Make them feel simultaneously understood and challenged.
+
+Return as JSON with this structure:
+{
+  "comprehensiveAnalysis": {
+    "bigFive": {
+      "openness": { "score": 0-100, "analysis": "detailed paragraphs", "evidence": ["specific examples"] },
+      "conscientiousness": { "score": 0-100, "analysis": "detailed paragraphs", "evidence": ["specific examples"] },
+      "extraversion": { "score": 0-100, "analysis": "detailed paragraphs", "evidence": ["specific examples"] },
+      "agreeableness": { "score": 0-100, "analysis": "detailed paragraphs", "evidence": ["specific examples"] },
+      "neuroticism": { "score": 0-100, "analysis": "detailed paragraphs", "evidence": ["specific examples"] }
+    },
+    "attachmentStyle": {
+      "primaryStyle": "string",
+      "analysis": "detailed paragraphs",
+      "evidence": ["specific examples"]
+    },
+    "cognitivePatterns": {
+      "thinkingStyle": "string",
+      "analysis": "detailed paragraphs",
+      "patterns": ["list of patterns"],
+      "evidence": ["specific examples"]
+    },
+    "emotionalIntelligence": {
+      "selfAwareness": { "level": "high/medium/low", "analysis": "detailed paragraphs" },
+      "emotionalRegulation": { "level": "high/medium/low", "analysis": "detailed paragraphs" },
+      "socialAwareness": { "level": "high/medium/low", "analysis": "detailed paragraphs" },
+      "relationshipManagement": { "level": "high/medium/low", "analysis": "detailed paragraphs" }
+    },
+    "defenseMechanisms": {
+      "primary": ["list of mechanisms"],
+      "analysis": "detailed paragraphs",
+      "adaptiveness": "string"
+    },
+    "communicationStyle": {
+      "overview": "detailed paragraphs",
+      "strengths": ["list"],
+      "blindSpots": ["list"],
+      "evidence": ["specific examples"]
+    },
+    "coreValues": {
+      "values": ["list of core values"],
+      "analysis": "detailed paragraphs",
+      "conflicts": "string or null"
+    },
+    "shadowWork": {
+      "blindSpots": ["list of blind spots"],
+      "unhelpfulPatterns": ["list of patterns"],
+      "analysis": "detailed, honest paragraphs - the hard truths",
+      "selfDeceptions": ["list if any"]
+    },
+    "relationalPatterns": {
+      "connectionStyle": "string",
+      "analysis": "detailed paragraphs",
+      "needs": ["what they need from others"],
+      "offers": ["what they provide to others"],
+      "dynamics": ["recurring patterns"]
+    },
+    "existentialThemes": {
+      "meaningMaking": "detailed paragraphs",
+      "identityThemes": ["list"],
+      "analysis": "detailed paragraphs"
+    }
+  },
+  "executiveSummary": "2-3 paragraph overview of who this person is at their core",
+  "strengthsDeepDive": ["5-7 genuine strengths with explanations"],
+  "growthEdges": ["5-7 areas for growth, framed honestly but compassionately"],
+  "wellnessRecommendations": ["7-10 specific, personalized recommendations"],
+  "closingReflection": "A final paragraph that captures the essence of this person"
+}`;
+
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-4o',
+      messages: [
+        { 
+          role: 'system', 
+          content: 'You are a clinical psychologist providing the most comprehensive, honest, and insightful personality analysis possible. You see patterns others miss. You speak hard truths with compassion. You provide the "mirror" people need to truly see themselves.'
+        },
+        { role: 'user', content: comprehensivePrompt }
+      ],
+      temperature: 0.7,
+      max_tokens: 16000, // Allow for comprehensive response
+      response_format: { type: "json_object" }
+    });
+
+    const analysisText = completion.choices[0]?.message?.content || '{}';
+    const fullAnalysis = JSON.parse(analysisText);
+
+    console.log(`✅ Generated comprehensive personality analysis for user ${userId}`);
+
+    // Return the full comprehensive analysis
+    res.json({
+      ...fullAnalysis,
+      dataPoints: {
+        journalEntries: journalEntries.length,
+        conversationMessages: userMessageCount,
+        moodDataPoints: moodEntries.length
+      },
+      analysisStatus: 'complete',
+      lastUpdated: new Date().toISOString()
+    });
+
+  } catch (error) {
+    console.error('Failed to generate personality insights:', error);
+    res.status(500).json({ 
+      error: 'Failed to generate personality insights',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+export default router;

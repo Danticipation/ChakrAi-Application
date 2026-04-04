@@ -1,4 +1,4 @@
-import { getCurrentUserId } from "../utils/userSession";
+﻿import { getCurrentUserId } from "../utils/userSession";
 import React, { useState } from 'react';
 import { Shield, Lock, FileText, AlertTriangle, CheckCircle, Download, Upload, Key, Database, Eye, EyeOff } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -306,8 +306,8 @@ export default function PrivacyComplianceDashboard() {
                   <div className="p-4 bg-green-50 rounded-lg border border-green-200">
                     <h4 className="font-medium text-green-800 mb-2">Privacy Guarantees</h4>
                     <div className="space-y-1 text-sm text-green-700">
-                      <p>ε (Epsilon): 1.0 - Standard privacy level</p>
-                      <p>δ (Delta): 0.00001 - Very low failure probability</p>
+                      <p>Îµ (Epsilon): 1.0 - Standard privacy level</p>
+                      <p>Î´ (Delta): 0.00001 - Very low failure probability</p>
                       <p>Minimum Cohort: 10 users for analytics</p>
                     </div>
                   </div>
@@ -341,7 +341,7 @@ export default function PrivacyComplianceDashboard() {
                           <div>
                             <p className="font-medium capitalize">{report.reportType} Report</p>
                             <p className="text-xs text-gray-500">
-                              Cohort: {report.cohortSize} users | ε: {report.privacyEpsilon}
+                              Cohort: {report.cohortSize} users | Îµ: {report.privacyEpsilon}
                             </p>
                           </div>
                           <span className="text-xs text-gray-400">

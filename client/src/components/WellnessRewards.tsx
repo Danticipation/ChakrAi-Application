@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Gift, Trophy, Star, Users, Target, TrendingUp, Award, Zap } from 'lucide-react';
+import { Gift, Trophy, Star, Target, TrendingUp, Award } from 'lucide-react';
 import axios from 'axios';
 
 interface WellnessPoints {

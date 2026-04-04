@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+﻿import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -603,7 +603,7 @@ function AdaptiveTherapyPlan({ userId, onPlanUpdate }: AdaptiveTherapyPlanProps)
               <div className="min-w-0 flex-1">
                 <CardTitle className="text-lg md:text-xl theme-text font-serif truncate">Your Adaptive Therapy Plan</CardTitle>
                 <p className="text-sm theme-text-secondary">
-                  {currentPlan.planType.charAt(0).toUpperCase() + currentPlan.planType.slice(1)} Plan • 
+                  {currentPlan.planType.charAt(0).toUpperCase() + currentPlan.planType.slice(1)} Plan â€¢ 
                   Confidence: {Math.round(currentPlan.confidenceScore * 100)}%
                 </p>
               </div>
@@ -946,11 +946,11 @@ function AdaptiveTherapyPlan({ userId, onPlanUpdate }: AdaptiveTherapyPlanProps)
             <div className="text-sm text-purple-800">
               <p id="adaptive-intelligence-title" className="font-medium mb-2">Adaptive Intelligence</p>
               <ul className="space-y-1 text-xs" role="list">
-                <li role="listitem">• Your plan automatically adapts based on your progress and emotional patterns</li>
-                <li role="listitem">• Activities are personalized using AI analysis of your therapeutic needs</li>
-                <li role="listitem">• Real-time monitoring ensures interventions when support is needed</li>
-                <li role="listitem">• Completed activities persist across sessions for continuity</li>
-                <li role="listitem">• Progress tracking helps optimize your therapeutic journey</li>
+                <li role="listitem">â€¢ Your plan automatically adapts based on your progress and emotional patterns</li>
+                <li role="listitem">â€¢ Activities are personalized using AI analysis of your therapeutic needs</li>
+                <li role="listitem">â€¢ Real-time monitoring ensures interventions when support is needed</li>
+                <li role="listitem">â€¢ Completed activities persist across sessions for continuity</li>
+                <li role="listitem">â€¢ Progress tracking helps optimize your therapeutic journey</li>
               </ul>
             </div>
           </div>
@@ -961,4 +961,5 @@ function AdaptiveTherapyPlan({ userId, onPlanUpdate }: AdaptiveTherapyPlanProps)
 }
 
 export default AdaptiveTherapyPlan;
+
 

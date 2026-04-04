@@ -128,20 +128,23 @@ class ClientSideEncryptionImpl {
 
   encrypt(data: string, key: Buffer): { encrypted: string; iv: string; tag: string } {
     const iv = crypto.randomBytes(this.ivLength);
-    const cipher = crypto.createCipher('aes-256-cbc', key);
+    const cipher = crypto.createCipheriv(this.algorithm, key, iv);
     
     let encrypted = cipher.update(data, 'utf8', 'hex');
     encrypted += cipher.final('hex');
     
+    const tag = cipher.getAuthTag();
+    
     return {
       encrypted,
       iv: iv.toString('hex'),
-      tag: crypto.createHash('sha256').update(encrypted).digest('hex')
+      tag: tag.toString('hex')
     };
   }
 
   decrypt(encryptedData: string, key: Buffer, iv: string, tag: string): string {
-    const decipher = crypto.createDecipher('aes-256-cbc', key);
+    const decipher = crypto.createDecipheriv(this.algorithm, key, Buffer.from(iv, 'hex'));
+    decipher.setAuthTag(Buffer.from(tag, 'hex'));
     
     let decrypted = decipher.update(encryptedData, 'hex', 'utf8');
     decrypted += decipher.final('utf8');

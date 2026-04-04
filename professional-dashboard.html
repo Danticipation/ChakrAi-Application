@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chakrai - Mental Wellness Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            color: #2d3748;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .logo {
+            font-size: 2rem;
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 0.5rem;
+        }
+
+        .tagline {
+            color: #718096;
+            font-size: 1.1rem;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .wellness-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #4299e1;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #718096;
+            font-weight: 500;
+        }
+
+        .mood-selector {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .mood-btn {
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+            font-size: 1.5rem;
+        }
+
+        .mood-btn:hover {
+            border-color: #4299e1;
+            background: #ebf8ff;
+        }
+
+        .mood-btn.selected {
+            border-color: #4299e1;
+            background: #4299e1;
+            color: white;
+        }
+
+        .progress-ring {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 1rem;
+        }
+
+        .progress-ring-circle {
+            transition: stroke-dashoffset 0.35s;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+
+        .affirmation {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+            font-style: italic;
+            font-size: 1.1rem;
+            line-height: 1.8;
+            padding: 2rem;
+        }
+
+        .action-buttons {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .action-btn {
+            background: #4299e1;
+            color: white;
+            border: none;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .action-btn:hover {
+            background: #3182ce;
+            transform: translateY(-1px);
+        }
+
+        .insights-list {
+            space-y: 1rem;
+        }
+
+        .insight-item {
+            display: flex;
+            align-items: flex-start;
+            padding: 1rem;
+            background: #f7fafc;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .insight-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+        }
+
+        .achievement {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .achievement:last-child {
+            border-bottom: none;
+        }
+
+        .achievement-icon {
+            margin-right: 1rem;
+            font-size: 1.2rem;
+        }
+
+        /* Color themes */
+        .wellness-theme { background: #e6fffa; }
+        .mood-theme { background: #fef5e7; }
+        .insights-theme { background: #f0fff4; }
+        .goals-theme { background: #faf5ff; }
+        .affirmation-theme { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+            
+            .wellness-stats {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            .mood-selector {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1 class="logo">Chakrai</h1>
+            <p class="tagline">Your personal journey to mental wellness</p>
+        </header>
+
+        <!-- Dashboard Grid -->
+        <div class="dashboard-grid">
+            <!-- Wellness Overview -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon wellness-theme">📊</div>
+                    <h2 class="card-title">Wellness Overview</h2>
+                </div>
+                <div class="wellness-stats">
+                    <div class="stat">
+                        <div class="stat-number">7</div>
+                        <div class="stat-label">Day Streak</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number">85%</div>
+                        <div class="stat-label">Weekly Goal</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number">12</div>
+                        <div class="stat-label">Journal Entries</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number">150</div>
+                        <div class="stat-label">Mindful Minutes</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mood Check-in -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon mood-theme">😊</div>
+                    <h2 class="card-title">How are you feeling?</h2>
+                </div>
+                <p style="margin-bottom: 1rem; color: #718096;">Track your emotional state to better understand your patterns</p>
+                <div class="mood-selector">
+                    <div class="mood-btn" onclick="selectMood(this)" data-mood="great">
+                        <div>😊</div>
+                        <div style="font-size: 0.8rem; margin-top: 0.5rem;">Great</div>
+                    </div>
+                    <div class="mood-btn" onclick="selectMood(this)" data-mood="good">
+                        <div>🙂</div>
+                        <div style="font-size: 0.8rem; margin-top: 0.5rem;">Good</div>
+                    </div>
+                    <div class="mood-btn" onclick="selectMood(this)" data-mood="okay">
+                        <div>😐</div>
+                        <div style="font-size: 0.8rem; margin-top: 0.5rem;">Okay</div>
+                    </div>
+                    <div class="mood-btn" onclick="selectMood(this)" data-mood="struggling">
+                        <div>😔</div>
+                        <div style="font-size: 0.8rem; margin-top: 0.5rem;">Struggling</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Personal Insights -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon insights-theme">🧠</div>
+                    <h2 class="card-title">Personal Insights</h2>
+                </div>
+                <div class="insights-list">
+                    <div class="insight-item">
+                        <div class="insight-icon" style="background: #e6fffa; color: #047857;">📈</div>
+                        <div>
+                            <strong>Growth Pattern:</strong><br>
+                            You're most reflective in the evenings
+                        </div>
+                    </div>
+                    <div class="insight-item">
+                        <div class="insight-icon" style="background: #fef5e7; color: #d69e2e;">💡</div>
+                        <div>
+                            <strong>Suggestion:</strong><br>
+                            Try morning meditation for better focus
+                        </div>
+                    </div>
+                    <div class="insight-item">
+                        <div class="insight-icon" style="background: #f0fff4; color: #38a169;">🎯</div>
+                        <div>
+                            <strong>Progress:</strong><br>
+                            Emotional awareness improving weekly
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Achievements -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon goals-theme">🏆</div>
+                    <h2 class="card-title">Recent Achievements</h2>
+                </div>
+                <div>
+                    <div class="achievement">
+                        <div class="achievement-icon">🔥</div>
+                        <div>Maintained 7-day wellness streak</div>
+                    </div>
+                    <div class="achievement">
+                        <div class="achievement-icon">📝</div>
+                        <div>Completed 5 thoughtful journal entries</div>
+                    </div>
+                    <div class="achievement">
+                        <div class="achievement-icon">🧘</div>
+                        <div>Reached 150 mindful minutes this week</div>
+                    </div>
+                    <div class="achievement">
+                        <div class="achievement-icon">💬</div>
+                        <div>Had 3 meaningful AI conversations</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Daily Affirmation -->
+            <div class="card affirmation">
+                <div class="card-header" style="margin-bottom: 1rem;">
+                    <div class="card-icon" style="background: rgba(255,255,255,0.2); color: white;">✨</div>
+                    <h2 class="card-title" style="color: white;">Today's Affirmation</h2>
+                </div>
+                <p>"You have the strength to face any challenge that comes your way. Every step forward, no matter how small, is progress worth celebrating."</p>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon" style="background: #ebf8ff; color: #4299e1;">🚀</div>
+                    <h2 class="card-title">Quick Actions</h2>
+                </div>
+                <div class="action-buttons">
+                    <button class="action-btn" onclick="startActivity('chat')">
+                        💬 Start AI Conversation
+                    </button>
+                    <button class="action-btn" onclick="startActivity('journal')">
+                        📝 Write in Journal
+                    </button>
+                    <button class="action-btn" onclick="startActivity('meditate')">
+                        🧘 Guided Meditation
+                    </button>
+                    <button class="action-btn" onclick="startActivity('assess')">
+                        📋 Self-Assessment
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function selectMood(button) {
+            // Remove selected class from all mood buttons
+            document.querySelectorAll('.mood-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            
+            // Add selected class to clicked button
+            button.classList.add('selected');
+            
+            // Get mood value
+            const mood = button.getAttribute('data-mood');
+            console.log('Selected mood:', mood);
+            
+            // Here you would typically save this to your backend
+            showNotification('Mood logged successfully! 📝');
+        }
+
+        function startActivity(activity) {
+            const activities = {
+                chat: 'Starting AI conversation...',
+                journal: 'Opening your personal journal...',
+                meditate: 'Loading guided meditation...',
+                assess: 'Preparing self-assessment...'
+            };
+            
+            showNotification(activities[activity]);
+            
+            // Here you would navigate to the specific activity
+            console.log('Starting activity:', activity);
+        }
+
+        function showNotification(message) {
+            // Create temporary notification
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #48bb78;
+                color: white;
+                padding: 1rem 1.5rem;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                z-index: 1000;
+                font-weight: 500;
+                transition: all 0.3s ease;
+            `;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            // Remove after 3 seconds
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                notification.style.transform = 'translateY(-20px)';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Chakrai Dashboard loaded successfully');
+            
+            // Add subtle animations on scroll
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                    }
+                });
+            });
+            
+            document.querySelectorAll('.card').forEach(card => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+                observer.observe(card);
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,7 +1,7 @@
-import React, { useState, useCallback, useMemo } from 'react';
+﻿import React, { useState, useCallback, useMemo } from 'react';
 import { 
   Brain, TrendingUp, AlertTriangle, Target, Shield, BarChart, Clock, Users, 
-  Loader2, RefreshCw, ChevronDown, ChevronUp, CheckCircle, XCircle, 
+  Loader2, RefreshCw, CheckCircle, XCircle, 
   Eye, MessageSquare, ExternalLink, ArrowRight
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
@@ -743,3 +743,4 @@ export default function AiPerformanceMonitoringDashboard() {
     </div>
   );
 }
+

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+﻿import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 
@@ -78,13 +78,7 @@ export default function Affirmation({
 
   // Animation state management
   useEffect(() => {
-    if (isOpen) {
-      setShouldRender(true);
-      // Small delay to ensure DOM is ready for transition
-      requestAnimationFrame(() => {
-        setIsVisible(true);
-      });
-    } else {
+    if (!isOpen) {
       setIsVisible(false);
       // Wait for animation to complete before unmounting
       const timer = setTimeout(() => {
@@ -92,6 +86,13 @@ export default function Affirmation({
       }, animate ? 200 : 0);
       return () => clearTimeout(timer);
     }
+
+    setShouldRender(true);
+    // Small delay to ensure DOM is ready for transition
+    requestAnimationFrame(() => {
+      setIsVisible(true);
+    });
+    return;
   }, [isOpen, animate]);
 
   // Handle overlay click to close modal
@@ -198,3 +199,4 @@ export default function Affirmation({
   // Render modal in a portal attached to document.body
   return createPortal(modalContent, document.body);
 }
+
