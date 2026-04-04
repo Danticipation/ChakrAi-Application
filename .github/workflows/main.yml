@@ -1,0 +1,7 @@
+name: Runner Test
+on: [workflow_dispatch]
+jobs:
+  check-runner:
+    runs-on: [self-hosted, windows, gpu-rtx4070]
+    steps:
+      - run: echo "✅ Runner is alive on $env:COMPUTERNAME as $env:USERNAME"
