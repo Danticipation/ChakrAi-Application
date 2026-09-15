@@ -6,13 +6,13 @@ import axios from 'axios';
 import { useTheme, ThemeProvider } from '@/contexts/ThemeContext';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { SubscriptionProvider, useSubscription } from '@/contexts/SubscriptionContext';
-// import { SubscriptionModal } from '@/components/SubscriptionModal';
-// import { UsageLimitModal } from '@/components/UsageLimitModal';
+import { SubscriptionModal } from '@/components/SubscriptionModal';
+import { UsageLimitModal } from '@/components/UsageLimitModal';
 import MemoryDashboard from '@/components/MemoryDashboard';
 import ConversationContinuityDisplay from '@/components/ConversationContinuityDisplay';
 import VoiceSelector from '@/components/VoiceSelector';
 import ThemeSelector from '@/components/ThemeSelector';
-// import AuthModal from '@/components/AuthModal';
+import AuthModal from '@/components/AuthModal';
 
 import PersonalityQuiz from '@/components/PersonalityQuiz';
 import VoluntaryQuestionDeck from '@/components/VoluntaryQuestionDeck';
@@ -73,6 +73,11 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
   });
   const [showSettings, setShowSettings] = useState(false);
   const [showThemeModal, setShowThemeModal] = useState(false);
+  const [showSubscription, setShowSubscription] = useState(false);
+  const [showUsageLimit, setShowUsageLimit] = useState(false);
+  const [showAuth, setShowAuth] = useState(false);
+  const { subscription, canUseFeature, remainingUsage } = useSubscription();
+  const { user, isAuthenticated } = useAuth();
   
   // Chat functionality
   const [chatInput, setChatInput] = useState('');
@@ -758,6 +763,28 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
                 )}
               </div>
               
+              {/* Account & Subscription Section */}
+              <div className="mb-2 border-t border-white/10 pt-2">
+                <div className="space-y-1">
+                  {/* Premium/Subscribe Button */}
+                  <button
+                    onClick={() => setShowSubscription(true)}
+                    className="w-full h-9 px-3 text-xs font-medium transition-all rounded text-left bg-gradient-to-r from-amber-500/20 to-yellow-500/20 border border-amber-500/30 theme-text hover:bg-amber-500/30 flex items-center space-x-2"
+                  >
+                    <span>👑</span>
+                    <span>{subscription?.status === 'premium' ? 'Premium Active' : 'Upgrade to Premium'}</span>
+                  </button>
+                  {/* Login/Account Button */}
+                  <button
+                    onClick={() => setShowAuth(true)}
+                    className="w-full h-9 px-3 text-xs font-medium transition-all rounded text-left theme-text hover:bg-white/5 flex items-center space-x-2"
+                  >
+                    <span>👤</span>
+                    <span>{isAuthenticated ? user?.displayName || 'Account' : 'Login / Register'}</span>
+                  </button>
+                </div>
+              </div>
+
               {/* Section Status Indicator */}
               <div className="mt-4 pt-2 border-t border-white/10">
                 <div className="text-xs theme-text-secondary text-center opacity-60">
@@ -1007,12 +1034,38 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
                     </div>
                   </div>
                 </div>
+
+              {/* Mobile Account & Subscription */}
+              <div className="mt-4 pt-2 border-t border-white/10">
+                <div className="space-y-1">
+                  <button
+                    onClick={() => {
+                      setShowSubscription(true);
+                      setMobileMenuOpen(false);
+                    }}
+                    className="w-full flex items-center space-x-3 p-2 rounded-lg text-left bg-gradient-to-r from-amber-500/20 to-yellow-500/20 border border-amber-500/30 theme-text"
+                  >
+                    <span>👑</span>
+                    <span className="text-sm">{subscription?.status === 'premium' ? 'Premium Active' : 'Upgrade to Premium'}</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowAuth(true);
+                      setMobileMenuOpen(false);
+                    }}
+                    className="w-full flex items-center space-x-3 p-2 rounded-lg text-left theme-text hover:bg-white/5"
+                  >
+                    <span>👤</span>
+                    <span className="text-sm">{isAuthenticated ? user?.displayName || 'Account' : 'Login / Register'}</span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Mobile Content */}
+      {/* Mobile Content */}
         <div className="pt-20 min-h-screen">
           <div className="p-4">
             <ErrorBoundary>
@@ -1035,6 +1088,26 @@ const AppLayout: React.FC<{currentUserId: number | null, onDataReset: () => void
       {showThemeModal && (
         <ThemeSelector onClose={() => setShowThemeModal(false)} />
       )}
+
+      {/* Subscription Modal */}
+      <SubscriptionModal isOpen={showSubscription} onClose={() => setShowSubscription(false)} />
+
+      {/* Usage Limit Modal */}
+      <UsageLimitModal
+        isOpen={showUsageLimit}
+        onClose={() => setShowUsageLimit(false)}
+        onUpgrade={() => {
+          setShowUsageLimit(false);
+          setShowSubscription(true);
+        }}
+      />
+
+      {/* Auth Modal */}
+      <AuthModal
+        isOpen={showAuth}
+        onClose={() => setShowAuth(false)}
+        onAuthSuccess={() => setShowAuth(false)}
+      />
 
       {/* Removed duplicate chat components - using only main chat interface in "Chat with Chakrai" section */}
     </div>

@@ -511,8 +511,8 @@ export default function JournalDashboard({ userId }: JournalDashboardProps) {
             )}
           </div>
         )}
-        </div> {/* inner theme-card */}
-      </div>   {/* lime wrapper */
+        </div>
+      </div>
     );
   }, []);
 

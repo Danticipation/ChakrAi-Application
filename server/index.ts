@@ -201,8 +201,12 @@ app.get('/health/detailed', healthEndpoints.detailed);
 // Error handling middleware (must be last)
 app.use(errorHandler);
 
-// Setup Vite for frontend serving
-setupVite(app, server);
+// Setup frontend serving - production vs development
+if (process.env.NODE_ENV === 'production') {
+  serveStatic(app);
+} else {
+  setupVite(app, server);
+}
 
 // Start server
 server.listen(PORT, '0.0.0.0', () => {
