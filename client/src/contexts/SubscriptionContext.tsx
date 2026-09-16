@@ -78,17 +78,18 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
   const createCheckout = async (planType: 'monthly' | 'yearly'): Promise<string> => {
     try {
       // Get device fingerprint for anonymous users
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      ctx!.textBaseline = 'top';
-      ctx!.font = '14px Arial';
-      ctx!.fillText('Device fingerprint', 2, 2);
-      const deviceFingerprint = canvas.toDataURL().slice(-50);
+      const deviceFingerprint = localStorage.getItem('chakrai_device_fingerprint') || '';
 
       const response = await axios.post('/api/subscription/create-checkout', {
         planType,
         deviceFingerprint
       });
+      
+      // Return the checkout URL if available, otherwise fall back to session ID
+      if (response.data.url) {
+        window.location.href = response.data.url;
+        return response.data.sessionId;
+      }
       
       return response.data.sessionId;
     } catch (error) {
@@ -119,6 +120,18 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
 
   useEffect(() => {
     fetchSubscriptionStatus();
+    
+    // Check for subscription success/cancel in URL params
+    const params = new URLSearchParams(window.location.search);
+    const subParam = params.get('subscription');
+    if (subParam === 'success') {
+      // Refresh status after successful payment
+      setTimeout(() => fetchSubscriptionStatus(), 1000);
+      // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } else if (subParam === 'cancelled') {
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
   }, []);
 
   return (

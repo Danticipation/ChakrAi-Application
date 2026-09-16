@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Button } from '@/components/ui/button';
 import { useSubscription } from '@/contexts/SubscriptionContext';
-import { X, Crown, Sparkles, Zap, Shield, Check } from 'lucide-react';
+import { X, Crown, Sparkles, Zap, Shield, Check, CreditCard } from 'lucide-react';
+import axios from 'axios';
 
 interface SubscriptionModalProps {
   isOpen: boolean;
@@ -12,8 +13,9 @@ interface SubscriptionModalProps {
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
 
 export function SubscriptionModal({ isOpen, onClose }: SubscriptionModalProps) {
-  const { createCheckout, subscription } = useSubscription();
+  const { createCheckout, subscription, refreshStatus } = useSubscription();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
   if (!isOpen) return null;
 
@@ -22,26 +24,35 @@ export function SubscriptionModal({ isOpen, onClose }: SubscriptionModalProps) {
     
     setIsProcessing(true);
     try {
-      const stripe = await stripePromise;
-      if (!stripe) {
-        throw new Error('Stripe failed to load');
-      }
-
-      const sessionId = await createCheckout(planType);
-      
-      const { error } = await stripe.redirectToCheckout({
-        sessionId: sessionId,
-      });
-
-      if (error) {
-        console.error('Stripe redirect error:', error);
-        alert('Payment failed. Please try again.');
-      }
+      // createCheckout now redirects to Stripe URL directly
+      await createCheckout(planType);
     } catch (error) {
       console.error('Subscription error:', error);
-      alert('Failed to start subscription process. Please try again.');
+      // Fallback: try Stripe session redirect
+      try {
+        const stripe = await stripePromise;
+        if (stripe) {
+          const sessionId = await createCheckout(planType);
+          await stripe.redirectToCheckout({ sessionId });
+        }
+      } catch (fallbackError) {
+        console.error('Stripe redirect error:', fallbackError);
+        alert('Payment failed. Please try again.');
+      }
     } finally {
       setIsProcessing(false);
+    }
+  };
+
+  const handleManageBilling = async () => {
+    try {
+      const response = await axios.get('/api/subscription/billing-portal');
+      if (response.data.url) {
+        window.location.href = response.data.url;
+      }
+    } catch (error) {
+      console.error('Failed to open billing portal:', error);
+      alert('Could not open billing portal. Please try again.');
     }
   };
 
@@ -160,6 +171,15 @@ export function SubscriptionModal({ isOpen, onClose }: SubscriptionModalProps) {
           <div className="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">
             <p>Cancel anytime • 30-day money-back guarantee</p>
             <p className="mt-1">Secure payment processing by Stripe</p>
+            {subscription?.status === 'premium' && (
+              <button
+                onClick={handleManageBilling}
+                className="mt-3 text-blue-600 hover:text-blue-700 font-medium flex items-center justify-center gap-1 mx-auto"
+              >
+                <CreditCard className="w-4 h-4" />
+                Manage Billing
+              </button>
+            )}
           </div>
         </div>
       </div>
